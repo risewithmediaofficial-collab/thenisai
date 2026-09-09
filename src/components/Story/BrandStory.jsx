@@ -13,22 +13,14 @@ const frames = [
   {
     id: 'frame-2',
     number: '02',
-    label: 'The Vessel',
-    subheading: 'Brass Uruli',
-    caption: 'Simmered exclusively in hand-hammered heavy brass urulis that evenly circulate heat, cultivating our signature golden caramelization.',
-    img: '/palkova_card.jpg',
+    label: 'The Process',
+    subheading: 'Slow Stirred with Love',
+    caption: 'Patiently stirred for 4+ continuous hours over gentle fire with pure country cow ghee, allowing milk solids to naturally coalesce.',
+    img: '/brand_story.jpg',
   },
   {
     id: 'frame-3',
     number: '03',
-    label: 'The Process',
-    subheading: 'Slow Stirred with Love',
-    caption: 'Patiently stirred for 4+ continuous hours over low fire with pure country cow ghee, allowing milk solids to naturally coalesce.',
-    img: '/brand_story.jpg',
-  },
-  {
-    id: 'frame-4',
-    number: '04',
     label: 'The Craft',
     subheading: 'Melt-in-Mouth Perfection',
     caption: 'Finished to rich, velvety goodness without artificial essence or preservatives — authentic South Indian Palkova as tradition intended.',
@@ -185,7 +177,7 @@ export default function BrandStory() {
           onTouchEnd={onTouchEnd}
         >
           {/* Step Navigation Tabs (Desktop & Tablet) */}
-          <div className="hidden sm:grid grid-cols-4 gap-2 md:gap-4 mb-8">
+          <div className="hidden sm:grid grid-cols-3 gap-3 md:gap-4 mb-8">
             {frames.map((frame, index) => {
               const isActive = index === current;
               return (
@@ -240,7 +232,8 @@ export default function BrandStory() {
                     src={currentFrame.img}
                     alt={currentFrame.label}
                     className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
-                    loading="eager"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-warm-dark/90 via-warm-dark/30 to-transparent" />
                   
@@ -256,7 +249,7 @@ export default function BrandStory() {
                   <div>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-gold font-ui text-xs font-semibold tracking-widest uppercase">
-                        Chapter {currentFrame.number} of 04
+                        Chapter {currentFrame.number} of 03
                       </span>
                       <span className="w-8 h-[1px] bg-gold/50" />
                     </div>
