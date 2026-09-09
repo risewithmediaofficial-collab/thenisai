@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  thenisai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: thenisai
+    ports:
+      - "92:80"
+    restart: always
