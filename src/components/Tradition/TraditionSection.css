@@ -1,163 +1,265 @@
+/* ============================================================
+   THENISAI — Tradition Section (Interactive Comparison Slider)
+   ============================================================ */
+
 .tradition.section,
 .tradition {
   position: relative;
-  height: 85vh;
-  min-height: 550px;
-  max-height: 800px;
-  overflow: hidden;
+  width: 100%;
+  height: 75vh;
+  min-height: 480px;
+  max-height: 720px;
   padding: 0 !important;
   background: var(--warm-dark);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.tradition__split {
+.tradition__comparison-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+
+/* Layers */
+.tradition__layer {
   position: absolute;
   inset: 0;
-  display: flex;
-}
-
-.tradition__side {
-  flex: 1;
-  position: relative;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
-/* Right side is full-width behind, clipped by clip-path */
-.tradition__side--right {
-  position: absolute;
-  inset: 0;
+.tradition__layer--base {
+  z-index: 1;
+}
+
+.tradition__layer--reveal {
   z-index: 2;
   will-change: clip-path;
 }
 
-.tradition__right-inner {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  will-change: transform;
-}
-
-.tradition__img {
+.tradition__layer-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  will-change: transform;
+  display: block;
 }
 
-.tradition__side-overlay {
+/* Overlays */
+.tradition__layer-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to right,
-    rgba(10, 5, 2, 0.4) 0%,
-    rgba(10, 5, 2, 0.2) 50%,
-    rgba(10, 5, 2, 0.55) 100%
-  );
-}
-
-.tradition__side-overlay--right {
-  background: linear-gradient(
-    to left,
-    rgba(10, 5, 2, 0.4) 0%,
-    rgba(10, 5, 2, 0.2) 50%,
-    rgba(10, 5, 2, 0.55) 100%
-  );
-}
-
-.tradition__side-text {
-  position: absolute;
-  bottom: 48px;
-  left: 48px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 3;
-}
-
-/* For right side absolute overlay, right-align to the right edge */
-.tradition__side--right .tradition__side-text {
-  left: auto;
-  right: 48px;
-  text-align: right;
-}
-
-.tradition__side-label {
-  color: var(--gold);
-  letter-spacing: 0.3em;
-}
-
-.tradition__side-label--right {
-  color: var(--gold-light);
-}
-
-.tradition__side-heading {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 48px);
-  font-weight: 400;
-  color: var(--cream);
-  letter-spacing: -0.02em;
-}
-
-/* Center overlay */
-.tradition__center {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
   pointer-events: none;
 }
 
-.tradition__center-content {
+.tradition__layer-overlay--base {
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 10, 5, 0.45) 0%,
+    rgba(18, 10, 5, 0.15) 50%,
+    rgba(18, 10, 5, 0.75) 100%
+  );
+}
+
+.tradition__layer-overlay--reveal {
+  background: linear-gradient(
+    to bottom,
+    rgba(18, 10, 5, 0.4) 0%,
+    rgba(18, 10, 5, 0.1) 50%,
+    rgba(18, 10, 5, 0.75) 100%
+  );
+}
+
+/* Badges */
+.tradition__badge {
+  position: absolute;
+  bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 5;
+  background: rgba(18, 10, 5, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 168, 67, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.tradition__badge--left {
+  left: clamp(16px, 4vw, 48px);
+}
+
+.tradition__badge--right {
+  right: clamp(16px, 4vw, 48px);
+  text-align: right;
+  align-items: flex-end;
+}
+
+.tradition__badge-sub {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.tradition__badge-title {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 500;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+}
+
+/* Draggable Divider */
+.tradition__slider-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 10;
+  transform: translateX(-50%);
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
+.tradition__slider-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to bottom,
+    rgba(212, 168, 67, 0.8),
+    #FFF8EE,
+    rgba(212, 168, 67, 0.8)
+  );
+  box-shadow: 0 0 16px rgba(212, 168, 67, 0.6);
+}
+
+.tradition__slider-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--warm-dark);
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(212, 168, 67, 0.5), 0 4px 16px rgba(0, 0, 0, 0.6);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tradition__slider-divider:hover .tradition__slider-handle,
+.tradition__slider-divider:active .tradition__slider-handle {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 0 28px rgba(212, 168, 67, 0.8);
+  background: var(--deep-brown);
+}
+
+/* Center Title Badge */
+.tradition__center-badge {
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 8;
+  pointer-events: none;
+  width: 90%;
+  max-width: 420px;
+}
+
+.tradition__center-inner {
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  background: radial-gradient(ellipse at center, rgba(18, 10, 4, 0.6) 0%, transparent 75%);
-  padding: 32px 48px;
-  border-radius: 4px;
+  gap: 6px;
+  background: rgba(18, 10, 5, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 14px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 168, 67, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.tradition__heading {
+.tradition__center-icon {
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tradition__center-heading {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3.2vw, 34px);
+  font-weight: 400;
   color: var(--cream);
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.95);
   letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 1.15;
 }
 
-.tradition__heading em {
+.tradition__center-heading em {
   color: var(--gold-light);
   font-style: italic;
-  text-shadow: 0 4px 24px rgba(212, 168, 67, 0.4), 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 
+.tradition__center-hint {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(212, 168, 67, 0.75);
+}
+
+/* Mobile Responsive */
 @media (max-width: 768px) {
+  .tradition.section,
   .tradition {
-    height: auto;
-    min-height: auto;
+    height: 480px;
+    min-height: 440px;
   }
 
-  .tradition__split {
-    flex-direction: column;
-    height: auto;
+  .tradition__center-badge {
+    top: 20px;
   }
 
-  .tradition__side {
-    height: 50vh;
-    min-height: 280px;
+  .tradition__center-inner {
+    padding: 10px 18px;
   }
 
-  .tradition__side-text {
-    bottom: 24px;
-    left: 24px;
+  .tradition__center-heading {
+    font-size: 20px;
   }
 
-  .tradition__side--right .tradition__side-text {
-    right: 24px;
+  .tradition__badge {
+    bottom: 20px;
+    padding: 6px 12px;
   }
 
-  .tradition__center-content {
-    padding: 32px 32px;
+  .tradition__badge-title {
+    font-size: 14px;
+  }
+
+  .tradition__slider-handle {
+    width: 38px;
+    height: 38px;
   }
 }

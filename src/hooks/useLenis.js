@@ -17,6 +17,7 @@ export function useLenis() {
     });
 
     lenisRef.current = lenis;
+    window.__lenis = lenis;
 
     function raf(time) {
       lenis.raf(time);
@@ -26,6 +27,7 @@ export function useLenis() {
     requestAnimationFrame(raf);
 
     return () => {
+      window.__lenis = null;
       lenis.destroy();
     };
   }, []);

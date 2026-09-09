@@ -1,104 +1,119 @@
-import { useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
 import './TraditionSection.css';
 
-gsap.registerPlugin(ScrollTrigger);
-
 export default function TraditionSection() {
-  const sectionRef = useRef();
-  const leftRef = useRef();
-  const rightRef = useRef();
-  const clipRef = useRef();
+  const containerRef = useRef(null);
+  const [sliderPos, setSliderPos] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleMove = useCallback((clientX) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(percentage);
+  }, []);
+
+  const onTouchMove = useCallback((e) => {
+    handleMove(e.touches[0].clientX);
+  }, [handleMove]);
+
+  const onMouseMove = useCallback((e) => {
+    if (!isDragging) return;
+    handleMove(e.clientX);
+  }, [isDragging, handleMove]);
+
+  const onMouseDown = () => setIsDragging(true);
+  const onMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: 'top 60%',
-        end: 'bottom 40%',
-        scrub: 1.2,
-      },
-    });
-
-    tl.fromTo(
-      clipRef.current,
-      { clipPath: 'inset(0 50% 0 0)' },
-      { clipPath: 'inset(0 0% 0 0)', ease: 'none' }
-    );
-
-    tl.fromTo(leftRef.current, { scale: 1.08 }, { scale: 1, ease: 'none' }, 0);
-    tl.fromTo(rightRef.current, { scale: 1.12 }, { scale: 1.02, ease: 'none' }, 0);
-
-    return () => {
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
+    window.addEventListener('mouseup', onMouseUp);
+    return () => window.removeEventListener('mouseup', onMouseUp);
   }, []);
 
   return (
-    <section className="tradition section" ref={sectionRef}>
-      <div className="tradition__split">
-        {/* Left — Traditional */}
-        <div className="tradition__side tradition__side--left" ref={leftRef}>
+    <section className="tradition section" id="tradition">
+      <div
+        className="tradition__comparison-wrap"
+        ref={containerRef}
+        onMouseMove={onMouseMove}
+        onTouchMove={onTouchMove}
+      >
+        {/* Base Layer: Traditional / The Old Way (Left/Background) */}
+        <div className="tradition__layer tradition__layer--base">
           <img
             src="/brand_story.jpg"
-            alt="Traditional cooking"
-            className="tradition__img"
+            alt="Traditional cooking in brass uruli"
+            className="tradition__layer-img"
             loading="lazy"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+            decoding="async"
           />
-          <div className="tradition__side-overlay" />
-          <div className="tradition__side-text">
-            <span className="label tradition__side-label">Traditional</span>
-            <h3 className="tradition__side-heading">The Old Way</h3>
+          <div className="tradition__layer-overlay tradition__layer-overlay--base" />
+          
+          <div className="tradition__badge tradition__badge--left">
+            <span className="tradition__badge-sub">Heritage</span>
+            <span className="tradition__badge-title">The Old Way</span>
           </div>
         </div>
 
-        {/* Right — Modern (clip-path reveal) */}
-        <div className="tradition__side tradition__side--right" ref={clipRef}>
-          <div ref={rightRef} className="tradition__right-inner">
-            <img
-              src="/sweet_box.jpg"
-              alt="Modern Thenisai presentation"
-              className="tradition__img"
-              loading="lazy"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-            <div className="tradition__side-overlay tradition__side-overlay--right" />
-            <div className="tradition__side-text">
-              <span className="label tradition__side-label tradition__side-label--right">Modern</span>
-              <h3 className="tradition__side-heading">Reimagined</h3>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Center overlay text */}
-      <div className="tradition__center">
-        <motion.div
-          className="tradition__center-content"
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          viewport={{ once: true }}
+        {/* Clipped Layer: Reimagined / Modern (Right/Top) */}
+        <div
+          className="tradition__layer tradition__layer--reveal"
+          style={{ clipPath: `polygon(${sliderPos}% 0, 100% 0, 100% 100%, ${sliderPos}% 100%)` }}
         >
-          <div className="tradition__center-ornament">
-            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-              <circle cx="20" cy="20" r="18" stroke="#D4A843" strokeWidth="0.5" opacity="0.6"/>
-              <circle cx="20" cy="20" r="10" stroke="#D4A843" strokeWidth="0.5" opacity="0.4"/>
-              <circle cx="20" cy="20" r="3" fill="#D4A843" opacity="0.8"/>
+          <img
+            src="/sweet_box.jpg"
+            alt="Thenisai luxury sweet presentation"
+            className="tradition__layer-img"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="tradition__layer-overlay tradition__layer-overlay--reveal" />
+
+          <div className="tradition__badge tradition__badge--right">
+            <span className="tradition__badge-sub">Modern Luxury</span>
+            <span className="tradition__badge-title">Reimagined</span>
+          </div>
+        </div>
+
+        {/* Draggable Divider Line & Handle */}
+        <div
+          className="tradition__slider-divider"
+          style={{ left: `${sliderPos}%` }}
+          onMouseDown={onMouseDown}
+          onTouchStart={() => setIsDragging(true)}
+        >
+          <div className="tradition__slider-line" />
+          <div className="tradition__slider-handle" aria-label="Slide to compare">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M8 7l-5 5 5 5M16 7l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
-          <h2 className="display-lg tradition__heading">
-            Tradition,<br/>
-            <em>Reimagined.</em>
-          </h2>
-        </motion.div>
+        </div>
+
+        {/* Center Title Badge */}
+        <div className="tradition__center-badge">
+          <motion.div
+            className="tradition__center-inner"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <div className="tradition__center-icon">
+              <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" stroke="#D4A843" strokeWidth="1" opacity="0.6"/>
+                <circle cx="20" cy="20" r="9" stroke="#D4A843" strokeWidth="1" opacity="0.4"/>
+                <circle cx="20" cy="20" r="3" fill="#D4A843" opacity="0.9"/>
+              </svg>
+            </div>
+            <h2 className="tradition__center-heading">
+              Tradition, <em>Reimagined.</em>
+            </h2>
+            <span className="tradition__center-hint">Slide or touch to compare</span>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

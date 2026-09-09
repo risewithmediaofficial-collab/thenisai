@@ -12,6 +12,24 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Lock scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      window.__lenis?.stop();
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      window.__lenis?.start();
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      window.__lenis?.start();
+    };
+  }, [menuOpen]);
+
   const links = [
     { label: 'Home', href: '#hero' },
     { label: 'Sweets', href: '#collection' },
@@ -80,13 +98,12 @@ export default function Navbar() {
         {menuOpen && (
           <motion.div
             className="mobile-menu"
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: -15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           >
             <div className="mobile-menu__inner">
-              <div className="mobile-menu__logo">THENISAI</div>
               <nav className="mobile-menu__links">
                 {links.map((link, i) => (
                   <motion.a
@@ -94,25 +111,38 @@ export default function Navbar() {
                     href={link.href}
                     className="mobile-menu__link"
                     onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
-                    initial={{ opacity: 0, x: 30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.08 + 0.1 }}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 + 0.08 }}
                   >
-                    {link.label}
+                    <span className="mobile-menu__link-num">0{i + 1}</span>
+                    <span className="mobile-menu__link-text">{link.label}</span>
                   </motion.a>
                 ))}
+
+                <motion.div
+                  className="mobile-menu__divider"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ delay: 0.3 }}
+                />
+
                 <motion.a
                   href="#contact"
                   className="btn btn-gold mobile-menu__cta"
                   onClick={(e) => { e.preventDefault(); scrollTo('#contact'); }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.35 }}
                 >
                   <span>Order Now</span>
                 </motion.a>
               </nav>
-              <div className="mobile-menu__tagline">Pure · Rich · Traditional</div>
+
+              <div className="mobile-menu__footer">
+                <div className="mobile-menu__tagline">Pure · Rich · Traditional</div>
+                <div className="mobile-menu__sub">Handcrafted South Indian Delicacies</div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -120,3 +150,4 @@ export default function Navbar() {
     </>
   );
 }
+
