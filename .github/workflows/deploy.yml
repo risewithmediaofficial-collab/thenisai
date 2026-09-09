@@ -1,0 +1,56 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy Docker App to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Execute Deployment via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          timeout: 180s
+          command_timeout: 20m
+          script: |
+            set -e
+
+            # Target directory on VPS
+            APP_DIR="/var/www/thenisai"
+            echo "==> Deploying Thenisai to ${APP_DIR}..."
+
+            # Create directory if it doesn't exist
+            mkdir -p "${APP_DIR}"
+            cd "${APP_DIR}"
+
+            # Clone or pull latest code from main
+            if [ -d ".git" ]; then
+              echo "==> Fetching latest changes..."
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              echo "==> Cloning repository..."
+              git clone https://github.com/risewithmediaofficial-collab/thenisai.git .
+            fi
+
+            # Build and deploy Docker containers
+            echo "==> Starting Docker Compose build..."
+            docker compose down || true
+            docker compose up -d --build
+
+            # Clean up old unused images to save disk space
+            echo "==> Pruning dangling images..."
+            docker image prune -f || true
+
+            echo "==> Deployment completed successfully! App running on port 92."

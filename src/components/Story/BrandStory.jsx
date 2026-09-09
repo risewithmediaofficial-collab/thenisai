@@ -1,159 +1,329 @@
-import { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
-import './BrandStory.css';
-
-gsap.registerPlugin(ScrollTrigger);
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const frames = [
   {
     id: 'frame-1',
+    number: '01',
     label: 'The Source',
-    caption: 'Fresh whole milk',
-    bg: 'rgba(245,237,216,0.05)',
+    subheading: 'Pure Farm Milk',
+    caption: 'Fresh whole milk collected daily at dawn from local heritage farms in Tamil Nadu, preserving unmatched rich sweetness and purity.',
+    img: '/ingredients.jpg',
   },
   {
     id: 'frame-2',
+    number: '02',
     label: 'The Vessel',
-    caption: 'Traditional brass uruli',
-    bg: 'rgba(212,168,67,0.05)',
+    subheading: 'Brass Uruli',
+    caption: 'Simmered exclusively in hand-hammered heavy brass urulis that evenly circulate heat, cultivating our signature golden caramelization.',
+    img: '/palkova_card.jpg',
   },
   {
     id: 'frame-3',
+    number: '03',
     label: 'The Process',
-    caption: 'Slow stirred for hours',
-    bg: 'rgba(42,24,16,0.1)',
+    subheading: 'Slow Stirred with Love',
+    caption: 'Patiently stirred for 4+ continuous hours over low fire with pure country cow ghee, allowing milk solids to naturally coalesce.',
+    img: '/brand_story.jpg',
   },
   {
     id: 'frame-4',
+    number: '04',
     label: 'The Craft',
-    caption: 'Finished Palkova',
-    bg: 'rgba(212,168,67,0.08)',
+    subheading: 'Melt-in-Mouth Perfection',
+    caption: 'Finished to rich, velvety goodness without artificial essence or preservatives — authentic South Indian Palkova as tradition intended.',
+    img: '/palkova_hero.jpg',
   },
 ];
 
+const AUTO_SWIPE_INTERVAL = 4000;
+
 export default function BrandStory() {
-  const sectionRef = useRef();
-  const trackRef = useRef();
+  const [current, setCurrent] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const timerRef = useRef(null);
 
-  useEffect(() => {
-    const section = sectionRef.current;
-    const track = trackRef.current;
-    if (!section || !track) return;
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: section,
-        start: 'top top',
-        end: '+=300%',
-        pin: true,
-        scrub: 1,
-        anticipatePin: 1,
-      },
+  const paginate = useCallback((newDirection) => {
+    setDirection(newDirection);
+    setCurrent((prev) => {
+      let next = prev + newDirection;
+      if (next < 0) next = frames.length - 1;
+      if (next >= frames.length) next = 0;
+      return next;
     });
-
-    // Slide each frame
-    tl.to(track, {
-      x: () => -(track.scrollWidth - window.innerWidth),
-      ease: 'none',
-    });
-
-    // Reveal images as they come into view
-    const images = track.querySelectorAll('.story__frame-img');
-    images.forEach((img, i) => {
-      tl.from(img, { scale: 1.15, ease: 'none' }, i * 0.25);
-    });
-
-    return () => {
-      tl.scrollTrigger?.kill();
-      tl.kill();
-    };
   }, []);
 
+  const goToSlide = (index) => {
+    setDirection(index > current ? 1 : -1);
+    setCurrent(index);
+  };
+
+  // Auto-swipe effect
+  useEffect(() => {
+    if (isPaused) return;
+
+    timerRef.current = setInterval(() => {
+      paginate(1);
+    }, AUTO_SWIPE_INTERVAL);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isPaused, paginate]);
+
+  // Touch handlers for mobile swipe
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsPaused(true);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    setIsPaused(false);
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      paginate(1);
+    } else if (isRightSwipe) {
+      paginate(-1);
+    }
+  };
+
+  const slideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.96,
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.4 },
+        scale: { duration: 0.4 },
+      },
+    },
+    exit: (dir) => ({
+      zIndex: 0,
+      x: dir < 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.96,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.3 },
+      },
+    }),
+  };
+
+  const currentFrame = frames[current];
+
   return (
-    <section id="story" className="story" ref={sectionRef}>
-      <div className="story__header">
-        <motion.span
-          className="label story__eyebrow"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          Our Craft
-        </motion.span>
-        <motion.h2
-          className="display-md story__title"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          viewport={{ once: true }}
-        >
-          Made the Traditional Way
-        </motion.h2>
-        <motion.p
-          className="story__sub body-lg"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          viewport={{ once: true }}
-        >
-          Slow cooked. Richly crafted. Truly Thenisai.
-        </motion.p>
+    <section
+      id="story"
+      className="relative w-full py-20 md:py-28 lg:py-32 bg-warm-dark text-cream overflow-hidden"
+    >
+      {/* Background ambient lighting */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 left-1/4 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[140px]" />
+        <div className="absolute -bottom-40 right-1/4 w-[600px] h-[600px] bg-caramel/10 rounded-full blur-[160px]" />
       </div>
 
-      <div className="story__scroll-track-wrap">
-        <div className="story__track" ref={trackRef}>
-          {frames.map((frame, i) => (
-            <div key={frame.id} className="story__frame">
-              <div className="story__frame-img-wrap">
-                {i === 2 ? (
-                  <img
-                    src="/brand_story.jpg"
-                    alt={frame.caption}
-                    className="story__frame-img"
-                    loading="lazy"
-                  />
-                ) : i === 3 ? (
-                  <img
-                    src="/palkova_hero.jpg"
-                    alt={frame.caption}
-                    className="story__frame-img"
-                    loading="lazy"
-                  />
-                ) : i === 0 ? (
-                  <img
-                    src="/ingredients.jpg"
-                    alt={frame.caption}
-                    className="story__frame-img"
-                    loading="lazy"
-                  />
-                ) : (
-                  <img
-                    src="/palkova_card.jpg"
-                    alt={frame.caption}
-                    className="story__frame-img"
-                    loading="lazy"
-                  />
-                )}
-                <div className="story__frame-overlay" />
-              </div>
-              <div className="story__frame-label">
-                <span className="story__frame-number">0{i + 1}</span>
-                <h3 className="story__frame-title">{frame.label}</h3>
-                <p className="story__frame-caption">{frame.caption}</p>
-              </div>
-            </div>
-          ))}
+      <div className="relative max-w-container mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
+          <motion.span
+            className="inline-block text-gold uppercase tracking-[0.25em] text-xs md:text-sm font-ui font-medium mb-3"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            Our Sacred Heritage
+          </motion.span>
+          <motion.h2
+            className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal tracking-tight text-cream mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.7 }}
+            viewport={{ once: true }}
+          >
+            Made The Traditional Way
+          </motion.h2>
+          <motion.p
+            className="font-body italic text-lg sm:text-xl md:text-2xl text-cream/70 font-light"
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.7 }}
+            viewport={{ once: true }}
+          >
+            Slow cooked. Purely crafted. Unforgettable taste.
+          </motion.p>
+          <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mt-6" />
         </div>
-      </div>
 
-      {/* Scroll hint */}
-      <div className="story__hint">
-        <span className="label">Scroll to explore</span>
-        <svg width="40" height="12" viewBox="0 0 40 12" fill="none">
-          <path d="M0 6h38M32 1l6 5-6 5" stroke="var(--gold)" strokeWidth="0.8" opacity="0.6"/>
-        </svg>
+        {/* Interactive Auto-Swipe Showcase Container */}
+        <div
+          className="relative max-w-5xl mx-auto"
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Step Navigation Tabs (Desktop & Tablet) */}
+          <div className="hidden sm:grid grid-cols-4 gap-2 md:gap-4 mb-8">
+            {frames.map((frame, index) => {
+              const isActive = index === current;
+              return (
+                <button
+                  key={frame.id}
+                  onClick={() => goToSlide(index)}
+                  className={`text-left p-3 md:p-4 rounded-lg border transition-all duration-500 relative overflow-hidden group ${
+                    isActive
+                      ? 'bg-cream/10 border-gold/60 shadow-gold-glow'
+                      : 'bg-cream/5 border-white/10 hover:border-gold/30 hover:bg-cream/[0.07]'
+                  }`}
+                >
+                  {/* Progress bar fill for active step */}
+                  {isActive && !isPaused && (
+                    <motion.div
+                      className="absolute bottom-0 left-0 top-0 bg-gold/15 -z-0"
+                      initial={{ width: '0%' }}
+                      animate={{ width: '100%' }}
+                      transition={{ duration: AUTO_SWIPE_INTERVAL / 1000, ease: 'linear' }}
+                      key={current}
+                    />
+                  )}
+                  <div className="relative z-10 flex items-center gap-2 mb-1">
+                    <span className={`text-[11px] font-ui font-semibold tracking-wider ${isActive ? 'text-gold' : 'text-cream/50'}`}>
+                      {frame.number}
+                    </span>
+                    <span className={`h-1 w-1 rounded-full ${isActive ? 'bg-gold' : 'bg-cream/30'}`} />
+                  </div>
+                  <div className={`font-display text-sm md:text-base font-medium truncate ${isActive ? 'text-cream' : 'text-cream/70 group-hover:text-cream'}`}>
+                    {frame.label}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Main Visual Slide Card */}
+          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-gold/20 bg-deep-brown/40 shadow-2xl backdrop-blur-sm min-h-[460px] sm:min-h-[500px] md:min-h-[540px]">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={current}
+                custom={direction}
+                variants={slideVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="grid grid-cols-1 md:grid-cols-12 h-full items-stretch"
+              >
+                {/* Image Column */}
+                <div className="relative md:col-span-7 h-[260px] sm:h-[320px] md:h-full min-h-[260px] md:min-h-[500px] overflow-hidden group">
+                  <img
+                    src={currentFrame.img}
+                    alt={currentFrame.label}
+                    className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
+                    loading="eager"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-warm-dark/90 via-warm-dark/30 to-transparent" />
+                  
+                  {/* Badge on Image */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-gold/30">
+                    <span className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+                    <span className="font-ui text-[11px] tracking-wider uppercase text-gold">Step {currentFrame.number}</span>
+                  </div>
+                </div>
+
+                {/* Content Column */}
+                <div className="md:col-span-5 p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-b from-deep-brown/80 to-warm-dark/95">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-gold font-ui text-xs font-semibold tracking-widest uppercase">
+                        Chapter {currentFrame.number} of 04
+                      </span>
+                      <span className="w-8 h-[1px] bg-gold/50" />
+                    </div>
+
+                    <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl text-cream font-normal leading-tight mb-2">
+                      {currentFrame.label}
+                    </h3>
+                    <h4 className="font-display italic text-gold text-lg sm:text-xl font-normal mb-4">
+                      {currentFrame.subheading}
+                    </h4>
+
+                    <p className="font-body text-cream/80 text-base sm:text-lg md:text-xl leading-relaxed font-light mb-6">
+                      {currentFrame.caption}
+                    </p>
+                  </div>
+
+                  {/* Controls & Progress bar */}
+                  <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+                    {/* Dots / Indicators */}
+                    <div className="flex items-center gap-2">
+                      {frames.map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => goToSlide(i)}
+                          aria-label={`Go to slide ${i + 1}`}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            i === current ? 'w-8 bg-gold' : 'w-2 bg-cream/30 hover:bg-cream/60'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Prev / Next Arrows */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => paginate(-1)}
+                        className="w-10 h-10 rounded-full border border-gold/30 bg-cream/5 flex items-center justify-center text-cream hover:bg-gold hover:text-deep-brown transition-all duration-300 active:scale-95"
+                        aria-label="Previous step"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => paginate(1)}
+                        className="w-10 h-10 rounded-full border border-gold/30 bg-cream/5 flex items-center justify-center text-cream hover:bg-gold hover:text-deep-brown transition-all duration-300 active:scale-95"
+                        aria-label="Next step"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                          <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Mobile Swipe Hint */}
+          <div className="sm:hidden flex items-center justify-center gap-2 text-gold/70 text-xs font-ui mt-4">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M8 7l-5 5 5 5M16 7l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>Swipe left or right to explore steps</span>
+          </div>
+        </div>
       </div>
     </section>
   );
