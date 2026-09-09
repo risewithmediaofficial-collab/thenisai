@@ -1,0 +1,119 @@
+.ingredients {
+  position: relative;
+  background: var(--warm-dark);
+  overflow: hidden;
+}
+
+.ingredients__bg-img {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.ingredients__bg-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.25;
+  filter: saturate(0.5);
+}
+
+.ingredients__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(26,15,8,0.5) 0%, rgba(26,15,8,0.9) 100%);
+}
+
+.ingredients__inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 64px;
+}
+
+.ingredients__header {
+  text-align: center;
+  max-width: 700px;
+}
+
+.ingredients__title {
+  color: var(--cream);
+  margin-bottom: 16px;
+}
+
+.ingredients__title em {
+  color: var(--gold);
+  font-style: italic;
+}
+
+.ingredients__sub {
+  color: rgba(255, 248, 238, 0.5);
+  font-style: italic;
+}
+
+/* Grid */
+.ingredients__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+/* Ingredient card */
+.ingredient-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 32px 28px;
+  background: rgba(245, 237, 216, 0.05);
+  border: 1px solid rgba(212, 168, 67, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  min-width: 140px;
+  text-align: center;
+  transition: background 0.4s ease, border-color 0.4s ease;
+  cursor: default;
+}
+
+.ingredient-card:hover {
+  background: rgba(212, 168, 67, 0.08);
+  border-color: rgba(212, 168, 67, 0.4);
+}
+
+.ingredient-card__emoji {
+  font-size: 36px;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.3));
+}
+
+.ingredient-card__name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--cream);
+  letter-spacing: -0.01em;
+}
+
+.ingredient-card__desc {
+  color: var(--gold);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ingredient-card {
+    min-width: 110px;
+    padding: 24px 20px;
+  }
+
+  .ingredient-card__emoji {
+    font-size: 28px;
+  }
+}

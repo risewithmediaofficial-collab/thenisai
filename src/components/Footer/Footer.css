@@ -1,0 +1,131 @@
+.footer {
+  background: var(--deep-brown);
+  color: var(--cream);
+  padding-top: 0;
+}
+
+.footer__top-line {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 168, 67, 0.4), transparent);
+}
+
+.footer__inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 48px;
+  padding: 64px 0 48px;
+  align-items: start;
+}
+
+/* Brand */
+.footer__logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--cream);
+}
+
+.footer__tagline {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-top: 6px;
+  opacity: 0.8;
+}
+
+/* Nav */
+.footer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.footer__nav-link {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 238, 0.55);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer__nav-link:hover {
+  color: var(--gold);
+}
+
+/* Right */
+.footer__right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.footer__right-text {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(255, 248, 238, 0.3);
+}
+
+.footer__social {
+  display: flex;
+  gap: 12px;
+}
+
+.footer__social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(212, 168, 67, 0.2);
+  color: rgba(255, 248, 238, 0.5);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer__social-icon:hover {
+  background: rgba(212, 168, 67, 0.1);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Bottom bar */
+.footer__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  border-top: 1px solid rgba(255, 248, 238, 0.06);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: rgba(255, 248, 238, 0.25);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer__inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    text-align: center;
+  }
+
+  .footer__right {
+    align-items: center;
+  }
+
+  .footer__bottom {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}

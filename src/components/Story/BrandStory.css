@@ -1,0 +1,196 @@
+/* ============================================================
+   THENISAI — Brand Story Section (Cinematic Horizontal Scroll)
+   ============================================================ */
+
+.story {
+  position: relative;
+  background: var(--warm-dark);
+  overflow: hidden;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.story__header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  text-align: center;
+  padding: 64px var(--container-pad) 32px;
+  background: linear-gradient(to bottom, rgba(18, 10, 5, 0.78) 0%, rgba(18, 10, 5, 0.4) 65%, transparent 100%);
+}
+
+.story__eyebrow {
+  display: block;
+  color: var(--gold);
+  margin-bottom: 12px;
+  letter-spacing: 0.3em;
+}
+
+.story__title {
+  color: var(--cream);
+  margin-bottom: 12px;
+}
+
+.story__sub {
+  color: rgba(255, 248, 238, 0.55);
+  font-style: italic;
+}
+
+/* Horizontal scroll track */
+.story__scroll-track-wrap {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.story__track {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  gap: 0;
+  will-change: transform;
+}
+
+.story__frame {
+  flex: 0 0 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.story__frame-img-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.story__frame-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  will-change: transform;
+  display: block;
+}
+
+.story__frame-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(8, 4, 2, 0.85) 0%,
+    rgba(8, 4, 2, 0.2) 38%,
+    rgba(8, 4, 2, 0.0) 62%,
+    rgba(8, 4, 2, 0.0) 100%
+  );
+}
+
+/* ── Frame Label: anchored to bottom-left within a fixed container ── */
+.story__frame-label {
+  position: relative;
+  z-index: 2;
+
+  /* Sit inside the same container width as the rest of the site */
+  width: 100%;
+  max-width: var(--container-max, 1400px);
+  margin: 0 auto;          /* centre the full-width label block */
+  padding-left: var(--container-pad);   /* align text to site left edge */
+  padding-right: var(--container-pad);
+  padding-bottom: 56px;
+  padding-top: 40px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  /* Left accent bar scoped to the content, not the full-width padding */
+  box-sizing: border-box;
+}
+
+/* The gold accent bar lives on the text, not the outer wrapper */
+.story__frame-label::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: var(--gold);
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.story__frame-number {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.story__frame-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 58px);
+  font-weight: 400;
+  color: var(--cream);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.8);
+  margin: 0;
+}
+
+.story__frame-caption {
+  font-family: var(--font-body);
+  font-size: clamp(13px, 1.4vw, 18px);
+  color: rgba(255, 248, 238, 0.65);
+  font-style: italic;
+  font-weight: 300;
+  margin: 0;
+}
+
+.story__hint {
+  position: absolute;
+  bottom: 32px;
+  right: var(--container-pad);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(212, 168, 67, 0.5);
+}
+
+/* Mobile: show stacked instead of horizontal */
+@media (max-width: 768px) {
+  .story__scroll-track-wrap {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .story__track {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .story__frame {
+    flex: 0 0 60vh;
+    height: 60vh;
+  }
+
+  .story__frame-label {
+    max-width: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 36px;
+    padding-top: 28px;
+    margin: 0;
+  }
+
+  .story__hint {
+    display: none;
+  }
+}

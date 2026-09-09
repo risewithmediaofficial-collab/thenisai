@@ -1,0 +1,113 @@
+.showcase {
+  position: relative;
+  background: var(--deep-brown);
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+/* Particles */
+.showcase__particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.showcase__particle {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.9), rgba(212, 168, 67, 0.1));
+  opacity: 0.7;
+}
+
+/* Radial glow */
+.showcase__glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vw;
+  height: 70vh;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Inner layout */
+.showcase__inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+  padding: var(--section-padding) 0;
+}
+
+/* Image */
+.showcase__img-wrap {
+  position: relative;
+  perspective: 800px;
+}
+
+.showcase__img {
+  width: 100%;
+  max-width: 580px;
+  display: block;
+  border-radius: 2px;
+  box-shadow:
+    0 40px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(212, 168, 67, 0.1);
+}
+
+.showcase__img-shadow {
+  position: absolute;
+  bottom: -24px;
+  left: 10%;
+  right: 10%;
+  height: 40px;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, transparent 80%);
+  filter: blur(16px);
+}
+
+/* Text */
+.showcase__text {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.showcase__eyebrow {
+  color: var(--gold);
+  letter-spacing: 0.3em;
+}
+
+.showcase__title {
+  color: var(--cream);
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .showcase__inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 48px;
+  }
+
+  .showcase__img-wrap {
+    margin: 0 auto;
+  }
+
+  .showcase__text {
+    align-items: center;
+  }
+
+  .gold-line-left {
+    margin: 24px auto !important;
+  }
+}

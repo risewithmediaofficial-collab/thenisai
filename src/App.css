@@ -1,0 +1,14 @@
+/* App-level styles */
+.site {
+  min-height: 100vh;
+  background: var(--cream);
+  overflow-x: hidden;
+}
+
+/* Suspense fallback placeholder */
+.section-placeholder {
+  min-height: 200px;
+  background: var(--cream);
+}
+
+/* App.css — reset old boilerplate */

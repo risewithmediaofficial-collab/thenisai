@@ -1,0 +1,168 @@
+.collection {
+  background: var(--ivory);
+  padding-bottom: calc(var(--section-padding) * 1.5);
+}
+
+.collection__header {
+  text-align: center;
+  margin-bottom: 72px;
+}
+
+.collection__eyebrow {
+  display: block;
+  color: var(--caramel);
+  margin-bottom: 12px;
+  letter-spacing: 0.3em;
+}
+
+.collection__title {
+  color: var(--deep-brown);
+}
+
+/* Grid */
+.collection__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+/* First card (featured) spans 2 columns */
+.sweet-card--featured {
+  grid-column: span 2;
+}
+
+/* Card */
+.sweet-card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.5s var(--ease-smooth), box-shadow 0.5s var(--ease-smooth);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--milk-white);
+}
+
+.sweet-card:hover {
+  box-shadow: 0 24px 60px rgba(42, 24, 16, 0.18);
+}
+
+/* Image */
+.sweet-card__img-wrap {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 3/4;
+}
+
+.sweet-card--featured .sweet-card__img-wrap {
+  aspect-ratio: 16/10;
+}
+
+.sweet-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--ease-smooth);
+}
+
+.sweet-card:hover .sweet-card__img {
+  transform: scale(1.06);
+}
+
+.sweet-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(26,15,8,0.5) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.sweet-card:hover .sweet-card__overlay {
+  opacity: 1;
+}
+
+/* Badge */
+.sweet-card__badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--gold);
+  color: var(--deep-brown);
+  padding: 6px 14px;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  font-weight: 600;
+}
+
+/* Body */
+.sweet-card__body {
+  padding: 20px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--milk-white);
+}
+
+.sweet-card__tagline {
+  color: var(--caramel);
+  font-size: 9px;
+  letter-spacing: 0.25em;
+}
+
+.sweet-card__name {
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: 400;
+  color: var(--deep-brown);
+  letter-spacing: -0.01em;
+}
+
+/* Discover link */
+.sweet-card__discover {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--caramel);
+  text-decoration: none;
+  margin-top: 4px;
+  transition: gap 0.3s ease, color 0.3s ease;
+}
+
+.sweet-card__discover:hover {
+  gap: 14px;
+  color: var(--gold-dark);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .collection__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .sweet-card--featured {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .collection__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .sweet-card--featured {
+    grid-column: span 2;
+  }
+  .sweet-card--featured .sweet-card__img-wrap {
+    aspect-ratio: 4/3;
+  }
+}
+
+@media (max-width: 480px) {
+  .collection__grid {
+    grid-template-columns: 1fr;
+  }
+  .sweet-card--featured {
+    grid-column: span 1;
+  }
+}
