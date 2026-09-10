@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCart } from '../../context/CartContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import './Navbar.css';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { totalItems, setIsCartOpen } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -13,22 +16,7 @@ export default function Navbar() {
   }, []);
 
   // Lock scroll when mobile menu is open
-  useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      window.__lenis?.stop();
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      window.__lenis?.start();
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      window.__lenis?.start();
-    };
-  }, [menuOpen]);
+  useScrollLock(menuOpen);
 
   const links = [
     { label: 'Home', href: '#hero' },
@@ -39,8 +27,12 @@ export default function Navbar() {
 
   const scrollTo = (href) => {
     setMenuOpen(false);
-    const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (window.__lenis) {
+      window.__lenis.scrollTo(href, { offset: -20, duration: 1.2 });
+    } else {
+      const el = document.querySelector(href);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -54,8 +46,8 @@ export default function Navbar() {
         <div className="navbar__inner">
           {/* Logo */}
           <a className="navbar__logo" href="#hero" onClick={(e) => { e.preventDefault(); scrollTo('#hero'); }}>
-            <span className="navbar__logo-text">THENISAI</span>
-            <span className="navbar__logo-sub">The Taste of Tradition</span>
+            <span className="navbar__logo-text">THENISAI SWEETS</span>
+            <span className="navbar__logo-sub">Since 2006 · The Taste of Tradition</span>
           </a>
 
           {/* Desktop links */}
@@ -73,14 +65,36 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* CTA */}
-          <a
-            href="#contact"
-            className="navbar__cta btn btn-gold"
-            onClick={(e) => { e.preventDefault(); scrollTo('#contact'); }}
-          >
-            <span>Order Now</span>
-          </a>
+          {/* Right actions: Cart + Order CTA */}
+          <div className="navbar__actions">
+            <button
+              className="navbar__cart-btn"
+              onClick={() => setIsCartOpen(true)}
+              aria-label={`View sweet box cart (${totalItems} items)`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3 6h18" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16 10a4 4 0 01-8 0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              {totalItems > 0 && (
+                <span className="navbar__cart-badge">{totalItems}</span>
+              )}
+            </button>
+
+            <button
+              className="navbar__cta btn btn-gold"
+              onClick={() => {
+                if (totalItems > 0) {
+                  setIsCartOpen(true);
+                } else {
+                  scrollTo('#collection');
+                }
+              }}
+            >
+              <span>{totalItems > 0 ? 'Checkout' : 'Order Now'}</span>
+            </button>
+          </div>
 
           {/* Mobile hamburger */}
           <button
@@ -98,6 +112,7 @@ export default function Navbar() {
         {menuOpen && (
           <motion.div
             className="mobile-menu"
+            data-lenis-prevent
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -15 }}
@@ -127,20 +142,26 @@ export default function Navbar() {
                   transition={{ delay: 0.3 }}
                 />
 
-                <motion.a
-                  href="#contact"
+                <motion.button
                   className="btn btn-gold mobile-menu__cta"
-                  onClick={(e) => { e.preventDefault(); scrollTo('#contact'); }}
+                  onClick={() => {
+                    setMenuOpen(false);
+                    if (totalItems > 0) {
+                      setIsCartOpen(true);
+                    } else {
+                      scrollTo('#collection');
+                    }
+                  }}
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.35 }}
                 >
-                  <span>Order Now</span>
-                </motion.a>
+                  <span>{totalItems > 0 ? `Sweet Box (${totalItems})` : 'Order Now'}</span>
+                </motion.button>
               </nav>
 
               <div className="mobile-menu__footer">
-                <div className="mobile-menu__tagline">Pure · Rich · Traditional</div>
+                <div className="mobile-menu__tagline">Since 2006 · Pure · Rich · Traditional</div>
                 <div className="mobile-menu__sub">Handcrafted South Indian Delicacies</div>
               </div>
             </div>

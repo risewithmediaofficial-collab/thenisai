@@ -95,6 +95,53 @@
   transform: scaleX(1);
 }
 
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar__cart-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 168, 67, 0.25);
+  color: var(--cream);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.navbar__cart-btn:hover {
+  background: rgba(212, 168, 67, 0.15);
+  border-color: var(--gold);
+  color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.navbar__cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #D4A843, #B37D28);
+  color: #0E0704;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .navbar__cta {
   white-space: nowrap;
   padding: 12px 24px;
@@ -264,6 +311,15 @@
   .navbar__links,
   .navbar__cta {
     display: none;
+  }
+
+  .navbar__actions {
+    gap: 8px;
+  }
+
+  .navbar__cart-btn {
+    width: 36px;
+    height: 36px;
   }
 
   .navbar__hamburger {

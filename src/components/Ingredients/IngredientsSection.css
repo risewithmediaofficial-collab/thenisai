@@ -85,10 +85,27 @@
   border-color: rgba(212, 168, 67, 0.4);
 }
 
-.ingredient-card__emoji {
-  font-size: 36px;
-  line-height: 1;
-  filter: drop-shadow(0 0 12px rgba(212, 168, 67, 0.3));
+.ingredient-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.12) 0%, rgba(212, 168, 67, 0.03) 100%);
+  border: 1px solid rgba(212, 168, 67, 0.28);
+  color: #E8C470;
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 2px 8px rgba(212, 168, 67, 0.2));
+  margin-bottom: 4px;
+}
+
+.ingredient-card:hover .ingredient-card__icon-wrap {
+  color: #FFF6E8;
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.25) 0%, rgba(212, 168, 67, 0.08) 100%);
+  border-color: rgba(212, 168, 67, 0.65);
+  transform: translateY(-3px) scale(1.05);
+  filter: drop-shadow(0 4px 16px rgba(212, 168, 67, 0.45));
 }
 
 .ingredient-card__name {
@@ -113,7 +130,13 @@
     padding: 24px 20px;
   }
 
-  .ingredient-card__emoji {
-    font-size: 28px;
+  .ingredient-card__icon-wrap {
+    width: 48px;
+    height: 48px;
+  }
+
+  .ingredient-card__icon-wrap svg {
+    width: 32px;
+    height: 32px;
   }
 }

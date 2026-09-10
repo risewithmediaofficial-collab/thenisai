@@ -1,0 +1,111 @@
+.staff-switcher-root {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 9999;
+  font-family: 'Inter', sans-serif;
+}
+
+.staff-switcher__inner {
+  background: rgba(18, 10, 5, 0.95);
+  border: 1px solid rgba(212, 168, 67, 0.35);
+  border-radius: 30px;
+  padding: 6px 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 168, 67, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
+}
+
+.staff-switcher-root.collapsed .staff-switcher__inner {
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.staff-switcher__brand {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 6px;
+}
+
+.staff-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #52C474;
+  box-shadow: 0 0 8px #52C474;
+}
+
+.staff-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #D4A843;
+}
+
+.staff-toggle-btn {
+  background: none;
+  border: none;
+  color: #8C7560;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 2px;
+}
+
+.staff-toggle-btn:hover {
+  color: #FFF;
+}
+
+.staff-switcher__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.staff-link {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid transparent;
+  color: #C8B39B;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.staff-link:hover {
+  background: rgba(212, 168, 67, 0.15);
+  color: #FFF;
+}
+
+.staff-link.active {
+  background: #D4A843;
+  color: #0E0704;
+  border-color: #D4A843;
+}
+
+.staff-badge {
+  background: #E5823B;
+  color: #FFF;
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .staff-switcher-root {
+    bottom: 16px;
+    left: 16px;
+  }
+}

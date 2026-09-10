@@ -33,6 +33,7 @@
   --font-display: 'Playfair Display', serif;
   --font-body: 'Cormorant Garamond', serif;
   --font-ui: 'Inter', sans-serif;
+  --font-num: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Spacing */
   --section-padding: clamp(80px, 12vw, 160px);
@@ -63,7 +64,9 @@ body {
   line-height: 1.6;
 }
 
-/* Lenis smooth scroll */
+/* ============================================================
+   LENIS SMOOTH SCROLLING BASE
+   ============================================================ */
 html.lenis, html.lenis body {
   height: auto;
 }
@@ -80,15 +83,141 @@ html.lenis, html.lenis body {
   overflow: hidden;
 }
 
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+
+/* ============================================================
+   SCREEN SCROLL LOCK WHEN ANY POPUP / MODAL IS ACTIVE
+   Preserves exact section scroll position without jumping to top
+   ============================================================ */
+body.modal-open {
+  touch-action: none !important;
+  overscroll-behavior: contain !important;
+}
+
+/* Modals, drawers, and dialogs remain fully scrollable internally */
+html.modal-open [data-lenis-prevent],
+body.modal-open [data-lenis-prevent],
+.invoice-portal,
+.checkout-portal,
+.admin-modal-portal,
+.cart-drawer__content,
+.printable-invoice-container,
+.restock-modal,
+.scale-modal,
+.mobile-menu {
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Backdrops isolate interaction and reject wheel pass-through */
+.invoice-backdrop,
+.checkout-backdrop,
+.admin-modal-backdrop,
+.cart-drawer__backdrop {
+  touch-action: none !important;
+  overscroll-behavior: contain !important;
+}
+
 /* ============================================================
    TYPOGRAPHY
    ============================================================ */
+
+/* ============================================================
+   GLOBAL NUMERICAL FONT SYSTEM: LINING SANS-SERIF DIGITS
+   Ensures digits 0-9 and currency symbols across all elements,
+   headings, paragraphs, buttons, cards, and tables ALWAYS render
+   in modern, clean sans-serif (Inter) rather than old-style serif numerals.
+   ============================================================ */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: local('Inter'), local('Inter-Regular'), local('Inter Regular'),
+       local('-apple-system'), local('BlinkMacSystemFont'), local('Segoe UI'),
+       local('Roboto'), local('Helvetica Neue'), local('Arial'), local('sans-serif'),
+       url('https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
+  unicode-range: U+0030-0039, U+20B9, U+0024, U+00A2, U+00A3, U+00A5, U+0025, U+002B, U+002D, U+00D7, U+002F, U+002C, U+002E;
+}
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: local('Inter'), local('Inter-Regular'), local('Inter Regular'),
+       local('-apple-system'), local('BlinkMacSystemFont'), local('Segoe UI'),
+       local('Roboto'), local('Helvetica Neue'), local('Arial'), local('sans-serif'),
+       url('https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
+  unicode-range: U+0030-0039, U+20B9, U+0024, U+00A2, U+00A3, U+00A5, U+0025, U+002B, U+002D, U+00D7, U+002F, U+002C, U+002E;
+}
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.02em;
+}
+
+/* Modern, Clean Sans-Serif Numbers for Prices, Calculations, Badges & Totals */
+.grand-total-highlight,
+.total-value,
+.cart-total__val,
+.cart-item__price,
+.cart-item__unit-price,
+.cart-summary__val,
+.sweet-card__price-tag,
+.computed-cost,
+.kpi-value,
+.stock-number,
+.total-amount-highlight,
+.order-invoice-no,
+.order-price,
+.order-time-stamp,
+.showcase__price,
+.pos-line-price,
+.pack-price,
+.grand-amount,
+.scale-computed-cost,
+.scale-live-display,
+.stock-preview-val,
+.calc-item,
+.calc-item span,
+.calc-item.total,
+.calc-item.total span,
+.calc-val-bold,
+.calc-row,
+.calc-row span,
+.calc-row.total,
+.calc-row.total span,
+.pos-bill-calc,
+.pos-bill-calc span,
+.pos-bill-line span,
+.inv-table td,
+.inv-totals span,
+.total-row span,
+.meta-val,
+.stepper-value,
+.weight-pill,
+.pack-label,
+.pos-stock-tag,
+.stock-unit,
+.batch-meta span,
+[class*="price"],
+[class*="total-val"],
+[class*="grand-total"],
+[class*="total-amount"],
+[class*="calc-val"],
+[class*="stock-number"],
+[class*="kpi-value"],
+[class*="invoice-no"] {
+  font-family: var(--font-num) !important;
+  font-variant-numeric: tabular-nums lining-nums !important;
+  font-feature-settings: "tnum" 1, "lnum" 1 !important;
 }
 
 .display-xl {

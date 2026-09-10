@@ -206,10 +206,6 @@ export default function SignaturePalkova() {
                 </Canvas>
               </Suspense>
             </div>
-            <div className="signature__hint">
-              <span className="signature__hint-icon">✦</span>
-              <span>Drag to rotate 360° · Real-time brass & khoa reflections</span>
-            </div>
           </div>
 
           {/* Right Feature Column */}

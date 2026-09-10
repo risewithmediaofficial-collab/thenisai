@@ -2,11 +2,14 @@ import { useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
+import { useCart } from '../../context/CartContext';
+import { SPECIAL_BOX } from '../../data/sweetsData';
 import './ProductShowcase.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ProductShowcase() {
+  const { addToCart, setIsCartOpen } = useCart();
   const sectionRef = useRef();
   const imgRef = useRef();
   const particlesRef = useRef();
@@ -97,20 +100,29 @@ export default function ProductShowcase() {
             <h2 className="display-lg showcase__title">
               A Box Full of Happiness.
             </h2>
-            <div className="gold-line gold-line-left" style={{ margin: '24px 0' }} />
-            <a
-              href="#contact"
+            <p className="showcase__subtitle" style={{ color: 'rgba(255, 248, 238, 0.8)', fontSize: '15px', marginTop: '12px', lineHeight: '1.6' }}>
+              Handpicked assortments of Palkova, Royal Mysore Pak, Kaju Katli, and Badam Halwa.
+            </p>
+            <div className="showcase__price-row" style={{ display: 'flex', alignItems: 'center', gap: '14px', margin: '20px 0 24px' }}>
+              <span className="showcase__price" style={{ fontFamily: 'Inter, sans-serif', fontSize: '24px', color: '#D4A843', fontWeight: '700', fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                ₹{SPECIAL_BOX.price}
+              </span>
+              <span className="label" style={{ background: 'rgba(212, 168, 67, 0.15)', color: '#D4A843', padding: '4px 10px', borderRadius: '4px' }}>
+                1 kg Premium Gift Box
+              </span>
+            </div>
+            <button
               className="btn btn-primary"
-              onClick={(e) => {
-                e.preventDefault();
-                document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' });
+              onClick={() => {
+                addToCart(SPECIAL_BOX, SPECIAL_BOX.weight, SPECIAL_BOX.price, 1);
+                setIsCartOpen(true);
               }}
             >
-              <span>Shop Sweets</span>
+              <span>Order Special Box</span>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
               </svg>
-            </a>
+            </button>
           </motion.div>
         </div>
       </div>

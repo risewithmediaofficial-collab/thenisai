@@ -1,11 +1,13 @@
 .collection {
   background: var(--ivory);
-  padding-bottom: calc(var(--section-padding) * 1.5);
+  padding-top: 24px !important;
+  padding-bottom: clamp(40px, 5vw, 70px) !important;
+  scroll-margin-top: 70px;
 }
 
 .collection__header {
   text-align: center;
-  margin-bottom: 72px;
+  margin-bottom: 24px;
 }
 
 .collection__eyebrow {
@@ -92,9 +94,27 @@
   font-weight: 600;
 }
 
+/* Price tag badge */
+.sweet-card__price-tag {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  background: rgba(14, 7, 4, 0.88);
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  font-family: var(--font-num, 'Inter', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
 /* Body */
 .sweet-card__body {
-  padding: 20px 20px 24px;
+  padding: 18px 20px 22px;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -109,30 +129,126 @@
 
 .sweet-card__name {
   font-family: var(--font-display);
-  font-size: clamp(18px, 2vw, 26px);
-  font-weight: 400;
+  font-size: clamp(18px, 1.8vw, 24px);
+  font-weight: 500;
   color: var(--deep-brown);
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
-/* Discover link */
-.sweet-card__discover {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.sweet-card__desc {
+  font-size: 12px;
+  color: #6E5848;
+  line-height: 1.5;
+  margin: 4px 0 6px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Weight Selector */
+.sweet-card__weights {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0 12px 0;
+}
+
+.weight-pill {
+  background: rgba(42, 24, 16, 0.05);
+  border: 1px solid rgba(140, 106, 46, 0.25);
+  color: var(--deep-brown);
   font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--caramel);
-  text-decoration: none;
-  margin-top: 4px;
-  transition: gap 0.3s ease, color 0.3s ease;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.sweet-card__discover:hover {
-  gap: 14px;
-  color: var(--gold-dark);
+.weight-pill:hover {
+  background: rgba(212, 168, 67, 0.15);
+  border-color: var(--gold);
+}
+
+.weight-pill.active {
+  background: var(--deep-brown);
+  color: var(--gold-light);
+  border-color: var(--deep-brown);
+}
+
+/* Card Actions */
+.sweet-card__actions {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-add-cart {
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  color: var(--deep-brown);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-add-cart:hover {
+  background: var(--gold-light);
+  transform: translateY(-1px);
+}
+
+.btn-add-cart.added {
+  background: #2E5C3B;
+  border-color: #2E5C3B;
+  color: #72D888;
+}
+
+.added-check {
+  font-weight: bold;
+}
+
+.btn-quick-buy {
+  background: transparent;
+  border: 1px solid rgba(42, 24, 16, 0.2);
+  color: var(--deep-brown);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 8px 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-quick-buy:hover {
+  background: var(--deep-brown);
+  color: var(--cream);
+  border-color: var(--deep-brown);
+}
+
+.collection__subtitle {
+  max-width: 580px;
+  margin: 12px auto 0;
+  font-size: 14px;
+  color: #735C4A;
+  line-height: 1.6;
 }
 
 /* Responsive */

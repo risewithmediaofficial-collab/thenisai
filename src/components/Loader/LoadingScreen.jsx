@@ -26,7 +26,7 @@ export default function LoadingScreen({ onComplete }) {
     return () => clearInterval(intervalRef.current);
   }, [onComplete]);
 
-  const letters = 'THENISAI'.split('');
+  const letters = 'THENISAI SWEETS'.split('');
 
   return (
     <AnimatePresence>
@@ -72,7 +72,7 @@ export default function LoadingScreen({ onComplete }) {
                     ease: [0.22, 1, 0.36, 1]
                   }}
                 >
-                  {letter}
+                  {letter === ' ' ? '\u00A0' : letter}
                 </motion.span>
               ))}
             </div>

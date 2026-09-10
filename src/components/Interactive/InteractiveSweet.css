@@ -2,7 +2,8 @@
   position: relative;
   background: var(--warm-dark);
   overflow: hidden;
-  padding-bottom: 0;
+  padding-top: clamp(32px, 4vw, 54px) !important;
+  padding-bottom: 0 !important;
 }
 
 .interactive-sweet__bg {
@@ -19,7 +20,7 @@
   width: 60vw;
   height: 60vw;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(212, 168, 67, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(212, 168, 67, 0.1) 0%, transparent 70%);
   animation: glowPulse 4s ease-in-out infinite;
 }
 
@@ -32,7 +33,7 @@
   text-align: center;
   position: relative;
   z-index: 2;
-  padding-top: var(--section-padding);
+  padding-top: 0;
 }
 
 .interactive-sweet__eyebrow {

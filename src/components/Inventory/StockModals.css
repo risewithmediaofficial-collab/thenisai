@@ -1,0 +1,396 @@
+/* =========================================================
+   STOCK MODALS: ADD STOCK & REFILL STOCK
+   Universal styles for Admin and Billing Counter
+   ========================================================= */
+
+.stock-modal-portal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.stock-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  touch-action: none !important;
+}
+
+.stock-modal {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  max-height: min(90vh, 650px);
+  z-index: 2;
+  overflow: hidden;
+  margin: auto;
+}
+
+.stock-modal form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.stock-modal__header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #E2E8F0;
+  background: #F8FAFC;
+}
+
+.stock-modal__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #B45309;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stock-modal__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 4px 0 0 0;
+}
+
+.stock-modal__sub {
+  font-size: 0.8rem;
+  color: #64748B;
+  margin: 2px 0 0 0;
+}
+
+.stock-modal__close {
+  background: none;
+  border: none;
+  color: #94A3B8;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.stock-modal__close:hover {
+  background: #E2E8F0;
+  color: #0F172A;
+}
+
+.stock-modal__tabs {
+  display: flex;
+  padding: 8px 24px 0;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  gap: 8px;
+}
+
+.stock-tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.stock-tab-btn:hover {
+  color: #0F172A;
+}
+
+.stock-tab-btn.active {
+  color: #B45309;
+  border-bottom-color: #B45309;
+  font-weight: 700;
+}
+
+.stock-modal__body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+.stock-modal__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stock-modal__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stock-modal__body::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 6px;
+}
+
+.stock-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stock-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  display: flex;
+  justify-content: space-between;
+}
+
+.stock-field .stock-hint {
+  font-size: 0.74rem;
+  color: #64748B;
+  font-weight: 400;
+}
+
+.stock-input,
+.stock-select {
+  padding: 10px 14px;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #0F172A;
+  background: #FFFFFF;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Hide native number input spin buttons to avoid accidental value shifts on scroll */
+.stock-input[type='number']::-webkit-inner-spin-button,
+.stock-input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stock-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.stock-input:focus,
+.stock-select:focus {
+  outline: none;
+  border-color: #B45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.12);
+}
+
+.stock-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.stock-chip-btn {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-num, 'Inter', sans-serif);
+}
+
+.stock-chip-btn:hover {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+  color: #92400E;
+}
+
+.stock-chip-btn.active {
+  background: #B45309;
+  border-color: #B45309;
+  color: #FFFFFF;
+}
+
+.stock-preview-box {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #92400E;
+}
+
+.stock-preview-val {
+  font-family: var(--font-num, 'Inter', sans-serif);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #B45309;
+}
+
+.stock-modal__footer {
+  flex-shrink: 0;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-stock-submit {
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  color: #FFFFFF;
+  border: 1px solid #B45309;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.btn-stock-submit:hover {
+  background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+  transform: translateY(-1px);
+}
+
+.btn-stock-cancel {
+  padding: 11px 18px;
+  background: #FFFFFF;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-stock-cancel:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+/* Header Action Buttons for Admin and Billing */
+.stock-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-stock-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-stock-action.add {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+}
+
+.btn-stock-action.add:hover {
+  background: #FDE68A;
+  color: #78350F;
+  transform: translateY(-1px);
+}
+
+.btn-stock-action.refill {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}
+
+.btn-stock-action.refill:hover {
+  background: #D1FAE5;
+  color: #047857;
+  transform: translateY(-1px);
+}
+
+/* Staff Identity Badge */
+.staff-logged-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.staff-logged-badge.admin {
+  background: #FEF3C7;
+  color: #92400E;
+  border-color: #FDE68A;
+}
+
+.staff-logged-badge.cashier {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border-color: #BFDBFE;
+}
+
+/* Staff Logout Button */
+.btn-staff-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  transition: all 0.2s ease;
+}
+
+.btn-staff-logout:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #B91C1C;
+  transform: translateY(-1px);
+}
+

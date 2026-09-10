@@ -3,20 +3,45 @@ import './ContactSection.css';
 
 const contactInfo = [
   {
-    icon: '📍',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+        <circle cx="12" cy="10" r="3" />
+      </svg>
+    ),
     label: 'Location',
     value: '123 Sweet Street, Madurai, Tamil Nadu',
     link: null,
   },
   {
-    icon: '📞',
-    label: 'Phone',
-    value: '+91 98765 43210',
-    link: 'tel:+919876543210',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+      </svg>
+    ),
+    label: 'Primary Phone & Orders',
+    value: '+91 93448 93547',
+    link: 'tel:+919344893547',
   },
   {
-    icon: '🕐',
-    label: 'Hours',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+        <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
+      </svg>
+    ),
+    label: 'Secondary Contact',
+    value: '+91 86818 58723',
+    link: 'tel:+918681858723',
+  },
+  {
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+    label: 'Kitchen Hours',
     value: 'Mon–Sat: 9AM – 9PM\nSun: 10AM – 8PM',
     link: null,
   },
@@ -39,7 +64,7 @@ const socialLinks = [
       </svg>
     ),
     label: 'WhatsApp',
-    href: 'https://wa.me/919876543210',
+    href: 'https://wa.me/919344893547',
   },
 ];
 
@@ -62,7 +87,7 @@ export default function ContactSection() {
             transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
             viewport={{ once: true }}
           >
-            <span className="label contact__eyebrow">Visit Us</span>
+            <span className="label contact__eyebrow">Since 2006 · Visit Us</span>
             <h2 className="display-md contact__title">Taste Thenisai</h2>
             <div className="gold-line" style={{ marginTop: 20 }} />
           </motion.div>

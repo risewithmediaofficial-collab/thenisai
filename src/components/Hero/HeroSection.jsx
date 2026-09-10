@@ -62,7 +62,7 @@ export default function HeroSection() {
               variants={textVariants}
             >
               <span className="hero__eyebrow-line" />
-              <span>Signature Palkova</span>
+              <span>Est. 2006 · Signature Palkova</span>
               <span className="hero__eyebrow-line" />
             </motion.div>
 
@@ -74,7 +74,7 @@ export default function HeroSection() {
               animate="visible"
               variants={textVariants}
             >
-              THENISAI
+              THENISAI <span className="hero__title-accent">SWEETS</span>
             </motion.h1>
 
             {/* Subtitle */}

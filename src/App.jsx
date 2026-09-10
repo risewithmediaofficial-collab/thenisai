@@ -5,6 +5,12 @@ import './App.css';
 import LoadingScreen from './components/Loader/LoadingScreen';
 import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
+import CartDrawer from './components/Cart/CartDrawer';
+import CheckoutModal from './components/Billing/CheckoutModal';
+import InvoiceModal from './components/Billing/InvoiceModal';
+import AdminDashboard from './components/Admin/AdminDashboard';
+import BillingCounter from './components/Billing/BillingCounter';
+import { CartProvider, useCart } from './context/CartContext';
 import { useLenis } from './hooks/useLenis';
 import { useScrollReveal } from './hooks/useAnimations';
 
@@ -20,28 +26,40 @@ const CustomerReviews = lazy(() => import('./components/Reviews/CustomerReviews'
 const ContactSection = lazy(() => import('./components/Contact/ContactSection'));
 const Footer = lazy(() => import('./components/Footer/Footer'));
 
-function App() {
-  const [isLoaded, setIsLoaded] = useState(false);
+import { AuthProvider, useAuth } from './context/AuthContext';
+import StaffLoginModal from './components/Auth/StaffLoginModal';
 
-  // Initialize smooth scroll
-  useLenis();
+function AppContent({ isLoaded, handleLoadComplete }) {
+  const { currentView } = useCart();
+  const { isAdmin, isCashier } = useAuth();
 
-  // Initialize scroll reveal animations
-  useScrollReveal();
-
-  const handleLoadComplete = () => {
-    setIsLoaded(true);
-    // Allow body scroll after loading
-    document.body.style.overflow = '';
-  };
-
-  useEffect(() => {
-    // Prevent scroll during loading
-    if (!isLoaded) {
-      document.body.style.overflow = 'hidden';
+  // Route to Admin Dashboard UI (Protected)
+  if (currentView === 'admin') {
+    if (!isAdmin) {
+      return <StaffLoginModal initialRole="admin" onCancel={() => { window.location.hash = ''; }} />;
     }
-  }, [isLoaded]);
+    return (
+      <>
+        <AdminDashboard />
+        <InvoiceModal />
+      </>
+    );
+  }
 
+  // Route to In-Store Billing POS Counter UI (Protected)
+  if (currentView === 'billing') {
+    if (!isCashier) {
+      return <StaffLoginModal initialRole="cashier" onCancel={() => { window.location.hash = ''; }} />;
+    }
+    return (
+      <>
+        <BillingCounter />
+        <InvoiceModal />
+      </>
+    );
+  }
+
+  // Default Customer Storefront UI
   return (
     <>
       {/* Loading screen */}
@@ -97,7 +115,43 @@ function App() {
           </Suspense>
         </div>
       )}
+
+      {/* Cart Drawer, Checkout, & Tax Invoice Portals */}
+      <CartDrawer />
+      <CheckoutModal />
+      <InvoiceModal />
     </>
+  );
+}
+
+function App() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Initialize smooth scroll
+  useLenis();
+
+  // Initialize scroll reveal animations
+  useScrollReveal();
+
+  const handleLoadComplete = () => {
+    setIsLoaded(true);
+    // Allow body scroll after loading
+    document.body.style.overflow = '';
+  };
+
+  useEffect(() => {
+    // Prevent scroll during loading
+    if (!isLoaded) {
+      document.body.style.overflow = 'hidden';
+    }
+  }, [isLoaded]);
+
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <AppContent isLoaded={isLoaded} handleLoadComplete={handleLoadComplete} />
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
