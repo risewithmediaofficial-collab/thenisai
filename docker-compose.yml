@@ -1,11 +1,61 @@
 version: '3.8'
 
 services:
+  # ─────────────────────────────────────────
+  # Frontend — React SPA served via Nginx
+  # Accessible at http://localhost:92
+  # ─────────────────────────────────────────
   thenisai:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: thenisai
+    container_name: thenisai-frontend
     ports:
       - "92:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: always
+    networks:
+      - thenisai-net
+
+  # ─────────────────────────────────────────
+  # Backend — Node.js Express API
+  # Accessible at http://localhost:5003
+  # Data persisted via named Docker volume
+  # ─────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: thenisai-backend
+    ports:
+      - "5003:5003"
+    environment:
+      - PORT=5003
+      - NODE_ENV=production
+    volumes:
+      # Persist db.json across container restarts
+      - thenisai-db:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:5003/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: always
+    networks:
+      - thenisai-net
+
+# ─────────────────────────────────────────
+# Named volume — keeps db.json data safe
+# even when containers are removed
+# ─────────────────────────────────────────
+volumes:
+  thenisai-db:
+    driver: local
+
+# Internal bridge network
+networks:
+  thenisai-net:
+    driver: bridge

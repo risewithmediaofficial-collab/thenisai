@@ -165,10 +165,6 @@ export default function HeroSection() {
                 <PalkovaScene mousePos={mousePos} />
               </Suspense>
             </div>
-            <div className="hero__visual-hint">
-              <span className="hero__visual-hint-dot" />
-              <span>Interactive 3D · Move cursor to tilt &amp; illuminate</span>
-            </div>
           </div>
         </div>
       </div>
