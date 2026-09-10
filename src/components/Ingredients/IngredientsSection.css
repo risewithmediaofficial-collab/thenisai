@@ -140,3 +140,26 @@
     height: 32px;
   }
 }
+
+@media (max-width: 480px) {
+  .ingredients__inner {
+    gap: 36px;
+  }
+
+  .ingredients__grid {
+    gap: 12px;
+  }
+
+  .ingredient-card {
+    min-width: 90px;
+    padding: 16px 10px;
+  }
+
+  .ingredient-card__name {
+    font-size: 15px;
+  }
+
+  .ingredient-card__desc {
+    font-size: 8.5px;
+  }
+}

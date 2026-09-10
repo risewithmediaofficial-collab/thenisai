@@ -54,6 +54,9 @@ html {
   scroll-behavior: auto; /* Lenis handles smooth scroll */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
 }
 
 body {
@@ -61,7 +64,16 @@ body {
   background-color: var(--cream);
   color: var(--text-dark);
   overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
   line-height: 1.6;
+}
+
+#root,
+.site {
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
 }
 
 /* ============================================================
