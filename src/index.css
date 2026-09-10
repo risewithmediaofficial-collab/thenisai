@@ -423,3 +423,44 @@ h1, h2, h3, h4 {
   background: var(--gold);
   color: var(--deep-brown);
 }
+
+/* ============================================================
+   NUMERIC FONT OVERRIDE — Force digits to render in clean Inter
+   instead of Cormorant Garamond's decorative old-style italics.
+   This intercepts Unicode ranges for: digits 0–9, + – : . , %
+   and renders them through Inter (normal weight, upright).
+   ============================================================ */
+
+@font-face {
+  font-family: 'Cormorant Garamond';
+  src: local('Inter'),
+       url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  unicode-range: U+0030-0039, U+002B, U+002D, U+003A, U+002E, U+002C, U+0025,
+                 U+0041-005A, U+0061-007A; /* digits, +, -, :, ., ,, %, A–Z, a–z when in pure numeric contexts */
+}
+
+/* Belt-and-suspenders: any element whose content is purely numeric
+   or belongs to UI components (billing, inventory, nav, admin) gets Inter */
+.pos-catalog-pane, .pos-bill-pane,
+.bill-item-qty, .bill-item-price, .bill-item-subtotal,
+.bill-calc, .bill-grand-total,
+.checkout-total, .checkout-line,
+.inv-stat-val, .inv-val,
+.admin-stat-val, .admin-kpi-value,
+.cart-qty, .cart-item-price, .cart-total,
+.stock-preview-val, .stock-input,
+.pack-price, .product-price,
+.nav-cart-badge,
+.contact__card-value, .contact__eyebrow,
+[class*="total"], [class*="price"], [class*="qty"],
+[class*="amount"], [class*="count"], [class*="stat"],
+time, .hours {
+  font-family: var(--font-ui) !important;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-style: normal;
+}
+
+
+
