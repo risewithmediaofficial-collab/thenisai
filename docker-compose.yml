@@ -3,7 +3,8 @@ version: '3.8'
 services:
   # ─────────────────────────────────────────
   # Frontend — React SPA served via Nginx
-  # Accessible at http://localhost:92
+  # Nginx proxies /api/* → backend:5003
+  # Accessible at http://YOUR_VPS_IP:92
   # ─────────────────────────────────────────
   thenisai:
     build:
@@ -21,8 +22,8 @@ services:
 
   # ─────────────────────────────────────────
   # Backend — Node.js Express API
-  # Accessible at http://localhost:5003
-  # Data persisted via named Docker volume
+  # Connects to MongoDB container
+  # Accessible internally at backend:5003
   # ─────────────────────────────────────────
   backend:
     build:
@@ -34,28 +35,50 @@ services:
     environment:
       - PORT=5003
       - NODE_ENV=production
-    volumes:
-      # Persist db.json across container restarts
-      - thenisai-db:/app/data
+      - MONGODB_URI=mongodb://mongodb:27017/thenisai
+    depends_on:
+      mongodb:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:5003/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 15s
+      start_period: 20s
+    restart: always
+    networks:
+      - thenisai-net
+
+  # ─────────────────────────────────────────
+  # MongoDB — Persistent database
+  # Data stored in named Docker volume
+  # Connection: mongodb://mongodb:27017/thenisai
+  # ─────────────────────────────────────────
+  mongodb:
+    image: mongo:7-jammy
+    container_name: thenisai-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - thenisai-mongodb:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     restart: always
     networks:
       - thenisai-net
 
 # ─────────────────────────────────────────
-# Named volume — keeps db.json data safe
-# even when containers are removed
+# Named volumes — data survives container restarts
 # ─────────────────────────────────────────
 volumes:
-  thenisai-db:
+  thenisai-mongodb:
     driver: local
 
-# Internal bridge network
+# Internal bridge network — containers communicate by service name
 networks:
   thenisai-net:
     driver: bridge
