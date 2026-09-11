@@ -55,8 +55,6 @@ services:
   mongodb:
     image: mongo:7-jammy
     container_name: thenisai-mongodb
-    ports:
-      - "27017:27017"
     volumes:
       - thenisai-mongodb:/data/db
     healthcheck:
