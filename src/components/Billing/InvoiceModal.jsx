@@ -11,13 +11,9 @@ export default function InvoiceModal() {
   // Default format: 'thermal' (80mm POS slip) for counter POS, 'a4' for online deliveries
   const [billFormat, setBillFormat] = useState('thermal');
 
-  // Copies mode: 'both' (2 bills: Customer + Shop), 'customer' (1 bill), 'shop' (1 bill)
-  const [copiesMode, setCopiesMode] = useState('both');
-
   useEffect(() => {
     if (activeInvoice) {
       setBillFormat(activeInvoice.source === 'online' ? 'a4' : 'thermal');
-      setCopiesMode('both'); // Default to 2 copies for every bill
     }
   }, [activeInvoice]);
 
@@ -44,16 +40,18 @@ export default function InvoiceModal() {
     window.print();
   };
 
-  const copiesToRender = copiesMode === 'both' ? ['customer', 'shop'] : [copiesMode];
+  const copiesToRender = ['customer'];
 
   // Pre-filled WhatsApp message
   const itemsText = items
     .map((item) => `• ${item.name} (${item.weight}) × ${item.quantity} = ₹${item.price * item.quantity}`)
     .join('\n');
 
-  const fullAddress = `${shippingAddress.doorNo}, ${shippingAddress.street}${
-    shippingAddress.landmark ? `, Near ${shippingAddress.landmark}` : ''
-  }, ${shippingAddress.city}, ${shippingAddress.state} - ${shippingAddress.pincode}`;
+  const fullAddress = shippingAddress?.doorNo
+    ? `${shippingAddress.doorNo}, ${shippingAddress.street || ''}${
+        shippingAddress.landmark ? `, Near ${shippingAddress.landmark}` : ''
+      }, ${shippingAddress.city || ''}, ${shippingAddress.state || ''} - ${shippingAddress.pincode || ''}`
+    : 'In-Store Counter Walk-in';
 
   const whatsappMessage = encodeURIComponent(
     `🙏 *Namaste Thenisai Sweets!* \nI just placed an order on your website.\n\n` +
@@ -324,7 +322,7 @@ export default function InvoiceModal() {
               </div>
               <div>
                 <span className="meta-label">State of Supply:</span>
-                <span className="meta-val">{shippingAddress.state}</span>
+                <span className="meta-val">{shippingAddress?.state || 'Tamil Nadu (33)'}</span>
               </div>
               <div>
                 <span className="meta-label">Status:</span>
@@ -347,17 +345,22 @@ export default function InvoiceModal() {
         {/* Billed To / Shipped To */}
         <div className="inv-parties">
           <div className="inv-party-card">
-            <h4 className="party-title">Billed & Shipped To:</h4>
-            <p className="party-name">{customer.fullName}</p>
-            <p className="party-line">{shippingAddress.doorNo}, {shippingAddress.street}</p>
-            {shippingAddress.landmark && (
+            <h4 className="party-title">{shippingAddress?.doorNo ? 'Billed & Shipped To:' : 'Billed To (Counter):'}</h4>
+            <p className="party-name">{customer?.fullName || 'Walk-in Guest'}</p>
+            {shippingAddress?.doorNo && (
+              <p className="party-line">{shippingAddress.doorNo}, {shippingAddress.street}</p>
+            )}
+            {shippingAddress?.landmark && (
               <p className="party-line">Landmark: {shippingAddress.landmark}</p>
             )}
-            <p className="party-line">
-              {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
-            </p>
+            {shippingAddress?.city && (
+              <p className="party-line">
+                {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
+              </p>
+            )}
             <p className="party-contact">
-              Mobile: <strong>+91 {customer.phone}</strong> | Email: {customer.email}
+              Mobile: <strong>{customer?.phone ? `+91 ${customer.phone}` : 'Walk-in Counter'}</strong>
+              {customer?.email ? ` | Email: ${customer.email}` : ''}
             </p>
           </div>
 
@@ -504,22 +507,28 @@ export default function InvoiceModal() {
         >
           {/* Top Celebration Bar */}
           <div className="invoice-success-banner">
-            <div className="success-icon-wrap">✓</div>
+            <div className="success-icon-wrap">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
             <div>
               <h3 className="success-banner-title">
                 {billFormat === 'thermal' ? '80mm POS Thermal Receipt' : 'Official GST Tax Invoice'}
               </h3>
               <p className="success-banner-sub">
                 Bill No: <strong>{invoiceNumber}</strong> · Billed to <strong>{customer.fullName}</strong>
-                {' '}· <span className="copies-status-tag">{copiesMode === 'both' ? '2 Bills (Customer & Shop Copy)' : copiesMode === 'customer' ? 'Customer Copy Only' : 'Shop Copy Only'}</span>
               </p>
             </div>
             <button className="invoice-close-icon" onClick={closeInvoice} aria-label="Close">
-              ✕
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
 
-          {/* Action Toolbar with Format Switcher & Copies Switcher */}
+          {/* Action Toolbar with Format Switcher */}
           <div className="invoice-toolbar">
             <div className="invoice-toolbar-left">
               {/* Format Switcher Pills */}
@@ -530,7 +539,12 @@ export default function InvoiceModal() {
                   onClick={() => setBillFormat('thermal')}
                   title="Switch to 80mm / 58mm POS thermal receipt printer layout"
                 >
-                  <span className="format-icon">🧾</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
+                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                    <path d="M8 7h8" />
+                    <path d="M8 11h8" />
+                    <path d="M8 15h5" />
+                  </svg>
                   <span>Thermal (80mm)</span>
                 </button>
                 <button
@@ -539,54 +553,26 @@ export default function InvoiceModal() {
                   onClick={() => setBillFormat('a4')}
                   title="Switch to standard A4/A5 formal tax invoice layout"
                 >
-                  <span className="format-icon">📄</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                  </svg>
                   <span>A4 Invoice</span>
-                </button>
-              </div>
-
-              {/* Copies Switcher Pills */}
-              <div className="invoice-copies-switcher">
-                <button
-                  type="button"
-                  className={`copies-btn ${copiesMode === 'both' ? 'active' : ''}`}
-                  onClick={() => setCopiesMode('both')}
-                  title="Print 2 bills: Customer Copy + Shop Copy"
-                >
-                  <span className="copies-icon">👥</span>
-                  <span>2 Bills (Cust + Shop)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`copies-btn ${copiesMode === 'customer' ? 'active' : ''}`}
-                  onClick={() => setCopiesMode('customer')}
-                  title="Print Customer Copy only"
-                >
-                  <span className="copies-icon">👤</span>
-                  <span>Customer Only</span>
-                </button>
-                <button
-                  type="button"
-                  className={`copies-btn ${copiesMode === 'shop' ? 'active' : ''}`}
-                  onClick={() => setCopiesMode('shop')}
-                  title="Print Shop Copy only"
-                >
-                  <span className="copies-icon">🏪</span>
-                  <span>Shop Only</span>
                 </button>
               </div>
             </div>
 
             <div className="invoice-toolbar-actions">
               <button className="toolbar-btn print-btn" onClick={handlePrint}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M6 14h12v8H6z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>
-                  {copiesMode === 'both'
-                    ? `Print 2 Bills (${billFormat === 'thermal' ? 'Thermal' : 'A4'})`
-                    : `Print ${copiesMode === 'customer' ? 'Customer' : 'Shop'} Bill`}
-                </span>
+                <span>Print {billFormat === 'thermal' ? 'Receipt' : 'Invoice'}</span>
               </button>
 
               <a
