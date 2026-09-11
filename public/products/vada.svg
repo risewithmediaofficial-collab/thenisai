@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="vadaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="vadaCrust" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="30%" stop-color="#D97706"/>
+      <stop offset="70%" stop-color="#B45309"/>
+      <stop offset="100%" stop-color="#92400E"/>
+    </linearGradient>
+    <radialGradient id="vadaHighlight" cx="45%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#FDE68A"/>
+      <stop offset="50%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </radialGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#vadaBg)"/>
+  
+  <!-- Steam from hot crispy vada -->
+  <path d="M48 18 Q44 10 48 4" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M60 14 Q64 6 60 2" stroke="#B45309" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M72 18 Q68 10 72 4" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+  <!-- Banana Leaf Plate Fragment -->
+  <path d="M18 84 Q60 102 102 84 Q60 66 18 84 Z" fill="#15803D" opacity="0.85"/>
+  <path d="M22 84 L98 84" stroke="#166534" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Medu Vada Shadow -->
+  <ellipse cx="60" cy="62" rx="34" ry="24" fill="#78350F" opacity="0.3"/>
+
+  <!-- Golden Brown Medu Vada Body -->
+  <ellipse cx="60" cy="56" rx="32" ry="26" fill="url(#vadaHighlight)" stroke="#78350F" stroke-width="2"/>
+
+  <!-- Center Hole of Medu Vada -->
+  <ellipse cx="60" cy="56" rx="10" ry="8" fill="#78350F" stroke="#92400E" stroke-width="1.5"/>
+  <ellipse cx="60" cy="58" rx="8" ry="6" fill="#15803D" opacity="0.8"/>
+
+  <!-- Crispy texture & seasoning specks: curry leaf flecks & peppercorns -->
+  <ellipse cx="44" cy="48" rx="2.5" ry="1.5" fill="#15803D"/>
+  <ellipse cx="76" cy="58" rx="2" ry="1.2" fill="#15803D"/>
+  <ellipse cx="50" cy="68" rx="2.2" ry="1.4" fill="#15803D"/>
+  <circle cx="70" cy="46" r="1.8" fill="#1C1917"/>
+  <circle cx="48" cy="58" r="1.6" fill="#1C1917"/>
+  <circle cx="66" cy="68" r="1.5" fill="#1C1917"/>
+  
+  <!-- Crispy ridges -->
+  <path d="M36 54 Q40 50 44 56" stroke="#92400E" stroke-width="1.5" fill="none"/>
+  <path d="M74 52 Q78 56 82 50" stroke="#92400E" stroke-width="1.5" fill="none"/>
+
+  <!-- Badge Label -->
+  <rect x="30" y="99" width="60" height="15" rx="7.5" fill="#B45309"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">வடை · VADA</text>
+</svg>

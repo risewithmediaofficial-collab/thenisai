@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { SWEETS_CATALOG, SPECIAL_BOX, GST_RATE } from '../../data/sweetsData';
+import { SWEETS_CATALOG, SPECIAL_BOX, BEVERAGES_AND_SNACKS, ALL_BILLING_ITEMS, GST_RATE } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import './BillingCounter.css';
 
 // Predefined categories for fast POS filtering
 const CATEGORIES = [
-  { id: 'all', label: 'All Sweets' },
+  { id: 'all', label: 'All Items' },
+  { id: 'beverages', label: '☕ Hot Beverages' },
+  { id: 'snacks', label: '🥟 Snacks & Vada' },
   { id: 'palkova', label: 'Palkova & Khoa' },
   { id: 'ghee', label: 'Desi Ghee Delicacies' },
   { id: 'dryfruit', label: 'Dry Fruit Specials' },
@@ -156,14 +158,14 @@ export default function BillingCounter() {
   const billGrandTotal = Math.round(billSubtotal + billGst);
 
   // Add standard pack to bill
-  const handleAddSweetToBill = (sweet, weight = '500g') => {
+  const handleAddSweetToBill = (sweet, weight = '500g', addQty = 1) => {
     const price = sweet.prices ? sweet.prices[weight] : sweet.price;
 
     setBillItems((prev) => {
       const idx = prev.findIndex((i) => i.id === sweet.id && i.weight === weight);
       if (idx > -1) {
         const updated = [...prev];
-        updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };
+        updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + addQty };
         return updated;
       } else {
         return [
@@ -173,7 +175,7 @@ export default function BillingCounter() {
             name: sweet.name,
             weight,
             price,
-            quantity: 1,
+            quantity: addQty,
             hsn: sweet.hsn || '2106',
             image: sweet.image,
           },
@@ -322,17 +324,22 @@ export default function BillingCounter() {
 
 
 
-  // Filtered sweets based on category and search query
-  const allSweetsWithBox = [SPECIAL_BOX, ...SWEETS_CATALOG];
+  // Filtered sweets and beverages based on category and search query
+  const allSweetsWithBox = ALL_BILLING_ITEMS || [SPECIAL_BOX, ...SWEETS_CATALOG, ...BEVERAGES_AND_SNACKS];
   const filteredSweets = allSweetsWithBox.filter((sw) => {
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      searchQuery.trim() === '' ||
-      sw.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sw.tagline.toLowerCase().includes(searchQuery.toLowerCase());
+      q === '' ||
+      sw.name.toLowerCase().includes(q) ||
+      (sw.tamilName && sw.tamilName.includes(searchQuery.trim())) ||
+      (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
+      (sw.tagline && sw.tagline.toLowerCase().includes(q));
 
     if (!matchesSearch) return false;
 
     if (selectedCategory === 'all') return true;
+    if (selectedCategory === 'beverages') return sw.category === 'beverages';
+    if (selectedCategory === 'snacks') return sw.category === 'snacks';
     if (selectedCategory === 'palkova') return sw.id.includes('palkova');
     if (selectedCategory === 'ghee') return sw.id.includes('mysore') || sw.id.includes('halwa');
     if (selectedCategory === 'dryfruit') return sw.id.includes('kaju') || sw.id.includes('badam');
@@ -677,10 +684,12 @@ export default function BillingCounter() {
             {/* Sweet Catalog Tiles Grid */}
             <div className="pos-sweets-grid">
               {filteredSweets.map((sweet) => {
+                const isBeverageOrSnack = Boolean(sweet.unit);
+                const unitLabel = sweet.unit ? (sweet.unit.toLowerCase().includes('pc') ? 'pcs' : 'cups') : 'kg';
                 const sweetStock = inventory.find((it) => it.id === sweet.id);
-                const currentStock = sweetStock?.stockKg ?? 20;
+                const currentStock = sweetStock?.stockKg ?? (sweet.price ? 80 : 20);
                 const isOutOfStock = currentStock <= 0.1;
-                const isLow = currentStock <= 8;
+                const isLow = currentStock <= (isBeverageOrSnack ? 15 : 8);
 
                 return (
                   <div
@@ -698,7 +707,7 @@ export default function BillingCounter() {
                         <h4 className="pos-sweet-title">{sweet.name}</h4>
                         <span className="pos-sweet-tagline">{sweet.tagline}</span>
                         <div className={`pos-stock-tag ${isLow ? 'low' : ''}`}>
-                          {isOutOfStock ? '⚠️ Out of Stock' : `Stock: ${currentStock} kg`}
+                          {isOutOfStock ? '⚠️ Out of Stock' : `Stock: ${currentStock} ${unitLabel}`}
                         </div>
                       </div>
                     </div>
@@ -757,7 +766,7 @@ export default function BillingCounter() {
                             <span className="pack-price">Custom</span>
                           </button>
                         </>
-                      ) : (
+                      ) : sweet.id === 'assorted-box' ? (
                         <button
                           type="button"
                           className="pos-pack-btn box-btn highlight"
@@ -767,6 +776,49 @@ export default function BillingCounter() {
                           <span className="pack-label">Royal Gift Box Pack</span>
                           <span className="pack-price">₹{sweet.price}</span>
                         </button>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="pos-pack-btn highlight"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 1)}
+                            title={`Add 1 ${sweet.unit || 'Cup'} to bill`}
+                          >
+                            <span className="pack-label">+1 {sweet.unit ? (sweet.unit.includes('Pc') ? 'Pc' : 'Cup') : 'Qty'}</span>
+                            <span className="pack-price">₹{sweet.price}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="pos-pack-btn"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 2)}
+                            title={`Add 2 ${sweet.unit || 'Cups'} to bill`}
+                          >
+                            <span className="pack-label">+2 Qty</span>
+                            <span className="pack-price">₹{sweet.price * 2}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="pos-pack-btn"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 3)}
+                            title={`Add 3 ${sweet.unit || 'Cups'} to bill`}
+                          >
+                            <span className="pack-label">+3 Qty</span>
+                            <span className="pack-price">₹{sweet.price * 3}</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="pos-pack-btn"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 5)}
+                            title={`Add 5 ${sweet.unit || 'Cups'} to bill`}
+                          >
+                            <span className="pack-label">+5 Qty</span>
+                            <span className="pack-price">₹{sweet.price * 5}</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>

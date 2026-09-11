@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { SWEETS_CATALOG } from '../../data/sweetsData';
+import { SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import './AdminDashboard.css';
@@ -517,7 +517,7 @@ export default function AdminDashboard() {
               {inventory.map((item) => {
                 const isLow = item.stockKg <= item.minThreshold;
                 const isCritical = item.stockKg <= item.minThreshold / 2;
-                const catalogMatch = SWEETS_CATALOG.find((s) => s.id === item.id);
+                const catalogMatch = (ALL_BILLING_ITEMS || SWEETS_CATALOG).find((s) => s.id === item.id);
 
                 return (
                   <div

@@ -19,6 +19,20 @@ const DEFAULT_INVENTORY = [
   { id: 'jangiri', name: 'Jangiri', stockKg: 15.0, minThreshold: 5, batchDate: 'Today 08:00 AM', batchNote: 'Fresh crispy batch' },
   { id: 'gulab-jamun', name: 'Gulab Jamun', stockKg: 25.0, minThreshold: 8, batchDate: 'Today 07:00 AM', batchNote: 'Cardamom syrup batch' },
   { id: 'assorted-box', name: 'Thenisai Royal Assorted Box', stockKg: 20.0, minThreshold: 5, batchDate: 'Today', batchNote: 'Gift boxes packed' },
+  // Counter Beverages & Snacks
+  { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh hot brew counter', unit: 'Cup' },
+  { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh brew counter', unit: 'Cup' },
+  { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', unit: 'Cup' },
+  { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', unit: 'Cup' },
+  { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', unit: 'Cup' },
+  { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', unit: 'Cup' },
+  { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', unit: 'Cup' },
+  { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh traditional ragi brew', unit: 'Cup' },
+  { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh citrus infusion', unit: 'Cup' },
+  { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', unit: 'Cup' },
+  { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', unit: 'Cup' },
+  { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh crushed ginger & lemon', unit: 'Cup' },
+  { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Crispy warm medu vada', unit: 'Pc' },
 ];
 
 const INITIAL_ORDERS = [
@@ -67,6 +81,7 @@ const INITIAL_ORDERS = [
 function getWeightInKg(weightStr) {
   if (!weightStr) return 0.5;
   const str = String(weightStr).toLowerCase();
+  if (str.includes('cup') || str.includes('pc') || str.includes('box')) return 1.0;
   if (str.includes('250g')) return 0.25;
   if (str.includes('500g')) return 0.5;
   if (str.includes('1kg') || str.includes('1 kg')) return 1.0;
@@ -128,7 +143,14 @@ export function CartProvider({ children }) {
   const [inventory, setInventory] = useState(() => {
     try {
       const saved = localStorage.getItem(INVENTORY_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : DEFAULT_INVENTORY;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const missing = DEFAULT_INVENTORY.filter((d) => !parsed.some((p) => p.id === d.id));
+          return missing.length > 0 ? [...parsed, ...missing] : parsed;
+        }
+      }
+      return DEFAULT_INVENTORY;
     } catch {
       return DEFAULT_INVENTORY;
     }

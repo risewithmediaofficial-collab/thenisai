@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="badamBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="badamLiquid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="50%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#badamBg)"/>
+  
+  <!-- Steam -->
+  <path d="M50 22 Q46 14 50 8" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M62 18 Q66 10 62 4" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Glass Tumbler Outline -->
+  <path d="M38 34 L45 92 Q47 98 60 98 Q73 98 75 92 L82 34 Z" fill="#FFFFFF" opacity="0.4" stroke="#FCD34D" stroke-width="1.5"/>
+  
+  <!-- Saffron Golden Badam Milk Liquid -->
+  <path d="M41 42 L46 90 Q48 95 60 95 Q72 95 74 90 L79 42 Q60 47 41 42 Z" fill="url(#badamLiquid)"/>
+
+  <!-- Glass Rim & Milk Surface -->
+  <ellipse cx="60" cy="34" rx="22" ry="5" fill="#FFFFFF" stroke="#FCD34D" stroke-width="1.5"/>
+  <ellipse cx="60" cy="43" rx="19" ry="4" fill="#FDE68A"/>
+  
+  <!-- Saffron Strands & Almond Slivers -->
+  <path d="M52 42 Q55 45 58 42" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <path d="M64 43 Q67 41 68 44" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+  <ellipse cx="56" cy="44" rx="3" ry="1.5" fill="#FEF08A" stroke="#B45309" stroke-width="0.8"/>
+  <ellipse cx="64" cy="42" rx="3" ry="1.5" fill="#FEF08A" stroke="#B45309" stroke-width="0.8"/>
+
+  <!-- Badge Label -->
+  <rect x="22" y="99" width="76" height="15" rx="7.5" fill="#D97706"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="#FFFFFF" text-anchor="middle">பாதாம் பால் · BADAM MILK</text>
+</svg>

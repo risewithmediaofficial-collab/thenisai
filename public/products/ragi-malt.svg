@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="ragiBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAF5FF"/>
+      <stop offset="100%" stop-color="#F3E8FF"/>
+    </linearGradient>
+    <linearGradient id="ragiMalt" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4C1D95"/>
+      <stop offset="40%" stop-color="#6B21A8"/>
+      <stop offset="80%" stop-color="#581C87"/>
+      <stop offset="100%" stop-color="#3B0764"/>
+    </linearGradient>
+    <linearGradient id="mudClay" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#9A3412"/>
+      <stop offset="50%" stop-color="#C2410C"/>
+      <stop offset="100%" stop-color="#7C2D12"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#ragiBg)"/>
+  
+  <!-- Steam -->
+  <path d="M52 20 Q48 12 52 6" stroke="#7E22CE" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M64 16 Q68 8 64 4" stroke="#581C87" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Traditional Terracotta Kulhad / Cup -->
+  <path d="M38 34 L45 88 Q47 94 60 94 Q73 94 75 88 L82 34 Z" fill="url(#mudClay)" stroke="#7C2D12" stroke-width="1.5"/>
+  <ellipse cx="60" cy="34" rx="22" ry="5.5" fill="#7C2D12"/>
+
+  <!-- Rich Nutritious Ragi Malt Liquid Surface -->
+  <ellipse cx="60" cy="36" rx="19" ry="4.5" fill="url(#ragiMalt)"/>
+  
+  <!-- Traditional Milk Swirl Accent -->
+  <path d="M50 36 Q60 38 70 35" stroke="#F3E8FF" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+
+  <!-- Badge Label -->
+  <rect x="20" y="99" width="80" height="15" rx="7.5" fill="#581C87"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="#FFFFFF" text-anchor="middle">கேழ்வரகு · RAGI MALT</text>
+</svg>

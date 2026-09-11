@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="boostBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF2F2"/>
+      <stop offset="100%" stop-color="#FEE2E2"/>
+    </linearGradient>
+    <linearGradient id="boostChoco" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#451A03"/>
+      <stop offset="50%" stop-color="#78350F"/>
+      <stop offset="100%" stop-color="#3A1400"/>
+    </linearGradient>
+    <linearGradient id="redMug" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#B91C1C"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#boostBg)"/>
+  
+  <!-- Steam -->
+  <path d="M52 20 Q48 12 52 6" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M64 16 Q68 8 64 4" stroke="#B91C1C" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Mug Handle -->
+  <path d="M78 46 C94 46 94 76 76 76" fill="none" stroke="#DC2626" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Red Sports Mug -->
+  <path d="M38 36 L43 84 Q45 90 60 90 Q75 90 77 84 L82 36 Z" fill="url(#redMug)"/>
+  <ellipse cx="60" cy="36" rx="22" ry="6" fill="#991B1B"/>
+
+  <!-- Chocolate Malt Surface -->
+  <ellipse cx="60" cy="38" rx="19" ry="5" fill="url(#boostChoco)"/>
+  
+  <!-- Lightning Bolt Icon (Secret of my energy) -->
+  <path d="M63 48 L55 64 L61 64 L57 78 L69 60 L62 60 Z" fill="#FACC15"/>
+
+  <!-- Badge Label -->
+  <rect x="28" y="99" width="64" height="15" rx="7.5" fill="#B91C1C"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="8.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">பூஸ்ட் · BOOST</text>
+</svg>

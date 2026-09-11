@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="suguBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBEB"/>
+      <stop offset="100%" stop-color="#FEF3C7"/>
+    </linearGradient>
+    <linearGradient id="suguTea" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78350F"/>
+      <stop offset="50%" stop-color="#92400E"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#suguBg)"/>
+  
+  <!-- Steam with warm aromatic spice -->
+  <path d="M48 20 Q44 12 48 6" stroke="#92400E" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M60 16 Q64 8 60 4" stroke="#B45309" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
+  <path d="M72 20 Q68 12 72 6" stroke="#92400E" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Earthy Cup / Glass -->
+  <path d="M38 34 L45 90 Q47 96 60 96 Q73 96 75 90 L82 34 Z" fill="#FFFFFF" opacity="0.3" stroke="#D97706" stroke-width="1.5"/>
+  
+  <!-- Herbal Sukku Tea Liquid -->
+  <path d="M41 42 L46 88 Q48 93 60 93 Q72 93 74 88 L79 42 Q60 47 41 42 Z" fill="url(#suguTea)"/>
+
+  <ellipse cx="60" cy="34" rx="22" ry="5" fill="#FFFFFF" opacity="0.5" stroke="#D97706" stroke-width="1.5"/>
+  <ellipse cx="60" cy="43" rx="19" ry="4" fill="#B45309"/>
+
+  <!-- Ginger Root Icon Badge Accent -->
+  <circle cx="60" cy="65" r="14" fill="#FEF3C7" opacity="0.9"/>
+  <path d="M54 62 C52 58 60 56 64 60 C68 62 66 70 61 71 C56 72 52 68 54 62 Z" fill="#D97706"/>
+  <circle cx="58" cy="66" r="1" fill="#78350F"/>
+  <circle cx="62" cy="63" r="1" fill="#78350F"/>
+
+  <!-- Badge Label -->
+  <rect x="20" y="99" width="80" height="15" rx="7.5" fill="#78350F"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="#FFFFFF" text-anchor="middle">சுக்கு டீ · SUGU TEA</text>
+</svg>

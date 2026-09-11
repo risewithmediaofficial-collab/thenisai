@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="lemonBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEFCE8"/>
+      <stop offset="100%" stop-color="#FEF9C3"/>
+    </linearGradient>
+    <linearGradient id="lemonLiquid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#D97706"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#CA8A04"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#lemonBg)"/>
+  
+  <!-- Steam -->
+  <path d="M50 22 Q46 14 50 8" stroke="#EAB308" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M62 18 Q66 10 62 4" stroke="#CA8A04" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+
+  <!-- Glass Tumbler Outline -->
+  <path d="M38 34 L45 92 Q47 98 60 98 Q73 98 75 92 L82 34 Z" fill="#FFFFFF" opacity="0.3" stroke="#FDE047" stroke-width="1.5"/>
+  
+  <!-- Golden Amber Lemon Tea -->
+  <path d="M41 42 L46 90 Q48 95 60 95 Q72 95 74 90 L79 42 Q60 47 41 42 Z" fill="url(#lemonLiquid)"/>
+
+  <!-- Glass Rim -->
+  <ellipse cx="60" cy="34" rx="22" ry="5" fill="#FFFFFF" opacity="0.5" stroke="#FDE047" stroke-width="1.5"/>
+
+  <!-- Lemon Wheel on Rim -->
+  <circle cx="75" cy="30" r="14" fill="#FACC15" stroke="#CA8A04" stroke-width="1.5"/>
+  <circle cx="75" cy="30" r="10" fill="#FEF08A"/>
+  <!-- Lemon segments -->
+  <path d="M75 20 L75 40 M65 30 L85 30 M68 23 L82 37 M68 37 L82 23" stroke="#EAB308" stroke-width="1"/>
+
+  <!-- Mint leaf -->
+  <path d="M48 38 C42 32 46 26 54 28 C56 34 52 38 48 38 Z" fill="#22C55E"/>
+
+  <!-- Badge Label -->
+  <rect x="18" y="99" width="84" height="15" rx="7.5" fill="#A16207"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="7.5" font-weight="bold" fill="#FFFFFF" text-anchor="middle">எலுமிச்சை டீ · LEMON TEA</text>
+</svg>

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="teaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FED7AA"/>
+    </linearGradient>
+    <linearGradient id="teaLiquid" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C2410C"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#9A3412"/>
+    </linearGradient>
+    <linearGradient id="glassShine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <rect width="120" height="120" rx="24" fill="url(#teaBg)"/>
+  
+  <!-- Steam lines -->
+  <path d="M48 24 Q44 16 48 10" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M60 20 Q64 12 60 6" stroke="#EA580C" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M72 24 Q68 16 72 10" stroke="#F97316" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+  <!-- Glass Tumbler Outline -->
+  <path d="M38 34 L45 92 Q47 98 60 98 Q73 98 75 92 L82 34 Z" fill="#FFFFFF" opacity="0.3"/>
+  
+  <!-- Tea Liquid -->
+  <path d="M41 44 L46 90 Q48 95 60 95 Q72 95 74 90 L79 44 Q60 49 41 44 Z" fill="url(#teaLiquid)"/>
+
+  <!-- Glass Rim and Highlights -->
+  <ellipse cx="60" cy="34" rx="22" ry="5" fill="#FFFFFF" fill-opacity="0.4" stroke="#FB923C" stroke-width="2"/>
+  <path d="M44 38 L49 88" stroke="url(#glassShine)" stroke-width="3" stroke-linecap="round"/>
+  
+  <!-- Foam/Cream top -->
+  <ellipse cx="60" cy="45" rx="18" ry="3.5" fill="#FED7AA" opacity="0.8"/>
+  
+  <!-- Badge Label -->
+  <rect x="36" y="99" width="48" height="15" rx="7.5" fill="#C2410C"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle">டீ · TEA</text>
+</svg>

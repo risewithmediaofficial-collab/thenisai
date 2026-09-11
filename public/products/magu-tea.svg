@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <linearGradient id="maguBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3F4F6"/>
+      <stop offset="100%" stop-color="#E5E7EB"/>
+    </linearGradient>
+    <linearGradient id="maguTea" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1F2937"/>
+      <stop offset="40%" stop-color="#4B5563"/>
+      <stop offset="80%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="24" fill="url(#maguBg)"/>
+  
+  <!-- Steam with herbal essence -->
+  <path d="M48 20 Q44 12 48 6" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+  <path d="M60 16 Q64 8 60 4" stroke="#1F2937" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.7"/>
+  <path d="M72 20 Q68 12 72 6" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+
+  <!-- Glass Tumbler -->
+  <path d="M38 34 L45 90 Q47 96 60 96 Q73 96 75 90 L82 34 Z" fill="#FFFFFF" opacity="0.4" stroke="#9CA3AF" stroke-width="1.5"/>
+  
+  <!-- Peppery Spiced Tea Liquid -->
+  <path d="M41 42 L46 88 Q48 93 60 93 Q72 93 74 88 L79 42 Q60 47 41 42 Z" fill="url(#maguTea)"/>
+
+  <ellipse cx="60" cy="34" rx="22" ry="5" fill="#FFFFFF" opacity="0.5" stroke="#9CA3AF" stroke-width="1.5"/>
+  <ellipse cx="60" cy="43" rx="19" ry="4" fill="#374151"/>
+
+  <!-- Black Peppercorns Floating on top & around -->
+  <circle cx="53" cy="42" r="2.5" fill="#111827" stroke="#9CA3AF" stroke-width="0.5"/>
+  <circle cx="61" cy="44" r="2.2" fill="#111827" stroke="#9CA3AF" stroke-width="0.5"/>
+  <circle cx="67" cy="42" r="2.4" fill="#111827" stroke="#9CA3AF" stroke-width="0.5"/>
+  <circle cx="58" cy="62" r="3.5" fill="#111827" opacity="0.8"/>
+  <circle cx="64" cy="66" r="3" fill="#111827" opacity="0.8"/>
+  <circle cx="54" cy="70" r="2.8" fill="#111827" opacity="0.8"/>
+
+  <!-- Badge Label -->
+  <rect x="20" y="99" width="80" height="15" rx="7.5" fill="#1F2937"/>
+  <text x="60" y="110" font-family="system-ui, sans-serif" font-size="8" font-weight="bold" fill="#FFFFFF" text-anchor="middle">மிளகு டீ · MAGU TEA</text>
+</svg>
