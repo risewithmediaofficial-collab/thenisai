@@ -11,9 +11,13 @@ export default function InvoiceModal() {
   // Default format: 'thermal' (80mm POS slip) for counter POS, 'a4' for online deliveries
   const [billFormat, setBillFormat] = useState('thermal');
 
+  // Copies mode: 'both' (2 bills: Customer + Shop), 'customer' (1 bill), 'shop' (1 bill)
+  const [copiesMode, setCopiesMode] = useState('both');
+
   useEffect(() => {
     if (activeInvoice) {
       setBillFormat(activeInvoice.source === 'online' ? 'a4' : 'thermal');
+      setCopiesMode('both'); // Default to 2 copies for every bill
     }
   }, [activeInvoice]);
 
@@ -40,6 +44,8 @@ export default function InvoiceModal() {
     window.print();
   };
 
+  const copiesToRender = copiesMode === 'both' ? ['customer', 'shop'] : [copiesMode];
+
   // Pre-filled WhatsApp message
   const itemsText = items
     .map((item) => `• ${item.name} (${item.weight}) × ${item.quantity} = ₹${item.price * item.quantity}`)
@@ -62,6 +68,418 @@ export default function InvoiceModal() {
   );
 
   const whatsappUrl = `https://wa.me/${STORE_DETAILS.whatsappNumber}?text=${whatsappMessage}`;
+
+  // Helper to render 80mm Thermal Receipt Copy
+  const renderThermalReceiptCopy = (copyType, index) => {
+    const isShopCopy = copyType === 'shop';
+
+    return (
+      <div key={copyType} className="thermal-single-copy-wrap">
+        {index > 0 && (
+          <div className="thermal-receipt-divider-cut">
+            <span className="cut-icon">✂</span>
+            <span className="cut-text">- - - - [ TEAR / CUT FOR SHOP COPY ] - - - -</span>
+            <span className="cut-icon">✂</span>
+          </div>
+        )}
+
+        <div className={`thermal-receipt-document copy-${copyType}`}>
+          {/* Thermal Header */}
+          <div className="thermal-header">
+            <div className="thermal-decor-stars">★ ★ ★ ★ ★</div>
+            <h2 className="thermal-brand-name">{STORE_DETAILS.brandName}</h2>
+            <p className="thermal-brand-tag">{STORE_DETAILS.tagline}</p>
+            <p className="thermal-addr-line">{STORE_DETAILS.addressLine1}</p>
+            <p className="thermal-addr-line">{STORE_DETAILS.cityStatePin}</p>
+            <p className="thermal-contact-line">TEL: {STORE_DETAILS.phone}</p>
+            <div className="thermal-tax-regs">
+              <div>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></div>
+              <div>FSSAI: <strong>{STORE_DETAILS.fssai}</strong></div>
+            </div>
+          </div>
+
+          <div className="thermal-divider-double" />
+
+          <div className="thermal-title-bar">
+            <span>TAX INVOICE / CASH MEMO</span>
+          </div>
+
+          {/* Distinct Copy Header */}
+          <div className={`thermal-copy-badge ${copyType}`}>
+            {isShopCopy ? '★ DUPLICATE - SHOP / STORE COPY ★' : '★ ORIGINAL - CUSTOMER COPY ★'}
+          </div>
+
+          <div className="thermal-divider-single" />
+
+          {/* Metadata */}
+          <div className="thermal-meta-block">
+            <div className="thermal-meta-row">
+              <span>BILL NO : <strong>{invoiceNumber}</strong></span>
+              <span>{orderDate}</span>
+            </div>
+            <div className="thermal-meta-row">
+              <span>TIME    : {orderTime}</span>
+              <span className="thermal-source-tag">
+                {activeInvoice.source === 'online' ? 'ONLINE' : 'POS'}
+              </span>
+            </div>
+            {activeInvoice.cashier && (
+              <div className="thermal-meta-row">
+                <span>CASHIER : {activeInvoice.cashier.name || activeInvoice.cashier.username}</span>
+                <span>{activeInvoice.cashier.counter || 'Desk 01'}</span>
+              </div>
+            )}
+            <div className="thermal-meta-row">
+              <span>CUSTOMER: {customer.fullName || 'Walk-in Guest'}</span>
+              {customer.phone && <span>PH: {customer.phone}</span>}
+            </div>
+          </div>
+
+          <div className="thermal-divider-dashed" />
+
+          {/* Items Table */}
+          <table className="thermal-items-table">
+            <thead>
+              <tr>
+                <th className="text-left" style={{ width: '48%' }}>ITEM</th>
+                <th className="text-center" style={{ width: '12%' }}>QTY</th>
+                <th className="text-right" style={{ width: '20%' }}>RATE</th>
+                <th className="text-right" style={{ width: '20%' }}>AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, idx) => (
+                <tr key={idx}>
+                  <td className="thermal-item-title">
+                    <div className="item-name">{item.name}</div>
+                    <div className="item-wt">({item.weight})</div>
+                  </td>
+                  <td className="text-center">{item.quantity}</td>
+                  <td className="text-right">{item.price.toFixed(2)}</td>
+                  <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="thermal-divider-dashed" />
+
+          {/* Totals Calculation */}
+          <div className="thermal-totals-box">
+            <div className="thermal-calc-row">
+              <span>Total Items: <strong>{items.length}</strong></span>
+              <span>Total Qty: <strong>{items.reduce((sum, it) => sum + (it.quantity || 1), 0)}</strong></span>
+            </div>
+            <div className="thermal-calc-row">
+              <span>Taxable Subtotal:</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+
+            {taxBreakdown?.cgst > 0 && (
+              <div className="thermal-calc-row">
+                <span>CGST (2.5%):</span>
+                <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
+              </div>
+            )}
+            {taxBreakdown?.sgst > 0 && (
+              <div className="thermal-calc-row">
+                <span>SGST (2.5%):</span>
+                <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
+              </div>
+            )}
+            {taxBreakdown?.igst > 0 && (
+              <div className="thermal-calc-row">
+                <span>IGST (5.0%):</span>
+                <span>₹{taxBreakdown.igst.toFixed(2)}</span>
+              </div>
+            )}
+            {deliveryFee > 0 && (
+              <div className="thermal-calc-row">
+                <span>Delivery Fee:</span>
+                <span>₹{deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="thermal-divider-double" />
+
+            <div className="thermal-grand-total">
+              <span className="grand-lbl">NET PAYABLE:</span>
+              <span className="grand-val">₹{grandTotal.toFixed(2)}</span>
+            </div>
+
+            <div className="thermal-divider-double" />
+
+            <div className="thermal-pay-info">
+              <div className="thermal-pay-row">
+                <span>Payment Mode:</span>
+                <strong>
+                  {paymentMethod === 'upi' ? 'UPI QR DIGITAL' : paymentMethod === 'card' ? 'CARD / EDC POS' : 'CASH COUNTER'}
+                </strong>
+              </div>
+              {upiUtr && (
+                <div className="thermal-pay-row">
+                  <span>UTR / Ref:</span>
+                  <span>{upiUtr}</span>
+                </div>
+              )}
+              <div className="thermal-pay-row">
+                <span>Order Status:</span>
+                <strong>{orderStatus}</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Shop Copy Audit Block */}
+          {isShopCopy && (
+            <div className="thermal-shop-audit-block">
+              <div className="thermal-divider-dashed" />
+              <div className="thermal-audit-row">
+                <span>Desk: <strong>{activeInvoice.cashier?.counter || 'Counter 01'}</strong></span>
+                <span>Cashier: <strong>{activeInvoice.cashier?.name || activeInvoice.cashier?.username || 'Staff'}</strong></span>
+              </div>
+              <div className="thermal-audit-signatures">
+                <div className="sign-line">Cashier Sign: __________________</div>
+                <div className="sign-line">Store / Kitchen Checked: ________</div>
+              </div>
+            </div>
+          )}
+
+          <div className="thermal-divider-dashed" />
+
+          {/* Barcode representation */}
+          <div className="thermal-barcode-wrap">
+            <div className="thermal-barcode-art">
+              ||||| ||| ||||||| |||| || |||||| ||||| ||||||
+            </div>
+            <span className="thermal-barcode-text">
+              *{invoiceNumber}*{isShopCopy ? '-SHOP' : '-CUST'}
+            </span>
+          </div>
+
+          {/* Thermal Footer Notice */}
+          <div className="thermal-footer-box">
+            {isShopCopy ? (
+              <>
+                <p className="thermal-thank-you">*** SHOP / STORE ACCOUNTS RECORD ***</p>
+                <p className="thermal-sub-msg">Retain for daily counter cash reconciliation & inventory audit</p>
+                <p className="thermal-domain">www.thenisaisweets.com · Internal Use</p>
+              </>
+            ) : (
+              <>
+                <p className="thermal-thank-you">*** THANK YOU! VISIT AGAIN! ***</p>
+                <p className="thermal-sub-msg">Authentic Traditional Delicacies & Pure Ghee Preparations</p>
+                <p className="thermal-sub-msg">Keep sweets in cool place · Quality Guaranteed</p>
+                <p className="thermal-sub-msg">Goods once sold cannot be returned</p>
+                <p className="thermal-domain">www.thenisaisweets.com</p>
+              </>
+            )}
+            <div className="thermal-paper-tear-gap" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper to render A4 Tax Invoice Copy
+  const renderA4InvoiceCopy = (copyType, index) => {
+    const isShopCopy = copyType === 'shop';
+
+    return (
+      <div
+        key={copyType}
+        className={`invoice-document copy-${copyType} ${index > 0 ? 'page-break-before' : ''}`}
+      >
+        {/* Header */}
+        <div className="inv-header">
+          <div className="inv-brand">
+            <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
+            <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>
+            <p className="inv-brand-address">
+              {STORE_DETAILS.addressLine1}, {STORE_DETAILS.cityStatePin}
+            </p>
+            <p className="inv-brand-meta">
+              Tel: {STORE_DETAILS.phone} | Sec: {STORE_DETAILS.secondaryPhone} | Email: {STORE_DETAILS.email}
+            </p>
+            <div className="inv-reg-badges">
+              <span>Est: <strong>2006</strong></span>
+              <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
+              <span>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></span>
+            </div>
+          </div>
+
+          <div className="inv-title-block">
+            <span className={`inv-tax-badge ${isShopCopy ? 'shop-badge' : ''}`}>
+              {isShopCopy
+                ? 'DUPLICATE FOR SUPPLIER (SHOP / STORE COPY)'
+                : 'ORIGINAL FOR RECIPIENT (CUSTOMER COPY)'}
+            </span>
+            <div className="inv-meta-table">
+              <div>
+                <span className="meta-label">Invoice No:</span>
+                <span className="meta-val highlight">{invoiceNumber}</span>
+              </div>
+              <div>
+                <span className="meta-label">Date:</span>
+                <span className="meta-val">{orderDate} ({orderTime})</span>
+              </div>
+              <div>
+                <span className="meta-label">State of Supply:</span>
+                <span className="meta-val">{shippingAddress.state}</span>
+              </div>
+              <div>
+                <span className="meta-label">Status:</span>
+                <span className="meta-val status-pill">{orderStatus}</span>
+              </div>
+              {activeInvoice.cashier && (
+                <div>
+                  <span className="meta-label">Billed By:</span>
+                  <span className="meta-val">
+                    {activeInvoice.cashier.name || activeInvoice.cashier.username} ({activeInvoice.cashier.counter || 'Counter Desk'})
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="inv-divider" />
+
+        {/* Billed To / Shipped To */}
+        <div className="inv-parties">
+          <div className="inv-party-card">
+            <h4 className="party-title">Billed & Shipped To:</h4>
+            <p className="party-name">{customer.fullName}</p>
+            <p className="party-line">{shippingAddress.doorNo}, {shippingAddress.street}</p>
+            {shippingAddress.landmark && (
+              <p className="party-line">Landmark: {shippingAddress.landmark}</p>
+            )}
+            <p className="party-line">
+              {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
+            </p>
+            <p className="party-contact">
+              Mobile: <strong>+91 {customer.phone}</strong> | Email: {customer.email}
+            </p>
+          </div>
+
+          <div className="inv-party-card payment-mode-card">
+            <h4 className="party-title">Payment & Dispatch Info:</h4>
+            <p className="party-line">
+              Mode:{' '}
+              <strong>
+                {paymentMethod === 'upi' ? 'Direct UPI (GPay / PhonePe)' : 'Cash / UPI on Delivery (COD)'}
+              </strong>
+            </p>
+            {upiUtr && <p className="party-line">UPI UTR Ref: <strong>{upiUtr}</strong></p>}
+            {giftNote && (
+              <p className="party-line gift-note">
+                Gift Message: <em>"{giftNote}"</em>
+              </p>
+            )}
+            <p className="party-line dispatch-tip">
+              Dispatch: Fresh daily batch packaged in tamper-proof seal.
+            </p>
+          </div>
+        </div>
+
+        {/* Line Items Table */}
+        <div className="inv-table-wrap">
+          <table className="inv-table">
+            <thead>
+              <tr>
+                <th style={{ width: '6%' }}>#</th>
+                <th style={{ width: '42%' }}>Item Description</th>
+                <th style={{ width: '12%' }}>HSN</th>
+                <th style={{ width: '12%' }}>Weight</th>
+                <th style={{ width: '10%' }} className="text-right">Qty</th>
+                <th style={{ width: '18%' }} className="text-right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, idx) => (
+                <tr key={`${item.id}-${item.weight}`}>
+                  <td>{idx + 1}</td>
+                  <td>
+                    <strong>{item.name}</strong>
+                    <span className="item-sub-desc">Handmade pure ghee preparation</span>
+                  </td>
+                  <td>{item.hsn}</td>
+                  <td>{item.weight}</td>
+                  <td className="text-right">{item.quantity}</td>
+                  <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Financial Calculation Breakdown */}
+        <div className="inv-footer-calc">
+          <div className="inv-notes">
+            <p className="note-title">Terms & Conditions:</p>
+            <ol>
+              <li>Perishable sweets: Keep in cool place or refrigerate after opening.</li>
+              <li>Goods once sold are freshly prepared and dispatched directly from kitchen.</li>
+              <li>All disputes subject to Madurai jurisdiction only.</li>
+            </ol>
+          </div>
+
+          <div className="inv-totals">
+            <div className="total-row">
+              <span>Taxable Subtotal</span>
+              <span>₹{subtotal.toFixed(2)}</span>
+            </div>
+
+            {!taxBreakdown.isInterState ? (
+              <>
+                <div className="total-row tax">
+                  <span>CGST @ 2.5%</span>
+                  <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
+                </div>
+                <div className="total-row tax">
+                  <span>SGST @ 2.5%</span>
+                  <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="total-row tax">
+                <span>IGST @ 5.0%</span>
+                <span>₹{taxBreakdown.igst.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="total-row">
+              <span>Delivery & Handling</span>
+              <span>{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}</span>
+            </div>
+
+            <div className="inv-grand-total">
+              <span>Grand Total (INR)</span>
+              <span className="grand-amount" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                ₹{grandTotal}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Signatory */}
+        <div className="inv-bottom-sign">
+          <div className="inv-sign-left">
+            <span>
+              {isShopCopy
+                ? 'Store Verification & Cash Counter Records'
+                : 'Authorized Signature / Computer Generated Bill'}
+            </span>
+          </div>
+          <div className="inv-sign-right">
+            <span>For <strong>{STORE_DETAILS.brandName}</strong></span>
+            <div className="sign-stamp">
+              {isShopCopy ? '[Store Accounts Verified]' : '[Kitchen Seal Approved]'}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <AnimatePresence>
@@ -93,6 +511,7 @@ export default function InvoiceModal() {
               </h3>
               <p className="success-banner-sub">
                 Bill No: <strong>{invoiceNumber}</strong> · Billed to <strong>{customer.fullName}</strong>
+                {' '}· <span className="copies-status-tag">{copiesMode === 'both' ? '2 Bills (Customer & Shop Copy)' : copiesMode === 'customer' ? 'Customer Copy Only' : 'Shop Copy Only'}</span>
               </p>
             </div>
             <button className="invoice-close-icon" onClick={closeInvoice} aria-label="Close">
@@ -100,28 +519,61 @@ export default function InvoiceModal() {
             </button>
           </div>
 
-          {/* Action Toolbar with Format Switcher */}
+          {/* Action Toolbar with Format Switcher & Copies Switcher */}
           <div className="invoice-toolbar">
-            {/* Format Switcher Pills */}
-            <div className="invoice-format-switcher">
-              <button
-                type="button"
-                className={`format-btn ${billFormat === 'thermal' ? 'active' : ''}`}
-                onClick={() => setBillFormat('thermal')}
-                title="Switch to 80mm / 58mm POS thermal receipt printer layout"
-              >
-                <span className="format-icon">🧾</span>
-                <span>Thermal Receipt (80mm)</span>
-              </button>
-              <button
-                type="button"
-                className={`format-btn ${billFormat === 'a4' ? 'active' : ''}`}
-                onClick={() => setBillFormat('a4')}
-                title="Switch to standard A4/A5 formal tax invoice layout"
-              >
-                <span className="format-icon">📄</span>
-                <span>Standard A4 Invoice</span>
-              </button>
+            <div className="invoice-toolbar-left">
+              {/* Format Switcher Pills */}
+              <div className="invoice-format-switcher">
+                <button
+                  type="button"
+                  className={`format-btn ${billFormat === 'thermal' ? 'active' : ''}`}
+                  onClick={() => setBillFormat('thermal')}
+                  title="Switch to 80mm / 58mm POS thermal receipt printer layout"
+                >
+                  <span className="format-icon">🧾</span>
+                  <span>Thermal (80mm)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`format-btn ${billFormat === 'a4' ? 'active' : ''}`}
+                  onClick={() => setBillFormat('a4')}
+                  title="Switch to standard A4/A5 formal tax invoice layout"
+                >
+                  <span className="format-icon">📄</span>
+                  <span>A4 Invoice</span>
+                </button>
+              </div>
+
+              {/* Copies Switcher Pills */}
+              <div className="invoice-copies-switcher">
+                <button
+                  type="button"
+                  className={`copies-btn ${copiesMode === 'both' ? 'active' : ''}`}
+                  onClick={() => setCopiesMode('both')}
+                  title="Print 2 bills: Customer Copy + Shop Copy"
+                >
+                  <span className="copies-icon">👥</span>
+                  <span>2 Bills (Cust + Shop)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`copies-btn ${copiesMode === 'customer' ? 'active' : ''}`}
+                  onClick={() => setCopiesMode('customer')}
+                  title="Print Customer Copy only"
+                >
+                  <span className="copies-icon">👤</span>
+                  <span>Customer Only</span>
+                </button>
+                <button
+                  type="button"
+                  className={`copies-btn ${copiesMode === 'shop' ? 'active' : ''}`}
+                  onClick={() => setCopiesMode('shop')}
+                  title="Print Shop Copy only"
+                >
+                  <span className="copies-icon">🏪</span>
+                  <span>Shop Only</span>
+                </button>
+              </div>
             </div>
 
             <div className="invoice-toolbar-actions">
@@ -130,7 +582,11 @@ export default function InvoiceModal() {
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   <path d="M6 14h12v8H6z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>{billFormat === 'thermal' ? 'Print Thermal Bill (80mm)' : 'Print A4 Invoice'}</span>
+                <span>
+                  {copiesMode === 'both'
+                    ? `Print 2 Bills (${billFormat === 'thermal' ? 'Thermal' : 'A4'})`
+                    : `Print ${copiesMode === 'customer' ? 'Customer' : 'Shop'} Bill`}
+                </span>
               </button>
 
               <a
@@ -150,347 +606,18 @@ export default function InvoiceModal() {
           {/* Printable Invoice Sheet */}
           <div className="printable-invoice-container" data-lenis-prevent>
             {billFormat === 'thermal' ? (
-              <div className="thermal-receipt-document" ref={invoiceRef}>
-                {/* Thermal Header */}
-                <div className="thermal-header">
-                  <div className="thermal-decor-stars">★ ★ ★ ★ ★</div>
-                  <h2 className="thermal-brand-name">{STORE_DETAILS.brandName}</h2>
-                  <p className="thermal-brand-tag">{STORE_DETAILS.tagline}</p>
-                  <p className="thermal-addr-line">{STORE_DETAILS.addressLine1}</p>
-                  <p className="thermal-addr-line">{STORE_DETAILS.cityStatePin}</p>
-                  <p className="thermal-contact-line">TEL: {STORE_DETAILS.phone}</p>
-                  <div className="thermal-tax-regs">
-                    <div>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></div>
-                    <div>FSSAI: <strong>{STORE_DETAILS.fssai}</strong></div>
-                  </div>
-                </div>
-
-                <div className="thermal-divider-double" />
-
-                <div className="thermal-title-bar">
-                  <span>TAX INVOICE / CASH MEMO</span>
-                </div>
-
-                <div className="thermal-divider-single" />
-
-                {/* Metadata */}
-                <div className="thermal-meta-block">
-                  <div className="thermal-meta-row">
-                    <span>BILL NO : <strong>{invoiceNumber}</strong></span>
-                    <span>{orderDate}</span>
-                  </div>
-                  <div className="thermal-meta-row">
-                    <span>TIME    : {orderTime}</span>
-                    <span className="thermal-source-tag">
-                      {activeInvoice.source === 'online' ? 'ONLINE' : 'POS'}
-                    </span>
-                  </div>
-                  {activeInvoice.cashier && (
-                    <div className="thermal-meta-row">
-                      <span>CASHIER : {activeInvoice.cashier.name || activeInvoice.cashier.username}</span>
-                      <span>{activeInvoice.cashier.counter || 'Desk 01'}</span>
-                    </div>
-                  )}
-                  <div className="thermal-meta-row">
-                    <span>CUSTOMER: {customer.fullName || 'Walk-in Guest'}</span>
-                    {customer.phone && <span>PH: {customer.phone}</span>}
-                  </div>
-                </div>
-
-                <div className="thermal-divider-dashed" />
-
-                {/* Items Table */}
-                <table className="thermal-items-table">
-                  <thead>
-                    <tr>
-                      <th className="text-left" style={{ width: '48%' }}>ITEM</th>
-                      <th className="text-center" style={{ width: '12%' }}>QTY</th>
-                      <th className="text-right" style={{ width: '20%' }}>RATE</th>
-                      <th className="text-right" style={{ width: '20%' }}>AMOUNT</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item, idx) => (
-                      <tr key={idx}>
-                        <td className="thermal-item-title">
-                          <div className="item-name">{item.name}</div>
-                          <div className="item-wt">({item.weight})</div>
-                        </td>
-                        <td className="text-center">{item.quantity}</td>
-                        <td className="text-right">{item.price.toFixed(2)}</td>
-                        <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="thermal-divider-dashed" />
-
-                {/* Totals Calculation */}
-                <div className="thermal-totals-box">
-                  <div className="thermal-calc-row">
-                    <span>Total Items: <strong>{items.length}</strong></span>
-                    <span>Total Qty: <strong>{items.reduce((sum, it) => sum + (it.quantity || 1), 0)}</strong></span>
-                  </div>
-                  <div className="thermal-calc-row">
-                    <span>Taxable Subtotal:</span>
-                    <span>₹{subtotal.toFixed(2)}</span>
-                  </div>
-
-                  {taxBreakdown?.cgst > 0 && (
-                    <div className="thermal-calc-row">
-                      <span>CGST (2.5%):</span>
-                      <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {taxBreakdown?.sgst > 0 && (
-                    <div className="thermal-calc-row">
-                      <span>SGST (2.5%):</span>
-                      <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {taxBreakdown?.igst > 0 && (
-                    <div className="thermal-calc-row">
-                      <span>IGST (5.0%):</span>
-                      <span>₹{taxBreakdown.igst.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {deliveryFee > 0 && (
-                    <div className="thermal-calc-row">
-                      <span>Delivery Fee:</span>
-                      <span>₹{deliveryFee.toFixed(2)}</span>
-                    </div>
-                  )}
-
-                  <div className="thermal-divider-double" />
-
-                  <div className="thermal-grand-total">
-                    <span className="grand-lbl">NET PAYABLE:</span>
-                    <span className="grand-val">₹{grandTotal.toFixed(2)}</span>
-                  </div>
-
-                  <div className="thermal-divider-double" />
-
-                  <div className="thermal-pay-info">
-                    <div className="thermal-pay-row">
-                      <span>Payment Mode:</span>
-                      <strong>
-                        {paymentMethod === 'upi' ? 'UPI QR DIGITAL' : paymentMethod === 'card' ? 'CARD / EDC POS' : 'CASH COUNTER'}
-                      </strong>
-                    </div>
-                    {upiUtr && (
-                      <div className="thermal-pay-row">
-                        <span>UTR / Ref:</span>
-                        <span>{upiUtr}</span>
-                      </div>
-                    )}
-                    <div className="thermal-pay-row">
-                      <span>Order Status:</span>
-                      <strong>{orderStatus}</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="thermal-divider-dashed" />
-
-                {/* Barcode representation */}
-                <div className="thermal-barcode-wrap">
-                  <div className="thermal-barcode-art">
-                    ||||| ||| ||||||| |||| || |||||| ||||| ||||||
-                  </div>
-                  <span className="thermal-barcode-text">*{invoiceNumber}*</span>
-                </div>
-
-                {/* Thermal Footer Notice */}
-                <div className="thermal-footer-box">
-                  <p className="thermal-thank-you">*** THANK YOU! VISIT AGAIN! ***</p>
-                  <p className="thermal-sub-msg">Authentic Traditional Delicacies & Pure Ghee Preparations</p>
-                  <p className="thermal-sub-msg">Keep sweets in cool place · Quality Guaranteed</p>
-                  <p className="thermal-sub-msg">Goods once sold cannot be returned</p>
-                  <p className="thermal-domain">www.thenisaisweets.com</p>
-                  <div className="thermal-paper-tear-gap" />
-                </div>
+              <div
+                className={`thermal-receipt-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''}`}
+                ref={invoiceRef}
+              >
+                {copiesToRender.map((copyType, index) => renderThermalReceiptCopy(copyType, index))}
               </div>
             ) : (
-              <div className="invoice-document" ref={invoiceRef}>
-                {/* Header */}
-                <div className="inv-header">
-                  <div className="inv-brand">
-                    <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
-                    <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>
-                    <p className="inv-brand-address">
-                      {STORE_DETAILS.addressLine1}, {STORE_DETAILS.cityStatePin}
-                    </p>
-                    <p className="inv-brand-meta">
-                      Tel: {STORE_DETAILS.phone} | Sec: {STORE_DETAILS.secondaryPhone} | Email: {STORE_DETAILS.email}
-                    </p>
-                    <div className="inv-reg-badges">
-                      <span>Est: <strong>2006</strong></span>
-                      <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
-                      <span>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></span>
-                    </div>
-                  </div>
-
-                  <div className="inv-title-block">
-                    <span className="inv-tax-badge">ORIGINAL TAX INVOICE</span>
-                    <div className="inv-meta-table">
-                      <div>
-                        <span className="meta-label">Invoice No:</span>
-                        <span className="meta-val highlight">{invoiceNumber}</span>
-                      </div>
-                      <div>
-                        <span className="meta-label">Date:</span>
-                        <span className="meta-val">{orderDate} ({orderTime})</span>
-                      </div>
-                      <div>
-                        <span className="meta-label">State of Supply:</span>
-                        <span className="meta-val">{shippingAddress.state}</span>
-                      </div>
-                      <div>
-                        <span className="meta-label">Status:</span>
-                        <span className="meta-val status-pill">{orderStatus}</span>
-                      </div>
-                      {activeInvoice.cashier && (
-                        <div>
-                          <span className="meta-label">Billed By:</span>
-                          <span className="meta-val">
-                            {activeInvoice.cashier.name || activeInvoice.cashier.username} ({activeInvoice.cashier.counter || 'Counter Desk'})
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="inv-divider" />
-
-                {/* Billed To / Shipped To */}
-                <div className="inv-parties">
-                  <div className="inv-party-card">
-                    <h4 className="party-title">Billed & Shipped To:</h4>
-                    <p className="party-name">{customer.fullName}</p>
-                    <p className="party-line">{shippingAddress.doorNo}, {shippingAddress.street}</p>
-                    {shippingAddress.landmark && (
-                      <p className="party-line">Landmark: {shippingAddress.landmark}</p>
-                    )}
-                    <p className="party-line">
-                      {shippingAddress.city}, {shippingAddress.state} - {shippingAddress.pincode}
-                    </p>
-                    <p className="party-contact">
-                      Mobile: <strong>+91 {customer.phone}</strong> | Email: {customer.email}
-                    </p>
-                  </div>
-
-                  <div className="inv-party-card payment-mode-card">
-                    <h4 className="party-title">Payment & Dispatch Info:</h4>
-                    <p className="party-line">
-                      Mode:{' '}
-                      <strong>
-                        {paymentMethod === 'upi' ? 'Direct UPI (GPay / PhonePe)' : 'Cash / UPI on Delivery (COD)'}
-                      </strong>
-                    </p>
-                    {upiUtr && <p className="party-line">UPI UTR Ref: <strong>{upiUtr}</strong></p>}
-                    {giftNote && (
-                      <p className="party-line gift-note">
-                        Gift Message: <em>"{giftNote}"</em>
-                      </p>
-                    )}
-                    <p className="party-line dispatch-tip">
-                      Dispatch: Fresh daily batch packaged in tamper-proof seal.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Line Items Table */}
-                <div className="inv-table-wrap">
-                  <table className="inv-table">
-                    <thead>
-                      <tr>
-                        <th style={{ width: '6%' }}>#</th>
-                        <th style={{ width: '42%' }}>Item Description</th>
-                        <th style={{ width: '12%' }}>HSN</th>
-                        <th style={{ width: '12%' }}>Weight</th>
-                        <th style={{ width: '10%' }} className="text-right">Qty</th>
-                        <th style={{ width: '18%' }} className="text-right">Amount (₹)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((item, idx) => (
-                        <tr key={`${item.id}-${item.weight}`}>
-                          <td>{idx + 1}</td>
-                          <td>
-                            <strong>{item.name}</strong>
-                            <span className="item-sub-desc">Handmade pure ghee preparation</span>
-                          </td>
-                          <td>{item.hsn}</td>
-                          <td>{item.weight}</td>
-                          <td className="text-right">{item.quantity}</td>
-                          <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Financial Calculation Breakdown */}
-                <div className="inv-footer-calc">
-                  <div className="inv-notes">
-                    <p className="note-title">Terms & Conditions:</p>
-                    <ol>
-                      <li>Perishable sweets: Keep in cool place or refrigerate after opening.</li>
-                      <li>Goods once sold are freshly prepared and dispatched directly from kitchen.</li>
-                      <li>All disputes subject to Madurai jurisdiction only.</li>
-                    </ol>
-                  </div>
-
-                  <div className="inv-totals">
-                    <div className="total-row">
-                      <span>Taxable Subtotal</span>
-                      <span>₹{subtotal.toFixed(2)}</span>
-                    </div>
-
-                    {!taxBreakdown.isInterState ? (
-                      <>
-                        <div className="total-row tax">
-                          <span>CGST @ 2.5%</span>
-                          <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
-                        </div>
-                        <div className="total-row tax">
-                          <span>SGST @ 2.5%</span>
-                          <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="total-row tax">
-                        <span>IGST @ 5.0%</span>
-                        <span>₹{taxBreakdown.igst.toFixed(2)}</span>
-                      </div>
-                    )}
-
-                    <div className="total-row">
-                      <span>Delivery & Handling</span>
-                      <span>{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}</span>
-                    </div>
-
-                    <div className="inv-grand-total">
-                      <span>Grand Total (INR)</span>
-                      <span className="grand-amount" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                        ₹{grandTotal}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Signatory */}
-                <div className="inv-bottom-sign">
-                  <div className="inv-sign-left">
-                    <span>Authorized Signature / Computer Generated Bill</span>
-                  </div>
-                  <div className="inv-sign-right">
-                    <span>For <strong>{STORE_DETAILS.brandName}</strong></span>
-                    <div className="sign-stamp">[Kitchen Seal Approved]</div>
-                  </div>
-                </div>
+              <div
+                className={`a4-invoices-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''}`}
+                ref={invoiceRef}
+              >
+                {copiesToRender.map((copyType, index) => renderA4InvoiceCopy(copyType, index))}
               </div>
             )}
           </div>

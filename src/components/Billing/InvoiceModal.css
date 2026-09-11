@@ -105,7 +105,7 @@
   border-color: #94A3B8;
 }
 
-/* Toolbar & Format Switcher */
+/* Toolbar, Format Switcher & Copies Switcher */
 .invoice-toolbar {
   display: flex;
   align-items: center;
@@ -115,6 +115,13 @@
   padding: 12px 20px;
   background: #F8FAFC;
   border-bottom: 1px solid #E2E8F0;
+}
+
+.invoice-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .invoice-format-switcher {
@@ -155,6 +162,56 @@
 .format-icon {
   font-size: 0.95rem;
   line-height: 1;
+}
+
+/* Copies Switcher (Customer Copy & Shop Copy) */
+.invoice-copies-switcher {
+  display: inline-flex;
+  background: #E2E8F0;
+  border-radius: 9999px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.copies-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.copies-btn:hover {
+  color: #0F172A;
+}
+
+.copies-btn.active {
+  background: #0284C7;
+  color: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(2, 132, 199, 0.25);
+  font-weight: 700;
+}
+
+.copies-icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.copies-status-tag {
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .invoice-toolbar-actions {
@@ -491,6 +548,20 @@
 .text-center { text-align: center; }
 .text-right { text-align: right; }
 
+.thermal-receipt-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.thermal-single-copy-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .thermal-receipt-document {
   width: 100%;
   max-width: 360px;
@@ -505,6 +576,34 @@
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   border: 1px solid #E2E8F0;
   box-sizing: border-box;
+}
+
+.thermal-receipt-document.copy-shop {
+  border-left: 3px solid #0284C7;
+}
+
+/* Copy Type Distinction Badges */
+.thermal-copy-badge {
+  text-align: center;
+  font-weight: 900;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  padding: 3px 6px;
+  margin: 4px 0;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+
+.thermal-copy-badge.customer {
+  background: #000000;
+  color: #FFFFFF;
+  border: 1px solid #000000;
+}
+
+.thermal-copy-badge.shop {
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px dashed #000000;
 }
 
 .thermal-header {
@@ -680,6 +779,31 @@
   justify-content: space-between;
 }
 
+/* Shop Copy Audit Block */
+.thermal-shop-audit-block {
+  margin: 6px 0;
+  font-size: 10.5px;
+}
+
+.thermal-audit-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: #000000;
+}
+
+.thermal-audit-signatures {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.thermal-audit-signatures .sign-line {
+  font-weight: 600;
+  color: #000000;
+}
+
 /* Barcode representation */
 .thermal-barcode-wrap {
   text-align: center;
@@ -735,6 +859,44 @@
   margin-top: 8px;
 }
 
+/* Tear Divider between multiple thermal receipts */
+.thermal-receipt-divider-cut {
+  margin: 20px auto;
+  width: 100%;
+  max-width: 360px;
+  padding: 8px 10px;
+  text-align: center;
+  border-top: 2px dashed #475569;
+  border-bottom: 2px dashed #475569;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #334155;
+  background: #F8FAFC;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.05em;
+  box-sizing: border-box;
+}
+
+.thermal-receipt-divider-cut .cut-icon {
+  font-size: 1.1rem;
+}
+
+/* A4 Invoices Wrapper & Multiple Copies */
+.a4-invoices-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+}
+
+.inv-tax-badge.shop-badge {
+  background: #0369A1;
+}
+
 /* =========================================
    DEDICATED PRINT STYLESHEET (@media print)
    ========================================= */
@@ -752,14 +914,19 @@
   /* When printing in Thermal Receipt format (80mm) */
   .invoice-portal.format-thermal,
   .invoice-portal.format-thermal .printable-invoice-container,
+  .invoice-portal.format-thermal .thermal-receipt-wrapper,
+  .invoice-portal.format-thermal .thermal-single-copy-wrap,
   .invoice-portal.format-thermal .thermal-receipt-document,
-  .invoice-portal.format-thermal .thermal-receipt-document * {
+  .invoice-portal.format-thermal .thermal-receipt-document *,
+  .invoice-portal.format-thermal .thermal-receipt-divider-cut,
+  .invoice-portal.format-thermal .thermal-receipt-divider-cut * {
     visibility: visible !important;
   }
 
   /* When printing in Standard A4 Invoice format */
   .invoice-portal.format-a4,
   .invoice-portal.format-a4 .printable-invoice-container,
+  .invoice-portal.format-a4 .a4-invoices-wrapper,
   .invoice-portal.format-a4 .invoice-document,
   .invoice-portal.format-a4 .invoice-document * {
     visibility: visible !important;
@@ -802,6 +969,21 @@
   }
 
   /* Thermal roll receipt print configuration */
+  .invoice-portal.format-thermal .thermal-receipt-wrapper {
+    width: 100% !important;
+  }
+
+  .invoice-portal.format-thermal .thermal-single-copy-wrap {
+    width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .invoice-portal.format-thermal .thermal-receipt-wrapper.has-multiple .thermal-single-copy-wrap:not(:last-child) {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
   .invoice-portal.format-thermal .thermal-receipt-document {
     width: 76mm !important;
     max-width: 76mm !important;
@@ -819,6 +1001,21 @@
     print-color-adjust: exact !important;
   }
 
+  .invoice-portal.format-thermal .thermal-copy-badge.customer {
+    background: #000000 !important;
+    color: #FFFFFF !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .invoice-portal.format-thermal .thermal-copy-badge.shop {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: 1px dashed #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .invoice-portal.format-thermal .thermal-source-tag {
     background: #000000 !important;
     color: #FFFFFF !important;
@@ -826,16 +1023,34 @@
     print-color-adjust: exact !important;
   }
 
+  .invoice-portal.format-thermal .thermal-receipt-divider-cut {
+    border-color: #000000 !important;
+    color: #000000 !important;
+    background: transparent !important;
+    margin: 8mm auto !important;
+    max-width: 76mm !important;
+  }
+
   .invoice-portal.format-thermal .thermal-paper-tear-gap {
     display: none !important;
   }
 
   /* Standard A4 sheet print configuration */
+  .invoice-portal.format-a4 .a4-invoices-wrapper {
+    gap: 0 !important;
+  }
+
   .invoice-portal.format-a4 .invoice-document {
     padding: 15mm !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     width: 100% !important;
     background: #FFFFFF !important;
+  }
+
+  .invoice-portal.format-a4 .invoice-document.page-break-before {
+    page-break-before: always !important;
+    break-before: page !important;
+    margin-top: 0 !important;
   }
 }
