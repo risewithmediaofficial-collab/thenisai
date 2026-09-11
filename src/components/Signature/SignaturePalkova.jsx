@@ -179,8 +179,13 @@ export default function SignaturePalkova() {
               <Suspense fallback={null}>
                 <Canvas
                   camera={{ position: [0, 0.6, 4.4], fov: 44 }}
-                  gl={{ antialias: true, alpha: true }}
-                  dpr={[1, 2]}
+                  gl={{ antialias: false, alpha: true, powerPreference: 'default', preserveDrawingBuffer: false }}
+                  dpr={[1, 1.5]}
+                  onCreated={({ gl }) => {
+                    gl.domElement.addEventListener('webglcontextlost', (e) => {
+                      e.preventDefault();
+                    }, false);
+                  }}
                 >
                   <ambientLight intensity={0.6} color="#FFF8EE" />
                   <directionalLight position={[4, 6, 4]} intensity={2.8} color="#FFE4A0" castShadow />

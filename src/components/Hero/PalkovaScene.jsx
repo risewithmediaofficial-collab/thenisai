@@ -149,8 +149,13 @@ export default function PalkovaScene({ mousePos }) {
   return (
     <Canvas
       camera={{ position: [0, 0, 4.3], fov: 44 }}
-      gl={{ antialias: true, alpha: true }}
-      dpr={[1, 2]}
+      gl={{ antialias: false, alpha: true, powerPreference: 'default', preserveDrawingBuffer: false }}
+      dpr={[1, 1.5]}
+      onCreated={({ gl }) => {
+        gl.domElement.addEventListener('webglcontextlost', (e) => {
+          e.preventDefault();
+        }, false);
+      }}
     >
       {/* Warm Ambient Culinary Lighting */}
       <ambientLight intensity={0.75} color="#FFF8EE" />
