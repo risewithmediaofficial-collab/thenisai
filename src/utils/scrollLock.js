@@ -5,13 +5,13 @@ function isInsideScrollable(target) {
   if (!target || !target.closest) return false;
 
   // Never allow backdrop to pass scroll through
-  if (target.closest('.cart-backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop')) {
+  if (target.closest('.cart-backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-mobile-backdrop')) {
     return false;
   }
 
   return Boolean(
     target.closest(
-      '[data-lenis-prevent], .cart-drawer__content, .printable-invoice-container, .checkout-portal, .checkout-modal__body, .invoice-portal, .invoice-modal-wrap, .admin-modal-card, .restock-modal, .scale-modal, .pos-online-orders-drawer, .mobile-menu'
+      '[data-lenis-prevent], .cart-drawer__content, .printable-invoice-container, .checkout-portal, .checkout-modal__body, .invoice-portal, .invoice-modal-wrap, .admin-modal-card, .restock-modal, .scale-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .mobile-menu, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer'
     )
   );
 }

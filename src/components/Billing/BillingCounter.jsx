@@ -102,11 +102,21 @@ export default function BillingCounter() {
   // Online orders drawer / tab toggle
   const [showOnlineOrders, setShowOnlineOrders] = useState(false);
 
+  // Mobile UI state: 'catalog' vs 'bill' view, and mobile slide-out menu drawer
+  const [mobileTab, setMobileTab] = useState('catalog'); // 'catalog' | 'bill'
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   // Search input ref for keyboard shortcut (F2)
   const searchInputRef = useRef(null);
 
-  // Freeze background screen scroll when scale or stock popups are active
-  useScrollLock(Boolean(scaleModalSweet) || isAddStockOpen || isRefillOpen);
+  // Freeze background screen scroll when scale, stock popups, mobile menu, or online orders drawer are active
+  useScrollLock(
+    Boolean(scaleModalSweet) ||
+    isAddStockOpen ||
+    isRefillOpen ||
+    isMobileMenuOpen ||
+    showOnlineOrders
+  );
 
   // Keyboard shortcuts (F2: search, Enter/F9: finalize bill, Escape: close modals)
   useEffect(() => {
@@ -119,6 +129,8 @@ export default function BillingCounter() {
         setScaleModalSweet(null);
         setIsAddStockOpen(false);
         setIsRefillOpen(false);
+        setIsMobileMenuOpen(false);
+        setShowOnlineOrders(false);
       }
       // Press F9 or Enter to finalize bill immediately (if not typing in customer name/phone/search inputs)
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
@@ -334,37 +346,64 @@ export default function BillingCounter() {
           1. TOP POS TERMINAL CONTROL BAR
          =================================================== */}
       <header className="billing-pos-header">
-        <div className="pos-brand">
-          <h1 className="pos-title">Thenisai Sweets POS</h1>
-          <span className="pos-terminal-badge">{user?.counter || 'Counter Desk 01'}</span>
+        <div className="pos-header-brand-wrap">
+          <div className="pos-brand">
+            <h1 className="pos-title">Thenisai Sweets POS</h1>
+            <span className="pos-terminal-badge">{user?.counter || 'Counter Desk 01'}</span>
+          </div>
+
+          {/* Desktop POS Mode Switcher: Register vs My Shift Bills */}
+          <div className="pos-mode-switch-group desktop-only">
+            <button
+              type="button"
+              className={`pos-mode-tab-btn ${posTab === 'register' ? 'active' : ''}`}
+              onClick={() => setPosTab('register')}
+            >
+              <span className="tab-icon">🛒</span>
+              <span>New POS Sale</span>
+            </button>
+            <button
+              type="button"
+              className={`pos-mode-tab-btn ${posTab === 'my-bills' ? 'active' : ''}`}
+              onClick={() => {
+                setPosTab('my-bills');
+                handleRefreshShiftBills();
+              }}
+            >
+              <span className="tab-icon">🧾</span>
+              <span>My Shift Invoices</span>
+              <span className="tab-counter-badge">{myShiftBills.length}</span>
+            </button>
+          </div>
         </div>
 
-        {/* POS Mode Switcher: Register vs My Shift Bills */}
-        <div className="pos-mode-switch-group">
-          <button
-            type="button"
-            className={`pos-mode-tab-btn ${posTab === 'register' ? 'active' : ''}`}
-            onClick={() => setPosTab('register')}
-          >
-            <span className="tab-icon">🛒</span>
-            <span>New POS Sale</span>
-          </button>
-          <button
-            type="button"
-            className={`pos-mode-tab-btn ${posTab === 'my-bills' ? 'active' : ''}`}
-            onClick={() => {
-              setPosTab('my-bills');
-              handleRefreshShiftBills();
-            }}
-          >
-            <span className="tab-icon">🧾</span>
-            <span>My Shift Invoices</span>
-            <span className="tab-counter-badge">{myShiftBills.length}</span>
-          </button>
-        </div>
+        {/* Mobile View Switcher (when on Register: Sweets vs Bill) */}
+        {posTab === 'register' && (
+          <div className="pos-mobile-view-tabs mobile-only">
+            <button
+              type="button"
+              className={`mobile-view-tab ${mobileTab === 'catalog' ? 'active' : ''}`}
+              onClick={() => setMobileTab('catalog')}
+            >
+              <span>🍬 Sweets</span>
+            </button>
+            <button
+              type="button"
+              className={`mobile-view-tab ${mobileTab === 'bill' ? 'active' : ''}`}
+              onClick={() => setMobileTab('bill')}
+            >
+              <span>🧾 Bill</span>
+              {billItems.length > 0 && (
+                <span className="mobile-cart-badge">
+                  {billItems.reduce((s, it) => s + it.quantity, 0)}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
 
-        {/* Action Controls: Online Orders + Refill Tray Stock + Staff Info */}
-        <div className="pos-header-actions">
+        {/* Desktop Action Controls */}
+        <div className="pos-header-actions desktop-only">
           <div className="staff-logged-badge cashier">
             <span>👤</span>
             <span>{user?.name || 'Cashier Desk'}</span>
@@ -430,6 +469,39 @@ export default function BillingCounter() {
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
             <span>Logout</span>
+          </button>
+        </div>
+
+        {/* Mobile Header Right: Bell & Menu Bar Hamburger Icon */}
+        <div className="pos-mobile-header-right mobile-only">
+          <button
+            type="button"
+            className={`mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''}`}
+            onClick={() => setShowOnlineOrders(!showOnlineOrders)}
+            aria-label="Online Orders Queue"
+            title="View Online Delivery Orders"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            {pendingOnlineOrders.length > 0 && (
+              <span className="bell-badge">{pendingOnlineOrders.length}</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="pos-mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Open Cashier Menu"
+            title="Open Cashier Menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
           </button>
         </div>
       </header>
@@ -540,7 +612,7 @@ export default function BillingCounter() {
           3. MAIN TERMINAL WORKSPACE (REGISTER OR SHIFT LEDGER)
          =================================================== */}
       {posTab === 'register' ? (
-        <main className="pos-main-split">
+        <main className={`pos-main-split ${mobileTab === 'catalog' ? 'show-catalog' : 'show-bill'}`}>
           {/* LEFT COLUMN: SWEET CATALOG & QUICK WEIGH / PACK TILES */}
           <section className="pos-catalog-pane">
             {/* Quick Toolbar: Search & Shortcuts */}
@@ -603,115 +675,142 @@ export default function BillingCounter() {
             </div>
 
             {/* Sweet Catalog Tiles Grid */}
-            <div className="pos-products-grid">
+            <div className="pos-sweets-grid">
               {filteredSweets.map((sweet) => {
-                const isSpecialBox = sweet.id === 'special-gift-box';
                 const sweetStock = inventory.find((it) => it.id === sweet.id);
-                const isOutOfStock = sweetStock && sweetStock.stockKg <= 0.1;
+                const currentStock = sweetStock?.stockKg ?? 20;
+                const isOutOfStock = currentStock <= 0.1;
+                const isLow = currentStock <= 8;
 
                 return (
                   <div
                     key={sweet.id}
-                    className={`pos-product-card ${isSpecialBox ? 'featured-box' : ''} ${
-                      isOutOfStock ? 'out-of-stock' : ''
-                    }`}
+                    className={`pos-sweet-card ${isOutOfStock ? 'out-of-stock' : ''}`}
                   >
-                    {/* Top image & name info */}
-                    <div className="pos-card-head">
-                      {sweet.image && (
-                        <img
-                          src={sweet.image}
-                          alt={sweet.name}
-                          className="pos-card-img"
-                          loading="lazy"
-                        />
-                      )}
-                      <div className="pos-card-info">
-                        <span className="pos-card-name">{sweet.name}</span>
-                        <span className="pos-card-tag">{sweet.tagline}</span>
-                        {sweetStock && (
-                          <span
-                            className={`pos-stock-tag ${
-                              sweetStock.stockKg <= sweetStock.minThreshold ? 'low' : ''
-                            }`}
-                          >
-                            Tray: {sweetStock.stockKg} kg left
-                          </span>
-                        )}
+                    <div className="pos-sweet-card__top">
+                      <img
+                        src={sweet.image}
+                        alt={sweet.name}
+                        className="pos-sweet-img"
+                        loading="lazy"
+                      />
+                      <div className="pos-sweet-info">
+                        <h4 className="pos-sweet-title">{sweet.name}</h4>
+                        <span className="pos-sweet-tagline">{sweet.tagline}</span>
+                        <div className={`pos-stock-tag ${isLow ? 'low' : ''}`}>
+                          {isOutOfStock ? '⚠️ Out of Stock' : `Stock: ${currentStock} kg`}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Weight options / Quick Add Buttons */}
-                    <div className="pos-card-weights">
-                      {isSpecialBox ? (
-                        <button
-                          type="button"
-                          className="btn-weight-add box-btn"
-                          disabled={isOutOfStock}
-                          onClick={() => handleAddSweetToBill(sweet, 'Standard 4-in-1 Box')}
-                        >
-                          <span>+ Add 1 Box</span>
-                          <strong>₹{sweet.price}</strong>
-                        </button>
-                      ) : (
+                    {/* Terminal Weight Quick Buttons & Custom Scale Trigger */}
+                    <div className="pos-weight-buttons">
+                      {sweet.prices ? (
                         <>
                           <button
                             type="button"
-                            className="btn-weight-add"
+                            className="pos-pack-btn"
                             disabled={isOutOfStock}
                             onClick={() => handleAddSweetToBill(sweet, '250g')}
                           >
-                            <span>250g</span>
-                            <strong>₹{sweet.prices?.['250g']}</strong>
+                            <span className="pack-label">250g</span>
+                            <span className="pack-price">₹{sweet.prices['250g']}</span>
                           </button>
                           <button
                             type="button"
-                            className="btn-weight-add recommended"
+                            className="pos-pack-btn highlight"
                             disabled={isOutOfStock}
                             onClick={() => handleAddSweetToBill(sweet, '500g')}
                           >
-                            <span>500g</span>
-                            <strong>₹{sweet.prices?.['500g']}</strong>
+                            <span className="pack-label">500g</span>
+                            <span className="pack-price">₹{sweet.prices['500g']}</span>
                           </button>
                           <button
                             type="button"
-                            className="btn-weight-add"
+                            className="pos-pack-btn"
                             disabled={isOutOfStock}
                             onClick={() => handleAddSweetToBill(sweet, '1kg')}
                           >
-                            <span>1 kg</span>
-                            <strong>₹{sweet.prices?.['1kg']}</strong>
+                            <span className="pack-label">1 kg</span>
+                            <span className="pack-price">₹{sweet.prices['1kg']}</span>
                           </button>
                           <button
                             type="button"
-                            className="btn-weight-scale"
+                            className="pos-pack-btn scale-btn"
                             disabled={isOutOfStock}
-                            title="Weigh loose grams using scale"
                             onClick={() => {
                               setScaleModalSweet(sweet);
                               setCustomGrams('350');
                             }}
+                            title="Weigh loose grams on electronic scale"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
-                              <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-                              <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-                              <path d="M7 21h10" />
-                              <path d="M12 3v18" />
-                              <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
-                            </svg>
-                            Scale...
+                            <span className="pack-label">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                                <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+                                <path d="M7 21h10" />
+                                <path d="M12 3v18" />
+                                <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+                              </svg>
+                              Scale...
+                            </span>
+                            <span className="pack-price">Custom</span>
                           </button>
                         </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="pos-pack-btn box-btn highlight"
+                          disabled={isOutOfStock}
+                          onClick={() => handleAddSweetToBill(sweet, 'Standard 4-in-1 Box')}
+                        >
+                          <span className="pack-label">Royal Gift Box Pack</span>
+                          <span className="pack-price">₹{sweet.price}</span>
+                        </button>
                       )}
                     </div>
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Floating Mobile Cart Summary Bar */}
+            {billItems.length > 0 && (
+              <div className="pos-mobile-bottom-bar mobile-only">
+                <button
+                  type="button"
+                  className="btn-mobile-bill-summary"
+                  onClick={() => setMobileTab('bill')}
+                >
+                  <div className="summary-left">
+                    <span className="cart-badge-icon">🛒</span>
+                    <div className="summary-text">
+                      <strong>{billItems.reduce((s, it) => s + it.quantity, 0)} Items Added</strong>
+                      <small>{billItems.length} varieties · Tap to review</small>
+                    </div>
+                  </div>
+                  <div className="summary-right">
+                    <span className="summary-amount">₹{billGrandTotal}</span>
+                    <span className="summary-cta">View Bill & Pay ➔</span>
+                  </div>
+                </button>
+              </div>
+            )}
         </section>
 
         {/* RIGHT COLUMN: ACTIVE POS CASH REGISTER & TERMINAL NUMPAD */}
         <section className="pos-bill-pane">
+          {/* Mobile Return to Sweets Catalog Button */}
+          <div className="pos-bill-mobile-back mobile-only">
+            <button
+              type="button"
+              className="btn-back-to-catalog"
+              onClick={() => setMobileTab('catalog')}
+            >
+              ← Back to Sweets Catalog
+            </button>
+          </div>
+
           {/* Register Tape Header */}
           <div className="pos-bill-header">
             <div>
@@ -1285,6 +1384,197 @@ export default function BillingCounter() {
             isOpen={isRefillOpen}
             onClose={() => setIsRefillOpen(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ===================================================
+          6. MOBILE CASHIER MENU DRAWER (Slide-out Navigation)
+         =================================================== */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="pos-mobile-menu-portal" data-lenis-prevent>
+            <motion.div
+              className="pos-mobile-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            <motion.div
+              className="pos-mobile-drawer"
+              data-lenis-prevent
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            >
+              <div className="mobile-drawer-header">
+                <div className="drawer-user-info">
+                  <div className="drawer-user-avatar">👤</div>
+                  <div>
+                    <h4 className="drawer-user-name">{user?.name || 'Cashier Counter'}</h4>
+                    <span className="drawer-user-role">
+                      {user?.role === 'admin' ? 'Store Administrator' : 'Terminal Cashier'} · {user?.counter || 'Desk 01'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="drawer-close-btn"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-label="Close menu"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="mobile-drawer-body">
+                {/* Mode Navigation */}
+                <div className="drawer-group">
+                  <span className="drawer-group-title">POS WORKSPACE</span>
+                  <button
+                    type="button"
+                    className={`drawer-menu-item ${posTab === 'register' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPosTab('register');
+                      setMobileTab('catalog');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">🛒</span>
+                    <div className="item-text">
+                      <strong>New POS Counter Sale</strong>
+                      <small>Product catalog & active customer bill</small>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`drawer-menu-item ${posTab === 'my-bills' ? 'active' : ''}`}
+                    onClick={() => {
+                      setPosTab('my-bills');
+                      handleRefreshShiftBills();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">🧾</span>
+                    <div className="item-text">
+                      <strong>My Shift Invoices</strong>
+                      <small>{myShiftBills.length} invoices generated</small>
+                    </div>
+                    <span className="drawer-count-badge">{myShiftBills.length}</span>
+                  </button>
+                </div>
+
+                {/* Online Orders Queue */}
+                <div className="drawer-group">
+                  <span className="drawer-group-title">ONLINE DISPATCH</span>
+                  <button
+                    type="button"
+                    className="drawer-menu-item"
+                    onClick={() => {
+                      setShowOnlineOrders(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">🌐</span>
+                    <div className="item-text">
+                      <strong>Online Delivery Orders</strong>
+                      <small>Kitchen dispatch & bill printing</small>
+                    </div>
+                    {pendingOnlineOrders.length > 0 && (
+                      <span className="drawer-alert-badge">{pendingOnlineOrders.length} New</span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Counter Stock */}
+                <div className="drawer-group">
+                  <span className="drawer-group-title">INVENTORY & TRAYS</span>
+                  <button
+                    type="button"
+                    className="drawer-menu-item"
+                    onClick={() => {
+                      setIsAddStockOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">➕</span>
+                    <div className="item-text">
+                      <strong>Add Production Stock</strong>
+                      <small>Receive kitchen batches or new sweets</small>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="drawer-menu-item"
+                    onClick={() => {
+                      setIsRefillOpen(true);
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">🔄</span>
+                    <div className="item-text">
+                      <strong>Refill Counter Trays</strong>
+                      <small>Quickly update display tray weights</small>
+                    </div>
+                  </button>
+                </div>
+
+                {/* General Links */}
+                <div className="drawer-group">
+                  <span className="drawer-group-title">GENERAL</span>
+                  {user?.role === 'admin' && (
+                    <button
+                      type="button"
+                      className="drawer-menu-item"
+                      onClick={() => {
+                        window.location.hash = '#admin';
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="item-icon">👑</span>
+                      <div className="item-text">
+                        <strong>Admin Dashboard</strong>
+                        <small>Full sales analytics & reports</small>
+                      </div>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="drawer-menu-item"
+                    onClick={() => {
+                      window.location.hash = '';
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <span className="item-icon">🏪</span>
+                    <div className="item-text">
+                      <strong>Store Customer Frontpage</strong>
+                      <small>Return to customer online store</small>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              <div className="mobile-drawer-footer">
+                <button
+                  type="button"
+                  className="drawer-logout-btn"
+                  onClick={() => {
+                    logout();
+                    window.location.hash = '';
+                  }}
+                >
+                  <span className="item-icon">🚪</span>
+                  <span>Logout Staff Session</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
