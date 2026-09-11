@@ -743,11 +743,49 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   cursor: pointer;
   user-select: none;
+}
+
+.pos-list-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pos-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.pos-item-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 2px 7px;
+  min-width: 32px;
+  letter-spacing: -0.02em;
+  font-family: 'Inter', -apple-system, monospace;
+  flex-shrink: 0;
+}
+
+.pos-list-row.in-bill .pos-item-num-badge,
+.pos-sweet-card.in-bill .pos-item-num-badge {
+  background: #FEF3C7;
+  border-color: #FDE68A;
+  color: #B45309;
 }
 
 .pos-list-title {

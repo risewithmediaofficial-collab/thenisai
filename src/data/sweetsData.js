@@ -5,6 +5,7 @@ export const SWEET_WEIGHT_OPTIONS = [
 export const BEVERAGES_AND_SNACKS = [
   {
     id: 'tea',
+    itemNumber: 1,
     name: 'Tea — டீ',
     englishName: 'Tea',
     tamilName: 'டீ',
@@ -18,6 +19,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'coffee',
+    itemNumber: 2,
     name: 'Coffee — காபி',
     englishName: 'Coffee',
     tamilName: 'காபி',
@@ -31,6 +33,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'filter-coffee',
+    itemNumber: 3,
     name: 'Filter Coffee — ஃபில்டர் காபி',
     englishName: 'Filter Coffee',
     tamilName: 'ஃபில்டர் காபி',
@@ -44,6 +47,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'milk',
+    itemNumber: 4,
     name: 'Milk — பால்',
     englishName: 'Milk',
     tamilName: 'பால்',
@@ -57,6 +61,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'horlicks',
+    itemNumber: 5,
     name: 'Horlicks — ஹார்லிக்ஸ்',
     englishName: 'Horlicks',
     tamilName: 'ஹார்லிக்ஸ்',
@@ -70,6 +75,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'boost',
+    itemNumber: 6,
     name: 'Boost — பூஸ்ட்',
     englishName: 'Boost',
     tamilName: 'பூஸ்ட்',
@@ -83,6 +89,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'badam-milk',
+    itemNumber: 7,
     name: 'Badam Milk — பாதாம் பால்',
     englishName: 'Badam Milk',
     tamilName: 'பாதாம் பால்',
@@ -96,6 +103,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'ragi-malt',
+    itemNumber: 8,
     name: 'Ragi Malt — கேழ்வரகு கூழ்',
     englishName: 'Ragi Malt',
     tamilName: 'கேழ்வரகு கூழ்',
@@ -109,6 +117,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'lemon-tea',
+    itemNumber: 9,
     name: 'Lemon Tea — எலுமிச்சை டீ',
     englishName: 'Lemon Tea',
     tamilName: 'எலுமிச்சை டீ',
@@ -122,6 +131,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'sugu-tea',
+    itemNumber: 10,
     name: 'Sugu Tea — சுக்கு டீ',
     englishName: 'Sugu Tea',
     tamilName: 'சுக்கு டீ',
@@ -135,6 +145,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'magu-tea',
+    itemNumber: 11,
     name: 'Magu Tea — மிளகு டீ',
     englishName: 'Magu Tea',
     tamilName: 'மிளகு டீ',
@@ -148,6 +159,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'ginger-lemon',
+    itemNumber: 12,
     name: 'Ginger Lemon — இஞ்சி எலுமிச்சை',
     englishName: 'Ginger Lemon',
     tamilName: 'இஞ்சி எலுமிச்சை',
@@ -161,6 +173,7 @@ export const BEVERAGES_AND_SNACKS = [
   },
   {
     id: 'vada',
+    itemNumber: 13,
     name: 'Vada — வடை',
     englishName: 'Vada',
     tamilName: 'வடை',

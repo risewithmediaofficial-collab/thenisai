@@ -300,27 +300,70 @@ export default function BillingCounter() {
     openInvoice(savedOrder || saleData);
   };
 
-  // Filtered products based on search and category
+  // Filtered and orderwise products based on search and category
   const allProducts = ALL_BILLING_ITEMS;
-  const filteredSweets = allProducts.filter((sw) => {
-    const q = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      q === '' ||
+
+  const rawFiltered = allProducts.filter((sw, idx) => {
+    const itemNum = sw.itemNumber || idx + 1;
+    const qRaw = searchQuery.trim();
+    const q = qRaw.toLowerCase();
+
+    if (!q) {
+      if (selectedCategory === 'all') return true;
+      if (selectedCategory === 'tea') return sw.id.includes('tea') || sw.id === 'ginger-lemon';
+      if (selectedCategory === 'coffee') return sw.id.includes('coffee');
+      if (selectedCategory === 'malt') return sw.id.includes('milk') || sw.id === 'horlicks' || sw.id === 'boost' || sw.id === 'ragi-malt';
+      if (selectedCategory === 'beverages') return sw.category === 'beverages';
+      if (selectedCategory === 'snacks') return sw.category === 'snacks' || sw.id === 'vada';
+      return true;
+    }
+
+    // Number-based search (e.g. "1", "2", "#3", "13", or price "20", "25")
+    const cleanNumStr = qRaw.replace(/^#/, '').replace(/\.$/, '').trim();
+    const isPureNumber = /^\d+$/.test(cleanNumStr);
+    if (isPureNumber) {
+      const searchNum = parseInt(cleanNumStr, 10);
+      if (itemNum === searchNum) return true;
+      if (String(itemNum).startsWith(cleanNumStr)) return true;
+      if (sw.price === searchNum) return true;
+    }
+
+    // Text search (English, Tamil, ID)
+    const matchesText =
       sw.name.toLowerCase().includes(q) ||
-      (sw.tamilName && sw.tamilName.includes(searchQuery.trim())) ||
+      (sw.tamilName && sw.tamilName.includes(qRaw)) ||
       (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
-      (sw.tagline && sw.tagline.toLowerCase().includes(q));
+      sw.id.toLowerCase().includes(q);
 
-    if (!matchesSearch) return false;
-
-    if (selectedCategory === 'all') return true;
-    if (selectedCategory === 'tea') return sw.id.includes('tea') || sw.id === 'ginger-lemon';
-    if (selectedCategory === 'coffee') return sw.id.includes('coffee');
-    if (selectedCategory === 'malt') return sw.id.includes('milk') || sw.id === 'horlicks' || sw.id === 'boost' || sw.id === 'ragi-malt';
-    if (selectedCategory === 'beverages') return sw.category === 'beverages';
-    if (selectedCategory === 'snacks') return sw.category === 'snacks' || sw.id === 'vada';
-    return true;
+    return matchesText;
   });
+
+  // Always keep strictly orderwise (sorted by itemNumber 1..13)
+  // If user searches a number, exact itemNumber match is prioritized at top
+  const filteredSweets = [...rawFiltered].sort((a, b) => {
+    const numA = a.itemNumber || 999;
+    const numB = b.itemNumber || 999;
+
+    const cleanNum = searchQuery.trim().replace(/^#/, '').replace(/\.$/, '');
+    if (/^\d+$/.test(cleanNum)) {
+      const targetNum = parseInt(cleanNum, 10);
+      if (numA === targetNum) return -1;
+      if (numB === targetNum) return 1;
+    }
+    return numA - numB;
+  });
+
+  // Fast Enter key in search box adds the top matched item directly to bill
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredSweets.length > 0) {
+        const topItem = filteredSweets[0];
+        handleAddSweetToBill(topItem, topItem.unit || '1 Cup', 1);
+        setSearchQuery('');
+      }
+    }
+  };
 
   return (
     <div className="billing-pos-root side-layout">
@@ -501,9 +544,10 @@ export default function BillingCounter() {
                   <input
                     ref={searchInputRef}
                     type="text"
-                    placeholder="Search product (டீ, Coffee, வடை)... (Press F2)"
+                    placeholder="Search by number or name (1, 2, டீ, Coffee)... (Press F2)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
                   />
                   {searchQuery && (
                     <button
@@ -573,8 +617,9 @@ export default function BillingCounter() {
               {/* GRID VIEW (Clean Cards - Names & Stepper Only) */}
               {catalogLayout === 'grid' && (
                 <div className="pos-sweets-grid clean">
-                  {filteredSweets.map((sweet) => {
+                  {filteredSweets.map((sweet, idx) => {
                     const defaultUnit = sweet.unit || '1 Cup';
+                    const itemNum = sweet.itemNumber || idx + 1;
                     const billItem = billItems.find((it) => it.id === sweet.id);
                     const qtyInBill = billItem ? billItem.quantity : 0;
 
@@ -588,7 +633,10 @@ export default function BillingCounter() {
                           onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
                           title="Click to add 1"
                         >
-                          <h4 className="pos-sweet-title">{sweet.name}</h4>
+                          <div className="pos-card-title-wrap">
+                            <span className="pos-item-num-badge">#{itemNum}</span>
+                            <h4 className="pos-sweet-title">{sweet.name}</h4>
+                          </div>
                           <span className="pos-sweet-price">₹{sweet.price}</span>
                         </div>
 
@@ -634,8 +682,9 @@ export default function BillingCounter() {
               {/* LIST VIEW (Fast Clean Table - Names & Stepper Only) */}
               {catalogLayout === 'list' && (
                 <div className="pos-sweets-list">
-                  {filteredSweets.map((sweet) => {
+                  {filteredSweets.map((sweet, idx) => {
                     const defaultUnit = sweet.unit || '1 Cup';
+                    const itemNum = sweet.itemNumber || idx + 1;
                     const billItem = billItems.find((it) => it.id === sweet.id);
                     const qtyInBill = billItem ? billItem.quantity : 0;
 
@@ -649,7 +698,10 @@ export default function BillingCounter() {
                           onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
                           title="Click to add 1"
                         >
-                          <h4 className="pos-list-title">{sweet.name}</h4>
+                          <div className="pos-list-title-wrap">
+                            <span className="pos-item-num-badge">#{itemNum}</span>
+                            <h4 className="pos-list-title">{sweet.name}</h4>
+                          </div>
                           <span className="pos-list-rate">₹{sweet.price}</span>
                         </div>
 
