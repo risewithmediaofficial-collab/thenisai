@@ -121,12 +121,6 @@ export default function InvoiceModal() {
                 {activeInvoice.source === 'online' ? 'ONLINE' : 'POS'}
               </span>
             </div>
-            {activeInvoice.cashier && (
-              <div className="thermal-meta-row">
-                <span>CASHIER : {activeInvoice.cashier.name || activeInvoice.cashier.username}</span>
-                <span>{activeInvoice.cashier.counter || 'Desk 01'}</span>
-              </div>
-            )}
             <div className="thermal-meta-row">
               <span>CUSTOMER: {customer.fullName || 'Walk-in Guest'}</span>
               {customer.phone && <span>PH: {customer.phone}</span>}
@@ -328,14 +322,6 @@ export default function InvoiceModal() {
                 <span className="meta-label">Status:</span>
                 <span className="meta-val status-pill">{orderStatus}</span>
               </div>
-              {activeInvoice.cashier && (
-                <div>
-                  <span className="meta-label">Billed By:</span>
-                  <span className="meta-val">
-                    {activeInvoice.cashier.name || activeInvoice.cashier.username} ({activeInvoice.cashier.counter || 'Counter Desk'})
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>
