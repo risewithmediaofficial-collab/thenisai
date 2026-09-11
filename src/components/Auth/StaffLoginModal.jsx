@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import './StaffLoginModal.css';
 
 export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCancel }) {
   const { login, error: authError } = useAuth();
+  const { navigateTo } = useCart();
 
   const [selectedRole, setSelectedRole] = useState(initialRole);
   const [username, setUsername] = useState(initialRole === 'admin' ? 'admin' : 'cashier');
@@ -54,7 +56,15 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setIsSubmitting(false);
 
     if (res.success) {
-      if (onSuccess) onSuccess(res.user);
+      if (onSuccess) {
+        onSuccess(res.user);
+      } else {
+        if (res.user?.role === 'admin') {
+          navigateTo('admin');
+        } else if (res.user?.role === 'cashier') {
+          navigateTo('billing');
+        }
+      }
     } else {
       setLocalError(res.error || 'Invalid username or password');
     }

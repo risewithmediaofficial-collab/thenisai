@@ -20,10 +20,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Validate session on mount with backend
+  // Validate existing stored session on initial page load
   useEffect(() => {
     async function verifySession() {
-      if (!token) {
+      const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!savedToken) {
         setLoading(false);
         return;
       }
@@ -34,7 +35,10 @@ export function AuthProvider({ children }) {
           setUser(res.user);
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         } else {
-          logout();
+          setToken(null);
+          setUser(null);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_USER_KEY);
         }
       } catch (err) {
         console.warn('[Auth] Session validation failed or backend offline, using cached credentials:', err);
@@ -44,7 +48,7 @@ export function AuthProvider({ children }) {
     }
 
     verifySession();
-  }, [token]);
+  }, []); // Run ONLY on initial mount, not on every login!
 
   const login = async (credentials) => {
     setError(null);

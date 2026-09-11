@@ -8,11 +8,14 @@ export async function request(endpoint, options = {}) {
 
   const headers = {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers || {}),
   };
 
   const config = {
+    cache: 'no-store',
     ...options,
     headers,
   };
