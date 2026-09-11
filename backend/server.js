@@ -85,14 +85,23 @@ const orderSchema = new mongoose.Schema({
 const billSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   invoiceNumber: String,
+  orderDate: String,
+  orderTime: String,
   items: [mongoose.Schema.Types.Mixed],
   customer: mongoose.Schema.Types.Mixed,
   subtotal: Number,
   taxBreakdown: mongoose.Schema.Types.Mixed,
   grandTotal: Number,
   paymentMethod: String,
-  cashier: mongoose.Schema.Types.Mixed,
+  cashier: {
+    id: String,
+    name: String,
+    username: String,
+    role: String,
+    counter: String,
+  },
   source: { type: String, default: 'counter' },
+  status: { type: String, default: 'Completed' },
   createdAt: { type: Number, default: Date.now },
 });
 
@@ -381,42 +390,87 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 // ============================================================
 
 app.post('/api/bills', async (req, res) => {
-  const billData = req.body;
-  const now = new Date();
-  const invoiceNumber = billData.invoiceNumber || `THN-POS-${now.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+  try {
+    const billData = req.body;
+    const now = new Date();
+    const invoiceNumber = billData.invoiceNumber || `POS-${now.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  const finalBill = await Bill.create({
-    ...billData,
-    id: `bill-${Date.now()}`,
-    invoiceNumber,
-    createdAt: Date.now(),
-    source: 'counter',
-  });
+    const finalBill = await Bill.create({
+      ...billData,
+      id: billData.id || `bill-${Date.now()}`,
+      invoiceNumber,
+      orderDate: billData.orderDate || now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      orderTime: billData.orderTime || now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      cashier: billData.cashier || {
+        id: 'staff-2',
+        username: 'cashier',
+        name: 'M. Kannan',
+        role: 'cashier',
+        counter: 'Counter Desk 01',
+      },
+      createdAt: Date.now(),
+      source: 'counter',
+      status: 'Completed',
+    });
 
-  // Deduct inventory
-  if (finalBill.items && Array.isArray(finalBill.items)) {
-    for (const item of finalBill.items) {
-      const inv = await Inventory.findOne({ id: item.id });
-      if (inv) {
-        const w = String(item.weight).toLowerCase();
-        let weightKg = 0.5;
-        if (w.includes('250g')) weightKg = 0.25;
-        else if (w.includes('500g')) weightKg = 0.5;
-        else if (w.includes('1kg')) weightKg = 1.0;
-        else if (w.includes('kg')) weightKg = parseFloat(w) || 0.5;
-        inv.stockKg = Math.max(0, Math.round((inv.stockKg - weightKg * (item.quantity || 1)) * 10) / 10);
-        await inv.save();
+    // Deduct inventory
+    if (finalBill.items && Array.isArray(finalBill.items)) {
+      for (const item of finalBill.items) {
+        const inv = await Inventory.findOne({ id: item.id });
+        if (inv) {
+          const w = String(item.weight).toLowerCase();
+          let weightKg = 0.5;
+          if (w.includes('250g')) weightKg = 0.25;
+          else if (w.includes('500g')) weightKg = 0.5;
+          else if (w.includes('1kg')) weightKg = 1.0;
+          else if (w.includes('kg')) weightKg = parseFloat(w) || 0.5;
+          inv.stockKg = Math.max(0, Math.round((inv.stockKg - weightKg * (item.quantity || 1)) * 10) / 10);
+          await inv.save();
+        }
       }
     }
-  }
 
-  console.log(`[POS Billing] Bill: ${invoiceNumber} Total: ₹${finalBill.grandTotal}`);
-  res.json({ success: true, bill: finalBill });
+    console.log(`[POS Billing] Bill: ${invoiceNumber} Total: ₹${finalBill.grandTotal} by ${finalBill.cashier?.name || 'Staff'}`);
+    res.json({ success: true, bill: finalBill });
+  } catch (err) {
+    console.error('[POS Billing] Error creating bill:', err);
+    res.status(500).json({ success: false, message: 'Failed to create bill: ' + err.message });
+  }
 });
 
 app.get('/api/bills', async (req, res) => {
-  const bills = await Bill.find({}).sort({ createdAt: -1 });
-  res.json({ success: true, bills });
+  try {
+    const { cashierId, limit = 500 } = req.query;
+    const filter = {};
+
+    if (cashierId && cashierId !== 'all') {
+      filter.$or = [
+        { 'cashier.id': cashierId },
+        { 'cashier.username': cashierId },
+      ];
+    }
+
+    const bills = await Bill.find(filter).sort({ createdAt: -1 }).limit(Number(limit));
+    res.json({ success: true, bills });
+  } catch (err) {
+    console.error('[POS Billing] Error fetching bills:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch bills' });
+  }
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    service: 'Thenisai Sweets Backend Engine',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth/login',
+      inventory: '/api/inventory',
+      orders: '/api/orders',
+      bills: '/api/bills',
+    },
+  });
 });
 
 // ============================================================

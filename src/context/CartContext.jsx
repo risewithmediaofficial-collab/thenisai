@@ -134,6 +134,16 @@ export function CartProvider({ children }) {
     }
   });
 
+  // POS Counter Bills state
+  const [bills, setBills] = useState(() => {
+    try {
+      const saved = localStorage.getItem('thenisai_bills_cache');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // ==========================================
   // SCREEN SCROLL LOCK WHEN MODALS/DRAWER OPEN
   // ==========================================
@@ -196,9 +206,10 @@ export function CartProvider({ children }) {
     let isMounted = true;
     async function syncWithBackend() {
       try {
-        const [invRes, ordRes] = await Promise.all([
+        const [invRes, ordRes, billsRes] = await Promise.all([
           api.get('/api/inventory').catch(() => null),
           api.get('/api/orders').catch(() => null),
+          api.get('/api/bills').catch(() => null),
         ]);
         if (isMounted) {
           if (invRes && invRes.success && Array.isArray(invRes.inventory) && invRes.inventory.length > 0) {
@@ -206,6 +217,12 @@ export function CartProvider({ children }) {
           }
           if (ordRes && ordRes.success && Array.isArray(ordRes.orders) && ordRes.orders.length > 0) {
             setOrders(ordRes.orders);
+          }
+          if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
+            setBills(billsRes.bills);
+            try {
+              localStorage.setItem('thenisai_bills_cache', JSON.stringify(billsRes.bills));
+            } catch {}
           }
         }
       } catch (err) {
@@ -217,6 +234,26 @@ export function CartProvider({ children }) {
       isMounted = false;
     };
   }, []);
+
+  // Fetch bills with optional cashier filter
+  const fetchBills = async (cashierId) => {
+    try {
+      const endpoint = cashierId && cashierId !== 'all'
+        ? `/api/bills?cashierId=${encodeURIComponent(cashierId)}`
+        : '/api/bills';
+      const res = await api.get(endpoint);
+      if (res.success && Array.isArray(res.bills)) {
+        setBills(res.bills);
+        try {
+          localStorage.setItem('thenisai_bills_cache', JSON.stringify(res.bills));
+        } catch {}
+        return res.bills;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch bills from backend:', err);
+    }
+    return bills;
+  };
 
   // Deduct inventory helper
   const deductStockForItems = (itemsList) => {
@@ -271,18 +308,23 @@ export function CartProvider({ children }) {
   const addCounterSale = async (saleData) => {
     const fullOrder = {
       ...saleData,
-      id: `pos-${Date.now()}`,
-      source: 'walk-in',
+      id: saleData.id || `pos-${Date.now()}`,
+      source: 'counter',
       status: 'Completed',
       createdAt: Date.now(),
     };
 
     setOrders((prev) => [fullOrder, ...prev]);
+    setBills((prev) => [fullOrder, ...prev]);
     deductStockForItems(saleData.items);
 
     // Persist to backend bills endpoint
     try {
-      await api.post('/api/bills', saleData);
+      const res = await api.post('/api/bills', fullOrder);
+      if (res && res.success && res.bill) {
+        setBills((prev) => [res.bill, ...prev.filter((b) => b.id !== fullOrder.id && b.id !== res.bill.id)]);
+        return res.bill;
+      }
     } catch (err) {
       console.warn('Backend bill save fallback to local:', err);
     }
@@ -527,6 +569,8 @@ export function CartProvider({ children }) {
         currentView,
         navigateTo,
         orders,
+        bills,
+        fetchBills,
         inventory,
         pendingOrdersCount,
         placeOnlineOrder,

@@ -22,6 +22,8 @@ export default function BillingCounter() {
   const {
     inventory,
     orders,
+    bills,
+    fetchBills,
     acceptOrder,
     updateOrderStatus,
     addCounterSale,
@@ -29,6 +31,12 @@ export default function BillingCounter() {
     openInvoice,
     navigateTo,
   } = useCart();
+
+  // POS Mode: 'register' (Live Counter POS) | 'my-bills' (Cashier Shift Ledger)
+  const [posTab, setPosTab] = useState('register');
+  const [billSearchTerm, setBillSearchTerm] = useState('');
+  const [billPaymentFilter, setBillPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
+  const [isRefreshingBills, setIsRefreshingBills] = useState(false);
 
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
@@ -42,6 +50,46 @@ export default function BillingCounter() {
 
   // Hold / Recall Bills state
   const [heldBills, setHeldBills] = useState([]);
+
+  // Shift Ledger Filtering for Cashier
+  const myShiftBills = (bills || []).filter((b) => {
+    if (!user) return true;
+    if (user.role === 'admin') return true;
+    const uid = user.id || user._id || user.username;
+    return (
+      b.cashier?.id === uid ||
+      b.cashier?.username === user.username ||
+      !b.cashier?.username
+    );
+  });
+
+  const filteredShiftBills = myShiftBills.filter((b) => {
+    if (billPaymentFilter !== 'all' && (b.paymentMethod || '').toLowerCase() !== billPaymentFilter) {
+      return false;
+    }
+    if (billSearchTerm.trim()) {
+      const term = billSearchTerm.toLowerCase();
+      const matchInv = b.invoiceNumber?.toLowerCase().includes(term);
+      const matchCust = b.customer?.fullName?.toLowerCase().includes(term);
+      const matchPhone = b.customer?.phone?.includes(term);
+      if (!matchInv && !matchCust && !matchPhone) return false;
+    }
+    return true;
+  });
+
+  const myShiftTotalRevenue = myShiftBills.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const myShiftCashTotal = myShiftBills.filter((b) => b.paymentMethod === 'cash').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const myShiftUpiTotal = myShiftBills.filter((b) => b.paymentMethod === 'upi').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const myShiftCardTotal = myShiftBills.filter((b) => b.paymentMethod === 'card').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+
+  const handleRefreshShiftBills = async () => {
+    setIsRefreshingBills(true);
+    try {
+      await fetchBills(user?.id || user?.username);
+    } finally {
+      setTimeout(() => setIsRefreshingBills(false), 400);
+    }
+  };
 
   // Loose Weight Scale Modal state
   const [scaleModalSweet, setScaleModalSweet] = useState(null);
@@ -205,7 +253,7 @@ export default function BillingCounter() {
 
 
   // Complete counter sale & print bill
-  const handleCompleteSale = (e) => {
+  const handleCompleteSale = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (billItems.length === 0) return;
 
@@ -218,6 +266,13 @@ export default function BillingCounter() {
       invoiceNumber,
       orderDate: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       orderTime: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      cashier: {
+        id: user?.id || user?._id || 'staff-2',
+        name: user?.name || 'Cashier Counter',
+        username: user?.username || 'cashier',
+        role: user?.role || 'cashier',
+        counter: user?.counter || 'Counter Desk 01',
+      },
       customer: {
         fullName: customerInfo.fullName.trim() || 'Walk-in Guest',
         phone: customerInfo.phone.trim() || 'Store Counter',
@@ -248,9 +303,9 @@ export default function BillingCounter() {
       orderStatus: 'Completed (Paid at Counter)',
     };
 
-    const savedOrder = addCounterSale(saleData);
+    const savedOrder = await addCounterSale(saleData);
     handleClearBill();
-    openInvoice(savedOrder);
+    openInvoice(savedOrder || saleData);
   };
 
 
@@ -280,7 +335,32 @@ export default function BillingCounter() {
          =================================================== */}
       <header className="billing-pos-header">
         <div className="pos-brand">
-          <h1 className="pos-title">Thenisai Sweets POS Billing</h1>
+          <h1 className="pos-title">Thenisai Sweets POS</h1>
+          <span className="pos-terminal-badge">{user?.counter || 'Counter Desk 01'}</span>
+        </div>
+
+        {/* POS Mode Switcher: Register vs My Shift Bills */}
+        <div className="pos-mode-switch-group">
+          <button
+            type="button"
+            className={`pos-mode-tab-btn ${posTab === 'register' ? 'active' : ''}`}
+            onClick={() => setPosTab('register')}
+          >
+            <span className="tab-icon">🛒</span>
+            <span>New POS Sale</span>
+          </button>
+          <button
+            type="button"
+            className={`pos-mode-tab-btn ${posTab === 'my-bills' ? 'active' : ''}`}
+            onClick={() => {
+              setPosTab('my-bills');
+              handleRefreshShiftBills();
+            }}
+          >
+            <span className="tab-icon">🧾</span>
+            <span>My Shift Invoices</span>
+            <span className="tab-counter-badge">{myShiftBills.length}</span>
+          </button>
         </div>
 
         {/* Action Controls: Online Orders + Refill Tray Stock + Staff Info */}
@@ -457,150 +537,173 @@ export default function BillingCounter() {
       </AnimatePresence>
 
       {/* ===================================================
-          3. MAIN TERMINAL BILLING SPLIT WORKSPACE
+          3. MAIN TERMINAL WORKSPACE (REGISTER OR SHIFT LEDGER)
          =================================================== */}
-      <main className="pos-main-split">
-        {/* LEFT COLUMN: SWEET CATALOG & QUICK WEIGH / PACK TILES */}
-        <section className="pos-catalog-pane">
-          {/* Quick Toolbar: Search & Shortcuts */}
-          <div className="pos-catalog-toolbar">
-            <div className="pos-search">
-              <span className="pos-search-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-              </span>
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search sweet or box... (Press F2)"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="pos-search-clear"
-                  onClick={() => setSearchQuery('')}
-                >
-                  ✕
-                </button>
+      {posTab === 'register' ? (
+        <main className="pos-main-split">
+          {/* LEFT COLUMN: SWEET CATALOG & QUICK WEIGH / PACK TILES */}
+          <section className="pos-catalog-pane">
+            {/* Quick Toolbar: Search & Shortcuts */}
+            <div className="pos-catalog-toolbar">
+              <div className="pos-search">
+                <span className="pos-search-icon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </span>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search sweet or box... (Press F2)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="pos-search-clear"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Held Bills Quick Indicator */}
+              {heldBills.length > 0 && (
+                <div className="held-bills-banner">
+                  <span>⏸ {heldBills.length} Bill(s) on Hold:</span>
+                  {heldBills.map((h, i) => (
+                    <button
+                      key={h.id}
+                      type="button"
+                      className="btn-recall-held"
+                      onClick={() => handleRecallBill(h.id)}
+                    >
+                      Recall #{i + 1} (₹{h.total})
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
 
-            {/* Held Bills Quick Indicator */}
-            {heldBills.length > 0 && (
-              <div className="held-bills-banner">
-                <span>⏸ {heldBills.length} Bill(s) on Hold:</span>
-                {heldBills.map((h, i) => (
-                  <button
-                    key={h.id}
-                    type="button"
-                    className="btn-recall-held"
-                    onClick={() => handleRecallBill(h.id)}
+            {/* Quick Category Tabs Bar */}
+            <div className="pos-category-bar">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  className={`category-pill ${selectedCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat.id)}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sweet Catalog Tiles Grid */}
+            <div className="pos-products-grid">
+              {filteredSweets.map((sweet) => {
+                const isSpecialBox = sweet.id === 'special-gift-box';
+                const sweetStock = inventory.find((it) => it.id === sweet.id);
+                const isOutOfStock = sweetStock && sweetStock.stockKg <= 0.1;
+
+                return (
+                  <div
+                    key={sweet.id}
+                    className={`pos-product-card ${isSpecialBox ? 'featured-box' : ''} ${
+                      isOutOfStock ? 'out-of-stock' : ''
+                    }`}
                   >
-                    Recall #{i + 1} (₹{h.total})
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Quick Category Tabs Bar */}
-          <div className="pos-category-bar">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                className={`category-pill ${selectedCategory === cat.id ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat.id)}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Sweets Grid */}
-          <div className="pos-sweets-grid">
-            {filteredSweets.map((sweet) => {
-              const currentStock = inventory.find((inv) => inv.id === sweet.id)?.stockKg ?? 20;
-              const isLow = currentStock <= 8;
-
-              return (
-                <div key={sweet.id} className="pos-sweet-card">
-                  <div className="pos-sweet-card__top">
-                    <img src={sweet.image} alt={sweet.name} className="pos-sweet-img" />
-                    <div className="pos-sweet-info">
-                      <h4 className="pos-sweet-title">{sweet.name}</h4>
-                      <span className="pos-sweet-tagline">{sweet.tagline}</span>
-                      <div className={`pos-stock-tag ${isLow ? 'low' : ''}`}>
-                        Stock: <strong>{currentStock} kg</strong>
+                    {/* Top image & name info */}
+                    <div className="pos-card-head">
+                      {sweet.image && (
+                        <img
+                          src={sweet.image}
+                          alt={sweet.name}
+                          className="pos-card-img"
+                          loading="lazy"
+                        />
+                      )}
+                      <div className="pos-card-info">
+                        <span className="pos-card-name">{sweet.name}</span>
+                        <span className="pos-card-tag">{sweet.tagline}</span>
+                        {sweetStock && (
+                          <span
+                            className={`pos-stock-tag ${
+                              sweetStock.stockKg <= sweetStock.minThreshold ? 'low' : ''
+                            }`}
+                          >
+                            Tray: {sweetStock.stockKg} kg left
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Terminal Weight Quick Buttons & Custom Scale Trigger */}
-                  <div className="pos-weight-buttons">
-                    {sweet.prices ? (
-                      <>
+                    {/* Weight options / Quick Add Buttons */}
+                    <div className="pos-card-weights">
+                      {isSpecialBox ? (
                         <button
                           type="button"
-                          className="pos-pack-btn"
-                          onClick={() => handleAddSweetToBill(sweet, '250g')}
+                          className="btn-weight-add box-btn"
+                          disabled={isOutOfStock}
+                          onClick={() => handleAddSweetToBill(sweet, 'Standard 4-in-1 Box')}
                         >
-                          <span className="pack-label">250g</span>
-                          <span className="pack-price">₹{sweet.prices['250g']}</span>
+                          <span>+ Add 1 Box</span>
+                          <strong>₹{sweet.price}</strong>
                         </button>
-                        <button
-                          type="button"
-                          className="pos-pack-btn highlight"
-                          onClick={() => handleAddSweetToBill(sweet, '500g')}
-                        >
-                          <span className="pack-label">500g</span>
-                          <span className="pack-price">₹{sweet.prices['500g']}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="pos-pack-btn"
-                          onClick={() => handleAddSweetToBill(sweet, '1kg')}
-                        >
-                          <span className="pack-label">1 kg</span>
-                          <span className="pack-price">₹{sweet.prices['1kg']}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="pos-pack-btn scale-btn"
-                          onClick={() => {
-                            setScaleModalSweet(sweet);
-                            setCustomGrams('350');
-                          }}
-                          title="Weigh loose grams on electronic scale"
-                        >
-                          <span className="pack-label">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="btn-weight-add"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, '250g')}
+                          >
+                            <span>250g</span>
+                            <strong>₹{sweet.prices?.['250g']}</strong>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-weight-add recommended"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, '500g')}
+                          >
+                            <span>500g</span>
+                            <strong>₹{sweet.prices?.['500g']}</strong>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-weight-add"
+                            disabled={isOutOfStock}
+                            onClick={() => handleAddSweetToBill(sweet, '1kg')}
+                          >
+                            <span>1 kg</span>
+                            <strong>₹{sweet.prices?.['1kg']}</strong>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-weight-scale"
+                            disabled={isOutOfStock}
+                            title="Weigh loose grams using scale"
+                            onClick={() => {
+                              setScaleModalSweet(sweet);
+                              setCustomGrams('350');
+                            }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
                               <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
                               <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
                               <path d="M7 21h10" />
                               <path d="M12 3v18" />
                               <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
                             </svg>
-                            Loose wt
-                          </span>
-                          <span className="pack-price">Scale</span>
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        className="pos-pack-btn box-btn"
-                        onClick={() => handleAddSweetToBill(sweet, sweet.weight || '1kg')}
-                      >
-                        <span className="pack-label">{sweet.weight || '1kg Box'}</span>
-                        <span className="pack-price">₹{sweet.price}</span>
-                      </button>
-                    )}
-                  </div>
+                            Scale...
+                          </button>
+                        </>
+                      )}
+                    </div>
                 </div>
               );
             })}
@@ -832,6 +935,229 @@ export default function BillingCounter() {
           </div>
         </section>
       </main>
+      ) : (
+        <main className="pos-shift-bills-wrapper">
+          {/* Shift Header Strip */}
+          <div className="shift-header-strip">
+            <div className="shift-header-left">
+              <h2 className="shift-view-title">🧾 Cashier Shift Billing Ledger</h2>
+              <div className="shift-cashier-meta">
+                <span className="meta-badge cashier-badge">
+                  👤 Cashier: <strong>{user?.name || 'Cashier Counter'}</strong> ({user?.username || 'cashier'})
+                </span>
+                <span className="meta-badge counter-badge">
+                  📍 Terminal: <strong>{user?.counter || 'Counter Desk 01'}</strong>
+                </span>
+                <span className="meta-badge date-badge">
+                  📅 Date: <strong>{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong>
+                </span>
+              </div>
+            </div>
+
+            <div className="shift-header-right">
+              <button
+                type="button"
+                className="btn-shift-refresh"
+                onClick={handleRefreshShiftBills}
+                disabled={isRefreshingBills}
+              >
+                <svg
+                  className={isRefreshingBills ? 'spin' : ''}
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>{isRefreshingBills ? 'Syncing...' : 'Refresh Bills'}</span>
+              </button>
+              <button
+                type="button"
+                className="btn-shift-new-sale"
+                onClick={() => setPosTab('register')}
+              >
+                🛒 Return to POS Register
+              </button>
+            </div>
+          </div>
+
+          {/* Shift KPI Summary Cards */}
+          <div className="shift-kpis-grid">
+            <div className="shift-kpi-card total">
+              <span className="kpi-label">Total Shift Revenue</span>
+              <div className="kpi-val">₹{myShiftTotalRevenue.toLocaleString('en-IN')}</div>
+              <span className="kpi-sub">{myShiftBills.length} Invoices Generated</span>
+            </div>
+
+            <div className="shift-kpi-card cash">
+              <span className="kpi-label">💵 Cash Collected</span>
+              <div className="kpi-val">₹{myShiftCashTotal.toLocaleString('en-IN')}</div>
+              <span className="kpi-sub">
+                {myShiftBills.filter((b) => b.paymentMethod === 'cash').length} Cash Bills
+              </span>
+            </div>
+
+            <div className="shift-kpi-card upi">
+              <span className="kpi-label">📱 UPI Collections</span>
+              <div className="kpi-val">₹{myShiftUpiTotal.toLocaleString('en-IN')}</div>
+              <span className="kpi-sub">
+                {myShiftBills.filter((b) => b.paymentMethod === 'upi').length} UPI Transactions
+              </span>
+            </div>
+
+            <div className="shift-kpi-card card">
+              <span className="kpi-label">💳 Card Swipe</span>
+              <div className="kpi-val">₹{myShiftCardTotal.toLocaleString('en-IN')}</div>
+              <span className="kpi-sub">
+                {myShiftBills.filter((b) => b.paymentMethod === 'card').length} EDC Swipes
+              </span>
+            </div>
+          </div>
+
+          {/* Toolbar: Search and Filter */}
+          <div className="shift-toolbar">
+            <div className="shift-search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search invoice no (POS-...), customer name or phone..."
+                value={billSearchTerm}
+                onChange={(e) => setBillSearchTerm(e.target.value)}
+              />
+              {billSearchTerm && (
+                <button type="button" className="clear-btn" onClick={() => setBillSearchTerm('')}>
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className="shift-filter-chips">
+              <span className="filter-label">Payment:</span>
+              {[
+                { id: 'all', label: 'All Payments' },
+                { id: 'cash', label: '💵 Cash' },
+                { id: 'upi', label: '📱 UPI' },
+                { id: 'card', label: '💳 Card' },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  className={`shift-chip ${billPaymentFilter === f.id ? 'active' : ''}`}
+                  onClick={() => setBillPaymentFilter(f.id)}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Shift Invoices Table / Card */}
+          <div className="shift-table-container">
+            {filteredShiftBills.length === 0 ? (
+              <div className="shift-empty-state">
+                <div className="shift-empty-icon">🧾</div>
+                <h3>No Invoices Found</h3>
+                <p>
+                  {myShiftBills.length === 0
+                    ? 'No sales recorded on this terminal yet. Click below to start billing customers.'
+                    : 'No invoices match the current search or payment filter.'}
+                </p>
+                {myShiftBills.length === 0 && (
+                  <button
+                    type="button"
+                    className="btn btn-gold"
+                    onClick={() => setPosTab('register')}
+                  >
+                    🛒 Open POS Register
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="shift-table-card">
+                <table className="shift-invoices-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice No</th>
+                      <th>Time</th>
+                      <th>Customer Details</th>
+                      <th>Items Sold</th>
+                      <th>Payment Mode</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredShiftBills.map((bill) => (
+                      <tr key={bill.id || bill.invoiceNumber}>
+                        <td>
+                          <span className="shift-inv-badge">{bill.invoiceNumber}</span>
+                        </td>
+                        <td>
+                          <span className="shift-time">{bill.orderTime || 'Just now'}</span>
+                          <span className="shift-date-sub">{bill.orderDate}</span>
+                        </td>
+                        <td>
+                          <div className="cust-name-row">
+                            <strong>{bill.customer?.fullName || 'Walk-in Guest'}</strong>
+                          </div>
+                          <div className="cust-phone-sub">
+                            📞 {bill.customer?.phone || 'Store Counter'}
+                          </div>
+                        </td>
+                        <td>
+                          <div className="shift-items-list">
+                            {bill.items?.map((it, idx) => (
+                              <span key={idx} className="shift-item-pill">
+                                {it.name} ({it.weight}) × {it.quantity}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`payment-pill ${bill.paymentMethod?.toLowerCase()}`}>
+                            {bill.paymentMethod === 'upi' ? '📱 UPI QR' : bill.paymentMethod === 'card' ? '💳 Card POS' : '💵 Cash'}
+                          </span>
+                        </td>
+                        <td>
+                          <strong className="shift-amount">₹{bill.grandTotal}</strong>
+                        </td>
+                        <td>
+                          <span className="shift-status-pill">
+                            ✓ {bill.orderStatus || bill.status || 'Paid'}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="btn-shift-print-inv"
+                            onClick={() => openInvoice(bill)}
+                            title="View & Print Official GST Tax Receipt"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                              <path d="M6 14h12v8H6z" />
+                            </svg>
+                            <span>Print Bill</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </main>
+      )}
 
       {/* ===================================================
           4. LOOSE WEIGHT SCALE POPUP MODAL

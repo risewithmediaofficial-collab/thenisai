@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
     orders,
+    bills,
+    fetchBills,
     inventory,
     acceptOrder,
     updateOrderStatus,
@@ -24,19 +26,121 @@ export default function AdminDashboard() {
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'New' | 'Accepted' | 'Dispatched' | 'Delivered'
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Sales Tab Filters & States
+  const [salesSearchTerm, setSalesSearchTerm] = useState('');
+  const [salesCashierFilter, setSalesCashierFilter] = useState('all');
+  const [salesSourceFilter, setSalesSourceFilter] = useState('all'); // 'all' | 'counter' | 'online'
+  const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
+  const [isSyncingSales, setIsSyncingSales] = useState(false);
+
   // Stock Modals State
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
   const [isRefillOpen, setIsRefillOpen] = useState(false);
   useScrollLock(isAddStockOpen || isRefillOpen);
 
-  // Calculate high-level KPIs
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
-  const onlineOrders = orders.filter((o) => o.source === 'online');
-  const counterSales = orders.filter((o) => o.source === 'walk-in');
+  // Consolidate all sales: counter bills from DB + online orders
+  const allSales = useMemo(() => {
+    const map = new Map();
+    // Add bills from database (/api/bills)
+    (bills || []).forEach((b) => {
+      const key = b.invoiceNumber || b.id;
+      if (key) map.set(key, { ...b, source: b.source || 'counter' });
+    });
+    // Add orders (online website orders & fallback)
+    (orders || []).forEach((o) => {
+      const key = o.invoiceNumber || o.id;
+      if (key && !map.has(key)) {
+        map.set(key, o);
+      }
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => (b.createdAt || 0) - (a.createdAt || 0)
+    );
+  }, [bills, orders]);
+
+  // High-level combined KPIs
+  const totalRevenue = allSales.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+  const onlineOrders = allSales.filter((o) => o.source === 'online');
+  const counterSales = allSales.filter((o) => (o.source || 'counter') === 'counter' || o.source === 'walk-in');
   const pendingOrders = onlineOrders.filter((o) => o.status === 'New');
   const lowStockItems = inventory.filter((item) => item.stockKg <= item.minThreshold);
 
-  // Filtered orders list
+  const counterRevenue = counterSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const onlineRevenue = onlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalCashRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalUpiRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalCardRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+
+  // Cashier Performance Aggregation
+  const cashierSummary = useMemo(() => {
+    const map = {};
+    allSales.forEach((sale) => {
+      if (sale.cashier || (sale.source || 'counter') === 'counter' || sale.source === 'walk-in') {
+        const cid = sale.cashier?.username || sale.cashier?.id || 'counter-desk';
+        const name = sale.cashier?.name || 'Counter Staff';
+        const counter = sale.cashier?.counter || 'Counter Desk';
+        if (!map[cid]) {
+          map[cid] = {
+            id: cid,
+            name,
+            counter,
+            role: sale.cashier?.role || 'cashier',
+            billCount: 0,
+            totalAmount: 0,
+            cash: 0,
+            upi: 0,
+            card: 0,
+          };
+        }
+        map[cid].billCount += 1;
+        const amt = sale.grandTotal || 0;
+        map[cid].totalAmount += amt;
+        const pm = (sale.paymentMethod || '').toLowerCase();
+        if (pm === 'cash') map[cid].cash += amt;
+        else if (pm === 'upi') map[cid].upi += amt;
+        else if (pm === 'card') map[cid].card += amt;
+      }
+    });
+    return Object.values(map);
+  }, [allSales]);
+
+  // Filtered sales for Tab 3
+  const filteredSales = allSales.filter((sale) => {
+    const sSource = sale.source === 'online' ? 'online' : 'counter';
+    if (salesSourceFilter !== 'all' && sSource !== salesSourceFilter) return false;
+
+    const sPayment = (sale.paymentMethod || '').toLowerCase();
+    if (salesPaymentFilter !== 'all' && sPayment !== salesPaymentFilter) return false;
+
+    if (salesCashierFilter !== 'all') {
+      const cid = sale.cashier?.username || sale.cashier?.id;
+      if (cid !== salesCashierFilter) return false;
+    }
+
+    if (salesSearchTerm.trim()) {
+      const term = salesSearchTerm.toLowerCase();
+      const matchInv = sale.invoiceNumber?.toLowerCase().includes(term);
+      const matchCust = sale.customer?.fullName?.toLowerCase().includes(term);
+      const matchPhone = sale.customer?.phone?.includes(term);
+      const matchCashier =
+        sale.cashier?.name?.toLowerCase().includes(term) ||
+        sale.cashier?.username?.toLowerCase().includes(term);
+      if (!matchInv && !matchCust && !matchPhone && !matchCashier) return false;
+    }
+
+    return true;
+  });
+
+  const handleSyncAllSales = async () => {
+    setIsSyncingSales(true);
+    try {
+      await fetchBills();
+    } finally {
+      setTimeout(() => setIsSyncingSales(false), 400);
+    }
+  };
+
+  // Filtered orders list for Tab 1
   const filteredOrders = orders.filter((order) => {
     const matchesFilter =
       orderFilter === 'all'
@@ -171,10 +275,13 @@ export default function AdminDashboard() {
           <button
             type="button"
             className={`admin-tab ${activeTab === 'sales' ? 'active' : ''}`}
-            onClick={() => setActiveTab('sales')}
+            onClick={() => {
+              setActiveTab('sales');
+              handleSyncAllSales();
+            }}
           >
             <span>All Sales & Billing Log</span>
-            <span className="tab-pill">{orders.length}</span>
+            <span className="tab-pill">{allSales.length}</span>
           </button>
         </div>
 
@@ -493,74 +600,266 @@ export default function AdminDashboard() {
             TAB 3: ALL SALES & BILLING LOG
            ========================================= */}
         {activeTab === 'sales' && (
-          <section className="tab-content">
-            <div className="tab-toolbar">
-              <h3 className="section-title">Complete Sales & Tax Invoices Log</h3>
-              <div className="sales-stats-strip">
-                <span>Total Bills: <strong>{orders.length}</strong></span>
-                <span>Online Deliveries: <strong>{onlineOrders.length}</strong></span>
-                <span>Counter Sales: <strong>{counterSales.length}</strong></span>
+          <section className="tab-content admin-sales-tab">
+            {/* Sales Stats Strip */}
+            <div className="tab-toolbar admin-sales-toolbar-top">
+              <div>
+                <h3 className="section-title">All Sales, Cashier Desks & Invoices</h3>
+                <p className="section-desc">
+                  Unified audit log of all online delivery orders and counter POS sales stored in database.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                className="btn-sync-sales"
+                onClick={handleSyncAllSales}
+                disabled={isSyncingSales}
+              >
+                <svg
+                  className={isSyncingSales ? 'spin' : ''}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                </svg>
+                <span>{isSyncingSales ? 'Syncing...' : 'Sync Database Bills'}</span>
+              </button>
+            </div>
+
+            {/* Sales Summary Metrics Strip */}
+            <div className="sales-overview-metrics">
+              <div className="sales-stat-card total">
+                <span className="stat-label">Gross Sales Revenue</span>
+                <strong className="stat-val">₹{totalRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{allSales.length} Total Bills</span>
+              </div>
+              <div className="sales-stat-card counter">
+                <span className="stat-label">🏪 Counter Store Sales</span>
+                <strong className="stat-val">₹{counterRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{counterSales.length} In-Store Bills</span>
+              </div>
+              <div className="sales-stat-card online">
+                <span className="stat-label">🌐 Online Web Delivery</span>
+                <strong className="stat-val">₹{onlineRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{onlineOrders.length} Online Orders</span>
+              </div>
+              <div className="sales-stat-card payment">
+                <span className="stat-label">Payment Modes</span>
+                <div className="payment-split-pills">
+                  <span>💵 Cash: ₹{totalCashRevenue.toLocaleString('en-IN')}</span>
+                  <span>📱 UPI: ₹{totalUpiRevenue.toLocaleString('en-IN')}</span>
+                  <span>💳 Card: ₹{totalCardRevenue.toLocaleString('en-IN')}</span>
+                </div>
               </div>
             </div>
 
-            <div className="sales-table-card">
-              <table className="sales-table">
-                <thead>
-                  <tr>
-                    <th>Invoice No</th>
-                    <th>Date & Time</th>
-                    <th>Source</th>
-                    <th>Customer Name</th>
-                    <th>Items</th>
-                    <th>Payment</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map((ord) => (
-                    <tr key={ord.id}>
-                      <td>
-                        <strong>{ord.invoiceNumber}</strong>
-                      </td>
-                      <td>{ord.orderDate} {ord.orderTime}</td>
-                      <td>
-                        <span className={`source-pill ${ord.source}`}>
-                          {ord.source === 'online' ? 'Online' : 'In-Store'}
-                        </span>
-                      </td>
-                      <td>
-                        <strong>{ord.customer?.fullName || 'Walk-in Customer'}</strong>
-                        {ord.customer?.phone && <div className="sub-phone">📞 {ord.customer.phone}</div>}
-                      </td>
-                      <td>
-                        {ord.items?.length} items ({ord.items?.map((it) => it.name).join(', ')})
-                      </td>
-                      <td>
-                        {ord.paymentMethod === 'upi' ? 'UPI' : ord.paymentMethod === 'card' ? 'Card' : 'Cash'}
-                      </td>
-                      <td>
-                        <strong>₹{ord.grandTotal}</strong>
-                      </td>
-                      <td>
-                        <span className={`status-tag ${ord.status?.toLowerCase()}`}>
-                          {ord.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="table-invoice-btn"
-                          onClick={() => openInvoice(ord)}
-                        >
-                          Print Bill
-                        </button>
-                      </td>
-                    </tr>
+            {/* Cashier Performance Cards */}
+            {cashierSummary.length > 0 && (
+              <div className="cashier-performance-section">
+                <div className="section-sub-header">
+                  <h4 className="sub-title">Staff & Cashier Counter Performance</h4>
+                  <span className="sub-note">Click any cashier to filter sales below</span>
+                </div>
+                <div className="cashier-cards-grid">
+                  {cashierSummary.map((c) => {
+                    const isSelected = salesCashierFilter === c.id;
+                    return (
+                      <div
+                        key={c.id}
+                        className={`cashier-card ${isSelected ? 'selected' : ''}`}
+                        onClick={() => setSalesCashierFilter(isSelected ? 'all' : c.id)}
+                      >
+                        <div className="cashier-card__header">
+                          <div className="cashier-avatar">👤</div>
+                          <div>
+                            <h5 className="cashier-name">{c.name}</h5>
+                            <span className="cashier-meta">{c.counter} · {c.role?.toUpperCase()}</span>
+                          </div>
+                          <span className={`filter-indicator-badge ${isSelected ? 'active' : ''}`}>
+                            {isSelected ? '✓ Filtered' : 'Filter'}
+                          </span>
+                        </div>
+                        <div className="cashier-card__stats">
+                          <div>
+                            <span className="lbl">Total Collected:</span>
+                            <strong className="amt">₹{c.totalAmount.toLocaleString('en-IN')}</strong>
+                          </div>
+                          <div>
+                            <span className="lbl">Invoices:</span>
+                            <strong>{c.billCount}</strong>
+                          </div>
+                        </div>
+                        <div className="cashier-card__footer">
+                          <span>💵 ₹{c.cash}</span>
+                          <span>📱 ₹{c.upi}</span>
+                          <span>💳 ₹{c.card}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Toolbar: Filters & Search */}
+            <div className="sales-tab-filters-bar">
+              <div className="sales-filter-controls">
+                {/* Cashier Filter */}
+                <select
+                  value={salesCashierFilter}
+                  onChange={(e) => setSalesCashierFilter(e.target.value)}
+                  className="admin-select-filter"
+                >
+                  <option value="all">All Cashiers & Attendants</option>
+                  {cashierSummary.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      👤 {c.name} ({c.counter})
+                    </option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+
+                {/* Channel Filter */}
+                <select
+                  value={salesSourceFilter}
+                  onChange={(e) => setSalesSourceFilter(e.target.value)}
+                  className="admin-select-filter"
+                >
+                  <option value="all">All Channels (Counter + Online)</option>
+                  <option value="counter">🏪 Counter POS Bills</option>
+                  <option value="online">🌐 Online Website Orders</option>
+                </select>
+
+                {/* Payment Filter */}
+                <select
+                  value={salesPaymentFilter}
+                  onChange={(e) => setSalesPaymentFilter(e.target.value)}
+                  className="admin-select-filter"
+                >
+                  <option value="all">All Payment Methods</option>
+                  <option value="cash">💵 Cash Only</option>
+                  <option value="upi">📱 UPI QR Only</option>
+                  <option value="card">💳 Card Swipe Only</option>
+                </select>
+              </div>
+
+              {/* Search Box */}
+              <div className="sales-search-wrap">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Search invoice, customer, phone, or cashier..."
+                  value={salesSearchTerm}
+                  onChange={(e) => setSalesSearchTerm(e.target.value)}
+                />
+                {salesSearchTerm && (
+                  <button type="button" className="clear-btn" onClick={() => setSalesSearchTerm('')}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Sales Table Card */}
+            <div className="sales-table-card">
+              {filteredSales.length === 0 ? (
+                <div className="empty-tab-state">
+                  <div className="empty-icon">🧾</div>
+                  <h3>No Sales Records Found</h3>
+                  <p>No billing or invoice records match the current filter selection.</p>
+                </div>
+              ) : (
+                <table className="sales-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice No</th>
+                      <th>Date & Time</th>
+                      <th>Channel</th>
+                      <th>Billed By / Cashier</th>
+                      <th>Customer Details</th>
+                      <th>Items Sold</th>
+                      <th>Payment</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSales.map((sale) => (
+                      <tr key={sale.id || sale.invoiceNumber}>
+                        <td>
+                          <strong>{sale.invoiceNumber}</strong>
+                        </td>
+                        <td>
+                          <div>{sale.orderDate}</div>
+                          <small style={{ color: '#64748B' }}>{sale.orderTime}</small>
+                        </td>
+                        <td>
+                          <span className={`source-pill ${sale.source === 'online' ? 'online' : 'counter'}`}>
+                            {sale.source === 'online' ? '🌐 Online' : '🏪 Counter POS'}
+                          </span>
+                        </td>
+                        <td>
+                          {sale.cashier ? (
+                            <div className="cashier-cell">
+                              <strong>👤 {sale.cashier.name || sale.cashier.username}</strong>
+                              <small>{sale.cashier.counter || 'Counter Desk'}</small>
+                            </div>
+                          ) : (
+                            <span className="cashier-online-tag">
+                              {sale.source === 'online' ? '🌐 Web System' : '🏪 Store POS'}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <strong>{sale.customer?.fullName || 'Walk-in Guest'}</strong>
+                          {sale.customer?.phone && (
+                            <div className="sub-phone">📞 {sale.customer.phone}</div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="table-items-summary">
+                            {sale.items?.length || 0} item(s)
+                            <small>({sale.items?.map((it) => `${it.name} (${it.weight})`).join(', ')})</small>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={`payment-pill ${sale.paymentMethod?.toLowerCase()}`}>
+                            {sale.paymentMethod === 'upi' ? '📱 UPI' : sale.paymentMethod === 'card' ? '💳 Card' : '💵 Cash'}
+                          </span>
+                        </td>
+                        <td>
+                          <strong className="sale-amount">₹{sale.grandTotal}</strong>
+                        </td>
+                        <td>
+                          <span className={`status-tag ${sale.status?.toLowerCase() || 'completed'}`}>
+                            {sale.status || sale.orderStatus || 'Completed'}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="table-invoice-btn"
+                            onClick={() => openInvoice(sale)}
+                            title="View / Print Tax Invoice"
+                          >
+                            Print Bill
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </section>
         )}

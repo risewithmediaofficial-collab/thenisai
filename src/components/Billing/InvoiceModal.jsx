@@ -152,6 +152,14 @@ export default function InvoiceModal() {
                       <span className="meta-label">Status:</span>
                       <span className="meta-val status-pill">{orderStatus}</span>
                     </div>
+                    {activeInvoice.cashier && (
+                      <div>
+                        <span className="meta-label">Billed By:</span>
+                        <span className="meta-val">
+                          {activeInvoice.cashier.name || activeInvoice.cashier.username} ({activeInvoice.cashier.counter || 'Counter Desk'})
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
