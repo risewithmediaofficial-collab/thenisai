@@ -570,78 +570,59 @@ export default function BillingCounter() {
                 ))}
               </div>
 
-              {/* GRID VIEW */}
+              {/* GRID VIEW (Clean Cards - Names & Stepper Only) */}
               {catalogLayout === 'grid' && (
-                <div className="pos-sweets-grid">
+                <div className="pos-sweets-grid clean">
                   {filteredSweets.map((sweet) => {
-                    const unitName = sweet.unit?.includes('Pc') ? 'Pc' : 'Cup';
-                    const sweetStock = inventory.find((it) => it.id === sweet.id);
-                    const currentStock = sweetStock?.stockKg ?? 80;
-                    const isOutOfStock = currentStock <= 0.1;
-                    const isLow = currentStock <= 15;
+                    const defaultUnit = sweet.unit || '1 Cup';
+                    const billItem = billItems.find((it) => it.id === sweet.id);
+                    const qtyInBill = billItem ? billItem.quantity : 0;
 
                     return (
                       <div
                         key={sweet.id}
-                        className={`pos-sweet-card ${isOutOfStock ? 'out-of-stock' : ''}`}
+                        className={`pos-sweet-card clean-card ${qtyInBill > 0 ? 'in-bill' : ''}`}
                       >
-                        <div className="pos-sweet-card__top">
-                          <img
-                            src={sweet.image}
-                            alt={sweet.name}
-                            className="pos-sweet-img"
-                            loading="lazy"
-                          />
-                          <div className="pos-sweet-info">
-                            <h4 className="pos-sweet-title">{sweet.name}</h4>
-                            <span className="pos-sweet-tagline">{sweet.tagline}</span>
-                            <div className={`pos-stock-tag ${isLow ? 'low' : ''}`}>
-                              {isOutOfStock ? '⚠️ Out of Stock' : `Stock: ${currentStock} ${unitName === 'Pc' ? 'pcs' : 'cups'}`}
-                            </div>
-                          </div>
+                        <div
+                          className="pos-card-info"
+                          onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
+                          title="Click to add 1"
+                        >
+                          <h4 className="pos-sweet-title">{sweet.name}</h4>
+                          <span className="pos-sweet-price">₹{sweet.price}</span>
                         </div>
 
-                        {/* Quick Cup Quantity Buttons: 1, 2, 3, 5 */}
-                        <div className="pos-weight-buttons">
+                        <div className="pos-catalog-stepper">
                           <button
                             type="button"
-                            className="pos-pack-btn highlight"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 1)}
-                            title={`Add 1 ${unitName} to bill`}
+                            className="cat-step-btn minus"
+                            disabled={qtyInBill === 0}
+                            onClick={() => handleUpdateBillQty(sweet.id, defaultUnit, -1)}
+                            title="Decrease quantity"
                           >
-                            <span className="pack-label">+1 {unitName}</span>
-                            <span className="pack-price">₹{sweet.price}</span>
+                            −
                           </button>
+                          <input
+                            type="number"
+                            min="0"
+                            max="999"
+                            className={`cat-qty-input ${qtyInBill > 0 ? 'active' : ''}`}
+                            value={qtyInBill}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              if (!isNaN(val) && val >= 0) {
+                                handleSetBillItemQty(sweet.id, defaultUnit, val);
+                              }
+                            }}
+                            title="Cups in bill"
+                          />
                           <button
                             type="button"
-                            className="pos-pack-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 2)}
-                            title={`Add 2 ${unitName}s to bill`}
+                            className="cat-step-btn plus"
+                            onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
+                            title="Increase quantity"
                           >
-                            <span className="pack-label">+2 Qty</span>
-                            <span className="pack-price">₹{sweet.price * 2}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="pos-pack-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 3)}
-                            title={`Add 3 ${unitName}s to bill`}
-                          >
-                            <span className="pack-label">+3 Qty</span>
-                            <span className="pack-price">₹{sweet.price * 3}</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="pos-pack-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 5)}
-                            title={`Add 5 ${unitName}s to bill`}
-                          >
-                            <span className="pack-label">+5 Qty</span>
-                            <span className="pack-price">₹{sweet.price * 5}</span>
+                            +
                           </button>
                         </div>
                       </div>
@@ -650,66 +631,59 @@ export default function BillingCounter() {
                 </div>
               )}
 
-              {/* LIST VIEW (Fast Compact Table) */}
+              {/* LIST VIEW (Fast Clean Table - Names & Stepper Only) */}
               {catalogLayout === 'list' && (
                 <div className="pos-sweets-list">
                   {filteredSweets.map((sweet) => {
-                    const unitName = sweet.unit?.includes('Pc') ? 'Pc' : 'Cup';
-                    const sweetStock = inventory.find((it) => it.id === sweet.id);
-                    const currentStock = sweetStock?.stockKg ?? 80;
-                    const isOutOfStock = currentStock <= 0.1;
+                    const defaultUnit = sweet.unit || '1 Cup';
+                    const billItem = billItems.find((it) => it.id === sweet.id);
+                    const qtyInBill = billItem ? billItem.quantity : 0;
 
                     return (
-                      <div key={sweet.id} className={`pos-list-row ${isOutOfStock ? 'out-of-stock' : ''}`}>
-                        <img src={sweet.image} alt={sweet.name} className="pos-list-img" loading="lazy" />
-                        <div className="pos-list-info">
-                          <div className="pos-list-title-wrap">
-                            <h4 className="pos-list-title">{sweet.name}</h4>
-                            <span className="pos-list-rate">₹{sweet.price} / {unitName}</span>
-                          </div>
-                          <span className="pos-list-tagline">{sweet.tagline}</span>
+                      <div
+                        key={sweet.id}
+                        className={`pos-list-row ${qtyInBill > 0 ? 'in-bill' : ''}`}
+                      >
+                        <div
+                          className="pos-list-info"
+                          onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
+                          title="Click to add 1"
+                        >
+                          <h4 className="pos-list-title">{sweet.name}</h4>
+                          <span className="pos-list-rate">₹{sweet.price}</span>
                         </div>
 
-                        <div className="pos-list-stock">
-                          <span className="stock-count">{currentStock} {unitName === 'Pc' ? 'pcs' : 'cups'}</span>
-                        </div>
-
-                        <div className="pos-list-actions">
+                        <div className="pos-catalog-stepper">
                           <button
                             type="button"
-                            className="pos-list-btn highlight"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 1)}
-                            title={`Add 1 ${unitName}`}
+                            className="cat-step-btn minus"
+                            disabled={qtyInBill === 0}
+                            onClick={() => handleUpdateBillQty(sweet.id, defaultUnit, -1)}
+                            title="Decrease quantity"
                           >
-                            +1 {unitName}
+                            −
                           </button>
+                          <input
+                            type="number"
+                            min="0"
+                            max="999"
+                            className={`cat-qty-input ${qtyInBill > 0 ? 'active' : ''}`}
+                            value={qtyInBill}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              if (!isNaN(val) && val >= 0) {
+                                handleSetBillItemQty(sweet.id, defaultUnit, val);
+                              }
+                            }}
+                            title="Cups in bill"
+                          />
                           <button
                             type="button"
-                            className="pos-list-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 2)}
-                            title={`Add 2 ${unitName}s`}
+                            className="cat-step-btn plus"
+                            onClick={() => handleAddSweetToBill(sweet, defaultUnit, 1)}
+                            title="Increase quantity"
                           >
-                            +2
-                          </button>
-                          <button
-                            type="button"
-                            className="pos-list-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 3)}
-                            title={`Add 3 ${unitName}s`}
-                          >
-                            +3
-                          </button>
-                          <button
-                            type="button"
-                            className="pos-list-btn"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddSweetToBill(sweet, sweet.unit || '1 Cup', 5)}
-                            title={`Add 5 ${unitName}s`}
-                          >
-                            +5
+                            +
                           </button>
                         </div>
                       </div>
