@@ -44,68 +44,7 @@
   max-width: 860px;
 }
 
-/* Success Banner */
-.invoice-success-banner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px 24px;
-  background: #ECFDF5;
-  border-bottom: 1px solid #A7F3D0;
-}
-
-.success-icon-wrap {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #10B981;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  flex-shrink: 0;
-  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
-}
-
-.success-banner-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.15rem;
-  color: #065F46;
-  font-weight: 700;
-  margin: 0 0 2px 0;
-}
-
-.success-banner-sub {
-  font-size: 0.8rem;
-  color: #047857;
-  margin: 0;
-}
-
-.invoice-close-icon {
-  margin-left: auto;
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  color: #475569;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.invoice-close-icon:hover {
-  background: #F1F5F9;
-  color: #0F172A;
-  border-color: #94A3B8;
-}
-
-/* Toolbar, Format Switcher & Copies Switcher */
+/* Toolbar, Format Switcher & Actions */
 .invoice-toolbar {
   display: flex;
   align-items: center;
@@ -115,13 +54,26 @@
   padding: 12px 20px;
   background: #F8FAFC;
   border-bottom: 1px solid #E2E8F0;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
 }
 
 .invoice-toolbar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
+}
+
+.invoice-quick-inv-badge {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #1E293B;
+  background: #E2E8F0;
+  padding: 5px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
 }
 
 .invoice-format-switcher {
@@ -254,6 +206,19 @@
 
 .toolbar-btn.whatsapp-btn:hover {
   background: #15803D;
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.close-btn {
+  background: #FFFFFF;
+  color: #475569;
+  border: 1px solid #CBD5E1;
+}
+
+.toolbar-btn.close-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+  border-color: #94A3B8;
   transform: translateY(-1px);
 }
 
