@@ -11,6 +11,82 @@
   padding-bottom: 60px;
 }
 
+.admin-root.side-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 100vh;
+  width: 100vw;
+  background: #F8FAFC;
+  overflow-x: hidden;
+  padding-bottom: 0;
+}
+
+.admin-content-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-mobile-strip {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .admin-root.side-layout {
+    flex-direction: column;
+  }
+
+  .admin-content-area {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: visible;
+  }
+
+  .admin-mobile-strip {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    gap: 12px;
+  }
+
+  .admin-hamburger-btn {
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #0F172A;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .admin-mobile-refill-btn {
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
+    color: #92400E;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+}
+
 /* Header */
 .admin-header {
   display: flex;

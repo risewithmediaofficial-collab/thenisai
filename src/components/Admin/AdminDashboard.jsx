@@ -6,6 +6,7 @@ import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
+import SideNavbar from '../Nav/SideNavbar';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -33,10 +34,13 @@ export default function AdminDashboard() {
   const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
   const [isSyncingSales, setIsSyncingSales] = useState(false);
 
-  // Stock Modals State
+  // Stock Modals & Mobile Sidebar State
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
   const [isRefillOpen, setIsRefillOpen] = useState(false);
-  useScrollLock(isAddStockOpen || isRefillOpen);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Lock scroll on background when modals or mobile drawers are open
+  useScrollLock(isAddStockOpen || isRefillOpen || isMobileMenuOpen);
 
   // Consolidate all sales: counter bills from DB + online orders
   const allSales = useMemo(() => {
@@ -159,62 +163,52 @@ export default function AdminDashboard() {
 
 
   return (
-    <div className="admin-root">
-      {/* Top Header */}
-      <header className="admin-header">
-        <div className="admin-header__brand">
-          <h1 className="admin-title">Thenisai Sweets · Admin Portal</h1>
-        </div>
+    <div className="admin-root side-layout">
+      {/* 1. Sleek Left Side Navbar */}
+      <SideNavbar
+        currentSection={`admin-${activeTab}`}
+        onSelectSection={(sec) => {
+          if (sec === 'admin-orders') setActiveTab('orders');
+          else if (sec === 'admin-inventory') setActiveTab('inventory');
+          else if (sec === 'admin-sales') {
+            setActiveTab('sales');
+            handleSyncAllSales();
+          }
+        }}
+        onOpenRefill={() => setIsRefillOpen(true)}
+        onOpenAddStock={() => setIsAddStockOpen(true)}
+        pendingOnlineCount={pendingOrders.length}
+        isMobileOpen={isMobileMenuOpen}
+        onCloseMobile={() => setIsMobileMenuOpen(false)}
+      />
 
-        <div className="stock-header-actions">
-          <div className="staff-logged-badge admin">
-            <span>👑</span>
-            <span>{user?.name || 'Admin'}</span>
+      {/* 2. Main Admin Content Area beside Side Navbar */}
+      <div className="admin-content-area">
+        {/* Compact Mobile Strip with Hamburger Trigger */}
+        <header className="admin-mobile-strip mobile-only">
+          <button
+            type="button"
+            className="admin-hamburger-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            aria-label="Open Navigation"
+          >
+            <span className="hamburger-icon">☰</span>
+          </button>
+          <div className="mobile-strip-brand">
+            <strong>THENISAI ADMIN</strong>
+            <span>Management & Inventory</span>
           </div>
-
-          <button
-            type="button"
-            className="btn-stock-action add"
-            onClick={() => setIsAddStockOpen(true)}
-            title="Add new kitchen batches or sweet varieties"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            <span>Add Stock</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-stock-action refill"
-            onClick={() => setIsRefillOpen(true)}
-            title="Quick refill of counter display trays"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-            </svg>
-            <span>Refill Stock</span>
-          </button>
-
-          <button
-            type="button"
-            className="btn-staff-logout"
-            onClick={() => {
-              logout();
-              window.location.hash = '';
-            }}
-            title="Log out of Admin Portal"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            <span>Logout</span>
-          </button>
-        </div>
-      </header>
+          <div className="admin-mobile-actions">
+            <button
+              type="button"
+              className="admin-mobile-refill-btn"
+              onClick={() => setIsRefillOpen(true)}
+              title="Quick Refill"
+            >
+              🔄 Refill
+            </button>
+          </div>
+        </header>
 
       <main className="admin-container">
         {/* KPI Cards Grid */}
@@ -864,6 +858,7 @@ export default function AdminDashboard() {
           </section>
         )}
       </main>
+      </div>
 
       {/* Universal Stock Modals */}
       <AnimatePresence>

@@ -128,15 +128,6 @@ async function seedIfEmpty() {
   }
 
   const defaultItems = [
-    { id: 'palkova', name: 'Signature Palkova', stockKg: 42.5, minThreshold: 10, batchDate: 'Today 06:00 AM', batchNote: 'Fresh Uruli Batch 1', pricePerKg: 680, hsn: '0402', category: 'Milk & Khoa' },
-    { id: 'milk-peda', name: 'Milk Peda', stockKg: 28.0, minThreshold: 8, batchDate: 'Today 07:00 AM', batchNote: 'Morning batch', pricePerKg: 640, hsn: '0402', category: 'Milk & Khoa' },
-    { id: 'mysore-pak', name: 'Royal Mysore Pak', stockKg: 35.0, minThreshold: 10, batchDate: 'Today 06:30 AM', batchNote: 'Desi Ghee batch', pricePerKg: 760, hsn: '2106', category: 'Ghee Sweets' },
-    { id: 'kaju-katli', name: 'Kaju Katli', stockKg: 22.0, minThreshold: 6, batchDate: 'Yesterday Evening', batchNote: 'Whole Cashew batch', pricePerKg: 1100, hsn: '2106', category: 'Cashew & Nut' },
-    { id: 'badam-halwa', name: 'Badam Halwa', stockKg: 18.5, minThreshold: 5, batchDate: 'Today 07:30 AM', batchNote: 'Kashmiri Saffron batch', pricePerKg: 1160, hsn: '2106', category: 'Halwa & Soft' },
-    { id: 'jangiri', name: 'Jangiri', stockKg: 15.0, minThreshold: 5, batchDate: 'Today 08:00 AM', batchNote: 'Fresh crispy batch', pricePerKg: 560, hsn: '2106', category: 'Ghee Sweets' },
-    { id: 'gulab-jamun', name: 'Gulab Jamun', stockKg: 25.0, minThreshold: 8, batchDate: 'Today 07:00 AM', batchNote: 'Cardamom syrup batch', pricePerKg: 600, hsn: '2106', category: 'Milk & Khoa' },
-    { id: 'assorted-box', name: 'Thenisai Royal Assorted Box', stockKg: 20.0, minThreshold: 5, batchDate: 'Today', batchNote: 'Gift boxes packed', pricePerKg: 850, hsn: '2106', category: 'Special Festival Box' },
-    // Counter Beverages & Snacks
     { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/products/tea.svg' },
     { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/products/coffee.svg' },
     { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/products/filter-coffee.svg' },
@@ -152,10 +143,14 @@ async function seedIfEmpty() {
     { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, hsn: '1905', category: 'Snacks & Savories', image: '/products/vada.svg' },
   ];
 
+  // Purge any obsolete sweet items
+  const validIds = defaultItems.map((d) => d.id);
+  await Inventory.deleteMany({ id: { $nin: validIds } });
+
   for (const it of defaultItems) {
     await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
   }
-  console.log('[Seed] Inventory verified/seeded');
+  console.log('[Seed] Inventory verified/seeded for exclusive 13 items');
 }
 
 // ============================================================

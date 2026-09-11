@@ -5,11 +5,13 @@ import { useCart } from '../../context/CartContext';
 import './SweetsCollection.css';
 
 function SweetCard({ sweet, index }) {
-  const { addToCart, setIsCartOpen } = useCart();
-  const [selectedWeight, setSelectedWeight] = useState('500g');
+  const hasPrices = Boolean(sweet.prices);
+  const [selectedWeight, setSelectedWeight] = useState(hasPrices ? '500g' : (sweet.unit || '1 Cup'));
   const [justAdded, setJustAdded] = useState(false);
 
-  const currentPrice = sweet.prices[selectedWeight] || sweet.prices['500g'];
+  const currentPrice = hasPrices
+    ? (sweet.prices[selectedWeight] || sweet.prices['500g'] || Object.values(sweet.prices)[0])
+    : (sweet.price || 20);
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
@@ -58,9 +60,9 @@ function SweetCard({ sweet, index }) {
         <h3 className="sweet-card__name">{sweet.name}</h3>
         <p className="sweet-card__desc">{sweet.description}</p>
 
-        {/* Weight Selector */}
+        {/* Weight / Unit Selector */}
         <div className="sweet-card__weights">
-          {SWEET_WEIGHT_OPTIONS.map((opt) => (
+          {hasPrices ? SWEET_WEIGHT_OPTIONS.map((opt) => (
             <button
               key={opt.id}
               type="button"
@@ -72,7 +74,9 @@ function SweetCard({ sweet, index }) {
             >
               {opt.label}
             </button>
-          ))}
+          )) : (
+            <span className="weight-pill active">{sweet.unit || '1 Cup'}</span>
+          )}
         </div>
 
         {/* Action Controls */}

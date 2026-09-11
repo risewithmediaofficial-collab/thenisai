@@ -11,15 +11,6 @@ const ORDERS_STORAGE_KEY = 'thenisai_orders_v1';
 const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v1';
 
 const DEFAULT_INVENTORY = [
-  { id: 'palkova', name: 'Signature Palkova', stockKg: 42.5, minThreshold: 10, batchDate: 'Today 06:00 AM', batchNote: 'Fresh Uruli Batch 1' },
-  { id: 'milk-peda', name: 'Milk Peda', stockKg: 28.0, minThreshold: 8, batchDate: 'Today 07:00 AM', batchNote: 'Morning batch' },
-  { id: 'mysore-pak', name: 'Royal Mysore Pak', stockKg: 35.0, minThreshold: 10, batchDate: 'Today 06:30 AM', batchNote: 'Desi Ghee batch' },
-  { id: 'kaju-katli', name: 'Kaju Katli', stockKg: 22.0, minThreshold: 6, batchDate: 'Yesterday Evening', batchNote: 'Whole Cashew batch' },
-  { id: 'badam-halwa', name: 'Badam Halwa', stockKg: 18.5, minThreshold: 5, batchDate: 'Today 07:30 AM', batchNote: 'Kashmiri Saffron batch' },
-  { id: 'jangiri', name: 'Jangiri', stockKg: 15.0, minThreshold: 5, batchDate: 'Today 08:00 AM', batchNote: 'Fresh crispy batch' },
-  { id: 'gulab-jamun', name: 'Gulab Jamun', stockKg: 25.0, minThreshold: 8, batchDate: 'Today 07:00 AM', batchNote: 'Cardamom syrup batch' },
-  { id: 'assorted-box', name: 'Thenisai Royal Assorted Box', stockKg: 20.0, minThreshold: 5, batchDate: 'Today', batchNote: 'Gift boxes packed' },
-  // Counter Beverages & Snacks
   { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh hot brew counter', unit: 'Cup' },
   { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh brew counter', unit: 'Cup' },
   { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', unit: 'Cup' },
@@ -139,15 +130,20 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Inventory state
+  // Inventory state (Exclusively the 13 products)
   const [inventory, setInventory] = useState(() => {
     try {
       const saved = localStorage.getItem(INVENTORY_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
-          const missing = DEFAULT_INVENTORY.filter((d) => !parsed.some((p) => p.id === d.id));
-          return missing.length > 0 ? [...parsed, ...missing] : parsed;
+          const validOnly = parsed.filter((p) => DEFAULT_INVENTORY.some((d) => d.id === p.id));
+          const missing = DEFAULT_INVENTORY.filter((d) => !validOnly.some((p) => p.id === d.id));
+          const finalInv = [...validOnly, ...missing];
+          if (finalInv.length > 0) {
+            localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(finalInv));
+            return finalInv;
+          }
         }
       }
       return DEFAULT_INVENTORY;

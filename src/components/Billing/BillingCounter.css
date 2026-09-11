@@ -14,6 +14,26 @@
   flex-direction: column;
 }
 
+.billing-pos-root.side-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  background: #F8FAFC;
+}
+
+.pos-content-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
 /* =========================================================
    1. POS TERMINAL HEADER
    ========================================================= */
@@ -437,6 +457,52 @@
   font-size: 0.8rem;
 }
 
+/* View Layout Switcher: Grid vs List */
+.pos-layout-toggle-group {
+  display: flex;
+  align-items: center;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.layout-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748B;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.layout-toggle-btn:hover {
+  color: #0F172A;
+}
+
+.layout-toggle-btn.active {
+  background: #FFFFFF;
+  color: #B45309;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.toggle-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.toggle-label {
+  font-size: 0.78rem;
+}
+
 /* Held Bills Indicator */
 .held-bills-banner {
   display: flex;
@@ -640,21 +706,144 @@
 }
 
 /* =========================================================
+   LIST VIEW (Fast Compact Rows)
+   ========================================================= */
+.pos-sweets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 24px;
+}
+
+.pos-list-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  transition: all 0.15s ease;
+}
+
+.pos-list-row:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.pos-list-row.out-of-stock {
+  opacity: 0.6;
+  filter: grayscale(0.5);
+}
+
+.pos-list-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #E2E8F0;
+  flex-shrink: 0;
+}
+
+.pos-list-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pos-list-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pos-list-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+}
+
+.pos-list-rate {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #B45309;
+}
+
+.pos-list-tagline {
+  font-size: 0.72rem;
+  color: #64748B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pos-list-stock {
+  font-size: 0.72rem;
+  color: #059669;
+  font-weight: 600;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.pos-list-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.pos-list-btn {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.pos-list-btn:hover:not(:disabled) {
+  background: #FEF3C7;
+  border-color: #D97706;
+  color: #B45309;
+}
+
+.pos-list-btn.highlight {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+  color: #B45309;
+}
+
+.pos-list-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================================================
    4. RIGHT COLUMN: ACTIVE POS CASH REGISTER (Dedicated Independent Scroll)
    ========================================================= */
 .pos-bill-pane {
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-height: 100%;
   min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: hidden !important; /* CRITICAL: Keep pane pinned; pos-bill-items scrolls */
   background: #FFFFFF;
   border-left: 1px solid #E2E8F0;
   box-shadow: -2px 0 12px rgba(15, 23, 42, 0.04);
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
 }
 
 .pos-bill-pane::-webkit-scrollbar {
@@ -788,12 +977,31 @@
   box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
 }
 
-/* Active Bill Items List */
+/* Active Bill Items List (Independently Scrollable with data-lenis-prevent) */
 .pos-bill-items {
-  flex: 1 0 auto;
-  min-height: 100px;
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 12px 20px;
   background: #FFFFFF;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+.pos-bill-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pos-bill-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pos-bill-items::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 6px;
 }
 
 .pos-empty-bill {
@@ -893,6 +1101,31 @@
   color: #0F172A;
   min-width: 18px;
   text-align: center;
+}
+
+.line-qty-input {
+  width: 44px;
+  height: 28px;
+  text-align: center;
+  border: 1px solid #CBD5E1;
+  border-radius: 5px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+  background: #FFFFFF;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.line-qty-input::-webkit-outer-spin-button,
+.line-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.line-qty-input:focus {
+  border-color: #B45309;
+  box-shadow: 0 0 0 2px rgba(180, 83, 9, 0.15);
 }
 
 .pos-line-price {
@@ -2204,6 +2437,10 @@
   background: #FEE2E2;
 }
 
+.mobile-only {
+  display: none !important;
+}
+
 /* =========================================================
    9. MEDIA QUERIES BREAKPOINTS (1024px & 640px)
    ========================================================= */
@@ -2222,25 +2459,128 @@
     overflow: hidden;
   }
 
-  .billing-pos-header {
-    padding: 10px 14px;
-    gap: 8px;
+  .billing-pos-root.side-layout {
+    flex-direction: column;
   }
 
-  .pos-title {
-    font-size: 1.15rem;
+  /* Compact Mobile Top Bar */
+  .pos-mobile-strip {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
+    gap: 10px;
+    z-index: 50;
+    flex-shrink: 0;
+    height: 54px;
   }
 
-  .pos-terminal-badge {
+  .pos-hamburger-btn {
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #0F172A;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pos-hamburger-btn:hover {
+    background: #E2E8F0;
+  }
+
+  .mobile-strip-brand {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .mobile-strip-brand strong {
+    font-size: 0.9rem;
+    display: block;
+    color: #0F172A;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-strip-brand span {
     font-size: 0.7rem;
-    padding: 1px 6px;
+    color: #64748B;
+  }
+
+  .pos-mobile-view-tabs {
+    display: flex;
+    background: #F1F5F9;
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .mobile-view-tab {
+    background: transparent;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #64748B;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .mobile-view-tab.active {
+    background: #FFFFFF;
+    color: #B45309;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+  }
+
+  .pos-mobile-bell-btn {
+    position: relative;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .pos-mobile-bell-btn.has-pending {
+    background: #FFF7ED;
+    border-color: #F97316;
+  }
+
+  .mobile-bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #DC2626;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 2px 5px;
   }
 
   .pos-main-split {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 60px);
-    height: calc(100dvh - 60px);
+    height: calc(100vh - 54px);
+    height: calc(100dvh - 54px);
     overflow: hidden;
   }
 
@@ -2261,12 +2601,14 @@
 
   .pos-main-split.show-bill .pos-bill-pane {
     display: flex !important;
+    flex-direction: column;
     height: 100%;
+    max-height: 100%;
     width: 100% !important;
     max-width: 100% !important;
     border-left: none;
     box-shadow: none;
-    padding-bottom: 24px;
+    overflow: hidden !important;
   }
 
   .pos-sweets-grid {
