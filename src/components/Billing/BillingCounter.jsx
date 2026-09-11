@@ -34,11 +34,26 @@ export default function BillingCounter() {
     navigateTo,
   } = useCart();
 
-  // POS Mode: 'register' (Live Counter POS) | 'my-bills' (Cashier Shift Ledger)
-  const [posTab, setPosTab] = useState('register');
+  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'inventory'
+  const [posTab, setPosTab] = useState(() => {
+    const h = window.location.hash.toLowerCase();
+    if (h.includes('bills')) return 'my-bills';
+    if (h.includes('orders') || h.includes('online')) return 'online-orders';
+    if (h.includes('stock') || h.includes('inventory')) return 'inventory';
+    return 'register';
+  });
+
   const [billSearchTerm, setBillSearchTerm] = useState('');
   const [billPaymentFilter, setBillPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
   const [isRefreshingBills, setIsRefreshingBills] = useState(false);
+
+  // Online Orders Dedicated Page state
+  const [onlineFilter, setOnlineFilter] = useState('all'); // 'all' | 'New' | 'Accepted' | 'Dispatched'
+  const [onlineSearch, setOnlineSearch] = useState('');
+  const [isRefreshingOrders, setIsRefreshingOrders] = useState(false);
+
+  // Target item for instant Refill Stock modal from inventory page
+  const [refillTargetSweetId, setRefillTargetSweetId] = useState(null);
 
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
@@ -55,6 +70,40 @@ export default function BillingCounter() {
 
   // Hold / Recall Bills state
   const [heldBills, setHeldBills] = useState([]);
+
+  // Sync hash routing for dedicated pages
+  useEffect(() => {
+    const handleHashSync = () => {
+      const h = window.location.hash.toLowerCase();
+      if (!h.startsWith('#billing')) return;
+      if (h.includes('bills')) {
+        setPosTab('my-bills');
+      } else if (h.includes('orders') || h.includes('online')) {
+        setPosTab('online-orders');
+      } else if (h.includes('stock') || h.includes('inventory')) {
+        setPosTab('inventory');
+      } else {
+        setPosTab('register');
+      }
+    };
+    window.addEventListener('hashchange', handleHashSync);
+    return () => window.removeEventListener('hashchange', handleHashSync);
+  }, []);
+
+  const handleSwitchTab = (newTab) => {
+    setPosTab(newTab);
+    if (newTab === 'register') {
+      window.location.hash = '#billing';
+      setMobileTab('catalog');
+    } else if (newTab === 'my-bills') {
+      window.location.hash = '#billing/bills';
+      handleRefreshShiftBills();
+    } else if (newTab === 'online-orders') {
+      window.location.hash = '#billing/orders';
+    } else if (newTab === 'inventory') {
+      window.location.hash = '#billing/inventory';
+    }
+  };
 
   // Shift Ledger Filtering for Cashier
   const myShiftBills = (bills || []).filter((b) => {
@@ -100,9 +149,6 @@ export default function BillingCounter() {
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
   const [isRefillOpen, setIsRefillOpen] = useState(false);
 
-  // Online orders drawer
-  const [showOnlineOrders, setShowOnlineOrders] = useState(false);
-
   // Mobile UI state: 'catalog' vs 'bill' view, and mobile side-nav drawer
   const [mobileTab, setMobileTab] = useState('catalog'); // 'catalog' | 'bill'
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -114,8 +160,7 @@ export default function BillingCounter() {
   useScrollLock(
     isAddStockOpen ||
     isRefillOpen ||
-    isMobileMenuOpen ||
-    showOnlineOrders
+    isMobileMenuOpen
   );
 
   // Keyboard shortcuts (F2: search, Enter/F9: finalize bill, Escape: close modals)
@@ -129,7 +174,6 @@ export default function BillingCounter() {
         setIsAddStockOpen(false);
         setIsRefillOpen(false);
         setIsMobileMenuOpen(false);
-        setShowOnlineOrders(false);
       }
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
       if ((e.key === 'F9' || (e.key === 'Enter' && (!isInput || e.ctrlKey))) && billItems.length > 0 && !isAddStockOpen && !isRefillOpen) {
@@ -142,9 +186,45 @@ export default function BillingCounter() {
   }, [billItems, customerInfo, paymentMode, isAddStockOpen, isRefillOpen]);
 
   // Incoming online orders
-  const pendingOnlineOrders = orders.filter(
+  const pendingOnlineOrders = (orders || []).filter(
     (o) => o.source === 'online' && (o.status === 'New' || o.status === 'Accepted')
   );
+
+  // Dedicated Online Orders Page filters & metrics
+  const allOnlineOrders = (orders || []).filter((o) => o.source === 'online');
+  const filteredOnlineOrders = allOnlineOrders.filter((ord) => {
+    if (onlineFilter !== 'all' && ord.status?.toLowerCase() !== onlineFilter.toLowerCase()) {
+      return false;
+    }
+    if (onlineSearch.trim()) {
+      const q = onlineSearch.toLowerCase();
+      const matchInv = ord.invoiceNumber?.toLowerCase().includes(q);
+      const matchCust = ord.customer?.fullName?.toLowerCase().includes(q);
+      const matchPhone = ord.customer?.phone?.includes(q);
+      const matchCity = ord.shippingAddress?.city?.toLowerCase().includes(q);
+      if (!matchInv && !matchCust && !matchPhone && !matchCity) return false;
+    }
+    return true;
+  });
+
+  const onlineNewCount = allOnlineOrders.filter((o) => o.status === 'New').length;
+  const onlineAcceptedCount = allOnlineOrders.filter((o) => o.status === 'Accepted').length;
+  const onlineDispatchedCount = allOnlineOrders.filter((o) => o.status === 'Dispatched').length;
+  const onlineRevenueTotal = allOnlineOrders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+
+  const handleRefreshOnlineOrders = async () => {
+    setIsRefreshingOrders(true);
+    setTimeout(() => setIsRefreshingOrders(false), 400);
+  };
+
+  // Dedicated Inventory Page metrics
+  const lowStockCount = (inventory || []).filter((item) => (item.stockKg || 0) <= (item.minThreshold || 10)).length;
+  const totalStockVarieties = (inventory || []).length;
+
+  const handleOpenRefillItem = (itemId) => {
+    setRefillTargetSweetId(itemId);
+    setIsRefillOpen(true);
+  };
 
   // POS Calculations
   const billSubtotal = billItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
@@ -369,19 +449,26 @@ export default function BillingCounter() {
     <div className="billing-pos-root side-layout">
       {/* 1. LEFT SIDE NAVIGATION BAR (No Cluttered Top Navbar) */}
       <SideNavbar
-        currentSection={posTab === 'register' ? 'pos-register' : 'pos-bills'}
+        currentSection={
+          posTab === 'register'
+            ? 'pos-register'
+            : posTab === 'my-bills'
+            ? 'pos-bills'
+            : posTab === 'online-orders'
+            ? 'pos-online'
+            : 'pos-inventory'
+        }
         onSelectSection={(sec) => {
-          if (sec === 'pos-register') {
-            setPosTab('register');
-            setMobileTab('catalog');
-          } else if (sec === 'pos-bills') {
-            setPosTab('my-bills');
-            handleRefreshShiftBills();
-          }
+          if (sec === 'pos-register') handleSwitchTab('register');
+          else if (sec === 'pos-bills') handleSwitchTab('my-bills');
+          else if (sec === 'pos-online') handleSwitchTab('online-orders');
+          else if (sec === 'pos-inventory') handleSwitchTab('inventory');
         }}
-        onOpenRefill={() => setIsRefillOpen(true)}
+        onOpenRefill={() => {
+          setRefillTargetSweetId(null);
+          setIsRefillOpen(true);
+        }}
         onOpenAddStock={() => setIsAddStockOpen(true)}
-        onOpenOnlineOrders={() => setShowOnlineOrders(true)}
         pendingOnlineCount={pendingOnlineOrders.length}
         shiftBillsCount={myShiftBills.length}
         isMobileOpen={isMobileMenuOpen}
@@ -402,10 +489,18 @@ export default function BillingCounter() {
           </button>
           <div className="mobile-strip-brand">
             <strong>THENISAI POS</strong>
-            <span>{user?.counter || 'Terminal 01'}</span>
+            <span>
+              {posTab === 'register'
+                ? (user?.counter || 'Terminal 01')
+                : posTab === 'my-bills'
+                ? 'Shift Ledger'
+                : posTab === 'online-orders'
+                ? 'Online Dispatch'
+                : 'Counter Stock'}
+            </span>
           </div>
 
-          {posTab === 'register' && (
+          {posTab === 'register' ? (
             <div className="pos-mobile-view-tabs">
               <button
                 type="button"
@@ -422,12 +517,20 @@ export default function BillingCounter() {
                 <span>Bill ({billItems.reduce((s, it) => s + it.quantity, 0)})</span>
               </button>
             </div>
+          ) : (
+            <button
+              type="button"
+              className="pos-mobile-back-btn"
+              onClick={() => handleSwitchTab('register')}
+            >
+              🛒 Return to POS
+            </button>
           )}
 
           <button
             type="button"
-            className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''}`}
-            onClick={() => setShowOnlineOrders(true)}
+            className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''} ${posTab === 'online-orders' ? 'active' : ''}`}
+            onClick={() => handleSwitchTab('online-orders')}
             aria-label="Online Orders"
           >
             🔔
@@ -437,103 +540,8 @@ export default function BillingCounter() {
           </button>
         </header>
 
-        {/* Incoming Online Orders Queue Drawer */}
-        <AnimatePresence>
-          {showOnlineOrders && (
-            <motion.div
-              className="pos-online-drawer"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-            >
-              <div className="pos-online-drawer__inner">
-                <div className="drawer-header">
-                  <div>
-                    <h3 className="drawer-title">🌐 Live Online Dispatch Queue</h3>
-                    <span className="drawer-sub">Accept and print bills directly at counter</span>
-                  </div>
-                  <button
-                    type="button"
-                    className="drawer-close-btn"
-                    onClick={() => setShowOnlineOrders(false)}
-                  >
-                    ✕ Close Queue
-                  </button>
-                </div>
-
-                {pendingOnlineOrders.length === 0 ? (
-                  <div className="no-pending-msg">
-                    ✓ All online delivery orders have been accepted and dispatched!
-                  </div>
-                ) : (
-                  <div className="pos-online-cards">
-                    {pendingOnlineOrders.map((ord) => (
-                      <div key={ord.id} className="pos-online-card">
-                        <div className="pos-ord-top">
-                          <span className="pos-ord-inv">{ord.invoiceNumber}</span>
-                          <span className="pos-ord-time">{ord.orderTime}</span>
-                          <span className={`pos-ord-status ${ord.status.toLowerCase()}`}>
-                            {ord.status}
-                          </span>
-                        </div>
-
-                        <div className="pos-ord-cust">
-                          <strong>{ord.customer.fullName}</strong> (+91 {ord.customer.phone})
-                          <div className="pos-ord-city">📍 {ord.shippingAddress?.city}, {ord.shippingAddress?.state}</div>
-                        </div>
-
-                        <div className="pos-ord-items">
-                          {ord.items?.map((it, idx) => (
-                            <span key={idx} className="pos-ord-item-chip">
-                              {it.name} ({it.weight}) × {it.quantity}
-                            </span>
-                          ))}
-                        </div>
-
-                        <div className="pos-ord-bottom">
-                          <div className="pos-ord-price">
-                            ₹{ord.grandTotal}{' '}
-                            <small>({ord.paymentMethod === 'upi' ? 'Paid via UPI' : 'Cash on Delivery'})</small>
-                          </div>
-                          <div className="pos-ord-btns">
-                            {ord.status === 'New' && (
-                              <button
-                                type="button"
-                                className="btn-pos-accept"
-                                onClick={() => acceptOrder(ord.id)}
-                              >
-                                ✓ Accept Order
-                              </button>
-                            )}
-                            {ord.status === 'Accepted' && (
-                              <button
-                                type="button"
-                                className="btn-pos-dispatch"
-                                onClick={() => updateOrderStatus(ord.id, 'Dispatched')}
-                              >
-                                Mark Dispatched
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              className="btn-pos-print"
-                              onClick={() => openInvoice(ord)}
-                            >
-                              Print Bill
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* 3. MAIN TERMINAL WORKSPACE (REGISTER OR SHIFT LEDGER) */}
-        {posTab === 'register' ? (
+        {/* PAGE 1: POS BILLING REGISTER */}
+        {posTab === 'register' && (
           <main className={`pos-main-split ${mobileTab === 'catalog' ? 'show-catalog' : 'show-bill'}`}>
             {/* LEFT COLUMN: BEVERAGE & SNACK CATALOG */}
             <section className="pos-catalog-pane">
@@ -976,10 +984,10 @@ export default function BillingCounter() {
               </div>
             </section>
           </main>
-        ) : (
-          /* ===================================================
-              SHIFT INVOICES LEDGER
-             =================================================== */
+        )}
+
+        {/* PAGE 2: SHIFT INVOICES LEDGER */}
+        {posTab === 'my-bills' && (
           <main className="pos-shift-ledger">
             <div className="shift-ledger-header">
               <div>
@@ -1160,6 +1168,357 @@ export default function BillingCounter() {
             </div>
           </main>
         )}
+
+        {/* ===================================================
+            PAGE 3: DEDICATED LIVE ONLINE ORDERS DISPATCH QUEUE
+           =================================================== */}
+        {posTab === 'online-orders' && (
+          <main className="pos-online-page">
+            <div className="online-page-header">
+              <div>
+                <span className="online-eyebrow">🌐 LIVE DISPATCH QUEUE</span>
+                <h2 className="online-title">Online Delivery Orders</h2>
+                <div className="online-meta-badges">
+                  <span className={`meta-badge ${onlineNewCount > 0 ? 'alert' : 'done'}`}>
+                    🔥 <strong>{onlineNewCount} New</strong> awaiting confirmation
+                  </span>
+                  <span className="meta-badge process">
+                    ⚡ <strong>{onlineAcceptedCount} In Packing</strong>
+                  </span>
+                  <span className="meta-badge done">
+                    🚚 <strong>{onlineDispatchedCount} Dispatched</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div className="online-header-right">
+                <button
+                  type="button"
+                  className="btn-online-refresh"
+                  onClick={handleRefreshOnlineOrders}
+                  disabled={isRefreshingOrders}
+                >
+                  <span>{isRefreshingOrders ? 'Syncing...' : '🔄 Refresh Queue'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="btn-return-pos"
+                  onClick={() => handleSwitchTab('register')}
+                >
+                  🛒 Return to POS
+                </button>
+              </div>
+            </div>
+
+            {/* Online Orders KPI Strip */}
+            <div className="online-kpis-grid">
+              <div className="online-kpi-card new">
+                <span className="kpi-label">New Incoming Orders</span>
+                <div className="kpi-val">{onlineNewCount}</div>
+                <span className="kpi-sub">Accept and print order slip</span>
+              </div>
+              <div className="online-kpi-card packing">
+                <span className="kpi-label">Packing / Ready</span>
+                <div className="kpi-val">{onlineAcceptedCount}</div>
+                <span className="kpi-sub">Ready for courier handover</span>
+              </div>
+              <div className="online-kpi-card dispatched">
+                <span className="kpi-label">Dispatched Today</span>
+                <div className="kpi-val">{onlineDispatchedCount}</div>
+                <span className="kpi-sub">Sent out for doorstep delivery</span>
+              </div>
+              <div className="online-kpi-card revenue">
+                <span className="kpi-label">Online Orders Revenue</span>
+                <div className="kpi-val">₹{onlineRevenueTotal.toLocaleString('en-IN')}</div>
+                <span className="kpi-sub">{allOnlineOrders.length} Total Web Orders</span>
+              </div>
+            </div>
+
+            {/* Filter Chips & Search Toolbar */}
+            <div className="online-toolbar">
+              <div className="online-filter-chips">
+                {[
+                  { id: 'all', label: `All Orders (${allOnlineOrders.length})` },
+                  { id: 'New', label: `🔥 New (${onlineNewCount})` },
+                  { id: 'Accepted', label: `⚡ Accepted (${onlineAcceptedCount})` },
+                  { id: 'Dispatched', label: `🚚 Dispatched (${onlineDispatchedCount})` },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`filter-chip ${onlineFilter === f.id ? 'active' : ''}`}
+                    onClick={() => setOnlineFilter(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="online-search-box">
+                <input
+                  type="text"
+                  placeholder="Search invoice no, customer name, phone, or city..."
+                  value={onlineSearch}
+                  onChange={(e) => setOnlineSearch(e.target.value)}
+                />
+                {onlineSearch && (
+                  <button type="button" className="clear-btn" onClick={() => setOnlineSearch('')}>
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Orders Cards Grid */}
+            <div className="online-cards-container">
+              {filteredOnlineOrders.length === 0 ? (
+                <div className="online-empty-page-state">
+                  <div className="empty-online-icon">📦</div>
+                  <h3>No Orders Found in this View</h3>
+                  <p>
+                    {allOnlineOrders.length === 0
+                      ? 'No incoming customer orders right now. New orders will appear here automatically.'
+                      : 'No orders match your selected filter or search query.'}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn-empty-return-pos"
+                    onClick={() => handleSwitchTab('register')}
+                  >
+                    🛒 Go to POS Billing Counter
+                  </button>
+                </div>
+              ) : (
+                <div className="online-orders-cards-grid">
+                  {filteredOnlineOrders.map((ord) => (
+                    <div key={ord.id} className={`online-full-card status-${ord.status?.toLowerCase()}`}>
+                      <div className="online-card-top">
+                        <div className="online-id-time">
+                          <span className="online-inv-code">{ord.invoiceNumber}</span>
+                          <span className="online-time-stamp">⏱ {ord.orderTime || ord.orderDate}</span>
+                        </div>
+                        <span className={`online-status-pill ${ord.status?.toLowerCase()}`}>
+                          {ord.status}
+                        </span>
+                      </div>
+
+                      <div className="online-cust-info">
+                        <div className="cust-primary">
+                          <strong>{ord.customer?.fullName || 'Online Customer'}</strong>
+                          <span className="cust-phone">📞 +91 {ord.customer?.phone}</span>
+                        </div>
+                        <div className="cust-address-line">
+                          📍 {ord.shippingAddress?.doorNo ? `${ord.shippingAddress.doorNo}, ` : ''}
+                          {ord.shippingAddress?.street ? `${ord.shippingAddress.street}, ` : ''}
+                          {ord.shippingAddress?.city}, {ord.shippingAddress?.state}
+                          {ord.shippingAddress?.pincode ? ` - ${ord.shippingAddress.pincode}` : ''}
+                        </div>
+                      </div>
+
+                      <div className="online-order-items-box">
+                        <span className="items-title">Ordered Items:</span>
+                        <div className="items-tags">
+                          {ord.items?.map((it, idx) => (
+                            <span key={idx} className="online-item-tag">
+                              {it.name} ({it.weight || '1 Cup'}) × <strong>{it.quantity}</strong>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="online-card-bottom">
+                        <div className="price-details">
+                          <span className="total-amount">₹{ord.grandTotal}</span>
+                          <span className="pay-method">
+                            {ord.paymentMethod === 'upi' ? '📱 UPI Paid' : '💵 Cash on Delivery'}
+                          </span>
+                        </div>
+
+                        <div className="online-action-buttons">
+                          {ord.status === 'New' && (
+                            <button
+                              type="button"
+                              className="btn-action-accept"
+                              onClick={() => acceptOrder(ord.id)}
+                            >
+                              ✓ Accept Order
+                            </button>
+                          )}
+                          {ord.status === 'Accepted' && (
+                            <button
+                              type="button"
+                              className="btn-action-dispatch"
+                              onClick={() => updateOrderStatus(ord.id, 'Dispatched')}
+                            >
+                              🚚 Mark Dispatched
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className="btn-action-print"
+                            onClick={() => openInvoice(ord)}
+                          >
+                            🖨️ Print Bill
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </main>
+        )}
+
+        {/* ===================================================
+            PAGE 4: DEDICATED COUNTER STOCK & REFILL PAGE
+           =================================================== */}
+        {posTab === 'inventory' && (
+          <main className="pos-inventory-page">
+            <div className="inventory-page-header">
+              <div>
+                <span className="inventory-eyebrow">📊 LIVE COUNTER INVENTORY</span>
+                <h2 className="inventory-title">Counter Stock & Refill Tracker</h2>
+                <div className="inventory-meta-badges">
+                  <span className="meta-badge count">
+                    📦 <strong>{totalStockVarieties} Beverage & Snack Varieties</strong>
+                  </span>
+                  {lowStockCount > 0 ? (
+                    <span className="meta-badge alert">
+                      ⚠️ <strong>{lowStockCount} Items Low Stock</strong>
+                    </span>
+                  ) : (
+                    <span className="meta-badge done">
+                      ✓ All trays adequately stocked
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="inventory-header-right">
+                <button
+                  type="button"
+                  className="btn-inventory-refill"
+                  onClick={() => {
+                    setRefillTargetSweetId(null);
+                    setIsRefillOpen(true);
+                  }}
+                >
+                  🔄 Refill Trays
+                </button>
+                <button
+                  type="button"
+                  className="btn-inventory-add"
+                  onClick={() => setIsAddStockOpen(true)}
+                >
+                  ➕ Add New Stock
+                </button>
+                <button
+                  type="button"
+                  className="btn-return-pos"
+                  onClick={() => handleSwitchTab('register')}
+                >
+                  🛒 Return to POS
+                </button>
+              </div>
+            </div>
+
+            {/* Inventory KPI Summary */}
+            <div className="inventory-kpis-grid">
+              <div className="inv-kpi-card total">
+                <span className="kpi-label">Active Products</span>
+                <div className="kpi-val">{totalStockVarieties}</div>
+                <span className="kpi-sub">Strictly 13 Teas, Malts & Snacks</span>
+              </div>
+              <div className={`inv-kpi-card ${lowStockCount > 0 ? 'warning' : 'healthy'}`}>
+                <span className="kpi-label">Low Stock Alerts</span>
+                <div className="kpi-val">{lowStockCount}</div>
+                <span className="kpi-sub">
+                  {lowStockCount > 0 ? 'Require immediate counter refill' : 'All trays ample'}
+                </span>
+              </div>
+              <div className="inv-kpi-card ready">
+                <span className="kpi-label">Healthy Trays</span>
+                <div className="kpi-val">{totalStockVarieties - lowStockCount} Ready</div>
+                <span className="kpi-sub">Serving walk-in customers</span>
+              </div>
+            </div>
+
+            {/* Counter Stock Table */}
+            <div className="inventory-table-wrap">
+              <div className="inventory-table-card">
+                <table className="inventory-stock-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Unit Price</th>
+                      <th>Tray Stock Available</th>
+                      <th>Min Alert</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {inventory.map((item, idx) => {
+                      const itemNum = idx + 1;
+                      const isLow = (item.stockKg || 0) <= (item.minThreshold || 10);
+                      const unit = item.unit || 'Cup';
+                      return (
+                        <tr key={item.id} className={isLow ? 'row-low-stock' : ''}>
+                          <td>
+                            <span className="item-num-badge">#{itemNum}</span>
+                          </td>
+                          <td>
+                            <strong className="item-title">{item.name}</strong>
+                            <div className="item-desc-sub">{item.batchNote || 'Fresh counter brew'}</div>
+                          </td>
+                          <td>
+                            <span className="category-pill">{item.unit === 'Pc' ? 'Snack' : 'Beverage'}</span>
+                          </td>
+                          <td>
+                            <strong className="price-tag">₹{item.price || (item.unit === 'Pc' ? 20 : item.id.includes('malt') || item.id.includes('boost') || item.id.includes('horlicks') || item.id.includes('badam') ? 25 : 20)}</strong>
+                          </td>
+                          <td>
+                            <div className="stock-level-cell">
+                              <span className="stock-value">{item.stockKg} {unit}s</span>
+                              <div className="stock-progress-bar">
+                                <div
+                                  className={`progress-fill ${isLow ? 'low' : 'normal'}`}
+                                  style={{
+                                    width: `${Math.min(100, Math.max(10, ((item.stockKg || 0) / 100) * 100))}%`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="min-threshold-sub">{item.minThreshold || 10} {unit}s</span>
+                          </td>
+                          <td>
+                            <span className={`status-badge ${isLow ? 'low' : 'ok'}`}>
+                              {isLow ? '⚠️ LOW STOCK' : '✓ In Stock'}
+                            </span>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className="btn-quick-refill-item"
+                              onClick={() => handleOpenRefillItem(item.id)}
+                            >
+                              🔄 Refill
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+        )}
       </div>
 
       {/* MODALS */}
@@ -1170,7 +1529,11 @@ export default function BillingCounter() {
 
       <RefillStockModal
         isOpen={isRefillOpen}
-        onClose={() => setIsRefillOpen(false)}
+        onClose={() => {
+          setIsRefillOpen(false);
+          setRefillTargetSweetId(null);
+        }}
+        initialSweetId={refillTargetSweetId}
       />
     </div>
   );

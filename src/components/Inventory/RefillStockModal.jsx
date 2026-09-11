@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import './StockModals.css';
 
-export default function RefillStockModal({ isOpen, onClose }) {
+export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const { inventory, addInventoryStock } = useCart();
 
   const [selectedSweetId, setSelectedSweetId] = useState(
-    inventory[0]?.id || 'palkova'
+    initialSweetId || inventory[0]?.id || 'tea'
   );
+
+  useEffect(() => {
+    if (initialSweetId) {
+      setSelectedSweetId(initialSweetId);
+    }
+  }, [initialSweetId, isOpen]);
   const [refillKg, setRefillKg] = useState('5');
   const [refillNote, setRefillNote] = useState('Counter tray refill from kitchen');
 

@@ -132,7 +132,7 @@ export default function SideNavbar({
                 className={`sidebar-nav-item ${currentSection === 'pos-bills' ? 'active' : ''}`}
                 onClick={() =>
                   handleNav(() => {
-                    window.location.hash = '#billing';
+                    window.location.hash = '#billing/bills';
                     if (onSelectSection) onSelectSection('pos-bills');
                   })
                 }
@@ -144,24 +144,41 @@ export default function SideNavbar({
                 )}
               </button>
 
-              {onOpenOnlineOrders && (
-                <button
-                  type="button"
-                  className="sidebar-nav-item"
-                  onClick={() => handleNav(onOpenOnlineOrders)}
-                >
-                  <span className="nav-icon">🌐</span>
-                  <span className="nav-text">Online Orders</span>
-                  {pendingOnlineCount > 0 && (
-                    <span className="nav-badge alert">{pendingOnlineCount} New</span>
-                  )}
-                </button>
-              )}
+              <button
+                type="button"
+                className={`sidebar-nav-item ${currentSection === 'pos-online' ? 'active' : ''}`}
+                onClick={() =>
+                  handleNav(() => {
+                    window.location.hash = '#billing/orders';
+                    if (onSelectSection) onSelectSection('pos-online');
+                  })
+                }
+              >
+                <span className="nav-icon">🌐</span>
+                <span className="nav-text">Online Orders</span>
+                {pendingOnlineCount > 0 && (
+                  <span className="nav-badge alert">{pendingOnlineCount} New</span>
+                )}
+              </button>
             </div>
           )}
 
           <div className="sidebar-nav-group">
             <span className="sidebar-nav-label">INVENTORY</span>
+
+            <button
+              type="button"
+              className={`sidebar-nav-item ${currentSection === 'pos-inventory' ? 'active' : ''}`}
+              onClick={() =>
+                handleNav(() => {
+                  window.location.hash = '#billing/inventory';
+                  if (onSelectSection) onSelectSection('pos-inventory');
+                })
+              }
+            >
+              <span className="nav-icon">📊</span>
+              <span className="nav-text">Counter Stock</span>
+            </button>
 
             {onOpenRefill && (
               <button

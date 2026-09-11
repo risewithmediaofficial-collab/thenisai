@@ -113,8 +113,8 @@ export function CartProvider({ children }) {
     const search = new URLSearchParams(window.location.search);
     const viewParam = search.get('view')?.toLowerCase();
 
-    if (hash === '#admin' || pathname.endsWith('/admin') || viewParam === 'admin') return 'admin';
-    if (hash === '#billing' || pathname.endsWith('/billing') || viewParam === 'billing') return 'billing';
+    if (hash.startsWith('#admin') || pathname.endsWith('/admin') || viewParam === 'admin') return 'admin';
+    if (hash.startsWith('#billing') || pathname.endsWith('/billing') || viewParam === 'billing') return 'billing';
     return 'storefront';
   };
 
