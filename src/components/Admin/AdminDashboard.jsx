@@ -1,11 +1,8 @@
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../../data/sweetsData';
-import AddStockModal from '../Inventory/AddStockModal';
-import RefillStockModal from '../Inventory/RefillStockModal';
 import SideNavbar from '../Nav/SideNavbar';
 import './AdminDashboard.css';
 
@@ -15,15 +12,13 @@ export default function AdminDashboard() {
     orders,
     bills,
     fetchBills,
-    inventory,
     acceptOrder,
     updateOrderStatus,
-    addInventoryStock,
     openInvoice,
     navigateTo,
   } = useCart();
 
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'inventory' | 'sales'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'sales'
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'New' | 'Accepted' | 'Dispatched' | 'Delivered'
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -34,13 +29,11 @@ export default function AdminDashboard() {
   const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
   const [isSyncingSales, setIsSyncingSales] = useState(false);
 
-  // Stock Modals & Mobile Sidebar State
-  const [isAddStockOpen, setIsAddStockOpen] = useState(false);
-  const [isRefillOpen, setIsRefillOpen] = useState(false);
+  // Mobile Sidebar State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Lock scroll on background when modals or mobile drawers are open
-  useScrollLock(isAddStockOpen || isRefillOpen || isMobileMenuOpen);
+  // Lock scroll on background when mobile drawer is open
+  useScrollLock(isMobileMenuOpen);
 
   // Consolidate all sales: counter bills from DB + online orders
   const allSales = useMemo(() => {
@@ -67,7 +60,6 @@ export default function AdminDashboard() {
   const onlineOrders = allSales.filter((o) => o.source === 'online');
   const counterSales = allSales.filter((o) => (o.source || 'counter') === 'counter' || o.source === 'walk-in');
   const pendingOrders = onlineOrders.filter((o) => o.status === 'New');
-  const lowStockItems = inventory.filter((item) => item.stockKg <= item.minThreshold);
 
   const counterRevenue = counterSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const onlineRevenue = onlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
@@ -163,27 +155,24 @@ export default function AdminDashboard() {
 
 
   return (
-    <div className="admin-root side-layout">
+    <div className="admin-root side-layout" data-lenis-prevent="true">
       {/* 1. Sleek Left Side Navbar */}
       <SideNavbar
         currentSection={`admin-${activeTab}`}
         onSelectSection={(sec) => {
           if (sec === 'admin-orders') setActiveTab('orders');
-          else if (sec === 'admin-inventory') setActiveTab('inventory');
           else if (sec === 'admin-sales') {
             setActiveTab('sales');
             handleSyncAllSales();
           }
         }}
-        onOpenRefill={() => setIsRefillOpen(true)}
-        onOpenAddStock={() => setIsAddStockOpen(true)}
         pendingOnlineCount={pendingOrders.length}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
       {/* 2. Main Admin Content Area beside Side Navbar */}
-      <div className="admin-content-area">
+      <div className="admin-content-area" data-lenis-prevent="true">
         {/* Compact Mobile Strip with Hamburger Trigger */}
         <header className="admin-mobile-strip mobile-only">
           <button
@@ -192,25 +181,21 @@ export default function AdminDashboard() {
             onClick={() => setIsMobileMenuOpen(true)}
             aria-label="Open Navigation"
           >
-            <span className="hamburger-icon">☰</span>
+            <span className="hamburger-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </svg>
+            </span>
           </button>
           <div className="mobile-strip-brand">
             <strong>THENISAI ADMIN</strong>
-            <span>Management & Inventory</span>
-          </div>
-          <div className="admin-mobile-actions">
-            <button
-              type="button"
-              className="admin-mobile-refill-btn"
-              onClick={() => setIsRefillOpen(true)}
-              title="Quick Refill"
-            >
-              🔄 Refill
-            </button>
+            <span>Orders & Sales Portal</span>
           </div>
         </header>
 
-      <main className="admin-container">
+      <main className="admin-container" data-lenis-prevent="true">
         {/* KPI Cards Grid */}
         <section className="admin-kpi-grid">
           <div className="kpi-card revenue">
@@ -233,51 +218,12 @@ export default function AdminDashboard() {
             <span className="kpi-sub">Deliveries across TN</span>
           </div>
 
-          <div className={`kpi-card stock ${lowStockItems.length > 0 ? 'alert' : ''}`}>
-            <span className="kpi-label">Low Stock Alerts</span>
-            <div className="kpi-value">{lowStockItems.length}</div>
-            <span className="kpi-sub">
-              {lowStockItems.length > 0 ? `${lowStockItems.map((s) => s.name).join(', ')}` : 'Ample stock available'}
-            </span>
+          <div className="kpi-card sales">
+            <span className="kpi-label">Counter Invoices</span>
+            <div className="kpi-value">{counterSales.length}</div>
+            <span className="kpi-sub">In-Store Register Bills</span>
           </div>
         </section>
-
-        {/* Tab Controls */}
-        <div className="admin-tabs">
-          <button
-            type="button"
-            className={`admin-tab ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setActiveTab('orders')}
-          >
-            <span>Online Orders</span>
-            {pendingOrders.length > 0 && (
-              <span className="tab-pill alert">{pendingOrders.length} New</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab ${activeTab === 'inventory' ? 'active' : ''}`}
-            onClick={() => setActiveTab('inventory')}
-          >
-            <span>Kitchen Inventory & Batches</span>
-            {lowStockItems.length > 0 && (
-              <span className="tab-pill warning">{lowStockItems.length} Low</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab ${activeTab === 'sales' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('sales');
-              handleSyncAllSales();
-            }}
-          >
-            <span>All Sales & Billing Log</span>
-            <span className="tab-pill">{allSales.length}</span>
-          </button>
-        </div>
 
         {/* =========================================
             TAB 1: ONLINE ORDERS PROCESSING
@@ -332,7 +278,24 @@ export default function AdminDashboard() {
                           {ord.orderDate} at {ord.orderTime}
                         </span>
                         <span className={`source-pill ${ord.source}`}>
-                          {ord.source === 'online' ? '🌐 Online Delivery' : '🏪 In-Store Walk-in'}
+                          {ord.source === 'online' ? (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="2" y1="12" x2="22" y2="12" />
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                              </svg>
+                              Online Delivery
+                            </>
+                          ) : (
+                            <>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                <polyline points="9 22 9 12 15 12 15 22" />
+                              </svg>
+                              In-Store Walk-in
+                            </>
+                          )}
                         </span>
                       </div>
 
@@ -349,19 +312,37 @@ export default function AdminDashboard() {
                         <span className="col-heading">Customer & Dispatch Address</span>
                         <div className="customer-name">{ord.customer?.fullName}</div>
                         <div className="customer-contact">
-                          <a href={`tel:${ord.customer?.phone}`}>📞 +91 {ord.customer?.phone}</a>
+                          <a href={`tel:${ord.customer?.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                            +91 {ord.customer?.phone}
+                          </a>
                           {ord.customer?.email && <span> · {ord.customer?.email}</span>}
                         </div>
                         {ord.shippingAddress && (
-                          <div className="customer-address">
-                            📍 {ord.shippingAddress.doorNo}, {ord.shippingAddress.street},{' '}
-                            {ord.shippingAddress.city}, {ord.shippingAddress.state} -{' '}
-                            {ord.shippingAddress.pincode}
+                          <div className="customer-address" style={{ display: 'flex', alignItems: 'flex-start', gap: '5px' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span>
+                              {ord.shippingAddress.doorNo}, {ord.shippingAddress.street},{' '}
+                              {ord.shippingAddress.city}, {ord.shippingAddress.state} -{' '}
+                              {ord.shippingAddress.pincode}
+                            </span>
                           </div>
                         )}
                         {ord.giftNote && (
-                          <div className="gift-banner">
-                            🎁 <em>"{ord.giftNote}"</em>
+                          <div className="gift-banner" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 12 20 22 4 22 4 12" />
+                              <rect x="2" y="7" width="20" height="5" />
+                              <line x1="12" y1="22" x2="12" y2="7" />
+                              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
+                              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
+                            </svg>
+                            <em>"{ord.giftNote}"</em>
                           </div>
                         )}
                       </div>
@@ -398,7 +379,10 @@ export default function AdminDashboard() {
                               className="act-btn accept"
                               onClick={() => acceptOrder(ord.id)}
                             >
-                              ✓ Accept Order
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              Accept Order
                             </button>
                           )}
 
@@ -454,7 +438,10 @@ export default function AdminDashboard() {
                               rel="noopener noreferrer"
                               className="act-btn whatsapp"
                             >
-                              💬 WhatsApp Customer
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                              </svg>
+                              WhatsApp Customer
                             </a>
                           )}
                         </div>
@@ -467,128 +454,6 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* =========================================
-            TAB 2: KITCHEN INVENTORY & BATCHES
-           ========================================= */}
-        {activeTab === 'inventory' && (
-          <section className="tab-content">
-            <div className="tab-toolbar">
-              <div className="toolbar-info">
-                <h3 className="section-title">Fresh Sweet Batches & Daily Stock</h3>
-                <p className="section-desc">
-                  Inventory is automatically deducted when online or store counter orders are placed.
-                </p>
-              </div>
-
-              <div className="stock-header-actions">
-                <button
-                  type="button"
-                  className="btn-stock-action add"
-                  onClick={() => setIsAddStockOpen(true)}
-                  title="Add new kitchen production batches or sweet varieties"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  <span>Add Stock</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn-stock-action refill"
-                  onClick={() => setIsRefillOpen(true)}
-                  title="Quick refill of counter display trays"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                  </svg>
-                  <span>Refill Stock</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="inventory-grid">
-              {inventory.map((item) => {
-                const isLow = item.stockKg <= item.minThreshold;
-                const isCritical = item.stockKg <= item.minThreshold / 2;
-                const catalogMatch = (ALL_BILLING_ITEMS || SWEETS_CATALOG).find((s) => s.id === item.id);
-
-                return (
-                  <div
-                    key={item.id}
-                    className={`inventory-card ${isCritical ? 'critical' : isLow ? 'low' : 'healthy'}`}
-                  >
-                    <div className="inv-card__header">
-                      {catalogMatch?.image && (
-                        <img
-                          src={catalogMatch.image}
-                          alt={item.name}
-                          className="inv-card__thumb"
-                        />
-                      )}
-                      <div>
-                        <h4 className="inv-card__title">{item.name}</h4>
-                        <span className="inv-card__hsn">HSN: {catalogMatch?.hsn || '2106'}</span>
-                      </div>
-
-                      <span className={`stock-status-pill ${isCritical ? 'critical' : isLow ? 'low' : 'healthy'}`}>
-                        {isCritical ? 'Critical Low' : isLow ? 'Low Stock' : 'In Stock'}
-                      </span>
-                    </div>
-
-                    <div className="inv-card__body">
-                      <div className="stock-number-row">
-                        <span className="stock-number">{item.stockKg}</span>
-                        <span className="stock-unit">kg available</span>
-                      </div>
-
-                      <div className="stock-progress-track">
-                        <div
-                          className="stock-progress-bar"
-                          style={{
-                            width: `${Math.min(100, Math.round((item.stockKg / 50) * 100))}%`,
-                          }}
-                        />
-                      </div>
-
-                      <div className="batch-meta">
-                        <span>Last Batch: <strong>{item.batchDate}</strong></span>
-                        <span>Note: <em>{item.batchNote}</em></span>
-                      </div>
-                    </div>
-
-                    <div className="inv-card__actions">
-                      <span className="quick-add-label">Quick Restock:</span>
-                      <div className="quick-add-chips">
-                        <button
-                          type="button"
-                          className="quick-kg-btn"
-                          onClick={() => addInventoryStock(item.id, 5, 'Quick +5kg Uruli Batch')}
-                        >
-                          +5 kg
-                        </button>
-                        <button
-                          type="button"
-                          className="quick-kg-btn"
-                          onClick={() => addInventoryStock(item.id, 10, 'Quick +10kg Uruli Batch')}
-                        >
-                          +10 kg
-                        </button>
-                        <button
-                          type="button"
-                          className="quick-kg-btn"
-                          onClick={() => addInventoryStock(item.id, 25, 'Kitchen Bulk Batch')}
-                        >
-                          +25 kg
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
 
         {/* =========================================
             TAB 3: ALL SALES & BILLING LOG
@@ -635,21 +500,53 @@ export default function AdminDashboard() {
                 <span className="stat-sub">{allSales.length} Total Bills</span>
               </div>
               <div className="sales-stat-card counter">
-                <span className="stat-label">🏪 Counter Store Sales</span>
+                <span className="stat-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  Counter Store Sales
+                </span>
                 <strong className="stat-val">₹{counterRevenue.toLocaleString('en-IN')}</strong>
                 <span className="stat-sub">{counterSales.length} In-Store Bills</span>
               </div>
               <div className="sales-stat-card online">
-                <span className="stat-label">🌐 Online Web Delivery</span>
+                <span className="stat-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  Online Web Delivery
+                </span>
                 <strong className="stat-val">₹{onlineRevenue.toLocaleString('en-IN')}</strong>
                 <span className="stat-sub">{onlineOrders.length} Online Orders</span>
               </div>
               <div className="sales-stat-card payment">
                 <span className="stat-label">Payment Modes</span>
                 <div className="payment-split-pills">
-                  <span>💵 Cash: ₹{totalCashRevenue.toLocaleString('en-IN')}</span>
-                  <span>📱 UPI: ₹{totalUpiRevenue.toLocaleString('en-IN')}</span>
-                  <span>💳 Card: ₹{totalCardRevenue.toLocaleString('en-IN')}</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="6" width="20" height="12" rx="2" />
+                      <circle cx="12" cy="12" r="2" />
+                      <path d="M6 12h.01M18 12h.01" />
+                    </svg>
+                    Cash: ₹{totalCashRevenue.toLocaleString('en-IN')}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                      <line x1="12" y1="18" x2="12.01" y2="18" />
+                    </svg>
+                    UPI: ₹{totalUpiRevenue.toLocaleString('en-IN')}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                      <line x1="1" y1="10" x2="23" y2="10" />
+                    </svg>
+                    Card: ₹{totalCardRevenue.toLocaleString('en-IN')}
+                  </span>
                 </div>
               </div>
             </div>
@@ -671,13 +568,27 @@ export default function AdminDashboard() {
                         onClick={() => setSalesCashierFilter(isSelected ? 'all' : c.id)}
                       >
                         <div className="cashier-card__header">
-                          <div className="cashier-avatar">👤</div>
+                          <div className="cashier-avatar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                              <circle cx="12" cy="7" r="4" />
+                            </svg>
+                          </div>
                           <div>
                             <h5 className="cashier-name">{c.name}</h5>
                             <span className="cashier-meta">{c.counter} · {c.role?.toUpperCase()}</span>
                           </div>
                           <span className={`filter-indicator-badge ${isSelected ? 'active' : ''}`}>
-                            {isSelected ? '✓ Filtered' : 'Filter'}
+                            {isSelected ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Filtered
+                              </span>
+                            ) : (
+                              'Filter'
+                            )}
                           </span>
                         </div>
                         <div className="cashier-card__stats">
@@ -691,9 +602,27 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="cashier-card__footer">
-                          <span>💵 ₹{c.cash}</span>
-                          <span>📱 ₹{c.upi}</span>
-                          <span>💳 ₹{c.card}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="6" width="20" height="12" rx="2" />
+                              <circle cx="12" cy="12" r="2" />
+                            </svg>
+                            ₹{c.cash}
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                              <line x1="12" y1="18" x2="12.01" y2="18" />
+                            </svg>
+                            ₹{c.upi}
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                              <line x1="1" y1="10" x2="23" y2="10" />
+                            </svg>
+                            ₹{c.card}
+                          </span>
                         </div>
                       </div>
                     );
@@ -714,7 +643,7 @@ export default function AdminDashboard() {
                   <option value="all">All Cashiers & Attendants</option>
                   {cashierSummary.map((c) => (
                     <option key={c.id} value={c.id}>
-                      👤 {c.name} ({c.counter})
+                      {c.name} ({c.counter})
                     </option>
                   ))}
                 </select>
@@ -726,8 +655,8 @@ export default function AdminDashboard() {
                   className="admin-select-filter"
                 >
                   <option value="all">All Channels (Counter + Online)</option>
-                  <option value="counter">🏪 Counter POS Bills</option>
-                  <option value="online">🌐 Online Website Orders</option>
+                  <option value="counter">Counter POS Bills</option>
+                  <option value="online">Online Website Orders</option>
                 </select>
 
                 {/* Payment Filter */}
@@ -737,9 +666,9 @@ export default function AdminDashboard() {
                   className="admin-select-filter"
                 >
                   <option value="all">All Payment Methods</option>
-                  <option value="cash">💵 Cash Only</option>
-                  <option value="upi">📱 UPI QR Only</option>
-                  <option value="card">💳 Card Swipe Only</option>
+                  <option value="cash">Cash Only</option>
+                  <option value="upi">UPI QR Only</option>
+                  <option value="card">Card Swipe Only</option>
                 </select>
               </div>
 
@@ -756,18 +685,28 @@ export default function AdminDashboard() {
                   onChange={(e) => setSalesSearchTerm(e.target.value)}
                 />
                 {salesSearchTerm && (
-                  <button type="button" className="clear-btn" onClick={() => setSalesSearchTerm('')}>
-                    ✕
+                  <button type="button" className="clear-btn" onClick={() => setSalesSearchTerm('')} aria-label="Clear Search">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                   </button>
                 )}
               </div>
             </div>
 
             {/* Sales Table Card */}
-            <div className="sales-table-card">
+            <div className="sales-table-card" data-lenis-prevent="true">
               {filteredSales.length === 0 ? (
                 <div className="empty-tab-state">
-                  <div className="empty-icon">🧾</div>
+                  <div className="empty-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" />
+                      <path d="M16 8h-8" />
+                      <path d="M16 12h-8" />
+                      <path d="M10 16h-2" />
+                    </svg>
+                  </div>
                   <h3>No Sales Records Found</h3>
                   <p>No billing or invoice records match the current filter selection.</p>
                 </div>
@@ -799,25 +738,67 @@ export default function AdminDashboard() {
                         </td>
                         <td>
                           <span className={`source-pill ${sale.source === 'online' ? 'online' : 'counter'}`}>
-                            {sale.source === 'online' ? '🌐 Online' : '🏪 Counter POS'}
+                            {sale.source === 'online' ? (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="2" y1="12" x2="22" y2="12" />
+                                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                                </svg>
+                                Online
+                              </>
+                            ) : (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                  <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                                Counter POS
+                              </>
+                            )}
                           </span>
                         </td>
                         <td>
                           {sale.cashier ? (
                             <div className="cashier-cell">
-                              <strong>👤 {sale.cashier.name || sale.cashier.username}</strong>
+                              <strong style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                  <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                {sale.cashier.name || sale.cashier.username}
+                              </strong>
                               <small>{sale.cashier.counter || 'Counter Desk'}</small>
                             </div>
                           ) : (
                             <span className="cashier-online-tag">
-                              {sale.source === 'online' ? '🌐 Web System' : '🏪 Store POS'}
+                              {sale.source === 'online' ? (
+                                <>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                    <circle cx="12" cy="12" r="10" />
+                                  </svg>
+                                  Web System
+                                </>
+                              ) : (
+                                <>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                                  </svg>
+                                  Store POS
+                                </>
+                              )}
                             </span>
                           )}
                         </td>
                         <td>
                           <strong>{sale.customer?.fullName || 'Walk-in Guest'}</strong>
                           {sale.customer?.phone && (
-                            <div className="sub-phone">📞 {sale.customer.phone}</div>
+                            <div className="sub-phone" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                              </svg>
+                              {sale.customer.phone}
+                            </div>
                           )}
                         </td>
                         <td>
@@ -828,7 +809,29 @@ export default function AdminDashboard() {
                         </td>
                         <td>
                           <span className={`payment-pill ${sale.paymentMethod?.toLowerCase()}`}>
-                            {sale.paymentMethod === 'upi' ? '📱 UPI' : sale.paymentMethod === 'card' ? '💳 Card' : '💵 Cash'}
+                            {sale.paymentMethod === 'upi' ? (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                </svg>
+                                UPI
+                              </>
+                            ) : sale.paymentMethod === 'card' ? (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                                </svg>
+                                Card
+                              </>
+                            ) : (
+                              <>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                                  <circle cx="12" cy="12" r="2" />
+                                </svg>
+                                Cash
+                              </>
+                            )}
                           </span>
                         </td>
                         <td>
@@ -859,25 +862,6 @@ export default function AdminDashboard() {
         )}
       </main>
       </div>
-
-      {/* Universal Stock Modals */}
-      <AnimatePresence>
-        {isAddStockOpen && (
-          <AddStockModal
-            isOpen={isAddStockOpen}
-            onClose={() => setIsAddStockOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isRefillOpen && (
-          <RefillStockModal
-            isOpen={isRefillOpen}
-            onClose={() => setIsRefillOpen(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

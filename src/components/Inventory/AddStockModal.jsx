@@ -94,8 +94,11 @@ export default function AddStockModal({ isOpen, onClose }) {
             <h3 className="stock-modal__title">Add Stock to Inventory</h3>
             <p className="stock-modal__sub">Record new production batches or introduce new sweet varieties</p>
           </div>
-          <button type="button" className="stock-modal__close" onClick={onClose}>
-            ✕
+          <button type="button" className="stock-modal__close" onClick={onClose} aria-label="Close modal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -206,7 +209,12 @@ export default function AddStockModal({ isOpen, onClose }) {
                 Cancel
               </button>
               <button type="submit" className="btn-stock-submit">
-                <span>📦 Confirm Add Stock</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                  <line x1="12" y1="22.08" x2="12" y2="12" />
+                </svg>
+                <span>Confirm Add Stock</span>
               </button>
             </div>
           </form>
@@ -307,7 +315,11 @@ export default function AddStockModal({ isOpen, onClose }) {
                 Cancel
               </button>
               <button type="submit" className="btn-stock-submit">
-                <span>✨ Create & Inward Item</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                <span>Create &amp; Inward Item</span>
               </button>
             </div>
           </form>

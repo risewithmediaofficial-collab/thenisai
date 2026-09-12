@@ -83,7 +83,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
   const displayError = localError || authError;
 
   return (
-    <div className="neu-auth-overlay">
+    <div className="neu-auth-overlay" data-lenis-prevent="true">
       {/* Top Left Back Arrow */}
       <button
         type="button"
@@ -101,7 +101,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
       {/* Concentric Outer Ambient Ring */}
       <div className="neu-outer-ring">
         {/* Main Neumorphic Circular Disc */}
-        <div className="neu-circle-card">
+        <div className="neu-circle-card" data-lenis-prevent="true">
           {/* Header Title */}
           <div className="neu-header">
             <h1 className="neu-title">Sign In</h1>
@@ -115,14 +115,23 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               className={`neu-role-btn ${selectedRole === 'admin' ? 'active' : ''}`}
               onClick={() => selectRolePreset('admin')}
             >
-              👑 Admin
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              Admin
             </button>
             <button
               type="button"
               className={`neu-role-btn ${selectedRole === 'cashier' ? 'active' : ''}`}
               onClick={() => selectRolePreset('cashier')}
             >
-              🧾 Cashier
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1z" />
+                <path d="M16 8h-8" />
+                <path d="M16 12h-8" />
+                <path d="M10 16h-2" />
+              </svg>
+              Cashier
             </button>
           </div>
 

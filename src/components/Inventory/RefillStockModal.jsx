@@ -59,8 +59,11 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
             <h3 className="stock-modal__title">Refill Counter Tray Stock</h3>
             <p className="stock-modal__sub">Quickly top up sweets in the front counter trays</p>
           </div>
-          <button type="button" className="stock-modal__close" onClick={onClose}>
-            ✕
+          <button type="button" className="stock-modal__close" onClick={onClose} aria-label="Close modal">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -71,7 +74,14 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
                 <span>Select Sweet to Refill</span>
                 <span className="stock-hint">
                   {currentKg <= (currentItem?.minThreshold || 8) ? (
-                    <strong style={{ color: '#DC2626' }}>⚠️ Low ({currentKg} kg)</strong>
+                    <strong style={{ color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                      </svg>
+                      Low ({currentKg} kg)
+                    </strong>
                   ) : (
                     `Current: ${currentKg} kg`
                   )}
@@ -84,7 +94,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               >
                 {inventory.map((it) => (
                   <option key={it.id} value={it.id}>
-                    {it.name} — {it.stockKg} kg on tray {it.stockKg <= it.minThreshold ? '⚠️ LOW' : ''}
+                    {it.name} — {it.stockKg} kg on tray {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
                   </option>
                 ))}
               </select>
@@ -151,7 +161,10 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               className="btn-stock-submit"
               style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', borderColor: '#047857' }}
             >
-              <span>⚡ Confirm Tray Refill</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+              </svg>
+              <span>Confirm Tray Refill</span>
             </button>
           </div>
         </form>
