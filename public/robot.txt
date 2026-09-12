@@ -1,0 +1,24 @@
+# robots.txt for Thenisai Sweets & Beverages
+# Website: https://thenisai.com
+
+User-agent: *
+Allow: /
+Allow: /public/
+Allow: /products/
+Allow: /*.jpg$
+Allow: /*.png$
+Allow: /*.svg$
+Allow: /*.css$
+Allow: /*.js$
+
+# Disallow internal backend API endpoints and administrative panels
+Disallow: /api/
+Disallow: /backend/
+Disallow: /admin
+Disallow: /billing
+
+# Crawl Delay
+Crawl-delay: 1
+
+# Sitemap Location
+Sitemap: https://thenisai.com/sitemap.xml

@@ -6,38 +6,92 @@ export function useLenis() {
   const lenisRef = useRef(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.15,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      gestureOrientation: 'vertical',
-      smoothWheel: true,
-      wheelMultiplier: 1.0,
-      touchMultiplier: 1.5,
-      infinite: false,
-    });
+    let lenis = null;
+    let unbindScroll = null;
+    let rafId = null;
 
-    lenisRef.current = lenis;
-    window.__lenis = lenis;
+    const isNonStorefront = () => {
+      const hash = (window.location.hash || '').toLowerCase();
+      const path = (window.location.pathname || '').toLowerCase();
+      return (
+        hash.startsWith('#admin') ||
+        hash.startsWith('#billing') ||
+        path.endsWith('/admin') ||
+        path.endsWith('/billing')
+      );
+    };
 
-    // Sync Lenis with GSAP ScrollTrigger
-    const unbindScroll = lenis.on('scroll', () => {
-      ScrollTrigger.update();
-    });
+    const stopAndDestroyLenis = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (unbindScroll) {
+        unbindScroll();
+        unbindScroll = null;
+      }
+      if (lenis) {
+        lenis.destroy();
+        lenis = null;
+      }
+      lenisRef.current = null;
+      window.__lenis = null;
+      document.body.style.overflow = '';
+    };
 
-    let rafId;
-    function raf(time) {
-      lenis.raf(time);
+    const initLenis = () => {
+      if (isNonStorefront()) {
+        stopAndDestroyLenis();
+        return;
+      }
+
+      if (lenis) return;
+
+      lenis = new Lenis({
+        duration: 1.15,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: 'vertical',
+        gestureOrientation: 'vertical',
+        smoothWheel: true,
+        wheelMultiplier: 1.0,
+        touchMultiplier: 1.5,
+        infinite: false,
+      });
+
+      lenisRef.current = lenis;
+      window.__lenis = lenis;
+
+      unbindScroll = lenis.on('scroll', () => {
+        ScrollTrigger.update();
+      });
+
+      function raf(time) {
+        lenis?.raf(time);
+        rafId = requestAnimationFrame(raf);
+      }
+
       rafId = requestAnimationFrame(raf);
+    };
+
+    if (isNonStorefront()) {
+      document.body.style.overflow = '';
+    } else {
+      initLenis();
     }
 
-    rafId = requestAnimationFrame(raf);
+    const handleHashChange = () => {
+      if (isNonStorefront()) {
+        stopAndDestroyLenis();
+      } else {
+        initLenis();
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
 
     return () => {
-      cancelAnimationFrame(rafId);
-      if (unbindScroll) unbindScroll();
-      window.__lenis = null;
-      lenis.destroy();
+      window.removeEventListener('hashchange', handleHashChange);
+      stopAndDestroyLenis();
     };
   }, []);
 

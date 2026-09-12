@@ -1,12 +1,28 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG } from '../../data/sweetsData';
 import './StockModals.css';
 
 export default function AddStockModal({ isOpen, onClose }) {
   const { inventory, addInventoryStock, addNewProductStock } = useCart();
   const [activeTab, setActiveTab] = useState('existing'); // 'existing' | 'new'
+
+  // Screen scroll lock when modal is open
+  useScrollLock(isOpen);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose]);
 
   // Prevent mouse wheel from inadvertently changing number input values while scrolling modal
   useEffect(() => {
@@ -249,6 +265,7 @@ export default function AddStockModal({ isOpen, onClose }) {
                     setNewForm((prev) => ({ ...prev, category: e.target.value }))
                   }
                 >
+                  <option value="Spices (Kara Vagai)">Spices (Kara Vagai) · கார வகை</option>
                   <option value="Ghee Sweets">Traditional Ghee Sweets</option>
                   <option value="Milk & Khoa">Milk & Khoa Delicacies</option>
                   <option value="Cashew & Nut">Cashew & Nut Sweets</option>

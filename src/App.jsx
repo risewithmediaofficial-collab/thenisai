@@ -8,9 +8,12 @@ import HeroSection from './components/Hero/HeroSection';
 import CartDrawer from './components/Cart/CartDrawer';
 import CheckoutModal from './components/Billing/CheckoutModal';
 import InvoiceModal from './components/Billing/InvoiceModal';
+import WishlistDrawer from './components/Wishlist/WishlistDrawer';
+import CustomerAuthModal from './components/Wishlist/CustomerAuthModal';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import BillingCounter from './components/Billing/BillingCounter';
 import { CartProvider, useCart } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
 import { useLenis } from './hooks/useLenis';
 import { useScrollReveal } from './hooks/useAnimations';
 
@@ -116,8 +119,10 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         </div>
       )}
 
-      {/* Cart Drawer, Checkout, & Tax Invoice Portals */}
+      {/* Cart Drawer, Wishlist Drawer, Customer Auth & Tax Invoice Portals */}
       <CartDrawer />
+      <WishlistDrawer />
+      <CustomerAuthModal />
       <CheckoutModal />
       <InvoiceModal />
     </>
@@ -140,16 +145,39 @@ function App() {
   };
 
   useEffect(() => {
-    // Prevent scroll during loading
+    const isNonStorefront = () => {
+      const hash = (window.location.hash || '').toLowerCase();
+      const path = (window.location.pathname || '').toLowerCase();
+      return hash.startsWith('#admin') || hash.startsWith('#billing') || path.endsWith('/admin') || path.endsWith('/billing');
+    };
+
+    if (isNonStorefront()) {
+      document.body.style.overflow = '';
+      return;
+    }
+
+    // Prevent scroll during loading on storefront only
     if (!isLoaded) {
       document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
     }
+
+    const onHashChange = () => {
+      if (isNonStorefront()) {
+        document.body.style.overflow = '';
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
   }, [isLoaded]);
 
   return (
     <AuthProvider>
       <CartProvider>
-        <AppContent isLoaded={isLoaded} handleLoadComplete={handleLoadComplete} />
+        <WishlistProvider>
+          <AppContent isLoaded={isLoaded} handleLoadComplete={handleLoadComplete} />
+        </WishlistProvider>
       </CartProvider>
     </AuthProvider>
   );

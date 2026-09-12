@@ -104,6 +104,7 @@ html.lenis, html.lenis body {
    SCREEN SCROLL LOCK WHEN ANY POPUP / MODAL IS ACTIVE
    Preserves exact section scroll position without jumping to top
    ============================================================ */
+html.modal-open,
 body.modal-open {
   touch-action: none !important;
   overscroll-behavior: contain !important;
@@ -112,11 +113,20 @@ body.modal-open {
 /* Modals, drawers, and dialogs remain fully scrollable internally */
 html.modal-open [data-lenis-prevent],
 body.modal-open [data-lenis-prevent],
+.cust-auth-modal,
+.cart-drawer,
+.cart-drawer__content,
+.wishlist-drawer,
 .invoice-portal,
 .checkout-portal,
+.checkout-modal,
+.checkout-modal__body,
 .admin-modal-portal,
-.cart-drawer__content,
+.admin-modal-card,
 .printable-invoice-container,
+.stock-modal,
+.refill-stock-modal,
+.add-stock-modal,
 .restock-modal,
 .scale-modal,
 .mobile-menu {
@@ -126,10 +136,16 @@ body.modal-open [data-lenis-prevent],
 }
 
 /* Backdrops isolate interaction and reject wheel pass-through */
+.cust-auth-overlay,
+.cust-auth-backdrop,
 .invoice-backdrop,
 .checkout-backdrop,
 .admin-modal-backdrop,
-.cart-drawer__backdrop {
+.cart-drawer__backdrop,
+.cart-backdrop,
+.stock-modal-backdrop,
+.pos-sidebar-backdrop,
+.pos-mobile-backdrop {
   touch-action: none !important;
   overscroll-behavior: contain !important;
 }

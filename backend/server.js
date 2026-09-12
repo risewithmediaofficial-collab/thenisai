@@ -105,11 +105,22 @@ const billSchema = new mongoose.Schema({
   createdAt: { type: Number, default: Date.now },
 });
 
+const customerSchema = new mongoose.Schema({
+  phone: { type: String, required: true, unique: true },
+  name: { type: String, default: 'Valued Customer' },
+  email: String,
+  wishlist: [{ type: String }],
+  token: String,
+  createdAt: { type: Number, default: Date.now },
+  lastLogin: { type: Number, default: Date.now },
+});
+
 const Staff = mongoose.model('Staff', staffSchema);
 const Inventory = mongoose.model('Inventory', inventorySchema);
 const Otp = mongoose.model('Otp', otpSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Bill = mongoose.model('Bill', billSchema);
+const Customer = mongoose.model('Customer', customerSchema);
 
 // In-memory sessions store
 const activeSessions = new Map();
@@ -278,6 +289,136 @@ app.post('/api/otp/verify', async (req, res) => {
   console.log(`[OTP] ✓ Verified +91 ${cleanPhone}`);
 
   return res.json({ success: true, verified: true, message: `Mobile +91 ${cleanPhone} successfully verified.`, verificationToken, phone: cleanPhone });
+});
+
+// ============================================================
+// 2B. CUSTOMER ACCOUNT & WISHLIST SYSTEM
+// ============================================================
+
+app.post('/api/customer/auth-otp', async (req, res) => {
+  const { phone, otp, name } = req.body;
+  if (!phone || !otp) return res.status(400).json({ success: false, message: 'Mobile number and OTP are required.' });
+
+  const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+  if (cleanPhone.length !== 10) return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit Indian mobile number.' });
+
+  const record = await Otp.findOne({ phone: cleanPhone });
+  if (!record) return res.status(400).json({ success: false, message: 'No active OTP found. Please request an OTP first.' });
+  if (Date.now() > record.expiresAt) {
+    await Otp.deleteOne({ phone: cleanPhone });
+    return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new OTP.' });
+  }
+  if (record.otp !== String(otp).trim()) {
+    await Otp.updateOne({ phone: cleanPhone }, { $inc: { attempts: 1 } });
+    return res.status(400).json({ success: false, message: 'Incorrect OTP. Please try again.' });
+  }
+
+  const token = `cust_${cleanPhone}_${Date.now()}`;
+  let customer = await Customer.findOne({ phone: cleanPhone });
+  if (!customer) {
+    customer = await Customer.create({
+      phone: cleanPhone,
+      name: name?.trim() || `Customer ${cleanPhone.slice(-4)}`,
+      wishlist: [],
+      token,
+      lastLogin: Date.now(),
+    });
+    console.log(`[Customer] 👤 New account created for +91 ${cleanPhone}`);
+  } else {
+    customer.token = token;
+    customer.lastLogin = Date.now();
+    if (name?.trim()) customer.name = name.trim();
+    await customer.save();
+    console.log(`[Customer] ✓ Logged in +91 ${cleanPhone}`);
+  }
+
+  await Otp.updateOne({ phone: cleanPhone }, { verified: true, token });
+
+  return res.json({
+    success: true,
+    message: `Account verified successfully for +91 ${cleanPhone}`,
+    customer: {
+      phone: customer.phone,
+      name: customer.name,
+      email: customer.email,
+      wishlist: customer.wishlist || [],
+    },
+    token,
+  });
+});
+
+app.get('/api/customer/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const phone = req.query.phone;
+  let customer = null;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    customer = await Customer.findOne({ token });
+  } else if (phone) {
+    const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+    customer = await Customer.findOne({ phone: cleanPhone });
+  }
+
+  if (!customer) {
+    return res.status(401).json({ success: false, message: 'Customer account not found or session expired.' });
+  }
+
+  return res.json({
+    success: true,
+    customer: {
+      phone: customer.phone,
+      name: customer.name,
+      email: customer.email,
+      wishlist: customer.wishlist || [],
+    },
+  });
+});
+
+app.post('/api/customer/wishlist/toggle', async (req, res) => {
+  const { phone, productId } = req.body;
+  if (!phone || !productId) return res.status(400).json({ success: false, message: 'Phone and productId are required.' });
+
+  const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+  let customer = await Customer.findOne({ phone: cleanPhone });
+  if (!customer) {
+    return res.status(404).json({ success: false, message: 'Customer account not found. Please verify with OTP first.' });
+  }
+
+  const currentList = customer.wishlist || [];
+  const exists = currentList.includes(productId);
+  let updatedList;
+  if (exists) {
+    updatedList = currentList.filter((id) => id !== productId);
+  } else {
+    updatedList = [...currentList, productId];
+  }
+
+  customer.wishlist = updatedList;
+  await customer.save();
+
+  return res.json({
+    success: true,
+    action: exists ? 'removed' : 'added',
+    wishlist: updatedList,
+  });
+});
+
+app.post('/api/customer/wishlist/sync', async (req, res) => {
+  const { phone, wishlist } = req.body;
+  if (!phone) return res.status(400).json({ success: false, message: 'Phone is required.' });
+
+  const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+  let customer = await Customer.findOne({ phone: cleanPhone });
+  if (!customer) {
+    return res.status(404).json({ success: false, message: 'Customer not found.' });
+  }
+
+  const merged = Array.from(new Set([...(customer.wishlist || []), ...(wishlist || [])]));
+  customer.wishlist = merged;
+  await customer.save();
+
+  return res.json({ success: true, wishlist: merged });
 });
 
 // ============================================================

@@ -20,21 +20,30 @@ export default function InvoiceModal() {
   if (!activeInvoice) return null;
 
   const {
-    invoiceNumber,
-    orderDate,
-    orderTime,
-    customer,
-    shippingAddress,
-    giftNote,
-    items,
-    subtotal,
-    taxBreakdown,
-    deliveryFee,
-    grandTotal,
-    paymentMethod,
-    upiUtr,
-    orderStatus,
+    invoiceNumber = 'POS-001',
+    orderDate = new Date().toLocaleDateString('en-IN'),
+    orderTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+    customer = {},
+    shippingAddress = {},
+    giftNote = '',
+    items = [],
+    paymentMethod = 'cash',
+    upiUtr = '',
+    orderStatus = 'Completed',
   } = activeInvoice;
+
+  const subtotal = Number(activeInvoice.subtotal) || 0;
+  const deliveryFee = Number(activeInvoice.deliveryFee) || 0;
+  const grandTotal = Number(activeInvoice.grandTotal) || (subtotal + deliveryFee);
+
+  const rawTax = activeInvoice.taxBreakdown || {};
+  const taxBreakdown = {
+    isInterState: Boolean(rawTax.isInterState),
+    cgst: typeof rawTax.cgst === 'number' ? rawTax.cgst : (Number(rawTax.cgst) || Math.round(subtotal * 0.025 * 100) / 100),
+    sgst: typeof rawTax.sgst === 'number' ? rawTax.sgst : (Number(rawTax.sgst) || Math.round(subtotal * 0.025 * 100) / 100),
+    igst: typeof rawTax.igst === 'number' ? rawTax.igst : (Number(rawTax.igst) || 0),
+    totalTax: typeof rawTax.totalTax === 'number' ? rawTax.totalTax : (Number(rawTax.totalTax) || Math.round(subtotal * 0.05 * 100) / 100),
+  };
 
   const handlePrint = () => {
     window.print();
@@ -147,8 +156,8 @@ export default function InvoiceModal() {
                     <div className="item-wt">({item.weight})</div>
                   </td>
                   <td className="text-center">{item.quantity}</td>
-                  <td className="text-right">{item.price.toFixed(2)}</td>
-                  <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
+                  <td className="text-right">{Number(item.price || 0).toFixed(2)}</td>
+                  <td className="text-right">{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -394,7 +403,7 @@ export default function InvoiceModal() {
                   <td>{item.hsn}</td>
                   <td>{item.weight}</td>
                   <td className="text-right">{item.quantity}</td>
-                  <td className="text-right">{(item.price * item.quantity).toFixed(2)}</td>
+                  <td className="text-right">{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
@@ -438,13 +447,13 @@ export default function InvoiceModal() {
 
             <div className="total-row">
               <span>Delivery & Handling</span>
-              <span>{deliveryFee === 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}</span>
+              <span>{deliveryFee <= 0 ? 'FREE' : `₹${deliveryFee.toFixed(2)}`}</span>
             </div>
 
             <div className="inv-grand-total">
               <span>Grand Total (INR)</span>
               <span className="grand-amount" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
-                ₹{grandTotal}
+                ₹{grandTotal.toFixed(2)}
               </span>
             </div>
           </div>

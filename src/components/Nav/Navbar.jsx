@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import './Navbar.css';
 
@@ -8,6 +9,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
+  const { wishlist, setIsWishlistOpen } = useWishlist();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -65,8 +67,22 @@ export default function Navbar() {
             ))}
           </ul>
 
-          {/* Right actions: Cart + Order CTA */}
+          {/* Right actions: Wishlist + Cart + Order CTA */}
           <div className="navbar__actions">
+            <button
+              className={`navbar__wishlist-btn ${wishlist.length > 0 ? 'has-items' : ''}`}
+              onClick={() => setIsWishlistOpen(true)}
+              aria-label={`View wishlist (${wishlist.length} saved)`}
+              title="My Wishlist"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlist.length > 0 ? '#D97706' : 'none'} stroke={wishlist.length > 0 ? '#D97706' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {wishlist.length > 0 && (
+                <span className="navbar__cart-badge">{wishlist.length}</span>
+              )}
+            </button>
+
             <button
               className="navbar__cart-btn"
               onClick={() => setIsCartOpen(true)}
@@ -134,6 +150,23 @@ export default function Navbar() {
                     <span className="mobile-menu__link-text">{link.label}</span>
                   </motion.a>
                 ))}
+
+                <button
+                  type="button"
+                  className="mobile-menu__wishlist-btn"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setIsWishlistOpen(true);
+                  }}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    My Wishlist
+                  </span>
+                  {wishlist.length > 0 && <span className="mobile-wishlist-count">{wishlist.length}</span>}
+                </button>
 
                 <motion.div
                   className="mobile-menu__divider"

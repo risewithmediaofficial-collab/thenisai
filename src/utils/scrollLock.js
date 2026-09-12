@@ -4,14 +4,21 @@ let savedScrollY = 0;
 function isInsideScrollable(target) {
   if (!target || !target.closest) return false;
 
-  // Never allow backdrop to pass scroll through
-  if (target.closest('.cart-backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-mobile-backdrop')) {
+  // Never allow backdrop or full-screen overlay backgrounds to pass scroll through
+  if (
+    target.classList?.contains('cust-auth-overlay') ||
+    target.classList?.contains('cust-auth-backdrop') ||
+    target.closest(
+      '.cust-auth-backdrop, .cart-backdrop, .cart-drawer__backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-mobile-backdrop, .pos-sidebar-backdrop, .stock-modal-backdrop'
+    )
+  ) {
     return false;
   }
 
+  // Allow internal scroll only for designated modal content cards / drawer bodies
   return Boolean(
     target.closest(
-      '[data-lenis-prevent], .cart-drawer__content, .printable-invoice-container, .checkout-portal, .checkout-modal__body, .invoice-portal, .invoice-modal-wrap, .admin-modal-card, .restock-modal, .scale-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .mobile-menu, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer'
+      '.cust-auth-modal, .cart-drawer, .cart-drawer__content, .wishlist-drawer, .checkout-modal, .checkout-modal__body, .invoice-modal-wrap, .printable-invoice-container, .admin-modal-card, .stock-modal, .refill-stock-modal, .add-stock-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer, .mobile-menu'
     )
   );
 }
@@ -47,6 +54,16 @@ function handleKeyDown(e) {
   e.preventDefault();
 }
 
+function handleScroll() {
+  if (lockCount > 0 && typeof savedScrollY === 'number') {
+    if (window.__lenis) {
+      window.__lenis.scrollTo(savedScrollY, { immediate: true });
+    } else if (Math.abs(window.scrollY - savedScrollY) > 1) {
+      window.scrollTo(0, savedScrollY);
+    }
+  }
+}
+
 export function lockScroll() {
   lockCount++;
   if (lockCount === 1) {
@@ -62,11 +79,13 @@ export function lockScroll() {
     }
 
     document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
 
-    // 4. Prevent wheel, touch, and key leaks to background
+    // 4. Prevent wheel, touch, key, and scroll leaks to background
     window.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('keydown', handleKeyDown, { passive: false });
+    window.addEventListener('scroll', handleScroll, { passive: true });
   }
 }
 
@@ -74,11 +93,13 @@ export function unlockScroll() {
   lockCount = Math.max(0, lockCount - 1);
   if (lockCount === 0) {
     document.body.classList.remove('modal-open');
+    document.documentElement.classList.remove('modal-open');
 
     // Clean up event listeners
     window.removeEventListener('wheel', handleWheel);
     window.removeEventListener('touchmove', handleTouchMove);
     window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('scroll', handleScroll);
 
     // Resume Lenis smooth scroll engine and maintain exact section position
     if (window.__lenis) {

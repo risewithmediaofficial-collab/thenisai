@@ -2,9 +2,14 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { SWEETS_CATALOG, SWEET_WEIGHT_OPTIONS } from '../../data/sweetsData';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
 import './SweetsCollection.css';
 
 function SweetCard({ sweet, index }) {
+  const { addToCart, setIsCartOpen } = useCart();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const isFav = isInWishlist(sweet.id);
+
   const hasPrices = Boolean(sweet.prices);
   const [selectedWeight, setSelectedWeight] = useState(hasPrices ? '500g' : (sweet.unit || '1 Cup'));
   const [justAdded, setJustAdded] = useState(false);
@@ -50,6 +55,32 @@ function SweetCard({ sweet, index }) {
         {sweet.featured && (
           <div className="sweet-card__badge label">Signature</div>
         )}
+
+        {/* Wishlist Heart Toggle */}
+        <button
+          type="button"
+          className={`sweet-card__wishlist-btn ${isFav ? 'is-active' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleWishlist(sweet.id);
+          }}
+          aria-label={isFav ? `Remove ${sweet.name} from wishlist` : `Save ${sweet.name} to wishlist`}
+          title={isFav ? 'Saved in Wishlist' : 'Save to Wishlist'}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill={isFav ? '#DC2626' : 'none'}
+            stroke={isFav ? '#DC2626' : 'currentColor'}
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+
         <div className="sweet-card__price-tag">
           ₹{currentPrice}
         </div>

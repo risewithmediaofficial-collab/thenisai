@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG } from '../data/sweetsData';
+import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG, SPICES_KARA_VAGAI } from '../data/sweetsData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
 
@@ -8,22 +8,46 @@ const CartContext = createContext();
 const CART_STORAGE_KEY = 'thenisai_cart_items_v1';
 const INVOICE_STORAGE_KEY = 'thenisai_last_invoice_v1';
 const ORDERS_STORAGE_KEY = 'thenisai_orders_v1';
-const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v1';
+const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v2';
+
+const SPICES_INVENTORY_ITEMS = SPICES_KARA_VAGAI.map((item) => ({
+  id: item.id,
+  name: item.name,
+  englishName: item.englishName,
+  tamilName: item.tamilName,
+  stockKg: item.unit === 'kg' ? 30 : 50,
+  minThreshold: item.unit === 'kg' ? 6 : 10,
+  batchDate: 'Today 07:00 AM',
+  batchNote: item.description || 'Fresh counter batch inward',
+  unit: item.unit || 'kg',
+  price: item.price,
+  category: 'spices',
+  subcategory: 'Spices (Kara Vagai)',
+  hsn: item.hsn || '2106',
+}));
 
 const DEFAULT_INVENTORY = [
-  { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh hot brew counter', unit: 'Cup' },
-  { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh brew counter', unit: 'Cup' },
-  { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', unit: 'Cup' },
-  { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', unit: 'Cup' },
-  { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', unit: 'Cup' },
-  { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', unit: 'Cup' },
-  { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', unit: 'Cup' },
-  { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh traditional ragi brew', unit: 'Cup' },
-  { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh citrus infusion', unit: 'Cup' },
-  { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', unit: 'Cup' },
-  { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', unit: 'Cup' },
-  { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh crushed ginger & lemon', unit: 'Cup' },
-  { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Crispy warm medu vada', unit: 'Pc' },
+  { id: 'palkova', name: 'Signature Palkova', stockKg: 45, minThreshold: 10, batchDate: 'Today 06:00 AM', batchNote: 'Simmered in brass uruli', unit: 'kg', category: 'sweets', subcategory: 'Ghee Sweets', price: 650 },
+  { id: 'milk-peda', name: 'Milk Peda', stockKg: 30, minThreshold: 8, batchDate: 'Today 06:30 AM', batchNote: 'Fresh cardamom batch', unit: 'kg', category: 'sweets', subcategory: 'Milk Sweets', price: 620 },
+  { id: 'mysore-pak', name: 'Royal Mysore Pak', stockKg: 40, minThreshold: 10, batchDate: 'Today 07:00 AM', batchNote: 'Pure desi ghee batch', unit: 'kg', category: 'sweets', subcategory: 'Ghee Sweets', price: 690 },
+  { id: 'kaju-katli', name: 'Kaju Katli', stockKg: 25, minThreshold: 5, batchDate: 'Yesterday 04:00 PM', batchNote: 'Premium cashew diamond cut', unit: 'kg', category: 'sweets', subcategory: 'Cashew Sweets', price: 1020 },
+  { id: 'badam-halwa', name: 'Badam Halwa', stockKg: 20, minThreshold: 5, batchDate: 'Today 07:30 AM', batchNote: 'Kashmiri saffron enriched', unit: 'kg', category: 'sweets', subcategory: 'Halwa', price: 1060 },
+  { id: 'jangiri', name: 'Jangiri', stockKg: 35, minThreshold: 8, batchDate: 'Today 08:00 AM', batchNote: 'Fresh rose syrup batch', unit: 'kg', category: 'sweets', subcategory: 'Traditional Sweets', price: 540 },
+  { id: 'gulab-jamun', name: 'Gulab Jamun', stockKg: 30, minThreshold: 8, batchDate: 'Today 08:30 AM', batchNote: 'Soft khoa dumplings', unit: 'kg', category: 'sweets', subcategory: 'Traditional Sweets', price: 580 },
+  { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh hot brew counter', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
+  { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh brew counter', unit: 'Cup', category: 'beverages', subcategory: 'Coffees', price: 20 },
+  { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', unit: 'Cup', category: 'beverages', subcategory: 'Coffees', price: 20 },
+  { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 20 },
+  { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
+  { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
+  { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
+  { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh traditional ragi brew', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
+  { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh citrus infusion', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
+  { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
+  { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
+  { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh crushed ginger & lemon', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
+  { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Crispy warm medu vada', unit: 'Pc', category: 'snacks', subcategory: 'Snacks (Vada)', price: 20 },
+  ...SPICES_INVENTORY_ITEMS,
 ];
 
 const INITIAL_ORDERS = [

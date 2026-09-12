@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import './StockModals.css';
 
 export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
@@ -9,6 +10,21 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const [selectedSweetId, setSelectedSweetId] = useState(
     initialSweetId || inventory[0]?.id || 'tea'
   );
+
+  // Screen scroll lock when modal is open
+  useScrollLock(isOpen);
+
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (initialSweetId) {
@@ -71,7 +87,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
           <div className="stock-modal__body">
             <div className="stock-field">
               <label>
-                <span>Select Sweet to Refill</span>
+                <span>Select Item to Refill</span>
                 <span className="stock-hint">
                   {currentKg <= (currentItem?.minThreshold || 8) ? (
                     <strong style={{ color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -80,10 +96,10 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
                         <line x1="12" y1="9" x2="12" y2="13" />
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
-                      Low ({currentKg} kg)
+                      Low ({currentKg} {currentItem?.unit || 'kg'})
                     </strong>
                   ) : (
-                    `Current: ${currentKg} kg`
+                    <span>Available: {currentKg} {currentItem?.unit || 'kg'}</span>
                   )}
                 </span>
               </label>
@@ -94,7 +110,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               >
                 {inventory.map((it) => (
                   <option key={it.id} value={it.id}>
-                    {it.name} — {it.stockKg} kg on tray {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
+                    {it.name} — {it.stockKg} {it.unit === 'kg' ? 'kg' : it.unit === 'Pkt' ? 'pkts' : it.unit === 'Bottle' ? 'bottles' : 'units'} {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
                   </option>
                 ))}
               </select>
@@ -102,7 +118,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
 
             <div className="stock-field">
               <label>
-                <span>Refill Amount (kg)</span>
+                <span>Refill Amount ({currentItem?.unit || 'kg'})</span>
                 <span className="stock-hint">Select quick preset or enter custom</span>
               </label>
               <input
