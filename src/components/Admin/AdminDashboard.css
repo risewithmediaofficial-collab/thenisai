@@ -116,6 +116,37 @@
     border-radius: 6px;
     cursor: pointer;
   }
+
+  .mobile-strip-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .mobile-strip-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .mobile-strip-brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .mobile-strip-brand-text strong {
+    font-size: 0.9rem;
+    display: block;
+    color: #0F172A;
+  }
+
+  .mobile-strip-brand-text span {
+    font-size: 0.72rem;
+    color: #64748B;
+  }
 }
 
 /* Header */

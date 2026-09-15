@@ -252,6 +252,19 @@
   margin-bottom: 20px;
 }
 
+.inv-brand-with-logo {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.inv-brand-logo-img {
+  max-width: 120px;
+  height: auto;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
 .inv-brand-name {
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 1.5rem;
@@ -573,6 +586,18 @@
 
 .thermal-header {
   text-align: center;
+}
+
+.thermal-logo-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.thermal-logo-img {
+  max-width: 130px;
+  height: auto;
+  display: block;
 }
 
 .thermal-decor-stars {

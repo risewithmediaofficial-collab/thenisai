@@ -47,14 +47,21 @@
   text-align: center;
 }
 
-.loader__ornament {
-  margin-bottom: 8px;
-  animation: ornamentPulse 3s ease-in-out infinite;
+.loader__emblem-wrap {
+  margin-bottom: 4px;
 }
 
-@keyframes ornamentPulse {
-  0%, 100% { opacity: 0.6; transform: scaleX(1); }
-  50% { opacity: 1; transform: scaleX(1.05); }
+.loader__emblem-img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(245, 158, 11, 0.6));
+  animation: emblemGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes emblemGlow {
+  0% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(245, 158, 11, 0.4)); }
+  100% { transform: scale(1.06); filter: drop-shadow(0 0 28px rgba(245, 158, 11, 0.85)); }
 }
 
 .loader__logo {

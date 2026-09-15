@@ -190,8 +190,11 @@ export default function AdminDashboard() {
             </span>
           </button>
           <div className="mobile-strip-brand">
-            <strong>THENISAI ADMIN</strong>
-            <span>Orders & Sales Portal</span>
+            <img src="/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
+            <div className="mobile-strip-brand-text">
+              <strong>THENISAI ADMIN</strong>
+              <span>Orders &amp; Sales Portal</span>
+            </div>
           </div>
         </header>
 

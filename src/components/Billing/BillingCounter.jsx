@@ -745,16 +745,19 @@ export default function BillingCounter() {
             </span>
           </button>
           <div className="mobile-strip-brand">
-            <strong>THENISAI POS</strong>
-            <span>
-              {posTab === 'register'
-                ? (user?.counter || 'Terminal 01')
-                : posTab === 'my-bills'
-                ? 'Shift Ledger'
-                : posTab === 'online-orders'
-                ? 'Online Dispatch'
-                : 'Counter Stock'}
-            </span>
+            <img src="/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
+            <div className="mobile-strip-brand-text">
+              <strong>THENISAI POS</strong>
+              <span>
+                {posTab === 'register'
+                  ? (user?.counter || 'Terminal 01')
+                  : posTab === 'my-bills'
+                  ? 'Shift Ledger'
+                  : posTab === 'online-orders'
+                  ? 'Online Dispatch'
+                  : 'Counter Stock'}
+              </span>
+            </div>
           </div>
 
           {posTab === 'register' ? (

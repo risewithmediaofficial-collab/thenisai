@@ -50,14 +50,15 @@ export default function LoadingScreen({ onComplete }) {
 
           {/* Central content */}
           <div className="loader__content">
-            {/* Golden ornament */}
-            <div className="loader__ornament">
-              <svg width="80" height="40" viewBox="0 0 80 40" fill="none">
-                <path d="M0 20 Q20 5 40 20 Q60 35 80 20" stroke="#D4A843" strokeWidth="0.5" fill="none" opacity="0.6"/>
-                <path d="M0 20 Q20 35 40 20 Q60 5 80 20" stroke="#D4A843" strokeWidth="0.5" fill="none" opacity="0.6"/>
-                <circle cx="40" cy="20" r="3" fill="#D4A843" opacity="0.8"/>
-              </svg>
-            </div>
+            {/* Logo Emblem */}
+            <motion.div
+              className="loader__emblem-wrap"
+              initial={{ opacity: 0, scale: 0.8, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <img src="/logo-icon.png" alt="Thenisai Logo" className="loader__emblem-img" />
+            </motion.div>
 
             {/* Logo letters */}
             <div className="loader__logo">

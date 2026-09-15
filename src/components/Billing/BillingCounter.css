@@ -3338,6 +3338,20 @@
 
   .mobile-strip-brand {
     display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .mobile-strip-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .mobile-strip-brand-text {
+    display: flex;
     flex-direction: column;
     min-width: 0;
   }

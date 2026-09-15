@@ -30,17 +30,35 @@
 .navbar__logo {
   text-decoration: none;
   display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1;
+}
+
+.navbar__logo-img {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navbar__logo:hover .navbar__logo-img {
+  transform: scale(1.06);
+}
+
+.navbar__logo-text-group {
+  display: flex;
   flex-direction: column;
   gap: 2px;
-  line-height: 1;
 }
 
 .navbar__logo-text {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--cream);
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
 
@@ -330,14 +348,18 @@
     background: rgba(18, 10, 5, 0.98);
   }
 
+  .navbar__logo-img {
+    height: 36px;
+  }
+
   .navbar__logo-text {
-    font-size: 18px;
-    letter-spacing: 0.16em;
+    font-size: 16px;
+    letter-spacing: 0.14em;
   }
 
   .navbar__logo-sub {
-    font-size: 8px;
-    letter-spacing: 0.2em;
+    font-size: 7.5px;
+    letter-spacing: 0.18em;
   }
 
   .navbar__links,

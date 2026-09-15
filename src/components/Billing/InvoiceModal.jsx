@@ -93,6 +93,9 @@ export default function InvoiceModal() {
         <div className={`thermal-receipt-document copy-${copyType}`}>
           {/* Thermal Header */}
           <div className="thermal-header">
+            <div className="thermal-logo-wrap">
+              <img src="/logo.png" alt="Thenisai Logo" className="thermal-logo-img" />
+            </div>
             <div className="thermal-decor-stars">★ ★ ★ ★ ★</div>
             <h2 className="thermal-brand-name">{STORE_DETAILS.brandName}</h2>
             <p className="thermal-brand-tag">{STORE_DETAILS.tagline}</p>
@@ -292,8 +295,10 @@ export default function InvoiceModal() {
       >
         {/* Header */}
         <div className="inv-header">
-          <div className="inv-brand">
-            <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
+          <div className="inv-brand-with-logo">
+            <img src="/logo.png" alt="Thenisai Sweets Logo" className="inv-brand-logo-img" />
+            <div className="inv-brand">
+              <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
             <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>
             <p className="inv-brand-address">
               {STORE_DETAILS.addressLine1}, {STORE_DETAILS.cityStatePin}
@@ -301,10 +306,11 @@ export default function InvoiceModal() {
             <p className="inv-brand-meta">
               Tel: {STORE_DETAILS.phone} | Sec: {STORE_DETAILS.secondaryPhone} | Email: {STORE_DETAILS.email}
             </p>
-            <div className="inv-reg-badges">
-              <span>Est: <strong>2006</strong></span>
-              <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
-              <span>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></span>
+              <div className="inv-reg-badges">
+                <span>Est: <strong>2006</strong></span>
+                <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
+                <span>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></span>
+              </div>
             </div>
           </div>
 
