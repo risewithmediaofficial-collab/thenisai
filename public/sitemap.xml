@@ -3,80 +3,122 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- Main Homepage -->
+  <!-- Main Storefront Homepage - Krishnagiri Local SEO Hub -->
   <url>
     <loc>https://thenisai.com/</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://thenisai.com/" />
+    <xhtml:link rel="alternate" hreflang="ta-IN" href="https://thenisai.com/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://thenisai.com/" />
+    
+    <image:image>
+      <image:loc>https://thenisai.com/palkova_hero.jpg</image:loc>
+      <image:title>Thenisai Palkova &amp; Sweets Krishnagiri — Best Palkova on NH 44</image:title>
+      <image:caption>Authentic slow-simmered pure cow milk Palkova at Nattamai Kottai, Krishnagiri near HP Petrol Bunk on Bangalore–Salem Highway.</image:caption>
+    </image:image>
     <image:image>
       <image:loc>https://thenisai.com/brand_story.jpg</image:loc>
-      <image:title>Thenisai Sweets &amp; Beverages - Madurai &amp; Theni Heritage</image:title>
-      <image:caption>Authentic South Indian Sweets, Signature Palkova, Tea, Degree Filter Coffee and Snacks</image:caption>
+      <image:title>Thenisai Palkova &amp; Sweets — Heritage Since 2006 Krishnagiri</image:title>
+      <image:caption>Over two decades of pure milk sweets and authentic confectionery craftsmanship in Krishnagiri, Tamil Nadu.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisai.com/logo-light.png</image:loc>
+      <image:title>Thenisai Palkova &amp; Sweets Official Logo Badge</image:title>
+      <image:caption>Traditional Tamil confectionery mark of purity and heritage since 2006.</image:caption>
     </image:image>
   </url>
 
-  <!-- Sweets & Beverages Collection -->
+  <!-- Sweets Collection & Online Menu -->
   <url>
     <loc>https://thenisai.com/#collection</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
     <image:image>
       <image:loc>https://thenisai.com/palkova_card.jpg</image:loc>
-      <image:title>Thenisai Sweets &amp; Snacks Menu</image:title>
-      <image:caption>Fresh Hot Tea, Filter Coffee, Medu Vada, Samosa, Bajji and Signature Treats</image:caption>
+      <image:title>Signature Palkova &amp; Traditional Sweets Collection Krishnagiri</image:title>
+      <image:caption>Order fresh Palkova, Milk Peda, Ghee Mysore Pak, Cashew Cake and authentic sweets in Krishnagiri.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisai.com/mysore_pak.jpg</image:loc>
+      <image:title>Pure Desi Ghee Mysore Pak — Thenisai Sweets Krishnagiri</image:title>
+      <image:caption>Melt-in-mouth traditional South Indian Mysore Pak prepared with pure ghee.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisai.com/kaju_katli.jpg</image:loc>
+      <image:title>Cashew Cake (Kaju Katli) — Thenisai Krishnagiri</image:title>
+      <image:caption>Premium diamond-cut cashew sweets made from whole royal cashews.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisai.com/badam_halwa.jpg</image:loc>
+      <image:title>Badam Halwa &amp; Traditional Halwa Varieties Krishnagiri</image:title>
+      <image:caption>Rich almond halwa enriched with pure ghee and saffron.</image:caption>
     </image:image>
   </url>
 
-  <!-- Brand Story & Heritage -->
+  <!-- Signature Palkova Section -->
   <url>
-    <loc>https://thenisai.com/#story</loc>
-    <lastmod>2026-09-11</lastmod>
+    <loc>https://thenisai.com/#palkova</loc>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://thenisai.com/palkova_hero.jpg</image:loc>
+      <image:title>Authentic Pure Cow Milk Palkova Krishnagiri</image:title>
+      <image:caption>Traditional brass uruli simmering of fresh cow milk and organic sugar — zero artificial colors or additives.</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Store Location, Directions & Contact (Nattamai Kottai, NH 44 Krishnagiri) -->
+  <url>
+    <loc>https://thenisai.com/#contact</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
     <image:image>
       <image:loc>https://thenisai.com/brand_story.jpg</image:loc>
-      <image:title>Our Heritage Since 2006</image:title>
-      <image:caption>Two decades of traditional South Indian culinary craftsmanship</image:caption>
+      <image:title>Visit Thenisai Palkova &amp; Sweets in Nattamai Kottai Krishnagiri</image:title>
+      <image:caption>Located on NH 44 (Bangalore–Salem Highway) near HP Petrol Bunk. Convenient stop for travelers and locals.</image:caption>
     </image:image>
   </url>
 
-  <!-- Pure Ingredients -->
+  <!-- Heritage & Brand Story -->
+  <url>
+    <loc>https://thenisai.com/#story</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Pure Ingredients Guarantee -->
   <url>
     <loc>https://thenisai.com/#ingredients</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://thenisai.com/ingredients.jpg</image:loc>
-      <image:title>Pure Cow Milk &amp; Natural Ingredients</image:title>
-      <image:caption>Farm fresh ingredients, zero preservatives and uncompromised quality</image:caption>
+      <image:title>Pure Cow Milk &amp; Natural Confectionery Ingredients</image:title>
+      <image:caption>100% farm fresh cow milk, pure ghee, and unadulterated ingredients.</image:caption>
     </image:image>
   </url>
 
-  <!-- Traditional Methods -->
+  <!-- Traditional Craftsmanship & Woodfire Kitchen -->
   <url>
     <loc>https://thenisai.com/#tradition</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Customer Reviews -->
-  <url>
-    <loc>https://thenisai.com/#reviews</loc>
-    <lastmod>2026-09-11</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <!-- Store Location & Contact -->
-  <url>
-    <loc>https://thenisai.com/#contact</loc>
-    <lastmod>2026-09-11</lastmod>
+    <lastmod>2026-09-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+  </url>
+
+  <!-- Verified Customer Reviews from Krishnagiri & Highway Travelers -->
+  <url>
+    <loc>https://thenisai.com/#reviews</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 
 </urlset>

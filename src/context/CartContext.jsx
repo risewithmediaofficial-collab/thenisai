@@ -51,7 +51,7 @@ const INITIAL_ORDERS = [
     orderDate: '10 Sep 2026',
     orderTime: '09:42 AM',
     customer: { fullName: 'Venkatesh Raman', phone: '9840123456', email: 'venkat@gmail.com' },
-    shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'Madurai', state: 'Tamil Nadu', pincode: '625020' },
+    shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'krishnagiri', state: 'Tamil Nadu', pincode: '625020' },
     items: [
       { id: 'palkova', name: 'Signature Palkova', weight: '500g', price: 340, quantity: 2, image: '/palkova_card.jpg', hsn: '0402' },
       { id: 'mysore-pak', name: 'Royal Mysore Pak', weight: '250g', price: 190, quantity: 1, image: '/mysore_pak.jpg', hsn: '2106' },
@@ -259,7 +259,7 @@ export function CartProvider({ children }) {
             setBills(billsRes.bills);
             try {
               localStorage.setItem('thenisai_bills_cache', JSON.stringify(billsRes.bills));
-            } catch {}
+            } catch { }
           }
         }
       } catch (err) {
@@ -283,7 +283,7 @@ export function CartProvider({ children }) {
         setBills(res.bills);
         try {
           localStorage.setItem('thenisai_bills_cache', JSON.stringify(res.bills));
-        } catch {}
+        } catch { }
         return res.bills;
       }
     } catch (err) {
@@ -460,11 +460,11 @@ export function CartProvider({ children }) {
         return prev.map((it) =>
           it.id === newId
             ? {
-                ...it,
-                stockKg: Math.round((it.stockKg + initialKg) * 100) / 100,
-                batchDate: timeStr,
-                batchNote: newProduct.batchNote || it.batchNote,
-              }
+              ...it,
+              stockKg: Math.round((it.stockKg + initialKg) * 100) / 100,
+              batchDate: timeStr,
+              batchNote: newProduct.batchNote || it.batchNote,
+            }
             : it
         );
       }

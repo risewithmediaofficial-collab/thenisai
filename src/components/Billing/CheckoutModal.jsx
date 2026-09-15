@@ -41,7 +41,7 @@ export default function CheckoutModal() {
     doorNo: '',
     street: '',
     landmark: '',
-    city: 'Madurai',
+    city: 'krishnagiri',
     state: 'Tamil Nadu',
     pincode: '',
     giftNote: '',
@@ -345,10 +345,10 @@ export default function CheckoutModal() {
                           {otpLoading
                             ? 'Sending...'
                             : otpCountdown > 0
-                            ? `Resend (${otpCountdown}s)`
-                            : otpSent
-                            ? 'Resend OTP'
-                            : 'Send OTP'}
+                              ? `Resend (${otpCountdown}s)`
+                              : otpSent
+                                ? 'Resend OTP'
+                                : 'Send OTP'}
                         </button>
                       ) : (
                         <button
@@ -503,7 +503,7 @@ export default function CheckoutModal() {
                     <input
                       type="text"
                       name="city"
-                      placeholder="Madurai"
+                      placeholder="krishnagiri"
                       value={formData.city}
                       onChange={handleChange}
                       className={errors.city ? 'error' : ''}
@@ -733,7 +733,7 @@ export default function CheckoutModal() {
 
               <div className="checkout-badges">
                 <span>✦ FSSAI Certified Kitchen</span>
-                <span>✦ Authentic Madurai Recipe</span>
+                <span>✦ Authentic krishnagiri Recipe</span>
               </div>
             </div>
           </div>

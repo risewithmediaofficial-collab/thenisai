@@ -1,24 +1,64 @@
-# robots.txt for Thenisai Sweets & Beverages
+# ==============================================================================
+# Robots.txt for Thenisai Palkova & Sweets (Krishnagiri, Tamil Nadu)
+# Business: Thenisai Palkova & Sweets
+# Location: Nattamai Kottai, Near H.P. Petrol Bunk, NH 44, Krishnagiri - 635001
 # Website: https://thenisai.com
+# ==============================================================================
 
+# Search Engine Crawlers (Google, Bing, Yahoo, DuckDuckGo, Applebot)
 User-agent: *
 Allow: /
-Allow: /public/
-Allow: /products/
+Allow: /#hero
+Allow: /#collection
+Allow: /#palkova
+Allow: /#story
+Allow: /#ingredients
+Allow: /#tradition
+Allow: /#reviews
+Allow: /#contact
 Allow: /*.jpg$
+Allow: /*.jpeg$
 Allow: /*.png$
+Allow: /*.webp$
 Allow: /*.svg$
 Allow: /*.css$
 Allow: /*.js$
 
-# Disallow internal backend API endpoints and administrative panels
+# Disallow Private Administrative, Cashier Billing, and Internal APIs
+Disallow: /admin
+Disallow: /#admin
+Disallow: /billing
+Disallow: /#billing
 Disallow: /api/
 Disallow: /backend/
+Disallow: /scratch/
+Disallow: /*?*admin*
+Disallow: /*?*billing*
+
+# Dedicated Googlebot Rules
+User-agent: Googlebot
+Allow: /
+Allow: /*.jpg$
+Allow: /*.png$
+Allow: /*.webp$
 Disallow: /admin
+Disallow: /#admin
 Disallow: /billing
+Disallow: /#billing
+Disallow: /api/
+Disallow: /backend/
 
-# Crawl Delay
+# Dedicated Googlebot Image Crawler Rules
+User-agent: Googlebot-Image
+Allow: /
+Allow: /*.jpg$
+Allow: /*.png$
+Allow: /*.webp$
+Allow: /*.svg$
+
+# Crawl-rate and Host Directives
 Crawl-delay: 1
+Host: https://thenisai.com
 
-# Sitemap Location
+# XML Sitemap Index
 Sitemap: https://thenisai.com/sitemap.xml

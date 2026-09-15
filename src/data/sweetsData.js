@@ -1014,11 +1014,12 @@ export const ALL_BILLING_ITEMS = [
 ];
 
 export const STORE_DETAILS = {
-  brandName: 'THENISAI SWEETS',
-  tagline: 'The Taste of Tradition · Since 2006 · Madurai & Theni Heritage',
+  brandName: 'Thenisai Palkova & Sweets',
+  tagline: 'The Taste of Tradition · Since 2006 · Krishnagiri',
   establishedYear: '2006',
-  addressLine1: '123 Sweet Street, Opp. South Tower',
-  cityStatePin: 'Madurai, Tamil Nadu - 625001',
+  addressLine1: 'Nattamai Kottai, Near H.P. Petrol Bunk, NH 44',
+  cityStatePin: 'Krishnagiri, Tamil Nadu - 635001',
+  landmark: 'NH 44 Bangalore–Salem Highway, Near HP Petrol Bunk',
   phone: '+91 93448 93547',
   secondaryPhone: '+91 86818 58723',
   whatsappNumber: '919344893547',
@@ -1027,6 +1028,7 @@ export const STORE_DETAILS = {
   gstin: '33AABCT9988C1Z4',
   fssai: '12423011000452',
   upiId: 'thenisai.sweets@okhdfcbank',
+  googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Thenisai+Palkova+and+Sweets+Nattamai+Kottai+Krishnagiri',
 };
 
 export const FREE_DELIVERY_THRESHOLD = 799;

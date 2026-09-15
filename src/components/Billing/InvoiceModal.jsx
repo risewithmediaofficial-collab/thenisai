@@ -57,21 +57,20 @@ export default function InvoiceModal() {
     .join('\n');
 
   const fullAddress = shippingAddress?.doorNo
-    ? `${shippingAddress.doorNo}, ${shippingAddress.street || ''}${
-        shippingAddress.landmark ? `, Near ${shippingAddress.landmark}` : ''
-      }, ${shippingAddress.city || ''}, ${shippingAddress.state || ''} - ${shippingAddress.pincode || ''}`
+    ? `${shippingAddress.doorNo}, ${shippingAddress.street || ''}${shippingAddress.landmark ? `, Near ${shippingAddress.landmark}` : ''
+    }, ${shippingAddress.city || ''}, ${shippingAddress.state || ''} - ${shippingAddress.pincode || ''}`
     : 'In-Store Counter Walk-in';
 
   const whatsappMessage = encodeURIComponent(
     `🙏 *Namaste Thenisai Sweets!* \nI just placed an order on your website.\n\n` +
-      `🧾 *Invoice No:* ${invoiceNumber}\n` +
-      `👤 *Customer:* ${customer?.fullName || 'Walk-in Guest'}${customer?.phone ? ` (${customer.phone})` : ''}\n` +
-      `📍 *Delivery Address:* ${fullAddress}\n\n` +
-      `📦 *Order Items:*\n${itemsText}\n\n` +
-      `💰 *Total Amount:* ₹${grandTotal}\n` +
-      `💳 *Payment Mode:* ${paymentMethod === 'upi' ? `Instant UPI (UTR: ${upiUtr || 'Paid'})` : 'Pay on Delivery (COD)'}\n` +
-      (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
-      `\nPlease confirm order packing and dispatch. Thank you!`
+    `🧾 *Invoice No:* ${invoiceNumber}\n` +
+    `👤 *Customer:* ${customer?.fullName || 'Walk-in Guest'}${customer?.phone ? ` (${customer.phone})` : ''}\n` +
+    `📍 *Delivery Address:* ${fullAddress}\n\n` +
+    `📦 *Order Items:*\n${itemsText}\n\n` +
+    `💰 *Total Amount:* ₹${grandTotal}\n` +
+    `💳 *Payment Mode:* ${paymentMethod === 'upi' ? `Instant UPI (UTR: ${upiUtr || 'Paid'})` : 'Pay on Delivery (COD)'}\n` +
+    (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
+    `\nPlease confirm order packing and dispatch. Thank you!`
   );
 
   const whatsappUrl = `https://wa.me/${STORE_DETAILS.whatsappNumber}?text=${whatsappMessage}`;
@@ -299,13 +298,13 @@ export default function InvoiceModal() {
             <img src="/logo.png" alt="Thenisai Sweets Logo" className="inv-brand-logo-img" />
             <div className="inv-brand">
               <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
-            <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>
-            <p className="inv-brand-address">
-              {STORE_DETAILS.addressLine1}, {STORE_DETAILS.cityStatePin}
-            </p>
-            <p className="inv-brand-meta">
-              Tel: {STORE_DETAILS.phone} | Sec: {STORE_DETAILS.secondaryPhone} | Email: {STORE_DETAILS.email}
-            </p>
+              <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>
+              <p className="inv-brand-address">
+                {STORE_DETAILS.addressLine1}, {STORE_DETAILS.cityStatePin}
+              </p>
+              <p className="inv-brand-meta">
+                Tel: {STORE_DETAILS.phone} | Sec: {STORE_DETAILS.secondaryPhone} | Email: {STORE_DETAILS.email}
+              </p>
               <div className="inv-reg-badges">
                 <span>Est: <strong>2006</strong></span>
                 <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
@@ -423,7 +422,7 @@ export default function InvoiceModal() {
             <ol>
               <li>Perishable sweets: Keep in cool place or refrigerate after opening.</li>
               <li>Goods once sold are freshly prepared and dispatched directly from kitchen.</li>
-              <li>All disputes subject to Madurai jurisdiction only.</li>
+              <li>All disputes subject to krishnagiri jurisdiction only.</li>
             </ol>
           </div>
 

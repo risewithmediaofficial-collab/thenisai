@@ -5,21 +5,27 @@ import './CustomerReviews.css';
 const reviews = [
   {
     id: 1,
-    quote: 'Absolutely rich and delicious.',
-    author: 'Priya M.',
-    location: 'Chennai',
+    quote: 'The best authentic Palkova in Krishnagiri. Rich, fresh cow milk aroma and perfect sweetness.',
+    author: 'Anitha S.',
+    location: 'Krishnagiri Town',
   },
   {
     id: 2,
-    quote: 'Just like traditional homemade Palkova.',
-    author: 'Ramesh K.',
-    location: 'Coimbatore',
+    quote: 'Our mandatory pitstop on the Bangalore–Salem Highway (NH 44). The warm Palkova and Ghee Mysore Pak are unbeatable.',
+    author: 'Suresh Kumar',
+    location: 'NH 44 Highway Commuter',
   },
   {
     id: 3,
-    quote: 'A taste worth remembering.',
-    author: 'Anitha S.',
-    location: 'Madurai',
+    quote: 'Just like traditional village brass-uruli Palkova. Fresh morning batches right at Nattamai Kottai.',
+    author: 'Ramesh K.',
+    location: 'Nattamai Kottai, Krishnagiri',
+  },
+  {
+    id: 4,
+    quote: 'Ordered bulk sweets gift boxes for our family wedding in Kaveripattinam. Outstanding quality and fresh packaging.',
+    author: 'K. Venkatesh',
+    location: 'Kaveripattinam',
   },
 ];
 
@@ -72,7 +78,7 @@ export default function CustomerReviews() {
             aria-label="Previous review"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M13 4l-6 6 6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
           </button>
 
@@ -115,7 +121,7 @@ export default function CustomerReviews() {
             aria-label="Next review"
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M7 4l6 6-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
             </svg>
           </button>
         </div>
