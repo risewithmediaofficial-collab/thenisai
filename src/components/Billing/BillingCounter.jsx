@@ -9,15 +9,16 @@ import RefillStockModal from '../Inventory/RefillStockModal';
 import SideNavbar from '../Nav/SideNavbar';
 import './BillingCounter.css';
 
-// Predefined categories for fast tea, beverages & spices POS filtering
+// Predefined categories for fast sweets & beverages POS filtering
 const CATEGORIES = [
-  { id: 'all', label: `All Items (${ALL_BILLING_ITEMS.length})` },
-  { id: 'spices', label: 'Spices (Kara Vagai)' },
-  { id: 'tea', label: 'Teas' },
-  { id: 'coffee', label: 'Coffees' },
-  { id: 'malt', label: 'Milk & Malts' },
-  { id: 'beverages', label: 'All Beverages' },
-  { id: 'snacks', label: 'Snacks (Vada)' },
+  { id: 'all', label: `All Sweets (${ALL_BILLING_ITEMS.length})` },
+  { id: 'halwa', label: 'Halwa (அல்வா)' },
+  { id: 'mysore-pak', label: 'Mysore Pak & Ghee' },
+  { id: 'cashew-rolls', label: 'Cashew & Rolls' },
+  { id: 'milk-bengali', label: 'Milk & Bengali' },
+  { id: 'traditional', label: 'Traditional Sweets' },
+  { id: 'pieces-packets', label: 'Pieces & Packets' },
+  { id: 'beverages', label: 'Tea & Beverages' },
 ];
 
 export default function BillingCounter() {
@@ -640,12 +641,27 @@ export default function BillingCounter() {
 
     if (!q) {
       if (selectedCategory === 'all') return true;
-      if (selectedCategory === 'spices') return sw.category === 'spices' || (sw.subcategory && sw.subcategory.toLowerCase().includes('kara'));
-      if (selectedCategory === 'tea') return sw.id.includes('tea') || sw.id === 'ginger-lemon';
-      if (selectedCategory === 'coffee') return sw.id.includes('coffee');
-      if (selectedCategory === 'malt') return (sw.id.includes('milk') && sw.category !== 'spices') || sw.id === 'horlicks' || sw.id === 'boost' || sw.id.includes('malt');
-      if (selectedCategory === 'beverages') return sw.category === 'beverages';
-      if (selectedCategory === 'snacks') return sw.category === 'snacks' || sw.id.includes('vada');
+      if (selectedCategory === 'halwa') {
+        return sw.subcategory === 'Halwa' || sw.name.toLowerCase().includes('halwa') || (sw.tamilName && sw.tamilName.includes('அல்வா'));
+      }
+      if (selectedCategory === 'mysore-pak') {
+        return sw.subcategory === 'Mysore Pak & Ghee' || sw.name.toLowerCase().includes('mysore') || sw.id === 'ghee';
+      }
+      if (selectedCategory === 'cashew-rolls') {
+        return sw.subcategory === 'Cashew & Rolls' || sw.name.toLowerCase().includes('roll') || sw.name.toLowerCase().includes('cashew') || sw.name.toLowerCase().includes('kaju') || sw.name.toLowerCase().includes('pista');
+      }
+      if (selectedCategory === 'milk-bengali') {
+        return sw.subcategory === 'Milk & Bengali' || sw.name.toLowerCase().includes('milk') || sw.name.toLowerCase().includes('khoa') || sw.name.toLowerCase().includes('peda') || sw.name.toLowerCase().includes('bengali') || sw.name.toLowerCase().includes('ras');
+      }
+      if (selectedCategory === 'traditional') {
+        return sw.subcategory === 'Traditional Sweets' || sw.name.toLowerCase().includes('laddu') || sw.name.toLowerCase().includes('jangiri') || sw.name.toLowerCase().includes('poli') || sw.name.toLowerCase().includes('athirasam');
+      }
+      if (selectedCategory === 'pieces-packets') {
+        return sw.unit === 'Pc' || sw.unit === 'Pkt';
+      }
+      if (selectedCategory === 'beverages') {
+        return sw.category === 'beverages' || sw.category === 'snacks';
+      }
       return true;
     }
 
@@ -977,7 +993,15 @@ export default function BillingCounter() {
               <div className="pos-sweets-list">
                   {filteredSweets.map((sweet, idx) => {
                     const isKg = sweet.unit === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
-                    const defaultUnit = isKg ? '250g' : sweet.unit === 'Pkt' ? '1 Pkt' : sweet.unit === 'Bottle' ? '1 Bottle' : sweet.unit || '1 Cup';
+                    const defaultUnit = isKg
+                      ? '250g'
+                      : sweet.unit === 'Pc'
+                      ? '1 Pc'
+                      : sweet.unit === 'Pkt'
+                      ? '1 Pkt'
+                      : sweet.unit === 'Litre'
+                      ? '1 Litre'
+                      : sweet.unit || '1 Pc';
                     const itemNum = sweet.itemNumber || idx + 1;
                     const itemsInBillForSweet = billItems.filter((it) => it.id === sweet.id);
                     const isItemInBill = itemsInBillForSweet.length > 0;
@@ -1012,7 +1036,10 @@ export default function BillingCounter() {
                           <span className="pos-list-rate">
                             ₹{sweet.price}
                             {sweet.unit === 'kg' && <small className="pos-price-unit"> / kg</small>}
-                            {sweet.unit === 'Pkt' && <small className="pos-price-unit"> / pkt</small>}
+                            {(sweet.unit === 'Pkt' || sweet.unit === 'pkt') && <small className="pos-price-unit"> / pkt</small>}
+                            {(sweet.unit === 'Pc' || sweet.unit === 'pc') && <small className="pos-price-unit"> / pc</small>}
+                            {sweet.unit === 'Litre' && <small className="pos-price-unit"> / Litre</small>}
+                            {sweet.unit === '1 Cup' && <small className="pos-price-unit"> / cup</small>}
                           </span>
                         </div>
 

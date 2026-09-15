@@ -1004,8 +1004,14 @@ export const SPICES_KARA_VAGAI = [
   },
 ];
 
-// Billing Counter items (the 13 quick-counter beverages and snacks + 50 Spices/Kara Vagai items)
-export const ALL_BILLING_ITEMS = [...BEVERAGES_AND_SNACKS, ...SPICES_KARA_VAGAI];
+import { THENISAI_SWEETS_62 } from './thenisaiSweets62';
+export { THENISAI_SWEETS_62 };
+
+// Billing Counter items (62 official sweets + quick beverages)
+export const ALL_BILLING_ITEMS = [
+  ...THENISAI_SWEETS_62,
+  ...BEVERAGES_AND_SNACKS.map((b, idx) => ({ ...b, itemNumber: 63 + idx })),
+];
 
 export const STORE_DETAILS = {
   brandName: 'THENISAI SWEETS',
