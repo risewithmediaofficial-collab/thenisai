@@ -211,8 +211,9 @@ export function CartProvider({ children }) {
     } else if (view === 'billing') {
       window.location.hash = '#billing';
     } else {
-      if (window.location.hash === '#admin' || window.location.hash === '#billing') {
-        window.history.pushState(null, '', window.location.pathname);
+      window.location.hash = '';
+      if (window.history.pushState) {
+        window.history.pushState(null, '', window.location.pathname + window.location.search);
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });

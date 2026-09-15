@@ -44,7 +44,7 @@ export default function SideNavbar({
           <div className="sidebar-brand-text">
             <h2 className="sidebar-brand-title">THENISAI</h2>
             <span className="sidebar-brand-subtitle">
-              {currentSection === 'admin' ? 'Admin Portal' : 'Billing Counter'}
+              {currentSection?.startsWith('admin') ? 'Admin Portal' : 'Billing Counter'}
             </span>
           </div>
           {onCloseMobile && (
@@ -187,7 +187,7 @@ export default function SideNavbar({
                 className="sidebar-nav-item"
                 onClick={() =>
                   handleNav(() => {
-                    window.location.hash = '#billing';
+                    navigateTo('billing');
                   })
                 }
               >
@@ -202,11 +202,11 @@ export default function SideNavbar({
               user?.role === 'admin' && (
                 <button
                   type="button"
-                  className={`sidebar-nav-item ${currentSection === 'admin' ? 'active' : ''}`}
+                  className={`sidebar-nav-item ${currentSection?.startsWith('admin') ? 'active' : ''}`}
                   onClick={() =>
                     handleNav(() => {
-                      window.location.hash = '#admin';
-                      if (onSelectSection) onSelectSection('admin');
+                      navigateTo('admin');
+                      if (onSelectSection) onSelectSection('admin-orders');
                     })
                   }
                 >
@@ -226,7 +226,7 @@ export default function SideNavbar({
               className="sidebar-nav-item"
               onClick={() =>
                 handleNav(() => {
-                  window.location.hash = '';
+                  navigateTo('storefront');
                 })
               }
             >
@@ -251,9 +251,9 @@ export default function SideNavbar({
               </svg>
             </div>
             <div className="sidebar-user-details">
-              <span className="sidebar-user-name">{user?.name || 'Cashier Desk'}</span>
+              <span className="sidebar-user-name">{user?.name || 'Staff'}</span>
               <span className="sidebar-user-desk">
-                {user?.role === 'admin' ? 'Administrator' : (user?.counter || 'Terminal 01')}
+                {user?.role === 'admin' ? 'Administrator' : 'Billing Cashier'}
               </span>
             </div>
           </div>
@@ -261,11 +261,11 @@ export default function SideNavbar({
           <button
             type="button"
             className="sidebar-logout-btn"
-            onClick={() => {
-              logout();
-              window.location.hash = '';
+            onClick={async () => {
+              await logout();
+              navigateTo('storefront');
             }}
-            title="End staff session"
+            title="Log out of system"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="logout-icon-svg">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
