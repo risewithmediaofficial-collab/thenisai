@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { ALL_BILLING_ITEMS, GST_RATE } from '../../data/sweetsData';
+import { exportBillsToExcel, downloadOfflineBillingTemplate, importBillsFromExcel } from '../../utils/excelBackup';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import SideNavbar from '../Nav/SideNavbar';
@@ -35,7 +36,84 @@ export default function BillingCounter() {
     addInventoryStock,
     openInvoice,
     navigateTo,
+    isOnline,
+    hasOfflinePending,
+    offlinePendingCount,
+    syncOfflineBills,
   } = useCart();
+
+  // Excel Backup State
+  const [isExcelMenuOpen, setIsExcelMenuOpen] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const excelMenuRef = useRef(null);
+  const excelImportRef = useRef(null);
+
+  // Close Excel dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (excelMenuRef.current && !excelMenuRef.current.contains(e.target)) {
+        setIsExcelMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const handleExportShiftExcel = () => {
+    exportBillsToExcel(
+      myShiftBills,
+      `Thenisai_Shift_${user?.name || 'Staff'}_${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '_')}.xlsx`,
+      `Thenisai — Shift Ledger (${user?.name || 'Counter Staff'})`
+    );
+    setIsExcelMenuOpen(false);
+  };
+
+  const handleExportAllBillsExcel = () => {
+    exportBillsToExcel(bills || [], undefined, 'Thenisai — All Counter Bills');
+    setIsExcelMenuOpen(false);
+  };
+
+  const handleDownloadOfflineTemplate = () => {
+    downloadOfflineBillingTemplate();
+    setIsExcelMenuOpen(false);
+  };
+
+  const handleSyncOfflineBills = async () => {
+    setIsSyncing(true);
+    setSyncResult(null);
+    try {
+      const result = await syncOfflineBills();
+      setSyncResult(result);
+      setTimeout(() => setSyncResult(null), 5000);
+    } finally {
+      setIsSyncing(false);
+    }
+    setIsExcelMenuOpen(false);
+  };
+
+  const handleImportExcelFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    importBillsFromExcel(file)
+      .then((importedBills) => {
+        alert(`✅ Imported ${importedBills.length} bills. They have been queued for sync.`);
+        // Queue them in offline sync
+        try {
+          const existing = JSON.parse(localStorage.getItem('thenisai_offline_sync_queue') || '[]');
+          const merged = [...importedBills, ...existing];
+          localStorage.setItem('thenisai_offline_sync_queue', JSON.stringify(merged));
+        } catch { /* ignore */ }
+      })
+      .catch((err) => alert(`❌ Import failed: ${err.message}`))
+      .finally(() => {
+        setIsImporting(false);
+        if (excelImportRef.current) excelImportRef.current.value = '';
+        setIsExcelMenuOpen(false);
+      });
+  };
 
   // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory'
   const [posTab, setPosTab] = useState(() => {
@@ -836,6 +914,21 @@ export default function BillingCounter() {
             </button>
           )}
 
+          {/* Connection Status + Excel Backup */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginRight: '8px' }}>
+            {/* Connection Status Pill */}
+            <span style={{
+              display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px',
+              borderRadius: '20px', fontSize: '11px', fontWeight: 600,
+              background: isOnline ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+              color: isOnline ? '#16a34a' : '#dc2626',
+              border: `1px solid ${isOnline ? '#86efac' : '#fca5a5'}`,
+            }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#22c55e' : '#ef4444', display: 'inline-block' }} />
+              {isOnline ? (hasOfflinePending ? `Online · ${offlinePendingCount} pending` : 'Server Online') : 'Offline Mode'}
+            </span>
+          </div>
+
           <button
             type="button"
             className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''} ${posTab === 'online-orders' ? 'active' : ''}`}
@@ -1581,6 +1674,83 @@ export default function BillingCounter() {
               </div>
 
               <div className="shift-header-right">
+                {/* Excel Backup Menu */}
+                <div style={{ position: 'relative' }} ref={excelMenuRef}>
+                  <button
+                    type="button"
+                    className="btn-shift-refresh"
+                    onClick={() => setIsExcelMenuOpen((o) => !o)}
+                    style={{ background: '#1D6F42', color: '#fff', borderColor: '#1D6F42', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    title="Excel Backup & Export"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="12" y1="18" x2="12" y2="12"/>
+                      <line x1="9" y1="15" x2="15" y2="15"/>
+                    </svg>
+                    <span>Excel Backup</span>
+                    {hasOfflinePending && (
+                      <span style={{ background: '#ef4444', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700 }}>
+                        {offlinePendingCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {isExcelMenuOpen && (
+                    <div style={{
+                      position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 9999,
+                      background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.14)', minWidth: '240px', overflow: 'hidden',
+                    }}>
+                      {/* Hidden file input for import */}
+                      <input
+                        ref={excelImportRef}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        style={{ display: 'none' }}
+                        onChange={handleImportExcelFile}
+                      />
+                      {[
+                        { icon: '📥', label: "Export Today's Shift (.xlsx)", onClick: handleExportShiftExcel },
+                        { icon: '📁', label: 'Export All Bills (.xlsx)', onClick: handleExportAllBillsExcel },
+                        { icon: '📋', label: 'Download Offline Billing Template', onClick: handleDownloadOfflineTemplate },
+                        { icon: '📤', label: `Import Excel Bills${isImporting ? ' (Importing...)' : ''}`, onClick: () => excelImportRef.current?.click() },
+                        { icon: '🔄', label: `Sync Offline Bills${offlinePendingCount > 0 ? ` (${offlinePendingCount} pending)` : ''}${isSyncing ? ' — Syncing...' : ''}`, onClick: handleSyncOfflineBills, disabled: isSyncing || !hasOfflinePending },
+                      ].map((item, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          disabled={item.disabled}
+                          onClick={item.onClick}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
+                            padding: '10px 16px', background: 'none', border: 'none',
+                            textAlign: 'left', cursor: item.disabled ? 'not-allowed' : 'pointer',
+                            color: item.disabled ? '#9ca3af' : '#1e293b', fontSize: '13px',
+                            borderBottom: idx < 4 ? '1px solid #f1f5f9' : 'none',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={(e) => { if (!item.disabled) e.currentTarget.style.background = '#f8fafc'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
+                        >
+                          <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {syncResult && (
+                  <span style={{
+                    background: '#dcfce7', color: '#15803d', borderRadius: '8px', padding: '4px 10px',
+                    fontSize: '12px', fontWeight: 600, border: '1px solid #86efac'
+                  }}>
+                    ✅ {syncResult.synced} synced{syncResult.failed > 0 ? `, ${syncResult.failed} failed` : ''}
+                  </span>
+                )}
+
                 <button
                   type="button"
                   className="btn-shift-refresh"

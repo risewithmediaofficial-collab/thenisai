@@ -147,24 +147,33 @@ export default function ContactSection() {
             viewport={{ once: true }}
           >
             <div className="catchment__badge">
-              <span>📍 Local Delivery Catchment &amp; Highway Service Areas</span>
+              <span>📍 Delivery Catchment &amp; Interstate Highway Service Hub</span>
             </div>
             <p className="catchment__description">
-              Direct counter pickup, gift parcel packing &amp; fast doorstep deliveries across Krishnagiri &amp; surrounding towns:
+              Direct counter pickup, travel parcel packaging &amp; fast doorstep deliveries across Krishnagiri, Hosur, Tamil Nadu, and NH 44 interstate travelers:
             </p>
             <div className="catchment__tags">
-              <span className="catchment__tag">Krishnagiri Town (கிருஷ்ணகிரி)</span>
+              {/* 1st Preference: Krishnagiri, Hosur & Tamil Nadu State */}
+              <span className="catchment__tag highlight">Krishnagiri (கிருஷ்ணகிரி)</span>
+              <span className="catchment__tag highlight">Hosur &amp; SIPCOT (ஓசூர்)</span>
+              <span className="catchment__tag highlight">Tamil Nadu State Wide</span>
               <span className="catchment__tag">Nattamai Kottai (நத்தமைக்கோட்டை)</span>
-              <span className="catchment__tag">NH 44 Bangalore – Salem Highway</span>
-              <span className="catchment__tag">Near HP Petrol Bunk</span>
+              <span className="catchment__tag">NH 44 Highway near HP Bunk</span>
               <span className="catchment__tag">Kaveripattinam (காவேரிப்பட்டினம்)</span>
               <span className="catchment__tag">Bargur (பர்கூர்)</span>
               <span className="catchment__tag">Veppanapalli (வேப்பனப்பள்ளி)</span>
               <span className="catchment__tag">Rayakottai (ராயக்கோட்டை)</span>
               <span className="catchment__tag">Uthangarai (ஊத்தங்கரை)</span>
+
+              {/* 2nd Preference: Karnataka & Bangalore Highway Corridor */}
+              <span className="catchment__tag highway">Karnataka / Bangalore NH 44</span>
+              <span className="catchment__tag highway">Electronic City &amp; Attibele</span>
+
+              {/* 3rd Preference: Kerala Highway Route */}
+              <span className="catchment__tag highway">Kerala Travelers Route (via Salem)</span>
             </div>
             <p className="catchment__tamil-note">
-              தேனிசை பால்கோவா &amp; ஸ்வீட்ஸ் — பாரம்பரிய சுவையில் தூய பசும்பால் பால்கோவா, நெய் மைசூர்பாகு, அல்வா மற்றும் இனிப்புகள்.
+              தேனிசை பால்கோவா &amp; ஸ்வீட்ஸ் — கிருஷ்ணகிரி, ஓசூர் மற்றும் தமிழ்நாடு முழுவதும் தூய பசும்பால் பால்கோவா, நெய் மைசூர்பாகு இனிப்புகள். Karnataka &amp; Kerala நெடுஞ்சாலை பயணிகளுக்கான விருப்பமான இனிப்பு நிறுத்தம்.
             </p>
           </motion.div>
 

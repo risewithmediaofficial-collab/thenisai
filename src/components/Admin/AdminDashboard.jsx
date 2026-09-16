@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { exportBillsToExcel, exportDailyRevenueToExcel } from '../../utils/excelBackup';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from './DailyRevenueReport';
 import './AdminDashboard.css';
@@ -536,6 +537,27 @@ export default function AdminDashboard() {
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
                 <span>{isSyncingSales ? 'Syncing...' : 'Sync Database Bills'}</span>
+              </button>
+
+              {/* Excel Export Button */}
+              <button
+                type="button"
+                onClick={() => exportBillsToExcel(allSales, undefined, 'Thenisai — All Sales Ledger')}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 14px', borderRadius: '8px', border: '1px solid #1D6F42',
+                  background: '#1D6F42', color: '#fff', cursor: 'pointer',
+                  fontSize: '13px', fontWeight: 600,
+                }}
+                title="Export all sales to Excel"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="12" y1="18" x2="12" y2="12"/>
+                  <line x1="9" y1="15" x2="15" y2="15"/>
+                </svg>
+                <span>Export to Excel</span>
               </button>
             </div>
 

@@ -10,6 +10,9 @@ const CART_STORAGE_KEY = 'thenisai_cart_items_v1';
 const INVOICE_STORAGE_KEY = 'thenisai_last_invoice_v1';
 const ORDERS_STORAGE_KEY = 'thenisai_orders_v1';
 const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v3';
+const BILLS_CACHE_KEY = 'thenisai_bills_cache';
+const OFFLINE_LEDGER_KEY = 'thenisai_offline_backup_ledger';
+const OFFLINE_QUEUE_KEY = 'thenisai_offline_sync_queue';
 
 const SWEETS_62_INVENTORY = THENISAI_SWEETS_62.map((item) => ({
   id: item.id,
@@ -185,11 +188,26 @@ export function CartProvider({ children }) {
   // POS Counter Bills state
   const [bills, setBills] = useState(() => {
     try {
-      const saved = localStorage.getItem('thenisai_bills_cache');
+      const saved = localStorage.getItem(BILLS_CACHE_KEY);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
+  });
+
+  // ── Offline Resilience State ──────────────────────────────────────────────
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hasOfflinePending, setHasOfflinePending] = useState(() => {
+    try {
+      const q = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+      return q.length > 0;
+    } catch { return false; }
+  });
+  const [offlinePendingCount, setOfflinePendingCount] = useState(() => {
+    try {
+      const q = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+      return q.length;
+    } catch { return 0; }
   });
 
   // ==========================================
@@ -209,6 +227,57 @@ export function CartProvider({ children }) {
       window.removeEventListener('popstate', onUrlChange);
     };
   }, []);
+
+  // ── Online / Offline event listeners ─────────────────────────────────────
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Auto-sync pending offline bills when connectivity restores
+      setTimeout(() => syncOfflineBillsInternal(), 2000);
+    };
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Internal: flush offline queue to backend ──────────────────────────────
+  const syncOfflineBillsInternal = async () => {
+    try {
+      const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+      if (!queue.length) return { synced: 0, failed: 0 };
+
+      const res = await api.post('/api/bills/sync-batch', { bills: queue });
+      if (res && res.success) {
+        // Remove successfully synced items from queue
+        const failedIds = new Set((res.failed || []).map(b => b.id));
+        const remaining = queue.filter(b => failedIds.has(b.id));
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(remaining));
+        setHasOfflinePending(remaining.length > 0);
+        setOfflinePendingCount(remaining.length);
+
+        // Refresh bills from backend
+        const billsRes = await api.get('/api/bills').catch(() => null);
+        if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
+          setBills(billsRes.bills);
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
+        }
+        return { synced: (res.synced || queue.length - remaining.length), failed: remaining.length };
+      }
+    } catch (err) {
+      console.warn('Offline sync failed (backend still down?):', err);
+    }
+    return { synced: 0, failed: 0 };
+  };
+
+  // ── Public: sync offline bills (called from UI) ───────────────────────────
+  const syncOfflineBills = async () => {
+    return await syncOfflineBillsInternal();
+  };
 
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
@@ -277,7 +346,7 @@ export function CartProvider({ children }) {
           if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
             setBills(billsRes.bills);
             try {
-              localStorage.setItem('thenisai_bills_cache', JSON.stringify(billsRes.bills));
+              localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
             } catch { }
           }
         }
@@ -301,7 +370,7 @@ export function CartProvider({ children }) {
       if (res.success && Array.isArray(res.bills)) {
         setBills(res.bills);
         try {
-          localStorage.setItem('thenisai_bills_cache', JSON.stringify(res.bills));
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(res.bills));
         } catch { }
         return res.bills;
       }
@@ -374,6 +443,13 @@ export function CartProvider({ children }) {
     setBills((prev) => [fullOrder, ...prev]);
     deductStockForItems(saleData.items);
 
+    // Save to offline ledger immediately (always — serves as local backup)
+    try {
+      const ledger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
+      ledger.unshift(fullOrder);
+      localStorage.setItem(OFFLINE_LEDGER_KEY, JSON.stringify(ledger.slice(0, 1000)));
+    } catch { /* ignore storage errors */ }
+
     // Persist to backend bills endpoint
     try {
       const res = await api.post('/api/bills', fullOrder);
@@ -382,7 +458,18 @@ export function CartProvider({ children }) {
         return res.bill;
       }
     } catch (err) {
-      console.warn('Backend bill save fallback to local:', err);
+      console.warn('Backend bill save failed — queuing for offline sync:', err);
+      // Backend is down → add to offline sync queue
+      try {
+        const offlineBill = { ...fullOrder, isOfflineBackup: true, offlineQueuedAt: Date.now() };
+        const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+        // De-duplicate by id
+        const deduped = queue.filter(b => b.id !== offlineBill.id);
+        deduped.unshift(offlineBill);
+        localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(deduped));
+        setHasOfflinePending(true);
+        setOfflinePendingCount(deduped.length);
+      } catch { /* ignore */ }
     }
 
     return fullOrder;
@@ -629,6 +716,11 @@ export function CartProvider({ children }) {
         fetchBills,
         inventory,
         pendingOrdersCount,
+        // Offline resilience
+        isOnline,
+        hasOfflinePending,
+        offlinePendingCount,
+        syncOfflineBills,
         placeOnlineOrder,
         addCounterSale,
         acceptOrder,

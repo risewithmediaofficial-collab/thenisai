@@ -181,8 +181,23 @@
   transition: all 0.2s ease;
 }
 
+.catchment__tag.highlight {
+  background: rgba(212, 168, 67, 0.18);
+  border-color: #e5b958;
+  color: #fff2d6;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(212, 168, 67, 0.15);
+}
+
+.catchment__tag.highway {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(96, 165, 250, 0.4);
+  color: #bfdbfe;
+  font-weight: 600;
+}
+
 .catchment__tag:hover {
-  background: rgba(212, 168, 67, 0.15);
+  background: rgba(212, 168, 67, 0.25);
   border-color: var(--gold);
 }
 

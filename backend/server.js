@@ -609,6 +609,90 @@ app.get('/api/bills', async (req, res) => {
   }
 });
 
+// ─── Offline Batch Sync ──────────────────────────────────────────────────────
+app.post('/api/bills/sync-batch', async (req, res) => {
+  try {
+    const { bills: incomingBills } = req.body;
+    if (!Array.isArray(incomingBills) || incomingBills.length === 0) {
+      return res.status(400).json({ success: false, message: 'No bills provided for sync.' });
+    }
+
+    const synced = [];
+    const skipped = [];
+    const failed = [];
+
+    for (const billData of incomingBills) {
+      try {
+        // De-duplicate: check if bill already exists by id or invoiceNumber
+        const exists = await Bill.findOne({
+          $or: [
+            { id: billData.id },
+            { invoiceNumber: billData.invoiceNumber },
+          ],
+        });
+
+        if (exists) {
+          skipped.push({ id: billData.id, invoiceNumber: billData.invoiceNumber, reason: 'already_exists' });
+          continue;
+        }
+
+        const now = new Date();
+        const invoiceNumber = billData.invoiceNumber || `SYNC-${now.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        const savedBill = await Bill.create({
+          ...billData,
+          invoiceNumber,
+          id: billData.id || `sync-${Date.now()}`,
+          syncedAt: Date.now(),
+          isOfflineBackup: billData.isOfflineBackup || true,
+          source: 'counter',
+          status: 'Completed',
+        });
+
+        synced.push(savedBill.id);
+
+        // Deduct inventory for synced bills
+        if (savedBill.items && Array.isArray(savedBill.items)) {
+          for (const item of savedBill.items) {
+            const inv = await Inventory.findOne({ id: item.id });
+            if (inv) {
+              const w = String(item.weight || '').toLowerCase();
+              let weightKg = 0.5;
+              if (w.includes('250g')) weightKg = 0.25;
+              else if (w.includes('500g')) weightKg = 0.5;
+              else if (w.includes('1kg')) weightKg = 1.0;
+              else if (w.includes('kg')) weightKg = parseFloat(w) || 0.5;
+              inv.stockKg = Math.max(0, Math.round((inv.stockKg - weightKg * (item.quantity || 1)) * 10) / 10);
+              await inv.save();
+            }
+          }
+        }
+      } catch (itemErr) {
+        console.error(`[Sync-Batch] Failed for bill ${billData.id}:`, itemErr.message);
+        failed.push({ id: billData.id, error: itemErr.message });
+      }
+    }
+
+    console.log(`[Sync-Batch] Synced: ${synced.length}, Skipped: ${skipped.length}, Failed: ${failed.length}`);
+    res.json({
+      success: true,
+      message: `Sync complete: ${synced.length} saved, ${skipped.length} already existed, ${failed.length} failed.`,
+      synced: synced.length,
+      skippedCount: skipped.length,
+      failed,
+    });
+  } catch (err) {
+    console.error('[Sync-Batch] Fatal error:', err);
+    res.status(500).json({ success: false, message: 'Batch sync failed: ' + err.message });
+  }
+});
+
+
+
+app.get('/google9b5b47e16db557a3.html', (req, res) => {
+  res.type('text/html').send('google-site-verification: google9b5b47e16db557a3.html');
+});
+
 app.get('/', (req, res) => {
   res.json({
     status: 'online',

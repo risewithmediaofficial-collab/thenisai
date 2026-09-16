@@ -75,7 +75,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="footer__bottom">
           <span>© 2006–2026 Thenisai Palkova &amp; Sweets. All rights reserved.</span>
-          <span>Nattamai Kottai, Near HP Petrol Bunk, NH 44, Krishnagiri, Tamil Nadu - 635001 · Tel: +91 93448 93547</span>
+          <span>Nattamai Kottai, Near HP Petrol Bunk, NH 44, Krishnagiri &amp; Hosur, Tamil Nadu - 635001 · Serving Tamil Nadu, Karnataka &amp; Kerala Travelers · Tel: +91 93448 93547</span>
           <div className="footer__staff-links">
             <span>Staff:</span>
             <a href="#admin">Admin</a>
