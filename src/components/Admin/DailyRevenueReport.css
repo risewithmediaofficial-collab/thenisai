@@ -1,128 +1,187 @@
 /* ==============================================================================
-   Daily Sales & Revenue Report Stylesheet (Thenisai Krishnagiri Theme)
+   Daily Sales & Revenue Report Stylesheet (Clean White Enterprise POS Theme)
+   Thenisai Palkova & Sweets - Krishnagiri NH 44 Store
    ============================================================================== */
 
 .daily-revenue-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* Header & Controls */
+/* ==============================================================================
+   1. Header & Controls Toolbar
+   ============================================================================== */
 .daily-revenue__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
   flex-wrap: wrap;
   gap: 20px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(212, 168, 67, 0.15);
+  padding: 22px 26px;
+  background: #FFFFFF;
+  border-radius: 14px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
 .daily-revenue__title-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
+}
+
+.daily-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #334155;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.daily-back-btn:hover {
+  background: #0F172A;
+  color: #FFFFFF;
+  border-color: #0F172A;
+  transform: translateX(-2px);
+}
+
+.daily-title-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 2px;
 }
 
 .daily-title-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  background: rgba(212, 168, 67, 0.12);
-  border: 1px solid rgba(212, 168, 67, 0.25);
+  gap: 6px;
+  padding: 3px 10px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
   border-radius: 999px;
-  color: #e5b958;
+  color: #92400E;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   width: fit-content;
 }
 
 .daily-title-badge .live-dot {
   width: 7px;
   height: 7px;
-  background: #22c55e;
+  background: #10B981;
   border-radius: 50%;
-  box-shadow: 0 0 8px #22c55e;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
   animation: pulseLive 2s infinite ease-in-out;
+}
+
+.daily-store-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748B;
 }
 
 @keyframes pulseLive {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 0.45; transform: scale(0.85); }
 }
 
 .daily-title-h2 {
-  font-family: var(--font-display, 'Playfair Display', serif);
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
   font-size: clamp(22px, 2.2vw, 28px);
-  color: #f7e8cb;
+  font-weight: 700;
+  color: #0F172A;
   margin: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .daily-title-sub {
-  font-size: 13px;
-  color: rgba(255, 248, 238, 0.65);
+  font-size: 13.5px;
+  color: #64748B;
   margin: 0;
+  font-weight: 400;
 }
 
 .daily-actions-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .daily-action-btn {
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .daily-action-btn.primary {
-  background: linear-gradient(135deg, #d4a843 0%, #b88628 100%);
-  color: #120904;
-  border: 1px solid #e5b958;
-  box-shadow: 0 4px 14px rgba(212, 168, 67, 0.25);
+  background: #B45309;
+  color: #FFFFFF;
+  border: none;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.22);
 }
 
 .daily-action-btn.primary:hover {
-  filter: brightness(1.1);
+  background: #92400E;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(180, 83, 9, 0.32);
 }
 
 .daily-action-btn.secondary {
-  background: rgba(255, 255, 255, 0.04);
-  color: #f7e8cb;
-  border: 1px solid rgba(212, 168, 67, 0.25);
+  background: #FFFFFF;
+  color: #334155;
+  border: 1px solid #CBD5E1;
 }
 
 .daily-action-btn.secondary:hover {
-  background: rgba(212, 168, 67, 0.1);
-  border-color: #d4a843;
+  background: #F8FAFC;
+  color: #0F172A;
+  border-color: #94A3B8;
 }
 
-/* Date Filter Strip */
+/* ==============================================================================
+   2. Date Filter Strip
+   ============================================================================== */
 .daily-filter-strip {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  background: rgba(22, 13, 7, 0.6);
-  padding: 14px 20px;
-  border-radius: 8px;
-  border: 1px solid rgba(212, 168, 67, 0.18);
+  background: #FFFFFF;
+  padding: 12px 20px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .date-preset-pills {
@@ -133,26 +192,28 @@
 
 .date-pill {
   padding: 8px 16px;
-  border-radius: 6px;
-  border: 1px solid rgba(212, 168, 67, 0.2);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 248, 238, 0.75);
-  font-size: 12px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #475569;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .date-pill:hover {
-  color: #f7e8cb;
-  background: rgba(212, 168, 67, 0.08);
+  color: #0F172A;
+  background: #F1F5F9;
+  border-color: #CBD5E1;
 }
 
 .date-pill.active {
-  background: #d4a843;
-  color: #120904;
-  border-color: #d4a843;
+  background: #0F172A;
+  color: #FFFFFF;
+  border-color: #0F172A;
   font-weight: 700;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
 }
 
 .custom-date-picker {
@@ -162,28 +223,32 @@
 }
 
 .picker-label {
-  font-size: 12px;
-  color: rgba(255, 248, 238, 0.6);
-  font-weight: 500;
+  font-size: 0.82rem;
+  color: #64748B;
+  font-weight: 600;
 }
 
 .date-input {
-  background: #1a0f08;
-  border: 1px solid rgba(212, 168, 67, 0.35);
-  color: #f7e8cb;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
   font-family: inherit;
   outline: none;
+  transition: all 0.15s ease;
 }
 
 .date-input:focus {
-  border-color: #d4a843;
-  box-shadow: 0 0 8px rgba(212, 168, 67, 0.3);
+  border-color: #B45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
 }
 
-/* Primary KPI Grid */
+/* ==============================================================================
+   3. Primary Financial KPI Grid
+   ============================================================================== */
 .revenue-kpi-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -191,65 +256,73 @@
 }
 
 .rev-card {
-  padding: 20px 22px;
-  background: rgba(24, 14, 8, 0.75);
-  border: 1px solid rgba(212, 168, 67, 0.18);
-  border-radius: 10px;
+  padding: 18px 22px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease;
+  gap: 5px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .rev-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(212, 168, 67, 0.35);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
 .rev-label {
-  font-size: 11px;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #d4a843;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #64748B;
 }
 
 .rev-value {
-  font-family: var(--font-display, 'Playfair Display', serif);
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
   font-size: clamp(24px, 2.2vw, 30px);
-  font-weight: 700;
-  color: #fff8ee;
+  font-weight: 800;
+  color: #0F172A;
   letter-spacing: -0.01em;
+  margin: 2px 0;
 }
 
 .rev-foot {
-  font-size: 12px;
-  color: rgba(255, 248, 238, 0.55);
+  font-size: 0.8rem;
+  color: #64748B;
+  font-weight: 500;
 }
 
 .rev-card.gross {
-  border-left: 4px solid #22c55e;
+  border-left: 4px solid #10B981;
 }
 
 .rev-card.net {
-  border-left: 4px solid #3b82f6;
+  border-left: 4px solid #3B82F6;
 }
 
 .rev-card.gst {
-  border-left: 4px solid #f59e0b;
+  border-left: 4px solid #F59E0B;
 }
 
 .rev-card.aov {
-  border-left: 4px solid #8b5cf6;
+  border-left: 4px solid #8B5CF6;
 }
 
-/* Tender Breakdown */
+/* ==============================================================================
+   4. Tender Breakdown (Cash vs UPI vs Card)
+   ============================================================================== */
 .section-subtitle {
-  font-family: var(--font-display, 'Playfair Display', serif);
-  font-size: 18px;
-  color: #f7e8cb;
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: #0F172A;
   margin: 0 0 14px 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
 }
 
 .tender-cards-grid {
@@ -260,25 +333,27 @@
 
 .tender-card {
   padding: 18px 20px;
-  background: rgba(24, 14, 8, 0.65);
-  border: 1px solid rgba(212, 168, 67, 0.18);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .tender-card:hover {
-  border-color: var(--gold, #d4a843);
-  background: rgba(212, 168, 67, 0.06);
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .tender-card.selected {
-  border-color: #d4a843;
-  background: rgba(212, 168, 67, 0.12);
-  box-shadow: 0 0 12px rgba(212, 168, 67, 0.2);
+  border-color: #B45309;
+  background: #FFFBEB;
+  box-shadow: 0 0 0 2px rgba(180, 83, 9, 0.22);
 }
 
 .tender-top {
@@ -288,33 +363,56 @@
 }
 
 .tender-badge {
-  font-size: 12px;
-  font-weight: 600;
-  color: #f7e8cb;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #0F172A;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .tender-percent {
-  font-size: 12px;
+  font-size: 0.78rem;
   font-weight: 700;
-  color: #d4a843;
   padding: 2px 8px;
-  background: rgba(212, 168, 67, 0.15);
-  border-radius: 4px;
+  border-radius: 6px;
+}
+
+.tender-card.cash .tender-percent {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.tender-card.upi .tender-percent {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.tender-card.card .tender-percent {
+  background: #F5F3FF;
+  color: #5B21B6;
+  border: 1px solid #DDD6FE;
 }
 
 .tender-amt {
-  font-family: var(--font-display, 'Playfair Display', serif);
-  font-size: 24px;
-  font-weight: 700;
-  color: #fff8ee;
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 2px 0;
 }
 
 .tender-count {
-  font-size: 11px;
-  color: rgba(255, 248, 238, 0.5);
+  font-size: 0.8rem;
+  color: #64748B;
+  font-weight: 500;
 }
 
-/* Two-Column Analytics */
+/* ==============================================================================
+   5. Two-Column Analytics: Hourly Rush & Top Sweets
+   ============================================================================== */
 .analytics-split-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -323,12 +421,13 @@
 
 .analytics-card {
   padding: 22px 24px;
-  background: rgba(24, 14, 8, 0.7);
-  border: 1px solid rgba(212, 168, 67, 0.18);
-  border-radius: 10px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .card-header-line {
@@ -338,19 +437,20 @@
 }
 
 .card-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #f7e8cb;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0F172A;
   margin: 0;
 }
 
 .card-tag {
-  font-size: 11px;
-  font-weight: 600;
-  color: #d4a843;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #92400E;
   padding: 3px 8px;
-  background: rgba(212, 168, 67, 0.12);
-  border-radius: 4px;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
 }
 
 /* Hourly Rush Bar Chart */
@@ -360,7 +460,7 @@
   gap: 6px;
   height: 160px;
   padding-top: 10px;
-  border-bottom: 1px solid rgba(212, 168, 67, 0.2);
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .hourly-bar-col {
@@ -384,31 +484,32 @@
 .bar-fill {
   width: 100%;
   max-width: 18px;
-  background: rgba(212, 168, 67, 0.25);
+  background: #F1F5F9;
   border-radius: 4px 4px 0 0;
   transition: all 0.3s ease;
 }
 
 .bar-fill.active {
-  background: linear-gradient(180deg, #e5b958 0%, #b88628 100%);
-  box-shadow: 0 0 8px rgba(212, 168, 67, 0.4);
+  background: linear-gradient(180deg, #D97706 0%, #B45309 100%);
 }
 
 .hourly-bar-col:hover .bar-fill {
-  background: #f7e8cb;
+  background: #F59E0B;
 }
 
 .bar-hour-label {
-  font-size: 10px;
-  color: rgba(255, 248, 238, 0.5);
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
   font-family: monospace;
 }
 
 .hourly-legend {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  color: rgba(255, 248, 238, 0.45);
+  font-size: 11.5px;
+  color: #64748B;
+  font-weight: 500;
 }
 
 /* Top Sweets Table */
@@ -419,23 +520,29 @@
 .top-sweets-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 0.85rem;
 }
 
 .top-sweets-table th {
   text-align: left;
-  padding: 8px 10px;
-  font-size: 11px;
-  color: rgba(212, 168, 67, 0.85);
+  padding: 10px 12px;
+  font-size: 0.74rem;
+  color: #475569;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-bottom: 1px solid rgba(212, 168, 67, 0.15);
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .top-sweets-table td {
-  padding: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: rgba(255, 248, 238, 0.85);
+  padding: 10px 12px;
+  border-bottom: 1px solid #F1F5F9;
+  color: #0F172A;
+}
+
+.top-sweets-table tr:last-child td {
+  border-bottom: none;
 }
 
 .sw-name-cell {
@@ -445,80 +552,103 @@
 }
 
 .sw-rank {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: #d4a843;
+  color: #0F172A;
   padding: 2px 6px;
-  background: rgba(212, 168, 67, 0.15);
+  background: #F1F5F9;
   border-radius: 4px;
 }
 
 .sw-title {
-  font-weight: 500;
+  font-weight: 600;
+  color: #0F172A;
 }
 
 .sw-qty-badge {
   font-size: 12px;
-  color: #f7e8cb;
-  background: rgba(255, 255, 255, 0.05);
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
+  font-weight: 600;
 }
 
 .sw-rev-text {
-  color: #22c55e;
+  color: #0F172A;
+  font-weight: 700;
 }
 
-/* Cashier Table & Daily Bills Table */
+.empty-state-notice {
+  padding: 24px;
+  text-align: center;
+  color: #64748B;
+  font-size: 0.86rem;
+}
+
+/* ==============================================================================
+   6. Cashier Shift & Drawer Settlement
+   ============================================================================== */
 .cashier-table-wrap,
 .daily-bills-table-wrap {
   overflow-x: auto;
-  background: rgba(24, 14, 8, 0.7);
-  border: 1px solid rgba(212, 168, 67, 0.18);
-  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
 }
 
 .cashier-table,
 .daily-bills-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: 0.85rem;
 }
 
 .cashier-table th,
 .daily-bills-table th {
   text-align: left;
   padding: 12px 16px;
-  background: rgba(212, 168, 67, 0.08);
-  color: #d4a843;
-  font-size: 11px;
+  background: #F8FAFC;
+  color: #475569;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  border-bottom: 1px solid rgba(212, 168, 67, 0.2);
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .cashier-table td,
 .daily-bills-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-  color: rgba(255, 248, 238, 0.85);
+  border-bottom: 1px solid #F1F5F9;
+  color: #0F172A;
+}
+
+.cashier-table tr:last-child td,
+.daily-bills-table tr:last-child td {
+  border-bottom: none;
 }
 
 .terminal-badge {
-  font-size: 11px;
-  padding: 2px 8px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-  color: rgba(255, 248, 238, 0.65);
+  font-size: 11.5px;
+  padding: 3px 8px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  color: #475569;
+  font-weight: 600;
 }
 
-.t-cash { color: #22c55e; font-weight: 600; }
-.t-upi { color: #38bdf8; font-weight: 600; }
-.t-card { color: #f59e0b; font-weight: 600; }
-.t-total { color: #fff8ee; font-size: 14px; }
+.t-cash { color: #065F46; font-weight: 700; }
+.t-upi { color: #1E40AF; font-weight: 700; }
+.t-card { color: #5B21B6; font-weight: 700; }
+.t-total { color: #0F172A; font-size: 14px; font-weight: 800; }
 
-/* Bills Transaction Log */
+/* ==============================================================================
+   7. Bills & Invoices Transaction Log
+   ============================================================================== */
 .bills-header-line {
   display: flex;
   justify-content: space-between;
@@ -529,61 +659,112 @@
 }
 
 .bills-search-input {
-  background: #1a0f08;
-  border: 1px solid rgba(212, 168, 67, 0.3);
-  color: #f7e8cb;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
   padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 0.84rem;
   min-width: 280px;
   outline: none;
+  transition: all 0.15s ease;
 }
 
 .bills-search-input:focus {
-  border-color: #d4a843;
-  box-shadow: 0 0 8px rgba(212, 168, 67, 0.25);
+  border-color: #B45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
 }
 
 .inv-badge {
-  color: #f7e8cb;
+  color: #0F172A;
   font-family: monospace;
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.time-text {
+  color: #64748B;
+  font-size: 0.82rem;
+}
+
+.cust-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.cust-info small {
+  color: #64748B;
+  font-size: 0.78rem;
+  font-weight: 400;
 }
 
 .pm-badge {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 11.5px;
+  font-weight: 700;
   padding: 3px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   text-transform: uppercase;
+  display: inline-block;
 }
 
-.pm-badge.cash { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
-.pm-badge.upi { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-.pm-badge.card { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.pm-badge.cash { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
+.pm-badge.upi { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+.pm-badge.card { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+
+.items-summary-badge {
+  font-size: 11.5px;
+  color: #475569;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+
+.bill-amt {
+  color: #0F172A;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
 
 .view-bill-btn {
-  padding: 6px 12px;
-  background: rgba(212, 168, 67, 0.12);
-  border: 1px solid rgba(212, 168, 67, 0.3);
-  color: #d4a843;
-  border-radius: 4px;
-  font-size: 11px;
+  padding: 6px 13px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  border-radius: 6px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .view-bill-btn:hover {
-  background: #d4a843;
-  color: #120904;
+  background: #0F172A;
+  color: #FFFFFF;
+  border-color: #0F172A;
 }
 
-/* Printable Z-Report Modal */
+.empty-day-state {
+  padding: 36px;
+  text-align: center;
+  color: #64748B;
+  background: #FFFFFF;
+  border: 1px dashed #CBD5E1;
+  border-radius: 12px;
+}
+
+/* ==============================================================================
+   8. Printable Z-Report Modal
+   ============================================================================== */
 .z-report-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.82);
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -592,14 +773,14 @@
 }
 
 .z-report-modal {
-  background: #180d06;
-  border: 1px solid rgba(212, 168, 67, 0.35);
-  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
   max-width: 440px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -615,35 +796,48 @@
 .z-print-btn {
   flex: 1;
   padding: 10px;
-  background: #d4a843;
-  color: #120904;
+  background: #B45309;
+  color: #FFFFFF;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 0.88rem;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.z-print-btn:hover {
+  background: #92400E;
 }
 
 .z-close-btn {
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff8ee;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  font-size: 13px;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.z-close-btn:hover {
+  background: #E2E8F0;
+  color: #0F172A;
 }
 
 /* Thermal Paper Styling for Z-Report */
 .z-report-slip {
-  background: #fff;
-  color: #111;
+  background: #FFFFFF;
+  color: #111111;
   padding: 24px 20px;
-  border-radius: 4px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
   font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
   font-size: 12px;
   line-height: 1.5;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .z-slip-header {
@@ -651,15 +845,16 @@
 }
 
 .z-slip-header h3 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   margin: 0 0 4px 0;
   letter-spacing: 0.05em;
+  color: #0F172A;
 }
 
 .z-slip-header p {
   font-size: 10.5px;
-  color: #444;
+  color: #475569;
   margin: 2px 0;
 }
 
@@ -667,16 +862,17 @@
   font-size: 13px;
   font-weight: 700;
   margin: 8px 0;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  color: #0F172A;
 }
 
 .slip-divider {
-  border-top: 1px dashed #444;
+  border-top: 1px dashed #94A3B8;
   margin: 10px 0;
 }
 
 .slip-divider-double {
-  border-top: 2px solid #111;
+  border-top: 2px solid #0F172A;
   margin: 10px 0;
 }
 
@@ -689,45 +885,53 @@
 .slip-row.title {
   font-weight: 800;
   margin-bottom: 4px;
+  color: #0F172A;
 }
 
 .slip-row.total {
   font-size: 13px;
   font-weight: 800;
   padding-top: 4px;
+  color: #0F172A;
 }
 
 .z-slip-signatures {
   display: flex;
   justify-content: space-between;
-  margin: 30px 0 16px 0;
+  margin: 28px 0 16px 0;
 }
 
 .sig-line {
-  border-top: 1px solid #333;
+  border-top: 1px solid #64748B;
   width: 45%;
   text-align: center;
   padding-top: 6px;
   font-size: 10px;
+  color: #475569;
 }
 
 .z-slip-footer {
   text-align: center;
   font-size: 10px;
-  color: #666;
+  color: #64748B;
 }
 
 /* Utilities */
 .text-right { text-align: right; }
 .text-center { text-align: center; }
 
-/* Responsive adjustments */
+/* ==============================================================================
+   9. Responsive Adjustments
+   ============================================================================== */
 @media (max-width: 1024px) {
   .revenue-kpi-grid {
     grid-template-columns: repeat(2, 1fr);
   }
   .analytics-split-layout {
     grid-template-columns: 1fr;
+  }
+  .daily-revenue__header {
+    align-items: flex-start;
   }
 }
 
@@ -740,9 +944,18 @@
     width: 100%;
     min-width: unset;
   }
+  .daily-actions-group {
+    width: 100%;
+  }
+  .daily-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
-/* Print Rules */
+/* ==============================================================================
+   10. Print Rules
+   ============================================================================== */
 @media print {
   body * {
     visibility: hidden;

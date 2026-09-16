@@ -27,7 +27,7 @@ function formatDateLabel(dateStr) {
   return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRefresh }) {
+export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRefresh, onBack }) {
   const todayKey = toDateKey(new Date());
 
   // Date Selection: 'today', 'yesterday', 'custom', or 'all'
@@ -268,13 +268,32 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       {/* Top Controls & Title */}
       <div className="daily-revenue__header">
         <div className="daily-revenue__title-group">
-          <div className="daily-title-badge">
-            <span className="live-dot" />
-            <span>FINANCIAL LEDGER &amp; CLOSING</span>
+          {onBack && (
+            <button
+              type="button"
+              className="daily-back-btn"
+              onClick={onBack}
+              title="Return to Billing Register"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              <span>Back to POS Register</span>
+            </button>
+          )}
+
+          <div className="daily-title-meta-row">
+            <div className="daily-title-badge">
+              <span className="live-dot" />
+              <span>FINANCIAL LEDGER &amp; CLOSING</span>
+            </div>
+            <span className="daily-store-tag">Krishnagiri NH 44 Store</span>
           </div>
+
           <h2 className="daily-title-h2">Daily Sales &amp; Revenue</h2>
           <p className="daily-title-sub">
-            Day-End Settlement &amp; Shift Register Audit · Krishnagiri NH 44 Store
+            Day-End Settlement &amp; Shift Register Audit · Real-time GST &amp; Tender Reconciliation
           </p>
         </div>
 
@@ -286,7 +305,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
               onClick={onRefresh}
               title="Refresh Live Data"
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
               </svg>
               <span>Sync</span>
@@ -297,8 +316,9 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
             type="button"
             className="daily-action-btn secondary"
             onClick={handleExportCSV}
+            title="Download CSV Spreadsheet"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="7 10 12 15 17 10"/>
               <line x1="12" y1="15" x2="12" y2="3"/>
@@ -310,8 +330,9 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
             type="button"
             className="daily-action-btn primary"
             onClick={() => setIsZReportOpen(true)}
+            title="Generate Official Thermal Z-Report"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 6 2 18 2 18 9"/>
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
               <rect x="6" y="14" width="12" height="8"/>

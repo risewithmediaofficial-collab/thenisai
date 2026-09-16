@@ -26,7 +26,10 @@ export default function LoadingScreen({ onComplete }) {
     return () => clearInterval(intervalRef.current);
   }, [onComplete]);
 
-  const letters = 'THENISAI SWEETS'.split('');
+  const WORDS = [
+    { text: 'THENISAI', letters: 'THENISAI'.split(''), startIndex: 0 },
+    { text: 'SWEETS', letters: 'SWEETS'.split(''), startIndex: 8 },
+  ];
 
   return (
     <AnimatePresence>
@@ -60,21 +63,29 @@ export default function LoadingScreen({ onComplete }) {
               <img src="/logo-icon.png" alt="Thenisai Logo" className="loader__emblem-img" />
             </motion.div>
 
-            {/* Logo letters */}
-            <div className="loader__logo">
-              {letters.map((letter, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: i * 0.08,
-                    duration: 0.6,
-                    ease: [0.22, 1, 0.36, 1]
-                  }}
-                >
-                  {letter === ' ' ? '\u00A0' : letter}
-                </motion.span>
+            {/* Logo letters grouped by word for responsive wrapping */}
+            <div className="loader__logo" aria-label="THENISAI SWEETS">
+              {WORDS.map((word, wIdx) => (
+                <span key={wIdx} className="loader__word">
+                  {word.letters.map((letter, i) => {
+                    const letterIndex = word.startIndex + i;
+                    return (
+                      <motion.span
+                        key={i}
+                        className="loader__letter"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{
+                          delay: letterIndex * 0.06,
+                          duration: 0.6,
+                          ease: [0.22, 1, 0.36, 1]
+                        }}
+                      >
+                        {letter}
+                      </motion.span>
+                    );
+                  })}
+                </span>
               ))}
             </div>
 

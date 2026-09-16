@@ -125,7 +125,7 @@ export default function SideNavbar({
                   <line x1="3" y1="10" x2="21" y2="10" />
                   <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                 </svg>
-                <span className="nav-text">Daily Sales &amp; Revenue</span>
+                <span className="nav-text">Daily Revenue</span>
               </button>
             </div>
           ) : (
@@ -210,7 +210,7 @@ export default function SideNavbar({
                   <line x1="3" y1="10" x2="21" y2="10" />
                   <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                 </svg>
-                <span className="nav-text">Daily Revenue Summary</span>
+                <span className="nav-text">Daily Revenue</span>
               </button>
             </div>
           )}
