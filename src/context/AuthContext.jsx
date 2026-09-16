@@ -5,24 +5,50 @@ const AuthContext = createContext();
 
 const AUTH_TOKEN_KEY = 'thenisai_auth_token';
 const AUTH_USER_KEY = 'thenisai_auth_user';
+const ADMIN_SESSION_KEY = 'thenisai_admin_session_unlocked';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem(AUTH_USER_KEY);
-      return saved ? JSON.parse(saved) : null;
+      const parsed = saved ? JSON.parse(saved) : null;
+      // Admin portal requires active session verification — never auto-bypass login
+      if (parsed && parsed.role === 'admin') {
+        const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+        return isSessionUnlocked ? parsed : null;
+      }
+      return parsed;
     } catch {
       return null;
     }
   });
 
-  const [token, setToken] = useState(() => localStorage.getItem(AUTH_TOKEN_KEY) || null);
+  const [token, setToken] = useState(() => {
+    const savedUser = localStorage.getItem(AUTH_USER_KEY);
+    if (savedUser && savedUser.includes('"role":"admin"')) {
+      const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+      if (!isSessionUnlocked) return null;
+    }
+    return localStorage.getItem(AUTH_TOKEN_KEY) || null;
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Validate existing stored session on initial page load
   useEffect(() => {
     async function verifySession() {
+      const savedUser = localStorage.getItem(AUTH_USER_KEY);
+      if (savedUser && savedUser.includes('"role":"admin"')) {
+        const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
+        if (!isSessionUnlocked) {
+          setUser(null);
+          setToken(null);
+          setLoading(false);
+          return;
+        }
+      }
+
       const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
       if (!savedToken) {
         setLoading(false);
@@ -33,10 +59,14 @@ export function AuthProvider({ children }) {
         const res = await api.get('/api/auth/me');
         if (res.success && res.user) {
           setUser(res.user);
+          if (res.user.role === 'admin') {
+            sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+          }
           localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         } else {
           setToken(null);
           setUser(null);
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(AUTH_USER_KEY);
         }
@@ -57,6 +87,9 @@ export function AuthProvider({ children }) {
       if (res.success && res.token) {
         setToken(res.token);
         setUser(res.user);
+        if (res.user?.role === 'admin') {
+          sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+        }
         localStorage.setItem(AUTH_TOKEN_KEY, res.token);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         return { success: true, user: res.user };
@@ -78,6 +111,7 @@ export function AuthProvider({ children }) {
         const tokenVal = `thenisai_session_staff-1_${Date.now()}`;
         setToken(tokenVal);
         setUser(fallbackAdmin);
+        sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
         localStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackAdmin));
         return { success: true, user: fallbackAdmin };
@@ -115,6 +149,7 @@ export function AuthProvider({ children }) {
       setToken(null);
       setUser(null);
       setError(null);
+      sessionStorage.removeItem(ADMIN_SESSION_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
     }

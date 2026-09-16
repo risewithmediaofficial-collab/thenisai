@@ -13,6 +13,16 @@ const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v3';
 const BILLS_CACHE_KEY = 'thenisai_bills_cache';
 const OFFLINE_LEDGER_KEY = 'thenisai_offline_backup_ledger';
 const OFFLINE_QUEUE_KEY = 'thenisai_offline_sync_queue';
+const TAX_SETTINGS_STORAGE_KEY = 'thenisai_tax_settings_v1';
+
+export const DEFAULT_TAX_SETTINGS = {
+  totalGstRate: 5,   // 5% Total GST
+  cgstRate: 2.5,     // 2.5% Central GST
+  sgstRate: 2.5,     // 2.5% State GST
+  gstin: '33AABCT9988Q1Z5',
+  taxEnabled: true,
+  lastUpdated: '16 Sep 2026',
+};
 
 const SWEETS_62_INVENTORY = THENISAI_SWEETS_62.map((item) => ({
   id: item.id,
@@ -49,12 +59,52 @@ const DEFAULT_INVENTORY = [
 
 const INITIAL_ORDERS = [
   {
+    id: 'ord-103',
+    invoiceNumber: 'THN-2026-5120',
+    orderDate: '16 Sep 2026',
+    orderTime: '02:15 PM',
+    customer: { fullName: 'Anitha Sundaram', phone: '9845012398', email: 'anitha.s@gmail.com' },
+    shippingAddress: { doorNo: '72, 4th Cross', street: 'Koramangala 5th Block', landmark: 'Near Sony World Signal', city: 'Bengaluru', state: 'Karnataka', pincode: '560095' },
+    items: [
+      { id: '13', name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு', weight: '500g', price: 340, quantity: 1, image: '/palkova_card.jpg', hsn: '2106' },
+      { id: 'palkova', name: 'Signature Palkova — பாரம்பரிய பால்கோவா', weight: '1kg', price: 680, quantity: 1, image: '/palkova_card.jpg', hsn: '0402' },
+    ],
+    subtotal: 1020,
+    taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },
+    deliveryFee: 0,
+    grandTotal: 1071,
+    paymentMethod: 'upi',
+    upiUtr: '425983719283',
+    source: 'online',
+    status: 'New',
+    createdAt: Date.now() - 1800000,
+  },
+  {
+    id: 'ord-102',
+    invoiceNumber: 'THN-2026-6418',
+    orderDate: '16 Sep 2026',
+    orderTime: '11:30 AM',
+    customer: { fullName: 'Karthik Raja', phone: '9789012345', email: 'karthik.raja@yahoo.com' },
+    shippingAddress: { doorNo: '18/B', street: 'Sipcot Phase 2', landmark: 'Opposite Ashok Leyland', city: 'Hosur', state: 'Tamil Nadu', pincode: '635126' },
+    items: [
+      { id: 'mysore-pak', name: 'Ghee Mysore Pak — நெய் மைசூர் பாக்', weight: '500g', price: 380, quantity: 2, image: '/mysore_pak.jpg', hsn: '2106' },
+    ],
+    subtotal: 760,
+    taxBreakdown: { rate: 5, totalTax: 38, cgst: 19, sgst: 19, igst: 0, isInterState: false },
+    deliveryFee: 0,
+    grandTotal: 798,
+    paymentMethod: 'card',
+    source: 'online',
+    status: 'Accepted',
+    createdAt: Date.now() - 7200000,
+  },
+  {
     id: 'ord-101',
     invoiceNumber: 'THN-2026-4821',
-    orderDate: '10 Sep 2026',
+    orderDate: '16 Sep 2026',
     orderTime: '09:42 AM',
     customer: { fullName: 'Venkatesh Raman', phone: '9840123456', email: 'venkat@gmail.com' },
-    shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'krishnagiri', state: 'Tamil Nadu', pincode: '625020' },
+    shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'Krishnagiri', state: 'Tamil Nadu', pincode: '635001' },
     items: [
       { id: 'palkova', name: 'Signature Palkova', weight: '500g', price: 340, quantity: 2, image: '/palkova_card.jpg', hsn: '0402' },
       { id: 'mysore-pak', name: 'Royal Mysore Pak', weight: '250g', price: 190, quantity: 1, image: '/mysore_pak.jpg', hsn: '2106' },
@@ -65,18 +115,18 @@ const INITIAL_ORDERS = [
     grandTotal: 914,
     paymentMethod: 'cod',
     source: 'online',
-    status: 'New',
-    createdAt: Date.now() - 3600000,
+    status: 'Dispatched',
+    createdAt: Date.now() - 14400000,
   },
   {
     id: 'ord-100',
     invoiceNumber: 'THN-2026-3912',
-    orderDate: '10 Sep 2026',
+    orderDate: '15 Sep 2026',
     orderTime: '08:15 AM',
     customer: { fullName: 'Lakshmi Narayanan', phone: '9443219876', email: 'lakshmi@outlook.com' },
     shippingAddress: { doorNo: '12', street: 'Anna Nagar West', landmark: '', city: 'Chennai', state: 'Tamil Nadu', pincode: '600040' },
     items: [
-      { id: 'kaju-katli', name: 'Kaju Katli', weight: '1kg', price: 1020, quantity: 1, image: '/kaju_katli.jpg', hsn: '2106' },
+      { id: 'kaju-katli', name: 'Kaju Katli — காஜு கத்லி', weight: '1kg', price: 1020, quantity: 1, image: '/kaju_katli.jpg', hsn: '2106' },
     ],
     subtotal: 1020,
     taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },
@@ -85,8 +135,8 @@ const INITIAL_ORDERS = [
     paymentMethod: 'upi',
     upiUtr: '425983719283',
     source: 'online',
-    status: 'Accepted',
-    createdAt: Date.now() - 7200000,
+    status: 'Delivered',
+    createdAt: Date.now() - 86400000,
   },
 ];
 
@@ -158,15 +208,50 @@ export function CartProvider({ children }) {
 
   const [currentView, setCurrentView] = useState(resolveViewFromUrl);
 
-  // Orders state
+  // Orders state — strictly online delivery orders
   const [orders, setOrders] = useState(() => {
     try {
       const saved = localStorage.getItem(ORDERS_STORAGE_KEY);
-      return saved ? JSON.parse(saved) : INITIAL_ORDERS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          // Keep strictly online orders (strip out counter POS bills)
+          const onlineOnly = parsed.filter(
+            (o) => o.source === 'online' || (!o.id?.toLowerCase().startsWith('pos-') && !o.invoiceNumber?.toLowerCase().startsWith('pos-'))
+          );
+          if (onlineOnly.length !== parsed.length) {
+            localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(onlineOnly));
+          }
+          return onlineOnly.length > 0 ? onlineOnly : INITIAL_ORDERS;
+        }
+      }
+      return INITIAL_ORDERS;
     } catch {
       return INITIAL_ORDERS;
     }
   });
+
+  // GST & Tax Settings (Configured dynamically by Admin)
+  const [taxSettings, setTaxSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem(TAX_SETTINGS_STORAGE_KEY);
+      return saved ? { ...DEFAULT_TAX_SETTINGS, ...JSON.parse(saved) } : DEFAULT_TAX_SETTINGS;
+    } catch {
+      return DEFAULT_TAX_SETTINGS;
+    }
+  });
+
+  const updateTaxSettings = (newSettings) => {
+    setTaxSettings((prev) => {
+      const updated = {
+        ...prev,
+        ...newSettings,
+        lastUpdated: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+      };
+      localStorage.setItem(TAX_SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   // Inventory state (Exclusively the 13 products)
   const [inventory, setInventory] = useState(() => {
@@ -444,7 +529,7 @@ export function CartProvider({ children }) {
       createdAt: Date.now(),
     };
 
-    setOrders((prev) => [fullOrder, ...prev]);
+    // Counter sales strictly belong in bills (Shift Bills & Daily Revenue), NOT in online orders
     setBills((prev) => [fullOrder, ...prev]);
     deductStockForItems(saleData.items);
 
@@ -721,6 +806,8 @@ export function CartProvider({ children }) {
         fetchBills,
         inventory,
         pendingOrdersCount,
+        taxSettings,
+        updateTaxSettings,
         // Offline resilience
         isOnline,
         hasOfflinePending,

@@ -5,7 +5,7 @@ import { STORE_DETAILS } from '../../data/sweetsData';
 import './InvoiceModal.css';
 
 export default function InvoiceModal() {
-  const { activeInvoice, closeInvoice } = useCart();
+  const { activeInvoice, closeInvoice, taxSettings } = useCart();
   const invoiceRef = useRef();
 
   // Default format: 'thermal' (80mm POS slip) for counter POS, 'a4' for online deliveries
@@ -47,12 +47,21 @@ export default function InvoiceModal() {
   const grandTotal = Number(activeInvoice.grandTotal) || (subtotal + deliveryFee);
 
   const rawTax = activeInvoice.taxBreakdown || {};
+  const cgstRate = typeof rawTax.cgstRate === 'number' ? rawTax.cgstRate : (typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5);
+  const sgstRate = typeof rawTax.sgstRate === 'number' ? rawTax.sgstRate : (typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5);
+  const totalTaxRate = typeof rawTax.rate === 'number' ? rawTax.rate : (typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : (cgstRate + sgstRate));
+  const activeGstin = rawTax.gstin || taxSettings?.gstin || STORE_DETAILS.gstin;
+
   const taxBreakdown = {
     isInterState: Boolean(rawTax.isInterState),
-    cgst: typeof rawTax.cgst === 'number' ? rawTax.cgst : (Number(rawTax.cgst) || Math.round(subtotal * 0.025 * 100) / 100),
-    sgst: typeof rawTax.sgst === 'number' ? rawTax.sgst : (Number(rawTax.sgst) || Math.round(subtotal * 0.025 * 100) / 100),
+    cgst: typeof rawTax.cgst === 'number' ? rawTax.cgst : (Number(rawTax.cgst) || Math.round(subtotal * (cgstRate / 100) * 100) / 100),
+    sgst: typeof rawTax.sgst === 'number' ? rawTax.sgst : (Number(rawTax.sgst) || Math.round(subtotal * (sgstRate / 100) * 100) / 100),
     igst: typeof rawTax.igst === 'number' ? rawTax.igst : (Number(rawTax.igst) || 0),
-    totalTax: typeof rawTax.totalTax === 'number' ? rawTax.totalTax : (Number(rawTax.totalTax) || Math.round(subtotal * 0.05 * 100) / 100),
+    totalTax: typeof rawTax.totalTax === 'number' ? rawTax.totalTax : (Number(rawTax.totalTax) || Math.round(subtotal * (totalTaxRate / 100) * 100) / 100),
+    cgstRate,
+    sgstRate,
+    totalTaxRate,
+    gstin: activeGstin,
   };
 
   const handlePrint = () => {
@@ -105,7 +114,7 @@ export default function InvoiceModal() {
             <h2 className="thermal-brand-name">{STORE_DETAILS.brandName}</h2>
             <p className="thermal-addr-line">NH 44, Nattamai Kottai, Krishnagiri · Ph: {STORE_DETAILS.phone.replace('+91 ', '')}</p>
             <p className="thermal-tax-line">
-              GSTIN: <strong>{STORE_DETAILS.gstin}</strong> | FSSAI: <strong>{STORE_DETAILS.fssai}</strong>
+              GSTIN: <strong>{activeGstin}</strong> | FSSAI: <strong>{STORE_DETAILS.fssai}</strong>
             </p>
           </div>
 
@@ -170,13 +179,13 @@ export default function InvoiceModal() {
 
             {(taxBreakdown?.cgst > 0 || taxBreakdown?.sgst > 0) && (
               <div className="thermal-calc-row">
-                <span>CGST (2.5%): ₹{taxBreakdown.cgst.toFixed(2)}</span>
-                <span>SGST (2.5%): ₹{taxBreakdown.sgst.toFixed(2)}</span>
+                <span>CGST ({taxBreakdown.cgstRate}%): ₹{taxBreakdown.cgst.toFixed(2)}</span>
+                <span>SGST ({taxBreakdown.sgstRate}%): ₹{taxBreakdown.sgst.toFixed(2)}</span>
               </div>
             )}
             {taxBreakdown?.igst > 0 && (
               <div className="thermal-calc-row">
-                <span>IGST (5.0%):</span>
+                <span>IGST ({taxBreakdown.totalTaxRate}%):</span>
                 <span>₹{taxBreakdown.igst.toFixed(2)}</span>
               </div>
             )}
@@ -260,7 +269,7 @@ export default function InvoiceModal() {
               <div className="inv-reg-badges">
                 <span>Est: <strong>2006</strong></span>
                 <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
-                <span>GSTIN: <strong>{STORE_DETAILS.gstin}</strong></span>
+                <span>GSTIN: <strong>{activeGstin}</strong></span>
               </div>
             </div>
           </div>
@@ -387,17 +396,17 @@ export default function InvoiceModal() {
             {!taxBreakdown.isInterState ? (
               <>
                 <div className="total-row tax">
-                  <span>CGST @ 2.5%</span>
+                  <span>CGST @ {taxBreakdown.cgstRate}%</span>
                   <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
                 </div>
                 <div className="total-row tax">
-                  <span>SGST @ 2.5%</span>
+                  <span>SGST @ {taxBreakdown.sgstRate}%</span>
                   <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
                 </div>
               </>
             ) : (
               <div className="total-row tax">
-                <span>IGST @ 5.0%</span>
+                <span>IGST @ {taxBreakdown.totalTaxRate}%</span>
                 <span>₹{taxBreakdown.igst.toFixed(2)}</span>
               </div>
             )}

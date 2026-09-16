@@ -9,7 +9,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
 
   const [selectedRole, setSelectedRole] = useState(initialRole);
   const [username, setUsername] = useState(initialRole === 'admin' ? 'admin' : 'cashier');
-  const [password, setPassword] = useState(initialRole === 'admin' ? 'admin123' : 'cashier123');
+  const [password, setPassword] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -18,10 +18,10 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setSelectedRole(initialRole);
     if (initialRole === 'admin') {
       setUsername('admin');
-      setPassword('admin123');
+      setPassword('');
     } else {
       setUsername('cashier');
-      setPassword('cashier123');
+      setPassword('');
     }
   }, [initialRole]);
 
@@ -30,10 +30,10 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setLocalError('');
     if (role === 'admin') {
       setUsername('admin');
-      setPassword('admin123');
+      setPassword('');
     } else {
       setUsername('cashier');
-      setPassword('cashier123');
+      setPassword('');
     }
   };
 

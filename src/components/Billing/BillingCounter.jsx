@@ -9,6 +9,7 @@ import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
+import GstSettingsModal from '../Admin/GstSettingsModal';
 import './BillingCounter.css';
 
 // Predefined categories for fast sweets & beverages POS filtering
@@ -40,7 +41,10 @@ export default function BillingCounter() {
     hasOfflinePending,
     offlinePendingCount,
     syncOfflineBills,
+    taxSettings,
   } = useCart();
+
+  const [isGstModalOpen, setIsGstModalOpen] = useState(false);
 
   // Excel Backup State
   const [isExcelMenuOpen, setIsExcelMenuOpen] = useState(false);
@@ -560,12 +564,16 @@ export default function BillingCounter() {
     });
   }, [inventory, invCategoryFilter, inventorySearch]);
 
-  // POS Calculations
+  // Dynamic POS Tax Calculations from Admin Settings
+  const totalTaxPct = typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : 5;
+  const cgstPct = typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5;
+  const sgstPct = typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5;
+  const isTaxEnabled = taxSettings?.taxEnabled !== false && totalTaxPct > 0;
+
   const billSubtotal = billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
-  const effectiveGstRate = typeof GST_RATE === 'number' && GST_RATE > 0 ? GST_RATE : 0.05;
-  const billGst = billItems.length > 0 ? Math.round(billSubtotal * effectiveGstRate * 100) / 100 : 0;
-  const billCgst = Math.round((billGst / 2) * 100) / 100;
-  const billSgst = Math.round((billGst / 2) * 100) / 100;
+  const billCgst = isTaxEnabled && billItems.length > 0 ? Math.round(billSubtotal * (cgstPct / 100) * 100) / 100 : 0;
+  const billSgst = isTaxEnabled && billItems.length > 0 ? Math.round(billSubtotal * (sgstPct / 100) * 100) / 100 : 0;
+  const billGst = Math.round((billCgst + billSgst) * 100) / 100;
   const billGrandTotal = Math.round(billSubtotal + billGst);
 
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
@@ -823,7 +831,10 @@ export default function BillingCounter() {
       items: [...billItems],
       subtotal: billSubtotal,
       taxBreakdown: {
-        rate: 5,
+        rate: isTaxEnabled ? totalTaxPct : 0,
+        cgstRate: isTaxEnabled ? cgstPct : 0,
+        sgstRate: isTaxEnabled ? sgstPct : 0,
+        gstin: taxSettings?.gstin || '33AABCT9988Q1Z5',
         isInterState: false,
         cgst: billCgst,
         sgst: billSgst,
@@ -936,19 +947,16 @@ export default function BillingCounter() {
         currentSection={
           posTab === 'register'
             ? 'pos-register'
-            : posTab === 'my-bills'
-            ? 'pos-bills'
+            : posTab === 'my-bills' || posTab === 'daily-sales'
+            ? 'pos-daily-sales'
             : posTab === 'online-orders'
             ? 'pos-online'
-            : posTab === 'daily-sales'
-            ? 'pos-daily-sales'
             : 'pos-inventory'
         }
         onSelectSection={(sec) => {
           if (sec === 'pos-register') handleSwitchTab('register');
-          else if (sec === 'pos-bills') handleSwitchTab('my-bills');
+          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') handleSwitchTab('daily-sales');
           else if (sec === 'pos-online') handleSwitchTab('online-orders');
-          else if (sec === 'pos-daily-sales') handleSwitchTab('daily-sales');
           else if (sec === 'pos-inventory') handleSwitchTab('inventory');
           else if (sec === 'admin-orders') navigateTo('admin', 'orders');
           else if (sec === 'admin-sales') navigateTo('admin', 'sales');
@@ -960,6 +968,7 @@ export default function BillingCounter() {
           setIsRefillOpen(true);
         }}
         onOpenAddStock={() => setIsAddStockOpen(true)}
+        onOpenGstSettings={user?.role === 'admin' ? () => setIsGstModalOpen(true) : undefined}
         pendingOnlineCount={pendingOnlineOrders.length}
         shiftBillsCount={myShiftBills.length}
         isMobileOpen={isMobileMenuOpen}
@@ -1754,7 +1763,9 @@ export default function BillingCounter() {
                   <span>₹{billSubtotal.toFixed(2)}</span>
                 </div>
                 <div className="calc-item">
-                  <span>GST @ 5%</span>
+                  <span>
+                    {isTaxEnabled ? `GST @ ${totalTaxPct}% (CGST ${cgstPct}% + SGST ${sgstPct}%)` : 'Tax (Exempt 0%)'}
+                  </span>
                   <span>₹{billGst.toFixed(2)}</span>
                 </div>
                 <div className="calc-item total">
@@ -2712,6 +2723,11 @@ export default function BillingCounter() {
           setRefillTargetSweetId(null);
         }}
         initialSweetId={refillTargetSweetId}
+      />
+
+      <GstSettingsModal
+        isOpen={isGstModalOpen}
+        onClose={() => setIsGstModalOpen(false)}
       />
     </div>
   );

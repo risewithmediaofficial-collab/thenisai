@@ -1,14 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd
+                            http://www.google.com/schemas/sitemap-image/1.1 http://www.google.com/schemas/sitemap-image/1.1/sitemap-image.xsd">
 
-  <!-- Primary Homepage - Thenisai Palkova & Sweets Krishnagiri -->
+  <!-- 1. Primary Homepage — Thenisai Palkova & Sweets Krishnagiri & Hosur -->
   <url>
     <loc>https://thenisaisweets.com/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.00</priority>
+    <xhtml:link rel="alternate" hreflang="en-IN" href="https://thenisaisweets.com/" />
+    <xhtml:link rel="alternate" hreflang="ta-IN" href="https://thenisaisweets.com/" />
+    <xhtml:link rel="alternate" hreflang="kn-IN" href="https://thenisaisweets.com/" />
+    <xhtml:link rel="alternate" hreflang="ml-IN" href="https://thenisaisweets.com/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://thenisaisweets.com/" />
+
+    <!-- Official Brand & Product Images -->
+    <image:image>
+      <image:loc>https://thenisaisweets.com/logo-light.png</image:loc>
+      <image:title>Thenisai Palkova &amp; Sweets Official Logo</image:title>
+      <image:caption>Thenisai Palkova &amp; Sweets Krishnagiri — Traditional South Indian Sweets Since 2006</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/logo-icon.png</image:loc>
+      <image:title>Thenisai Honey Bee Brand Icon</image:title>
+      <image:caption>Thenisai Traditional Sweets Honey Bee Emblem</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/palkova_hero.jpg</image:loc>
+      <image:title>Authentic Pure Cow Milk Palkova Krishnagiri</image:title>
+      <image:caption>Famous 100% Pure Cow Milk Palkova handcrafted fresh daily at Thenisai Sweets Krishnagiri</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/brand_story.jpg</image:loc>
+      <image:title>Thenisai Traditional Heritage &amp; Craftsmanship</image:title>
+      <image:caption>Rich heritage of traditional South Indian sweet making at Krishnagiri on NH 44</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 2. Sweets Collection & Online Ordering Menu -->
+  <url>
+    <loc>https://thenisaisweets.com/#collection</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/palkova_card.jpg</image:loc>
+      <image:title>Traditional Sweets Collection Krishnagiri</image:title>
+      <image:caption>Fresh Palkova, Milk Peda, Ghee Mysore Pak, Cashew Cake and authentic South Indian sweets</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/mysore_pak.jpg</image:loc>
+      <image:title>Pure Desi Ghee Mysore Pak</image:title>
+      <image:caption>Melt-in-mouth traditional royal Mysore Pak prepared with 100% pure cow ghee</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/kaju_katli.jpg</image:loc>
+      <image:title>Cashew Cake (Kaju Katli)</image:title>
+      <image:caption>Premium diamond-cut cashew fudge made from royal whole cashews</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/badam_halwa.jpg</image:loc>
+      <image:title>Rich Almond Badam Halwa</image:title>
+      <image:caption>Traditional almond halwa made with pure cow milk, saffron, and desi ghee</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/milk_peda.jpg</image:loc>
+      <image:title>Authentic Milk Peda</image:title>
+      <image:caption>Delicate milk peda simmered slow and garnished with cardamom</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 3. Signature 100% Pure Cow Milk Palkova -->
+  <url>
+    <loc>https://thenisaisweets.com/#signature</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/palkova_hero.jpg</image:loc>
+      <image:title>Thenisai Signature Palkova Krishnagiri</image:title>
+      <image:caption>Traditional brass uruli slow-simmering of 100% fresh cow milk with zero preservatives</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 4. Brand Heritage & Story Since 2006 -->
+  <url>
+    <loc>https://thenisaisweets.com/#story</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/brand_story.jpg</image:loc>
+      <image:title>Thenisai Palkova &amp; Sweets Heritage Story</image:title>
+      <image:caption>Over two decades of pure milk sweet craftsmanship on NH 44 Bangalore–Salem Highway</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 5. 100% Pure Ingredients Guarantee -->
+  <url>
+    <loc>https://thenisaisweets.com/#ingredients</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/ingredients.jpg</image:loc>
+      <image:title>Pure Farm Cow Milk &amp; Natural Ingredients</image:title>
+      <image:caption>100% unadulterated cow milk, golden desi ghee, and pure cane sugar</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 6. Traditional Woodfire Kitchen & Craftsmanship -->
+  <url>
+    <loc>https://thenisaisweets.com/#tradition</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 7. Interactive Sweet Box & Product Showcase -->
+  <url>
+    <loc>https://thenisaisweets.com/#showcase</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/sweet_box.jpg</image:loc>
+      <image:title>Premium Thenisai Sweet Gift Boxes</image:title>
+      <image:caption>Hand-packed assortment boxes for festivals, weddings, and highway travel</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 8. Verified Customer Ratings & Reviews -->
+  <url>
+    <loc>https://thenisaisweets.com/#reviews</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 9. Store Location, Directions & Contact (Krishnagiri & Hosur NH 44) -->
+  <url>
+    <loc>https://thenisaisweets.com/#contact</loc>
+    <lastmod>2026-09-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <image:image>
+      <image:loc>https://thenisaisweets.com/brand_story.jpg</image:loc>
+      <image:title>Visit Thenisai Sweets at Nattamai Kottai Krishnagiri</image:title>
+      <image:caption>Located on NH 44 (Bangalore–Salem Highway) near HP Petrol Bunk. Convenient stop for travelers from Tamil Nadu, Karnataka and Kerala</image:caption>
+    </image:image>
   </url>
 
 </urlset>

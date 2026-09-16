@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCart } from '../../context/CartContext';
 import { STORE_DETAILS } from '../../data/sweetsData';
 import './DailyRevenueReport.css';
 
@@ -28,6 +29,7 @@ function formatDateLabel(dateStr) {
 }
 
 export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRefresh, onBack }) {
+  const { taxSettings } = useCart();
   const todayKey = toDateKey(new Date());
 
   // Date Selection: 'today', 'yesterday', 'custom', or 'all'
@@ -103,8 +105,19 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
   }, [daySales]);
 
   const netSales = grossRevenue - totalTax;
-  const cgstAmount = totalTax / 2;
-  const sgstAmount = totalTax / 2;
+  const cgstAmount = useMemo(() => {
+    return daySales.reduce((acc, s) => {
+      const c = typeof s.taxBreakdown?.cgst === 'number' ? s.taxBreakdown.cgst : (s.taxBreakdown?.totalTax ? s.taxBreakdown.totalTax / 2 : 0);
+      return acc + c;
+    }, 0);
+  }, [daySales]);
+
+  const sgstAmount = useMemo(() => {
+    return daySales.reduce((acc, s) => {
+      const sg = typeof s.taxBreakdown?.sgst === 'number' ? s.taxBreakdown.sgst : (s.taxBreakdown?.totalTax ? s.taxBreakdown.totalTax / 2 : 0);
+      return acc + sg;
+    }, 0);
+  }, [daySales]);
 
   const totalBills = daySales.length;
   const avgOrderValue = totalBills > 0 ? Math.round(grossRevenue / totalBills) : 0;
@@ -291,9 +304,9 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
             <span className="daily-store-tag">Krishnagiri NH 44 Store</span>
           </div>
 
-          <h2 className="daily-title-h2">Daily Sales &amp; Revenue</h2>
+          <h2 className="daily-title-h2">Daily Revenue &amp; Shift Bills</h2>
           <p className="daily-title-sub">
-            Day-End Settlement &amp; Shift Register Audit · Real-time GST &amp; Tender Reconciliation
+            Shift Register Audit &amp; Day-End Settlement · Real-time GST &amp; Tender Reconciliation
           </p>
         </div>
 
@@ -397,9 +410,15 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
         </div>
 
         <div className="rev-card gst">
-          <span className="rev-label">GST 5% TAX COLLECTED</span>
+          <span className="rev-label">
+            {taxSettings?.taxEnabled !== false
+              ? `GST ${taxSettings?.totalGstRate ?? 5}% TAX COLLECTED`
+              : 'TAX COLLECTED (0% NIL)'}
+          </span>
           <div className="rev-value">₹{Math.round(totalTax).toLocaleString('en-IN')}</div>
-          <span className="rev-foot">CGST (2.5%): ₹{Math.round(cgstAmount)} · SGST: ₹{Math.round(sgstAmount)}</span>
+          <span className="rev-foot">
+            CGST ({taxSettings?.cgstRate ?? 2.5}%): ₹{Math.round(cgstAmount)} · SGST ({taxSettings?.sgstRate ?? 2.5}%): ₹{Math.round(sgstAmount)}
+          </span>
         </div>
 
         <div className="rev-card aov">
@@ -583,7 +602,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       <section className="daily-bills-section">
         <div className="bills-header-line">
           <h3 className="section-subtitle">
-            Bills &amp; Invoices Log ({daySales.length} Transactions)
+            Shift Bills &amp; Invoices Log ({daySales.length} Transactions)
           </h3>
           <div className="search-bills-box">
             <input
@@ -698,7 +717,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   <h3>THENISAI PALKOVA &amp; SWEETS</h3>
                   <p>Nattamai Kottai, Near HP Petrol Bunk</p>
                   <p>NH 44, Krishnagiri, Tamil Nadu - 635001</p>
-                  <p>Phone: +91 93448 93547 · GSTIN: 33AABCT9988C1Z4</p>
+                  <p>Phone: +91 93448 93547 · GSTIN: {taxSettings?.gstin || '33AABCT9988Q1Z5'}</p>
                   <div className="slip-divider-double" />
                   <h4>*** DAILY REGISTER Z-REPORT ***</h4>
                   <div className="slip-divider" />
@@ -738,11 +757,11 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                     <span>₹{Math.round(netSales).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-row">
-                    <span>CGST (2.5%):</span>
+                    <span>CGST ({taxSettings?.cgstRate ?? 2.5}%):</span>
                     <span>₹{Math.round(cgstAmount).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-row">
-                    <span>SGST (2.5%):</span>
+                    <span>SGST ({taxSettings?.sgstRate ?? 2.5}%):</span>
                     <span>₹{Math.round(sgstAmount).toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-divider" />

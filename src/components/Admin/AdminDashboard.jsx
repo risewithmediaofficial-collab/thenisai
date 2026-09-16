@@ -6,6 +6,7 @@ import { useScrollLock } from '../../hooks/useScrollLock';
 import { exportBillsToExcel, exportDailyRevenueToExcel } from '../../utils/excelBackup';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from './DailyRevenueReport';
+import GstSettingsModal from './GstSettingsModal';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -18,7 +19,10 @@ export default function AdminDashboard() {
     updateOrderStatus,
     openInvoice,
     navigateTo,
+    taxSettings,
   } = useCart();
+
+  const [isGstModalOpen, setIsGstModalOpen] = useState(false);
 
   const resolveAdminTabFromHash = () => {
     const h = window.location.hash.toLowerCase();
@@ -169,21 +173,27 @@ export default function AdminDashboard() {
     }
   };
 
-  // Filtered orders list for Tab 1
-  const filteredOrders = orders.filter((order) => {
-    const matchesFilter =
-      orderFilter === 'all'
-        ? true
-        : order.status?.toLowerCase() === orderFilter.toLowerCase();
+  // Filtered orders list for Tab 1 (Strictly Online Delivery Orders)
+  const filteredOrders = useMemo(() => {
+    const onlineOnly = (orders || []).filter(
+      (order) => order.source === 'online' || (!order.id?.toLowerCase().startsWith('pos-') && !order.invoiceNumber?.toLowerCase().startsWith('pos-'))
+    );
 
-    const matchesSearch =
-      searchTerm.trim() === '' ||
-      order.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer?.phone?.includes(searchTerm);
+    return onlineOnly.filter((order) => {
+      const matchesFilter =
+        orderFilter === 'all'
+          ? true
+          : order.status?.toLowerCase() === orderFilter.toLowerCase();
 
-    return matchesFilter && matchesSearch;
-  });
+      const matchesSearch =
+        searchTerm.trim() === '' ||
+        order.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer?.phone?.includes(searchTerm);
+
+      return matchesFilter && matchesSearch;
+    });
+  }, [orders, orderFilter, searchTerm]);
 
 
 
@@ -197,11 +207,11 @@ export default function AdminDashboard() {
           else if (sec === 'admin-sales') handleSwitchAdminTab('sales');
           else if (sec === 'admin-daily-revenue') handleSwitchAdminTab('daily-revenue');
           else if (sec === 'pos-register') navigateTo('billing', 'register');
-          else if (sec === 'pos-bills') navigateTo('billing', 'bills');
+          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') navigateTo('billing', 'daily-sales');
           else if (sec === 'pos-online') navigateTo('billing', 'orders');
-          else if (sec === 'pos-daily-sales') navigateTo('billing', 'daily-sales');
           else if (sec === 'storefront') navigateTo('storefront');
         }}
+        onOpenGstSettings={() => setIsGstModalOpen(true)}
         pendingOnlineCount={pendingOrders.length}
         shiftBillsCount={counterSales.length}
         isMobileOpen={isMobileMenuOpen}
@@ -236,6 +246,34 @@ export default function AdminDashboard() {
         </header>
 
       <main className="admin-container" data-lenis-prevent="true">
+        {/* Admin Top Operations & GST Settings Bar */}
+        <div className="admin-operations-bar">
+          <div className="admin-ops-title-group">
+            <h1 className="admin-portal-title">ADMIN MANAGEMENT PORTAL</h1>
+            <p className="admin-portal-sub">
+              Logged in as <strong>{user?.name || 'Administrator'}</strong> · Krishnagiri Store Operations
+            </p>
+          </div>
+
+          <div className="admin-ops-actions">
+            <button
+              type="button"
+              className="admin-gst-config-btn"
+              onClick={() => setIsGstModalOpen(true)}
+              title="Configure GST %, CGST %, SGST %, and Shop GSTIN"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="gst-config-icon">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+              <span className="gst-config-label">GST Rates:</span>
+              <span className="gst-config-badge">
+                {taxSettings?.totalGstRate ?? 5}% GST (CGST {taxSettings?.cgstRate ?? 2.5}% + SGST {taxSettings?.sgstRate ?? 2.5}%)
+              </span>
+            </button>
+          </div>
+        </div>
+
         {/* KPI Cards Grid */}
         <section className="admin-kpi-grid">
           <div
@@ -942,6 +980,11 @@ export default function AdminDashboard() {
             />
           </section>
         )}
+        {/* GST & Tax Configuration Modal */}
+        <GstSettingsModal
+          isOpen={isGstModalOpen}
+          onClose={() => setIsGstModalOpen(false)}
+        />
       </main>
       </div>
     </div>

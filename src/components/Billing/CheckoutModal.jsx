@@ -32,6 +32,7 @@ export default function CheckoutModal() {
     clearCart,
     openInvoice,
     placeOnlineOrder,
+    taxSettings,
   } = useCart();
 
   const [formData, setFormData] = useState({
@@ -73,12 +74,17 @@ export default function CheckoutModal() {
 
   if (!isCheckoutOpen) return null;
 
-  // Taxes & Pricing
+  // Dynamic Tax Settings from Admin
   const isInterState = formData.state !== 'Tamil Nadu';
-  const taxAmount = Math.round(subtotal * GST_RATE * 100) / 100;
-  const cgst = !isInterState ? Math.round((taxAmount / 2) * 100) / 100 : 0;
-  const sgst = !isInterState ? Math.round((taxAmount / 2) * 100) / 100 : 0;
-  const igst = isInterState ? taxAmount : 0;
+  const totalTaxPct = typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : 5;
+  const cgstPct = typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5;
+  const sgstPct = typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5;
+  const isTaxEnabled = taxSettings?.taxEnabled !== false && totalTaxPct > 0;
+
+  const cgst = (!isInterState && isTaxEnabled) ? Math.round(subtotal * (cgstPct / 100) * 100) / 100 : 0;
+  const sgst = (!isInterState && isTaxEnabled) ? Math.round(subtotal * (sgstPct / 100) * 100) / 100 : 0;
+  const igst = (isInterState && isTaxEnabled) ? Math.round(subtotal * (totalTaxPct / 100) * 100) / 100 : 0;
+  const taxAmount = Math.round((cgst + sgst + igst) * 100) / 100;
   const deliveryFee = isFreeDelivery ? 0 : STANDARD_DELIVERY_FEE;
   const grandTotal = Math.round(subtotal + taxAmount + deliveryFee);
 
@@ -224,7 +230,10 @@ export default function CheckoutModal() {
       items: [...cart],
       subtotal,
       taxBreakdown: {
-        rate: 5,
+        rate: isTaxEnabled ? totalTaxPct : 0,
+        cgstRate: isTaxEnabled ? cgstPct : 0,
+        sgstRate: isTaxEnabled ? sgstPct : 0,
+        gstin: taxSettings?.gstin || '33AABCT9988Q1Z5',
         isInterState,
         cgst,
         sgst,
@@ -686,9 +695,13 @@ export default function CheckoutModal() {
 
                 <div className="calc-row">
                   <span>
-                    GST (5%)
+                    {isTaxEnabled ? `GST (${totalTaxPct}%)` : 'Tax (Exempt 0%)'}
                     <small className="calc-sub">
-                      {!isInterState ? ' (CGST 2.5% + SGST 2.5%)' : ' (IGST 5%)'}
+                      {!isTaxEnabled
+                        ? ' (Tax Exempt)'
+                        : !isInterState
+                        ? ` (CGST ${cgstPct}% + SGST ${sgstPct}%)`
+                        : ` (IGST ${totalTaxPct}%)`}
                     </small>
                   </span>
                   <span>₹{taxAmount.toFixed(2)}</span>
