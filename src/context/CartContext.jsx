@@ -92,11 +92,16 @@ const INITIAL_ORDERS = [
 
 function getWeightInKg(weightStr) {
   if (!weightStr) return 0.5;
-  const str = String(weightStr).toLowerCase();
+  const str = String(weightStr).toLowerCase().trim();
   if (str.includes('cup') || str.includes('pc') || str.includes('box')) return 1.0;
-  if (str.includes('250g')) return 0.25;
-  if (str.includes('500g')) return 0.5;
-  if (str.includes('1kg') || str.includes('1 kg')) return 1.0;
+  if (str.includes('250g') || str.includes('250ml') || str.includes('250 ml')) return 0.25;
+  if (str.includes('500g') || str.includes('500ml') || str.includes('500 ml')) return 0.5;
+  if (str.includes('1kg') || str.includes('1 kg') || str.includes('1l') || str.includes('1 l') || str.includes('1 litre') || str.includes('1000ml')) return 1.0;
+  if (str.includes('2l') || str.includes('2 l') || str.includes('2 litre') || str.includes('2000ml')) return 2.0;
+  const mlMatch = str.match(/([\d.]+)\s*ml/);
+  if (mlMatch) return parseFloat(mlMatch[1]) / 1000;
+  const lMatch = str.match(/([\d.]+)\s*(?:l|litre|liter)/);
+  if (lMatch) return parseFloat(lMatch[1]);
   const match = str.match(/([\d.]+)\s*kg/);
   if (match) return parseFloat(match[1]);
   return 0.5;

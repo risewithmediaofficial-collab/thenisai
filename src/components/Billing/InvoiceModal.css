@@ -542,226 +542,188 @@
 
 .thermal-receipt-document {
   width: 100%;
-  max-width: 360px;
+  max-width: 330px;
   margin: 0 auto;
   background: #FFFFFF;
-  color: #000000;
-  font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
-  font-size: 11.5px;
-  line-height: 1.35;
-  padding: 20px 16px;
-  border-radius: 6px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  border: 1px solid #E2E8F0;
+  color: #000000 !important;
+  font-family: 'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 700;
+  padding: 12px 10px;
+  border-radius: 4px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  border: 1px solid #CBD5E1;
   box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .thermal-receipt-document.copy-shop {
-  border-left: 3px solid #0284C7;
-}
-
-/* Copy Type Distinction Badges */
-.thermal-copy-badge {
-  text-align: center;
-  font-weight: 900;
-  font-size: 10.5px;
-  letter-spacing: 0.05em;
-  padding: 3px 6px;
-  margin: 4px 0;
-  border-radius: 2px;
-  text-transform: uppercase;
-}
-
-.thermal-copy-badge.customer {
-  background: #000000;
-  color: #FFFFFF;
-  border: 1px solid #000000;
-}
-
-.thermal-copy-badge.shop {
-  background: #FFFFFF;
-  color: #000000;
-  border: 1px dashed #000000;
+  border-left: 4px solid #000000;
 }
 
 .thermal-header {
   text-align: center;
-}
-
-.thermal-logo-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 6px;
-}
-
-.thermal-logo-img {
-  max-width: 130px;
-  height: auto;
-  display: block;
-}
-
-.thermal-decor-stars {
-  font-size: 10px;
-  letter-spacing: 4px;
-  color: #475569;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .thermal-brand-name {
-  font-size: 1.25rem;
+  font-size: 15px;
   font-weight: 900;
-  color: #000000;
-  margin: 2px 0 3px;
+  color: #000000 !important;
+  margin: 0 0 2px 0;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-family: 'Courier New', Courier, monospace;
+  letter-spacing: 0.02em;
+  font-family: 'Segoe UI', Arial, sans-serif !important;
+  line-height: 1.2;
 }
 
-.thermal-brand-tag {
-  font-size: 9.5px;
+.thermal-addr-line {
+  font-size: 11px;
   font-weight: 700;
-  color: #334155;
-  margin: 0 0 4px;
-  text-transform: uppercase;
-}
-
-.thermal-addr-line,
-.thermal-contact-line {
-  font-size: 10.5px;
-  color: #0F172A;
+  color: #000000 !important;
   margin: 1px 0;
+  line-height: 1.25;
 }
 
-.thermal-tax-regs {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  margin-top: 5px;
-  padding-top: 4px;
-  border-top: 1px dotted #94A3B8;
+.thermal-tax-line {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #000000 !important;
+  margin: 2px 0 0 0;
+  line-height: 1.25;
 }
 
 /* Thermal Dividers */
-.thermal-divider-double {
-  border-top: 3px double #000000;
-  margin: 8px 0;
-}
-
-.thermal-divider-single {
-  border-top: 1px solid #000000;
-  margin: 6px 0;
+.thermal-divider-solid {
+  border-top: 1.5px solid #000000 !important;
+  margin: 4px 0 !important;
 }
 
 .thermal-divider-dashed {
-  border-top: 1px dashed #000000;
-  margin: 8px 0;
+  border-top: 1px dashed #000000 !important;
+  margin: 4px 0 !important;
 }
 
 .thermal-title-bar {
   text-align: center;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 11.5px;
-  letter-spacing: 0.08em;
-  padding: 2px 0;
-  color: #000000;
+  letter-spacing: 0.04em;
+  padding: 1px 0;
+  color: #000000 !important;
+  text-transform: uppercase;
 }
 
 /* Thermal Meta Block */
 .thermal-meta-block {
-  font-size: 11px;
-  margin: 4px 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin: 2px 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  color: #000000 !important;
 }
 
 .thermal-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: #000000 !important;
 }
 
-.thermal-source-tag {
-  background: #000000;
-  color: #FFFFFF;
+.thermal-pay-mode-tag {
+  background: #000000 !important;
+  color: #FFFFFF !important;
   padding: 1px 5px;
   border-radius: 2px;
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
 }
 
 /* Thermal Items Table */
 .thermal-items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 11px;
-  margin: 4px 0;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 2px 0;
+  color: #000000 !important;
 }
 
 .thermal-items-table th {
-  font-weight: 800;
-  border-bottom: 1px solid #000000;
-  padding: 4px 2px;
-  color: #000000;
-  font-size: 10.5px;
+  font-weight: 900;
+  border-bottom: 1.5px solid #000000 !important;
+  padding: 3px 1px;
+  color: #000000 !important;
+  font-size: 11px;
+  letter-spacing: 0.02em;
 }
 
 .thermal-items-table td {
-  padding: 4px 2px;
+  padding: 2.5px 1px;
   vertical-align: top;
-  color: #000000;
-}
-
-.thermal-item-title .item-name {
-  font-weight: 700;
-  word-break: break-word;
+  color: #000000 !important;
   line-height: 1.25;
 }
 
+.thermal-item-title .item-name {
+  font-weight: 800;
+  color: #000000 !important;
+}
+
 .thermal-item-title .item-wt {
-  font-size: 9.5px;
-  color: #475569;
+  font-weight: 700;
+  font-size: 11px;
+  color: #000000 !important;
 }
 
 /* Thermal Totals */
 .thermal-totals-box {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  font-size: 11px;
+  gap: 2px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #000000 !important;
 }
 
 .thermal-calc-row {
   display: flex;
   justify-content: space-between;
-  color: #000000;
+  color: #000000 !important;
+  line-height: 1.25;
 }
 
 .thermal-grand-total {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13.5px;
+  font-size: 14.5px;
   font-weight: 900;
-  padding: 4px 0;
-  color: #000000;
+  padding: 2px 0;
+  color: #000000 !important;
 }
 
 .thermal-grand-total .grand-lbl {
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .thermal-grand-total .grand-val {
-  font-size: 15px;
+  font-size: 15.5px;
   font-weight: 900;
 }
 
 .thermal-pay-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 10.5px;
-  margin-top: 2px;
+  gap: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000000 !important;
 }
 
 .thermal-pay-row {
@@ -771,82 +733,50 @@
 
 /* Shop Copy Audit Block */
 .thermal-shop-audit-block {
-  margin: 6px 0;
-  font-size: 10.5px;
+  margin: 3px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000000 !important;
 }
 
 .thermal-audit-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 6px;
-  color: #000000;
+  margin-bottom: 2px;
+  color: #000000 !important;
 }
 
 .thermal-audit-signatures {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .thermal-audit-signatures .sign-line {
-  font-weight: 600;
-  color: #000000;
-}
-
-/* Barcode representation */
-.thermal-barcode-wrap {
-  text-align: center;
-  margin: 10px 0 6px 0;
-}
-
-.thermal-barcode-art {
-  font-family: monospace;
-  font-weight: 900;
-  letter-spacing: 1.5px;
-  font-size: 13px;
-  line-height: 1;
-  transform: scaleY(1.35);
-  margin-bottom: 4px;
-}
-
-.thermal-barcode-text {
-  font-size: 10px;
-  letter-spacing: 2px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #000000 !important;
 }
 
 /* Footer info */
 .thermal-footer-box {
   text-align: center;
-  font-size: 10.5px;
-  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 3px;
+  color: #000000 !important;
 }
 
 .thermal-thank-you {
-  font-weight: 800;
-  font-size: 11px;
-  margin: 4px 0;
-  color: #000000;
+  font-weight: 900;
+  font-size: 12px;
+  margin: 1px 0;
+  color: #000000 !important;
+  letter-spacing: 0.02em;
 }
 
 .thermal-sub-msg {
-  font-size: 9.5px;
-  color: #334155;
-  margin: 2px 0;
-}
-
-.thermal-domain {
   font-size: 10px;
   font-weight: 700;
-  margin-top: 4px;
-  color: #000000;
-}
-
-.thermal-paper-tear-gap {
-  height: 24px;
-  border-bottom: 2px dashed #CBD5E1;
-  margin-top: 8px;
+  color: #000000 !important;
+  margin: 1px 0 0 0;
 }
 
 /* Tear Divider between multiple thermal receipts */
@@ -892,7 +822,7 @@
    ========================================= */
 @page {
   size: auto;
-  margin: 4mm 2mm;
+  margin: 1mm 1mm;
 }
 
 @media print {
@@ -975,16 +905,17 @@
   }
 
   .invoice-portal.format-thermal .thermal-receipt-document {
-    width: 76mm !important;
-    max-width: 76mm !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
     margin: 0 auto !important;
-    padding: 2mm 3mm !important;
+    padding: 1mm 1.5mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    font-size: 11px !important;
-    line-height: 1.3 !important;
+    font-family: 'Segoe UI', Arial, -apple-system, BlinkMacSystemFont, Roboto, sans-serif !important;
+    font-size: 11.5px !important;
+    line-height: 1.22 !important;
+    font-weight: 700 !important;
     color: #000000 !important;
     background: #FFFFFF !important;
     -webkit-print-color-adjust: exact !important;

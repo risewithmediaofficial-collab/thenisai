@@ -216,29 +216,113 @@ export default function BillingCounter() {
     } catch {}
   };
 
-  // Inline weight popover state (small popup inside each kg row)
+  // Helpers to identify measurable items (weight in kg/g and volume in Litre/ml)
+  const isLitreItem = (sweet) => {
+    if (!sweet) return false;
+    const u = (sweet.unit || '').toLowerCase();
+    return u === 'litre' || u === 'liter' || u === 'l' || u === 'ml';
+  };
+
+  const isKgItem = (sweet) => {
+    if (!sweet) return false;
+    const u = (sweet.unit || '').toLowerCase();
+    return u === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
+  };
+
+  const isMeasurableItem = (sweet) => isKgItem(sweet) || isLitreItem(sweet);
+
+  // Inline weight/volume popover state (popup inside each kg & litre row)
   const [inlineWeightId, setInlineWeightId] = useState(null); // sweet.id of open popover
+  const [editingWeight, setEditingWeight] = useState(null); // original weight if editing existing line
   const [inlineVal, setInlineVal] = useState('');
-  const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg'
+  const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg' | 'ml' | 'L'
   const inlineInputRef = useRef(null);
 
-  const openInlineWeight = (sweet) => {
-    if (inlineWeightId === sweet.id) {
+  const openInlineWeight = (sweet, existingWeight) => {
+    if (inlineWeightId === sweet.id && !existingWeight) {
       setInlineWeightId(null); // toggle off
+      setEditingWeight(null);
       return;
     }
     setInlineWeightId(sweet.id);
-    setInlineVal('');
-    setInlineUnit('g');
+    setEditingWeight(existingWeight || null);
+
+    const isLitre = isLitreItem(sweet);
+    if (existingWeight) {
+      const ew = String(existingWeight).toLowerCase().trim();
+      if (ew.includes('ml')) {
+        setInlineVal(ew.replace(/[^0-9.]/g, ''));
+        setInlineUnit('ml');
+      } else if (ew.includes('l') || ew.includes('litre')) {
+        setInlineVal(ew.replace(/[^0-9.]/g, ''));
+        setInlineUnit('L');
+      } else if (ew.includes('kg')) {
+        setInlineVal(ew.replace(/[^0-9.]/g, ''));
+        setInlineUnit('kg');
+      } else if (ew.includes('g')) {
+        setInlineVal(ew.replace(/[^0-9.]/g, ''));
+        setInlineUnit('g');
+      } else {
+        setInlineVal(isLitre ? '500' : '250');
+        setInlineUnit(isLitre ? 'ml' : 'g');
+      }
+    } else {
+      setInlineVal('');
+      setInlineUnit(isLitre ? 'ml' : 'g');
+    }
+
+    setTimeout(() => {
+      const rowEl = document.getElementById(`pos-row-${sweet.id}`);
+      if (rowEl) {
+        rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 40);
   };
 
-  const closeInlineWeight = () => setInlineWeightId(null);
+  const closeInlineWeight = () => {
+    setInlineWeightId(null);
+    setEditingWeight(null);
+  };
 
   const confirmInlineWeight = (sweet) => {
     const num = parseFloat(inlineVal);
     if (isNaN(num) || num <= 0) return;
-    const formatted = inlineUnit === 'kg' ? `${num} kg` : `${num}g`;
-    handleAddSweetToBill(sweet, formatted, 1);
+    let formatted;
+    if (isLitreItem(sweet)) {
+      formatted = (inlineUnit === 'L' || inlineUnit === 'Litre') ? `${num}L` : `${num}ml`;
+    } else {
+      formatted = inlineUnit === 'kg' ? `${num} kg` : `${num}g`;
+    }
+
+    if (editingWeight && editingWeight !== formatted) {
+      setBillItems((prev) => {
+        const withoutOld = prev.filter((i) => !(i.id === sweet.id && i.weight === editingWeight));
+        const price = computeItemPrice(sweet, formatted);
+        const existingIdx = withoutOld.findIndex((i) => i.id === sweet.id && i.weight === formatted);
+        if (existingIdx > -1) {
+          const updated = [...withoutOld];
+          updated[existingIdx] = { ...updated[existingIdx], quantity: updated[existingIdx].quantity + 1 };
+          return updated;
+        }
+        return [
+          ...withoutOld,
+          {
+            id: sweet.id,
+            name: sweet.name,
+            weight: formatted,
+            price,
+            quantity: 1,
+            hsn: sweet.hsn || '2106',
+            image: sweet.image,
+            unit: sweet.unit || '1 Cup',
+          },
+        ];
+      });
+    } else {
+      handleAddSweetToBill(sweet, formatted, 1);
+    }
+
+    setEditingWeight(null);
     setInlineWeightId(null);
   };
 
@@ -484,31 +568,62 @@ export default function BillingCounter() {
   const billSgst = Math.round((billGst / 2) * 100) / 100;
   const billGrandTotal = Math.round(billSubtotal + billGst);
 
-  // Helper to compute exact price for any weight (100g, 250g, 500g, 1 kg, cups, or custom typed grams)
+  // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
   const computeItemPrice = (sweet, weight) => {
     if (!sweet) return 20;
     if (sweet.prices && sweet.prices[weight]) {
       return Number(sweet.prices[weight]);
     }
-    const perKg = Number(sweet.price) || 0;
+    const perUnit = Number(sweet.price) || 0;
+
+    // Check volume (Litre / ml)
+    const isLitre = isLitreItem(sweet) ||
+      (typeof weight === 'string' && (weight.toLowerCase().includes('ml') || weight.toLowerCase().includes('litre') || weight.includes('L') || weight.toLowerCase().endsWith('l')));
+
+    if (isLitre) {
+      const wLower = typeof weight === 'string' ? weight.toLowerCase().trim() : '';
+      if (wLower === '250ml' || wLower === '250 ml') return Math.round(perUnit * 0.25);
+      if (wLower === '500ml' || wLower === '500 ml') return Math.round(perUnit * 0.5);
+      if (wLower === '1l' || wLower === '1 l' || wLower === '1 litre' || wLower === '1000ml') return perUnit;
+      if (wLower === '2l' || wLower === '2 l' || wLower === '2 litre' || wLower === '2000ml') return perUnit * 2;
+
+      // Custom ml: e.g. "350ml", "100ml", "750ml"
+      if (wLower.endsWith('ml')) {
+        const ml = parseFloat(wLower.replace('ml', '').trim());
+        if (!isNaN(ml) && ml > 0) {
+          return Math.round((perUnit * ml) / 1000);
+        }
+      }
+      // Custom Litres: e.g. "1.5L", "2.5 Litre", "3L"
+      if (wLower.endsWith('l') || wLower.includes('litre') || wLower.includes('liter')) {
+        const litres = parseFloat(wLower.replace(/[^0-9.]/g, '').trim());
+        if (!isNaN(litres) && litres > 0) {
+          return Math.round(perUnit * litres);
+        }
+      }
+      return perUnit;
+    }
+
+    // Check weight (kg / g)
     if (sweet.unit === 'kg' || weight?.includes('g') || weight?.includes('kg')) {
-      if (weight === '100g') return Math.round(perKg * 0.1);
-      if (weight === '250g') return Math.round(perKg * 0.25);
-      if (weight === '500g') return Math.round(perKg * 0.5);
-      if (weight === '1kg' || weight === '1 kg') return perKg;
+      if (weight === '100g') return Math.round(perUnit * 0.1);
+      if (weight === '250g') return Math.round(perUnit * 0.25);
+      if (weight === '500g') return Math.round(perUnit * 0.5);
+      if (weight === '1kg' || weight === '1 kg') return perUnit;
+      if (weight === '2kg' || weight === '2 kg') return perUnit * 2;
 
       // Custom grams: e.g. "150g", "350g", "125g"
       if (typeof weight === 'string' && weight.endsWith('g') && !weight.endsWith('kg')) {
         const grams = parseFloat(weight.replace('g', '').trim());
         if (!isNaN(grams) && grams > 0) {
-          return Math.round((perKg * grams) / 1000);
+          return Math.round((perUnit * grams) / 1000);
         }
       }
       // Custom kgs: e.g. "1.5 kg", "2 kg", "0.75 kg"
       if (typeof weight === 'string' && weight.includes('kg')) {
         const kgs = parseFloat(weight.replace('kg', '').trim());
         if (!isNaN(kgs) && kgs > 0) {
-          return Math.round(perKg * kgs);
+          return Math.round(perUnit * kgs);
         }
       }
     }
@@ -518,11 +633,12 @@ export default function BillingCounter() {
     return Number(sweet.price) || 20;
   };
 
-  // Add product to bill with chosen cup/pc/weight quantity
+  // Add product to bill with chosen cup/pc/weight/volume quantity
   const handleAddSweetToBill = (sweet, weight, addQty = 1) => {
     const qty = parseInt(addQty, 10) || 1;
-    const isKg = sweet.unit === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
-    const itemWeight = weight || (isKg ? '250g' : sweet.unit) || '1 Cup';
+    const isKg = isKgItem(sweet);
+    const isLitre = isLitreItem(sweet);
+    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweet.unit) || '1 Cup';
     const price = computeItemPrice(sweet, itemWeight);
 
     setBillItems((prev) => {
@@ -551,8 +667,9 @@ export default function BillingCounter() {
 
   // Product card click:
   const handleSelectProductCard = (sweet, weight) => {
-    const isKg = sweet.unit === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
-    const itemWeight = weight || (isKg ? '250g' : sweet.unit) || '1 Cup';
+    const isKg = isKgItem(sweet);
+    const isLitre = isLitreItem(sweet);
+    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweet.unit) || '1 Cup';
     const isSelected = billItems.some((it) => it.id === sweet.id && it.weight === itemWeight);
     if (!isSelected) {
       handleAddSweetToBill(sweet, itemWeight, 1);
@@ -565,8 +682,9 @@ export default function BillingCounter() {
     const val = parseInt(qty, 10);
     const id = typeof sweetOrId === 'object' ? sweetOrId.id : sweetOrId;
     const sweetObj = typeof sweetOrId === 'object' ? sweetOrId : ALL_BILLING_ITEMS.find((s) => s.id === id);
-    const isKg = sweetObj?.unit === 'kg' || Boolean(sweetObj?.prices && (sweetObj?.prices['250g'] || sweetObj?.prices['500g']));
-    const itemWeight = weight || (isKg ? '250g' : sweetObj?.unit) || '1 Cup';
+    const isKg = isKgItem(sweetObj);
+    const isLitre = isLitreItem(sweetObj);
+    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweetObj?.unit) || '1 Cup';
 
     if (isNaN(val) || val <= 0) {
       handleRemoveBillItem(id, itemWeight);
@@ -1126,12 +1244,16 @@ export default function BillingCounter() {
                 ))}
               </div>
 
-              {/* LIST VIEW (Fast Clean Table - Names, Type Weight & Stepper) */}
+              {/* LIST VIEW (Fast Clean Table - Names, Type Weight/Volume & Stepper) */}
               <div className="pos-sweets-list">
                   {filteredSweets.map((sweet, idx) => {
-                    const isKg = sweet.unit === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
+                    const isKg = isKgItem(sweet);
+                    const isLitre = isLitreItem(sweet);
+                    const isMeasurable = isKg || isLitre;
                     const defaultUnit = isKg
                       ? '250g'
+                      : isLitre
+                      ? '500ml'
                       : sweet.unit === 'Pc'
                       ? '1 Pc'
                       : sweet.unit === 'Pkt'
@@ -1146,17 +1268,22 @@ export default function BillingCounter() {
 
                     const isInlineOpen = inlineWeightId === sweet.id;
                     const inlinePrice = isInlineOpen
-                      ? (inlineUnit === 'kg'
-                          ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
-                          : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000))
+                      ? (isLitre
+                          ? (inlineUnit === 'L' || inlineUnit === 'Litre'
+                              ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
+                              : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000))
+                          : (inlineUnit === 'kg'
+                              ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
+                              : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000)))
                       : 0;
 
                     return (
                       <div
                         key={sweet.id}
+                        id={`pos-row-${sweet.id}`}
                         className={`pos-list-row ${isItemInBill ? 'in-bill' : ''} ${isInlineOpen ? 'weight-open' : ''}`}
                         onClick={() => {
-                          if (isKg) {
+                          if (isMeasurable) {
                             openInlineWeight(sweet);
                           } else {
                             handleSelectProductCard(sweet, defaultUnit);
@@ -1180,14 +1307,14 @@ export default function BillingCounter() {
                           </span>
                         </div>
 
-                        {isKg ? (
+                        {isMeasurable ? (
                           <div className="pos-list-kg-action" onClick={(e) => e.stopPropagation()}>
                             {/* Add button — shows summary if already in bill */}
                             <button
                               type="button"
                               className={`btn-type-weight ${isItemInBill ? 'active' : ''} ${isInlineOpen ? 'popover-open' : ''}`}
                               onClick={(e) => { e.stopPropagation(); openInlineWeight(sweet); }}
-                              title={`Add ${sweet.name} to bill`}
+                              title={`Add ${sweet.name} (${isLitre ? 'ml / L' : 'g / kg'}) to bill`}
                             >
                               {isInlineOpen ? (
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1206,53 +1333,125 @@ export default function BillingCounter() {
                               )}
                             </button>
 
-                            {/* ── Inline weight popover ── */}
+                            {/* ── Inline weight / volume popover ── */}
                             {isInlineOpen && (
                               <div className="inline-weight-popover" onClick={(e) => e.stopPropagation()}>
-                                {/* Unit toggle */}
-                                <div className="iwp-unit-row">
-                                  <button
-                                    type="button"
-                                    className={`iwp-unit-btn ${inlineUnit === 'g' ? 'active' : ''}`}
-                                    onClick={() => setInlineUnit('g')}
-                                  >g</button>
-                                  <button
-                                    type="button"
-                                    className={`iwp-unit-btn ${inlineUnit === 'kg' ? 'active' : ''}`}
-                                    onClick={() => setInlineUnit('kg')}
-                                  >kg</button>
+                                {/* Quick Presets for fast 1-tap selection */}
+                                <div className="iwp-presets">
+                                  {isLitre ? (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '250' && inlineUnit === 'ml' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('250'); setInlineUnit('ml'); }}
+                                      >250ml</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '500' && inlineUnit === 'ml' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('500'); setInlineUnit('ml'); }}
+                                      >500ml</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '1' && (inlineUnit === 'L' || inlineUnit === 'Litre') ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('1'); setInlineUnit('L'); }}
+                                      >1L</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '2' && (inlineUnit === 'L' || inlineUnit === 'Litre') ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('2'); setInlineUnit('L'); }}
+                                      >2L</button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '100' && inlineUnit === 'g' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('100'); setInlineUnit('g'); }}
+                                      >100g</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '250' && inlineUnit === 'g' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('250'); setInlineUnit('g'); }}
+                                      >250g</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '500' && inlineUnit === 'g' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('500'); setInlineUnit('g'); }}
+                                      >500g</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '1' && inlineUnit === 'kg' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('1'); setInlineUnit('kg'); }}
+                                      >1kg</button>
+                                      <button
+                                        type="button"
+                                        className={`iwp-preset-pill ${inlineVal === '2' && inlineUnit === 'kg' ? 'active' : ''}`}
+                                        onClick={() => { setInlineVal('2'); setInlineUnit('kg'); }}
+                                      >2kg</button>
+                                    </>
+                                  )}
                                 </div>
 
-                                {/* Number input */}
-                                <input
-                                  ref={inlineInputRef}
-                                  type="number"
-                                  min="1"
-                                  step="1"
-                                  className="iwp-input"
-                                  value={inlineVal}
-                                  placeholder="0"
-                                  onChange={(e) => setInlineVal(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') confirmInlineWeight(sweet);
-                                    if (e.key === 'Escape') closeInlineWeight();
-                                  }}
-                                />
+                                {/* Custom Input & Unit Toggle */}
+                                <div className="iwp-controls-row">
+                                  <div className="iwp-unit-row">
+                                    {isLitre ? (
+                                      <>
+                                        <button
+                                          type="button"
+                                          className={`iwp-unit-btn ${inlineUnit === 'ml' ? 'active' : ''}`}
+                                          onClick={() => setInlineUnit('ml')}
+                                        >ml</button>
+                                        <button
+                                          type="button"
+                                          className={`iwp-unit-btn ${inlineUnit === 'L' ? 'active' : ''}`}
+                                          onClick={() => setInlineUnit('L')}
+                                        >L</button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button
+                                          type="button"
+                                          className={`iwp-unit-btn ${inlineUnit === 'g' ? 'active' : ''}`}
+                                          onClick={() => setInlineUnit('g')}
+                                        >g</button>
+                                        <button
+                                          type="button"
+                                          className={`iwp-unit-btn ${inlineUnit === 'kg' ? 'active' : ''}`}
+                                          onClick={() => setInlineUnit('kg')}
+                                        >kg</button>
+                                      </>
+                                    )}
+                                  </div>
 
-                                {/* Live price preview */}
-                                {inlineVal && parseFloat(inlineVal) > 0 && (
-                                  <span className="iwp-price">₹{inlinePrice}</span>
-                                )}
+                                  <input
+                                    ref={inlineInputRef}
+                                    type="number"
+                                    min="1"
+                                    step={inlineUnit === 'L' || inlineUnit === 'kg' ? '0.1' : '1'}
+                                    className="iwp-input"
+                                    value={inlineVal}
+                                    placeholder="0"
+                                    onChange={(e) => setInlineVal(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') confirmInlineWeight(sweet);
+                                      if (e.key === 'Escape') closeInlineWeight();
+                                    }}
+                                  />
 
-                                {/* Confirm */}
-                                <button
-                                  type="button"
-                                  className="iwp-confirm-btn"
-                                  disabled={!inlineVal || parseFloat(inlineVal) <= 0}
-                                  onClick={() => confirmInlineWeight(sweet)}
-                                >
-                                  Add to Bill
-                                </button>
+                                  {inlineVal && parseFloat(inlineVal) > 0 && (
+                                    <span className="iwp-price">₹{inlinePrice}</span>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    className="iwp-confirm-btn"
+                                    disabled={!inlineVal || parseFloat(inlineVal) <= 0}
+                                    onClick={() => confirmInlineWeight(sweet)}
+                                  >
+                                    Add to Bill
+                                  </button>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1469,11 +1668,11 @@ export default function BillingCounter() {
                                 className="line-weight-tag clickable"
                                 onClick={() => {
                                   const sweetObj = ALL_BILLING_ITEMS.find((s) => s.id === item.id);
-                                  if (sweetObj && (sweetObj.unit === 'kg' || item.weight?.includes('g') || item.weight?.includes('kg'))) {
+                                  if (sweetObj && (isMeasurableItem(sweetObj) || item.weight?.includes('g') || item.weight?.includes('kg') || item.weight?.includes('ml') || item.weight?.includes('L') || item.weight?.includes('l'))) {
                                     handleOpenWeightModal(sweetObj, item.weight);
                                   }
                                 }}
-                                title="Click to change or retype weight"
+                                title="Click to change or retype weight / volume"
                               >
                                 {item.weight || item.unit || '1 Cup'} ✎
                               </span>

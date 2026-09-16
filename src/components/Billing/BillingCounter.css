@@ -955,18 +955,18 @@
   margin-left: 4px;
 }
 
-/* ── Inline Weight Popover ── */
+/* ── Inline Weight & Volume Popover ── */
 .inline-weight-popover {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   margin-top: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #FFFFFF;
   border: 1.5px solid #6366F1;
   border-radius: 10px;
   box-shadow: 0 4px 18px rgba(99, 102, 241, 0.18);
-  flex-wrap: nowrap;
   width: 100%;
   animation: iwpSlideDown 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -976,6 +976,50 @@
 @keyframes iwpSlideDown {
   from { opacity: 0; transform: translateY(-6px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Quick Presets row (100g, 250g, 500g, 1kg, 2kg or 250ml, 500ml, 1L, 2L) */
+.iwp-presets {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.iwp-preset-pill {
+  padding: 4px 10px;
+  background: #F8FAFC;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.iwp-preset-pill:hover {
+  background: #EEF2FF;
+  border-color: #6366F1;
+  color: #4F46E5;
+  transform: translateY(-1px);
+}
+
+.iwp-preset-pill.active {
+  background: #6366F1;
+  border-color: #4F46E5;
+  color: #FFFFFF;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+}
+
+/* Controls row (unit toggle, custom number input, live price, confirm button) */
+.iwp-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 /* Unit toggle pills */

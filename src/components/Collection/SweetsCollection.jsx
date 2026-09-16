@@ -11,11 +11,27 @@ function SweetCard({ sweet, index }) {
   const isFav = isInWishlist(sweet.id);
 
   const hasPrices = Boolean(sweet.prices);
-  const [selectedWeight, setSelectedWeight] = useState(hasPrices ? '500g' : (sweet.unit || '1 Cup'));
+  const isLitre = (sweet.unit || '').toLowerCase().includes('litre') || (sweet.unit || '').toLowerCase().includes('liter');
+  const availableOptions = hasPrices
+    ? (isLitre
+        ? [
+            { id: '250ml', label: '250ml' },
+            { id: '500ml', label: '500ml' },
+            { id: '1L', label: '1 Litre' },
+            { id: '2L', label: '2 Litre' },
+          ].filter((opt) => sweet.prices[opt.id] || sweet.prices[`${opt.label}`])
+        : SWEET_WEIGHT_OPTIONS)
+    : [];
+
+  const defaultWeight = hasPrices
+    ? (isLitre ? (sweet.prices['500ml'] ? '500ml' : Object.keys(sweet.prices)[0]) : (sweet.prices['500g'] ? '500g' : '250g'))
+    : (sweet.unit || '1 Cup');
+
+  const [selectedWeight, setSelectedWeight] = useState(defaultWeight);
   const [justAdded, setJustAdded] = useState(false);
 
   const currentPrice = hasPrices
-    ? (sweet.prices[selectedWeight] || sweet.prices['500g'] || Object.values(sweet.prices)[0])
+    ? (sweet.prices[selectedWeight] || sweet.prices[selectedWeight === '1L' ? '1 Litre' : selectedWeight] || Object.values(sweet.prices)[0])
     : (sweet.price || 20);
 
   const handleAddToCart = (e) => {
@@ -93,19 +109,21 @@ function SweetCard({ sweet, index }) {
 
         {/* Weight / Unit Selector */}
         <div className="sweet-card__weights">
-          {hasPrices ? SWEET_WEIGHT_OPTIONS.map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              className={`weight-pill ${selectedWeight === opt.id ? 'active' : ''}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedWeight(opt.id);
-              }}
-            >
-              {opt.label}
-            </button>
-          )) : (
+          {availableOptions.length > 0 ? (
+            availableOptions.map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                className={`weight-pill ${selectedWeight === opt.id || selectedWeight === opt.label ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedWeight(opt.id);
+                }}
+              >
+                {opt.label}
+              </button>
+            ))
+          ) : (
             <span className="weight-pill active">{sweet.unit || '1 Cup'}</span>
           )}
         </div>
