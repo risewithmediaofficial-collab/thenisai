@@ -3,176 +3,80 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- 1. Main Storefront Homepage - Krishnagiri, Hosur & Tamil Nadu Flagship Hub -->
+  <!--
+    Thenisai Palkova & Sweets — Sitemap
+    Location: Nattamai Kottai, Krishnagiri, Tamil Nadu 635001 | NH 44 (Bangalore–Salem Highway)
+    Note: This is a Single Page Application (SPA). All page sections are served
+    from the root URL. Fragment identifiers (#) are excluded per sitemap protocol.
+    All canonical content is indexed via the homepage URL.
+  -->
+
+  <!-- MAIN HOMEPAGE — Primary SEO landing page (Krishnagiri, Hosur & Tamil Nadu) -->
   <url>
     <loc>https://thenisai.com/</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+
+    <!-- hreflang alternate links for multi-language audiences -->
     <xhtml:link rel="alternate" hreflang="en-IN" href="https://thenisai.com/" />
     <xhtml:link rel="alternate" hreflang="ta-IN" href="https://thenisai.com/" />
     <xhtml:link rel="alternate" hreflang="kn-IN" href="https://thenisai.com/" />
     <xhtml:link rel="alternate" hreflang="ml-IN" href="https://thenisai.com/" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://thenisai.com/" />
-    
+
+    <!-- Hero Palkova Image -->
     <image:image>
       <image:loc>https://thenisai.com/palkova_hero.jpg</image:loc>
-      <image:title>Thenisai Palkova &amp; Sweets Krishnagiri &amp; Hosur — Best Palkova in Tamil Nadu on NH 44</image:title>
+      <image:title>Thenisai Palkova &amp; Sweets Krishnagiri — Best Palkova in Tamil Nadu on NH 44</image:title>
       <image:caption>Authentic slow-simmered pure cow milk Palkova at Nattamai Kottai, Krishnagiri near HP Petrol Bunk on NH 44 Bangalore–Salem Highway. Serving Krishnagiri, Hosur, Tamil Nadu, Karnataka and Kerala highway commuters.</image:caption>
     </image:image>
-    <image:image>
-      <image:loc>https://thenisai.com/brand_story.jpg</image:loc>
-      <image:title>Thenisai Palkova &amp; Sweets — Tamil Nadu Pure Milk Sweet Heritage Since 2006</image:title>
-      <image:caption>Over two decades of pure milk sweets and authentic confectionery craftsmanship in Krishnagiri &amp; Hosur district, Tamil Nadu.</image:caption>
-    </image:image>
-    <image:image>
-      <image:loc>https://thenisai.com/logo-light.png</image:loc>
-      <image:title>Thenisai Palkova &amp; Sweets Official Logo Badge</image:title>
-      <image:caption>Traditional Tamil confectionery mark of purity and heritage since 2006.</image:caption>
-    </image:image>
-  </url>
 
-  <!-- 2. Sweets Collection & Online Menu (Krishnagiri, Hosur & Tamil Nadu Delivery) -->
-  <url>
-    <loc>https://thenisai.com/#collection</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <!-- Sweets Collection Images -->
     <image:image>
       <image:loc>https://thenisai.com/palkova_card.jpg</image:loc>
-      <image:title>Signature Palkova &amp; Traditional Sweets Collection Krishnagiri &amp; Hosur</image:title>
-      <image:caption>Order fresh Palkova, Milk Peda, Ghee Mysore Pak, Cashew Cake and authentic sweets across Krishnagiri, Hosur, and Tamil Nadu.</image:caption>
+      <image:title>Signature Palkova &amp; Traditional Sweets Collection — Thenisai Krishnagiri &amp; Hosur</image:title>
+      <image:caption>Order fresh Palkova, Milk Peda, Ghee Mysore Pak, Cashew Cake and authentic sweets across Krishnagiri, Hosur, and Tamil Nadu. Delivery available.</image:caption>
     </image:image>
+
     <image:image>
       <image:loc>https://thenisai.com/mysore_pak.jpg</image:loc>
       <image:title>Pure Desi Ghee Mysore Pak — Thenisai Sweets Krishnagiri &amp; Hosur</image:title>
       <image:caption>Melt-in-mouth traditional South Indian Mysore Pak prepared with pure desi ghee for customers in Tamil Nadu, Karnataka and Kerala.</image:caption>
     </image:image>
+
     <image:image>
       <image:loc>https://thenisai.com/kaju_katli.jpg</image:loc>
       <image:title>Cashew Cake (Kaju Katli) — Thenisai Sweets Tamil Nadu</image:title>
-      <image:caption>Premium diamond-cut cashew sweets made from whole royal cashews.</image:caption>
+      <image:caption>Premium diamond-cut cashew sweets made from whole royal cashews. Popular gift box sweet for festivals and travel.</image:caption>
     </image:image>
+
     <image:image>
       <image:loc>https://thenisai.com/badam_halwa.jpg</image:loc>
-      <image:title>Badam Halwa &amp; Traditional Halwa Varieties Krishnagiri Hosur</image:title>
-      <image:caption>Rich almond halwa enriched with pure ghee and saffron.</image:caption>
+      <image:title>Badam Halwa &amp; Traditional Halwa Varieties — Thenisai Krishnagiri Hosur</image:title>
+      <image:caption>Rich almond halwa enriched with pure ghee and saffron. Available at our Krishnagiri store and for delivery in Hosur.</image:caption>
     </image:image>
-  </url>
 
-  <!-- 3. Primary Preference: Authentic Krishnagiri Palkova -->
-  <url>
-    <loc>https://thenisai.com/#palkova</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://thenisai.com/palkova_hero.jpg</image:loc>
-      <image:title>Authentic Pure Cow Milk Palkova Krishnagiri — Famous Tamil Nadu Sweet</image:title>
-      <image:caption>Traditional brass uruli simmering of fresh cow milk and organic sugar in Krishnagiri, Tamil Nadu — zero artificial additives.</image:caption>
-    </image:image>
-  </url>
-
-  <!-- 4. Primary Preference: Hosur & Krishnagiri District Sweet Hub -->
-  <url>
-    <loc>https://thenisai.com/#sweets-hosur</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://thenisai.com/palkova_card.jpg</image:loc>
-      <image:title>Best Palkova &amp; Sweets in Hosur — Fast Delivery in Hosur SIPCOT &amp; Town</image:title>
-      <image:caption>Fresh Palkova and gift sweet boxes delivered across Hosur, SIPCOT industrial area, Bagalur, and Krishnagiri district, Tamil Nadu.</image:caption>
-    </image:image>
-  </url>
-
-  <!-- 5. Primary Preference: Tamil Nadu Traditional Sweets Heritage -->
-  <url>
-    <loc>https://thenisai.com/#tamil-nadu-sweets</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://thenisai.com/mysore_pak.jpg</image:loc>
-      <image:title>Tamil Nadu Traditional Milk Sweets &amp; Pure Desi Ghee Confectionery</image:title>
-      <image:caption>Authentic Tamil Nadu sweet craftsmanship celebrated since 2006. Palkova, Ghee Mysore Pak, Halwa and Laddu varieties.</image:caption>
-    </image:image>
-  </url>
-
-  <!-- 6. Secondary Preference: Karnataka & Bangalore Highway Pitstop (NH 44) -->
-  <url>
-    <loc>https://thenisai.com/#karnataka-bangalore-highway</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    <!-- Brand Story Image -->
     <image:image>
       <image:loc>https://thenisai.com/brand_story.jpg</image:loc>
-      <image:title>NH 44 Sweet Pitstop for Karnataka &amp; Bangalore Travelers</image:title>
-      <image:caption>Located on the Bangalore–Salem Highway (NH 44) near HP Petrol Bunk. Favorite sweet stop for commuters traveling from Bangalore, Electronic City, Attibele and Karnataka.</image:caption>
+      <image:title>Thenisai Palkova &amp; Sweets — Tamil Nadu Pure Milk Sweet Heritage Since 2006</image:title>
+      <image:caption>Over two decades of pure milk sweets and authentic confectionery craftsmanship in Krishnagiri &amp; Hosur district, Tamil Nadu. NH 44 highway sweet landmark.</image:caption>
     </image:image>
-  </url>
 
-  <!-- 7. Tertiary Preference: Kerala Route Highway Commuters & Travel Gift Boxes -->
-  <url>
-    <loc>https://thenisai.com/#kerala-route-highway-pitstop</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://thenisai.com/palkova_hero.jpg</image:loc>
-      <image:title>Traditional Palkova &amp; Sweets for Kerala Highway Travelers on NH 44</image:title>
-      <image:caption>Travel-safe vacuum-sealed Palkova gift boxes for travelers journeying towards Kerala via Salem, Coimbatore, Palakkad and Kochi.</image:caption>
-    </image:image>
-  </url>
-
-  <!-- 8. Store Location, Directions & Contact (Nattamai Kottai, NH 44 Krishnagiri) -->
-  <url>
-    <loc>https://thenisai.com/#contact</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-    <image:image>
-      <image:loc>https://thenisai.com/brand_story.jpg</image:loc>
-      <image:title>Visit Thenisai Palkova &amp; Sweets in Nattamai Kottai Krishnagiri</image:title>
-      <image:caption>Located on NH 44 (Bangalore–Salem Highway) near HP Petrol Bunk. Convenient stop for travelers from Tamil Nadu, Karnataka and Kerala.</image:caption>
-    </image:image>
-  </url>
-
-  <!-- 9. Heritage & Brand Story -->
-  <url>
-    <loc>https://thenisai.com/#story</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- 10. Pure Ingredients Guarantee -->
-  <url>
-    <loc>https://thenisai.com/#ingredients</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <!-- Ingredients Image -->
     <image:image>
       <image:loc>https://thenisai.com/ingredients.jpg</image:loc>
-      <image:title>Pure Cow Milk &amp; Natural Confectionery Ingredients</image:title>
-      <image:caption>100% farm fresh cow milk, pure ghee, and unadulterated ingredients.</image:caption>
+      <image:title>Pure Cow Milk &amp; Natural Confectionery Ingredients — Thenisai Sweets</image:title>
+      <image:caption>100% farm fresh cow milk, pure ghee, and unadulterated ingredients. Zero artificial flavours or preservatives.</image:caption>
     </image:image>
-  </url>
 
-  <!-- 11. Traditional Craftsmanship & Woodfire Kitchen -->
-  <url>
-    <loc>https://thenisai.com/#tradition</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- 12. Verified Customer Reviews from Krishnagiri, Hosur & Highway Travelers -->
-  <url>
-    <loc>https://thenisai.com/#reviews</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.75</priority>
+    <!-- Logo -->
+    <image:image>
+      <image:loc>https://thenisai.com/logo-light.png</image:loc>
+      <image:title>Thenisai Palkova &amp; Sweets Official Logo Badge</image:title>
+      <image:caption>Traditional Tamil confectionery mark of purity and heritage since 2006. Krishnagiri, Tamil Nadu.</image:caption>
+    </image:image>
   </url>
 
 </urlset>
