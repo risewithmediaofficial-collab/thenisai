@@ -7,6 +7,7 @@ import { ALL_BILLING_ITEMS, GST_RATE } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import SideNavbar from '../Nav/SideNavbar';
+import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import './BillingCounter.css';
 
 // Predefined categories for fast sweets & beverages POS filtering
@@ -36,11 +37,12 @@ export default function BillingCounter() {
     navigateTo,
   } = useCart();
 
-  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'inventory'
+  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory'
   const [posTab, setPosTab] = useState(() => {
     const h = window.location.hash.toLowerCase();
     if (h.includes('bills')) return 'my-bills';
     if (h.includes('orders') || h.includes('online')) return 'online-orders';
+    if (h.includes('daily') || h.includes('revenue')) return 'daily-sales';
     if (h.includes('stock') || h.includes('inventory')) return 'inventory';
     return 'register';
   });
@@ -204,6 +206,8 @@ export default function BillingCounter() {
         setPosTab('my-bills');
       } else if (h.includes('orders') || h.includes('online')) {
         setPosTab('online-orders');
+      } else if (h.includes('daily') || h.includes('revenue') || h.includes('sales')) {
+        setPosTab('daily-sales');
       } else {
         setPosTab('register');
       }
@@ -225,6 +229,9 @@ export default function BillingCounter() {
       handleRefreshShiftBills();
     } else if (newTab === 'online-orders') {
       window.location.hash = '#billing/orders';
+    } else if (newTab === 'daily-sales') {
+      window.location.hash = '#billing/daily-sales';
+      handleRefreshShiftBills();
     }
   };
 
@@ -267,6 +274,20 @@ export default function BillingCounter() {
       setTimeout(() => setIsRefreshingBills(false), 400);
     }
   };
+
+  // Consolidated sales for Daily Revenue Report in POS
+  const allSales = useMemo(() => {
+    const map = new Map();
+    (bills || []).forEach((b) => {
+      const key = b.invoiceNumber || b.id;
+      if (key) map.set(key, { ...b, source: b.source || 'counter' });
+    });
+    (orders || []).forEach((o) => {
+      const key = o.invoiceNumber || o.id;
+      if (key && !map.has(key)) map.set(key, o);
+    });
+    return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }, [bills, orders]);
 
   // Stock Modals State
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
@@ -723,12 +744,15 @@ export default function BillingCounter() {
             ? 'pos-bills'
             : posTab === 'online-orders'
             ? 'pos-online'
+            : posTab === 'daily-sales'
+            ? 'pos-daily-sales'
             : 'pos-inventory'
         }
         onSelectSection={(sec) => {
           if (sec === 'pos-register') handleSwitchTab('register');
           else if (sec === 'pos-bills') handleSwitchTab('my-bills');
           else if (sec === 'pos-online') handleSwitchTab('online-orders');
+          else if (sec === 'pos-daily-sales') handleSwitchTab('daily-sales');
           else if (sec === 'pos-inventory') handleSwitchTab('inventory');
         }}
         onOpenRefill={() => {
@@ -969,6 +993,22 @@ export default function BillingCounter() {
                       </div>
                     </div>
                   )}
+
+                  <button
+                    type="button"
+                    className="btn-held-trigger toolbar"
+                    onClick={() => handleSwitchTab('daily-sales')}
+                    title="View Daily Sales & Revenue Settlement"
+                    style={{ marginLeft: 8 }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    <span>Daily Revenue</span>
+                  </button>
                 </div>
               </div>
 
@@ -2268,6 +2308,34 @@ export default function BillingCounter() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </main>
+        )}
+
+        {/* TAB 4: DAILY SALES & REVENUE SETTLEMENT */}
+        {posTab === 'daily-sales' && (
+          <main className="pos-subpage-main" data-lenis-prevent="true">
+            <div className="pos-subpage-inner">
+              <div style={{ marginBottom: 20 }}>
+                <button
+                  type="button"
+                  className="btn-return-pos"
+                  onClick={() => handleSwitchTab('register')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                  <span>Return to Billing Register</span>
+                </button>
+              </div>
+
+              <DailyRevenueReport
+                allSales={allSales}
+                onOpenInvoice={openInvoice}
+                onRefresh={fetchBills}
+              />
             </div>
           </main>
         )}

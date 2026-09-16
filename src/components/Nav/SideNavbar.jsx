@@ -105,7 +105,27 @@ export default function SideNavbar({
                   <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                   <polyline points="17 6 23 6 23 12" />
                 </svg>
-                <span className="nav-text">Sales & Ledger</span>
+                <span className="nav-text">Sales &amp; Ledger</span>
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-nav-item ${currentSection === 'admin-daily-revenue' ? 'active' : ''}`}
+                onClick={() =>
+                  handleNav(() => {
+                    window.location.hash = '#admin';
+                    if (onSelectSection) onSelectSection('admin-daily-revenue');
+                  })
+                }
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
+                </svg>
+                <span className="nav-text">Daily Sales &amp; Revenue</span>
               </button>
             </div>
           ) : (
@@ -172,6 +192,25 @@ export default function SideNavbar({
                 {pendingOnlineCount > 0 && (
                   <span className="nav-badge alert">{pendingOnlineCount} New</span>
                 )}
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-nav-item ${currentSection === 'pos-daily-sales' ? 'active' : ''}`}
+                onClick={() =>
+                  handleNav(() => {
+                    if (onSelectSection) onSelectSection('pos-daily-sales');
+                  })
+                }
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                  <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
+                </svg>
+                <span className="nav-text">Daily Revenue Summary</span>
               </button>
             </div>
           )}

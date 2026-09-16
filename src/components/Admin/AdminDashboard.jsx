@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import SideNavbar from '../Nav/SideNavbar';
+import DailyRevenueReport from './DailyRevenueReport';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -164,6 +165,9 @@ export default function AdminDashboard() {
           else if (sec === 'admin-sales') {
             setActiveTab('sales');
             handleSyncAllSales();
+          } else if (sec === 'admin-daily-revenue') {
+            setActiveTab('daily-revenue');
+            handleSyncAllSales();
           }
         }}
         pendingOnlineCount={pendingOrders.length}
@@ -201,8 +205,16 @@ export default function AdminDashboard() {
       <main className="admin-container" data-lenis-prevent="true">
         {/* KPI Cards Grid */}
         <section className="admin-kpi-grid">
-          <div className="kpi-card revenue">
-            <span className="kpi-label">Total Revenue</span>
+          <div
+            className="kpi-card revenue"
+            onClick={() => setActiveTab('daily-revenue')}
+            title="Click to view Daily Sales & Revenue Breakdown"
+            style={{ cursor: 'pointer' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="kpi-label">Total Revenue</span>
+              <span style={{ fontSize: '10px', color: '#d4a843', fontWeight: 700, letterSpacing: '0.08em' }}>VIEW DAILY ↗</span>
+            </div>
             <div className="kpi-value">₹{totalRevenue.toLocaleString('en-IN')}</div>
             <span className="kpi-sub">Online + Store Counter</span>
           </div>
@@ -861,6 +873,19 @@ export default function AdminDashboard() {
                 </table>
               )}
             </div>
+          </section>
+        )}
+
+        {/* =========================================
+            TAB 3: DAILY SALES & REVENUE REPORT
+           ========================================= */}
+        {activeTab === 'daily-revenue' && (
+          <section className="tab-content admin-daily-revenue-tab">
+            <DailyRevenueReport
+              allSales={allSales}
+              onOpenInvoice={openInvoice}
+              onRefresh={handleSyncAllSales}
+            />
           </section>
         )}
       </main>

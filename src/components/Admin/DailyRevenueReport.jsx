@@ -1,0 +1,776 @@
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { STORE_DETAILS } from '../../data/sweetsData';
+import './DailyRevenueReport.css';
+
+/**
+ * Format timestamp or date string into YYYY-MM-DD
+ */
+function toDateKey(dateVal) {
+  if (!dateVal) return '';
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Format date for display: "16 Sep 2026"
+ */
+function formatDateLabel(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  const dt = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+  if (isNaN(dt.getTime())) return dateStr;
+  return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRefresh }) {
+  const todayKey = toDateKey(new Date());
+
+  // Date Selection: 'today', 'yesterday', 'custom', or 'all'
+  const [dateMode, setDateMode] = useState('today');
+  const [customDate, setCustomDate] = useState(todayKey);
+  const [selectedPaymentFilter, setSelectedPaymentFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isZReportOpen, setIsZReportOpen] = useState(false);
+
+  // Compute targeted date string
+  const activeDateString = useMemo(() => {
+    if (dateMode === 'today') return todayKey;
+    if (dateMode === 'yesterday') {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return toDateKey(yesterday);
+    }
+    if (dateMode === 'custom') return customDate;
+    return ''; // 'all' mode
+  }, [dateMode, todayKey, customDate]);
+
+  // Filter sales for the selected date
+  const daySales = useMemo(() => {
+    return allSales.filter((sale) => {
+      // Check date matching
+      if (activeDateString) {
+        const saleDateKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
+        // Fallback matching against string like "16 Sep 2026"
+        if (saleDateKey !== activeDateString) {
+          // If no timestamp, try orderDate
+          if (sale.orderDate) {
+            const parsed = toDateKey(sale.orderDate);
+            if (parsed !== activeDateString) return false;
+          } else {
+            return false;
+          }
+        }
+      }
+
+      // Check payment filter
+      if (selectedPaymentFilter !== 'all') {
+        const pm = (sale.paymentMethod || '').toLowerCase();
+        if (selectedPaymentFilter === 'cash' && pm !== 'cash') return false;
+        if (selectedPaymentFilter === 'upi' && pm !== 'upi') return false;
+        if (selectedPaymentFilter === 'card' && pm !== 'card') return false;
+      }
+
+      // Check search query (invoice number, customer phone, customer name)
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const inv = (sale.invoiceNumber || '').toLowerCase();
+        const phone = (sale.customer?.phone || '').toLowerCase();
+        const name = (sale.customer?.fullName || '').toLowerCase();
+        if (!inv.includes(q) && !phone.includes(q) && !name.includes(q)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allSales, activeDateString, selectedPaymentFilter, searchTerm]);
+
+  // Key Financial Calculations
+  const grossRevenue = useMemo(() => {
+    return daySales.reduce((acc, s) => acc + (s.grandTotal || 0), 0);
+  }, [daySales]);
+
+  const totalTax = useMemo(() => {
+    return daySales.reduce((acc, s) => {
+      const tax = s.taxBreakdown?.totalTax || 0;
+      return acc + tax;
+    }, 0);
+  }, [daySales]);
+
+  const netSales = grossRevenue - totalTax;
+  const cgstAmount = totalTax / 2;
+  const sgstAmount = totalTax / 2;
+
+  const totalBills = daySales.length;
+  const avgOrderValue = totalBills > 0 ? Math.round(grossRevenue / totalBills) : 0;
+
+  // Tender Breakdown (Cash, UPI, Card)
+  const tenderSummary = useMemo(() => {
+    let cash = 0, upi = 0, card = 0;
+    let cashCount = 0, upiCount = 0, cardCount = 0;
+
+    daySales.forEach((s) => {
+      const amt = s.grandTotal || 0;
+      const pm = (s.paymentMethod || '').toLowerCase();
+      if (pm === 'cash') {
+        cash += amt;
+        cashCount += 1;
+      } else if (pm === 'upi') {
+        upi += amt;
+        upiCount += 1;
+      } else if (pm === 'card') {
+        card += amt;
+        cardCount += 1;
+      } else {
+        // Fallback default to cash if counter sale
+        cash += amt;
+        cashCount += 1;
+      }
+    });
+
+    return {
+      cash: { amount: cash, count: cashCount, percent: grossRevenue > 0 ? Math.round((cash / grossRevenue) * 100) : 0 },
+      upi: { amount: upi, count: upiCount, percent: grossRevenue > 0 ? Math.round((upi / grossRevenue) * 100) : 0 },
+      card: { amount: card, count: cardCount, percent: grossRevenue > 0 ? Math.round((card / grossRevenue) * 100) : 0 },
+    };
+  }, [daySales, grossRevenue]);
+
+  // Hourly Distribution (06:00 to 22:00)
+  const hourlyData = useMemo(() => {
+    const hours = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 22 (10 PM)
+    const stats = {};
+    hours.forEach((h) => {
+      stats[h] = { hour: h, label: `${h > 12 ? h - 12 : h} ${h >= 12 ? 'PM' : 'AM'}`, amount: 0, count: 0 };
+    });
+
+    daySales.forEach((s) => {
+      if (s.createdAt) {
+        const d = new Date(s.createdAt);
+        const h = d.getHours();
+        if (stats[h]) {
+          stats[h].amount += s.grandTotal || 0;
+          stats[h].count += 1;
+        }
+      }
+    });
+
+    return Object.values(stats);
+  }, [daySales]);
+
+  // Peak hourly amount for relative bar heights
+  const maxHourlyAmount = useMemo(() => {
+    return Math.max(...hourlyData.map((h) => h.amount), 1);
+  }, [hourlyData]);
+
+  // Top-Selling Sweets of the Selected Day
+  const topSweets = useMemo(() => {
+    const map = {};
+    daySales.forEach((s) => {
+      (s.items || []).forEach((it) => {
+        const key = it.id || it.name;
+        if (!map[key]) {
+          map[key] = {
+            id: it.id,
+            name: it.name,
+            unit: it.unit || it.weight || 'Pc',
+            price: it.price || 0,
+            quantity: 0,
+            revenue: 0,
+          };
+        }
+        const qty = it.quantity || 1;
+        map[key].quantity += qty;
+        map[key].revenue += (it.price || 0) * qty;
+      });
+    });
+
+    return Object.values(map)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+  }, [daySales]);
+
+  // Cashier Shift Settlement Summary
+  const cashierSettlement = useMemo(() => {
+    const map = {};
+    daySales.forEach((s) => {
+      const cid = s.cashier?.username || s.cashier?.id || 'counter-desk-01';
+      const cname = s.cashier?.name || 'Counter Cashier';
+      const cdesk = s.cashier?.counter || 'Register Desk #01';
+
+      if (!map[cid]) {
+        map[cid] = {
+          id: cid,
+          name: cname,
+          counter: cdesk,
+          bills: 0,
+          total: 0,
+          cash: 0,
+          upi: 0,
+          card: 0,
+        };
+      }
+
+      map[cid].bills += 1;
+      const amt = s.grandTotal || 0;
+      map[cid].total += amt;
+      const pm = (s.paymentMethod || '').toLowerCase();
+      if (pm === 'cash') map[cid].cash += amt;
+      else if (pm === 'upi') map[cid].upi += amt;
+      else if (pm === 'card') map[cid].card += amt;
+      else map[cid].cash += amt;
+    });
+
+    return Object.values(map);
+  }, [daySales]);
+
+  // CSV Export Handler
+  const handleExportCSV = () => {
+    if (daySales.length === 0) {
+      alert('No sales records to export for this date.');
+      return;
+    }
+
+    const headers = ['Invoice #', 'Date & Time', 'Customer', 'Phone', 'Payment Method', 'Cashier', 'Subtotal', 'Tax', 'Grand Total (INR)'];
+    const rows = daySales.map((s) => [
+      `"${s.invoiceNumber || s.id}"`,
+      `"${s.orderDate || ''} ${s.orderTime || ''}"`,
+      `"${s.customer?.fullName || 'Walk-in'}"`,
+      `"${s.customer?.phone || ''}"`,
+      `"${s.paymentMethod || 'Cash'}"`,
+      `"${s.cashier?.name || 'Counter Staff'}"`,
+      s.subtotal || 0,
+      s.taxBreakdown?.totalTax || 0,
+      s.grandTotal || 0,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `Thenisai_Daily_Sales_${activeDateString || 'All'}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Trigger Z-Report Print
+  const handlePrintZReport = () => {
+    window.print();
+  };
+
+  return (
+    <div className="daily-revenue-wrapper">
+      {/* Top Controls & Title */}
+      <div className="daily-revenue__header">
+        <div className="daily-revenue__title-group">
+          <div className="daily-title-badge">
+            <span className="live-dot" />
+            <span>FINANCIAL LEDGER &amp; CLOSING</span>
+          </div>
+          <h2 className="daily-title-h2">Daily Sales &amp; Revenue</h2>
+          <p className="daily-title-sub">
+            Day-End Settlement &amp; Shift Register Audit · Krishnagiri NH 44 Store
+          </p>
+        </div>
+
+        <div className="daily-actions-group">
+          {onRefresh && (
+            <button
+              type="button"
+              className="daily-action-btn secondary"
+              onClick={onRefresh}
+              title="Refresh Live Data"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+              </svg>
+              <span>Sync</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            className="daily-action-btn secondary"
+            onClick={handleExportCSV}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Export CSV</span>
+          </button>
+
+          <button
+            type="button"
+            className="daily-action-btn primary"
+            onClick={() => setIsZReportOpen(true)}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            <span>Print Day Z-Report</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Date Filter Tabs & Selector */}
+      <div className="daily-filter-strip">
+        <div className="date-preset-pills">
+          <button
+            type="button"
+            className={`date-pill ${dateMode === 'today' ? 'active' : ''}`}
+            onClick={() => setDateMode('today')}
+          >
+            Today ({formatDateLabel(todayKey)})
+          </button>
+          <button
+            type="button"
+            className={`date-pill ${dateMode === 'yesterday' ? 'active' : ''}`}
+            onClick={() => setDateMode('yesterday')}
+          >
+            Yesterday
+          </button>
+          <button
+            type="button"
+            className={`date-pill ${dateMode === 'all' ? 'active' : ''}`}
+            onClick={() => setDateMode('all')}
+          >
+            All-Time Consolidated
+          </button>
+        </div>
+
+        <div className="custom-date-picker">
+          <span className="picker-label">Pick Date:</span>
+          <input
+            type="date"
+            className="date-input"
+            value={dateMode === 'custom' ? customDate : activeDateString || todayKey}
+            onChange={(e) => {
+              setCustomDate(e.target.value);
+              setDateMode('custom');
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Primary KPI Metrics Grid */}
+      <section className="revenue-kpi-grid">
+        <div className="rev-card gross">
+          <span className="rev-label">TOTAL GROSS REVENUE</span>
+          <div className="rev-value">₹{grossRevenue.toLocaleString('en-IN')}</div>
+          <span className="rev-foot">{totalBills} Bills / Transactions</span>
+        </div>
+
+        <div className="rev-card net">
+          <span className="rev-label">NET TAXABLE SALES</span>
+          <div className="rev-value">₹{Math.round(netSales).toLocaleString('en-IN')}</div>
+          <span className="rev-foot">Excluding GST</span>
+        </div>
+
+        <div className="rev-card gst">
+          <span className="rev-label">GST 5% TAX COLLECTED</span>
+          <div className="rev-value">₹{Math.round(totalTax).toLocaleString('en-IN')}</div>
+          <span className="rev-foot">CGST (2.5%): ₹{Math.round(cgstAmount)} · SGST: ₹{Math.round(sgstAmount)}</span>
+        </div>
+
+        <div className="rev-card aov">
+          <span className="rev-label">AVERAGE ORDER VALUE</span>
+          <div className="rev-value">₹{avgOrderValue.toLocaleString('en-IN')}</div>
+          <span className="rev-foot">Per Customer Bill</span>
+        </div>
+      </section>
+
+      {/* Tender Breakdown Cards (Cash vs UPI vs Card) */}
+      <section className="tender-section">
+        <h3 className="section-subtitle">Payment Mode &amp; Drawer Tender Breakdown</h3>
+        <div className="tender-cards-grid">
+          <div
+            className={`tender-card cash ${selectedPaymentFilter === 'cash' ? 'selected' : ''}`}
+            onClick={() => setSelectedPaymentFilter((prev) => prev === 'cash' ? 'all' : 'cash')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="tender-top">
+              <span className="tender-badge cash">💵 Cash in Drawer</span>
+              <span className="tender-percent">{tenderSummary.cash.percent}%</span>
+            </div>
+            <div className="tender-amt">₹{tenderSummary.cash.amount.toLocaleString('en-IN')}</div>
+            <div className="tender-count">{tenderSummary.cash.count} Cash Bills (Click to filter)</div>
+          </div>
+
+          <div
+            className={`tender-card upi ${selectedPaymentFilter === 'upi' ? 'selected' : ''}`}
+            onClick={() => setSelectedPaymentFilter((prev) => prev === 'upi' ? 'all' : 'upi')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="tender-top">
+              <span className="tender-badge upi">📱 UPI / QR Code</span>
+              <span className="tender-percent">{tenderSummary.upi.percent}%</span>
+            </div>
+            <div className="tender-amt">₹{tenderSummary.upi.amount.toLocaleString('en-IN')}</div>
+            <div className="tender-count">{tenderSummary.upi.count} UPI Transfers (Click to filter)</div>
+          </div>
+
+          <div
+            className={`tender-card card ${selectedPaymentFilter === 'card' ? 'selected' : ''}`}
+            onClick={() => setSelectedPaymentFilter((prev) => prev === 'card' ? 'all' : 'card')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="tender-top">
+              <span className="tender-badge card">💳 Card / Swipe</span>
+              <span className="tender-percent">{tenderSummary.card.percent}%</span>
+            </div>
+            <div className="tender-amt">₹{tenderSummary.card.amount.toLocaleString('en-IN')}</div>
+            <div className="tender-count">{tenderSummary.card.count} Card Swipes (Click to filter)</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Two-Column Analytics Layout: Hourly Rush & Top Sweets */}
+      <div className="analytics-split-layout">
+        {/* Hourly Rush Chart */}
+        <div className="analytics-card hourly-rush">
+          <div className="card-header-line">
+            <h4 className="card-title">Hourly Sales Flow &amp; Peak Times</h4>
+            <span className="card-tag">6 AM – 10 PM</span>
+          </div>
+
+          <div className="hourly-bars-container">
+            {hourlyData.map((h) => {
+              const heightPercent = h.amount > 0 ? Math.max((h.amount / maxHourlyAmount) * 100, 6) : 2;
+              return (
+                <div key={h.hour} className="hourly-bar-col" title={`${h.label}: ₹${h.amount} (${h.count} bills)`}>
+                  <div className="bar-wrapper">
+                    <div
+                      className={`bar-fill ${h.amount > 0 ? 'active' : ''}`}
+                      style={{ height: `${heightPercent}%` }}
+                    />
+                  </div>
+                  <span className="bar-hour-label">{h.hour}</span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hourly-legend">
+            <span>Morning Counter (6–11 AM)</span>
+            <span>Afternoon (12–4 PM)</span>
+            <span>Evening Rush (5–9 PM)</span>
+          </div>
+        </div>
+
+        {/* Top-Selling Sweets */}
+        <div className="analytics-card top-sweets">
+          <div className="card-header-line">
+            <h4 className="card-title">Top Sweets Contribution</h4>
+            <span className="card-tag">{topSweets.length} Items</span>
+          </div>
+
+          {topSweets.length === 0 ? (
+            <div className="empty-state-notice">
+              <p>No itemized sweets sold yet for this period.</p>
+            </div>
+          ) : (
+            <div className="top-sweets-table-wrap">
+              <table className="top-sweets-table">
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Qty Sold</th>
+                    <th className="text-right">Revenue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topSweets.map((sw, idx) => (
+                    <tr key={sw.id || idx}>
+                      <td>
+                        <div className="sw-name-cell">
+                          <span className="sw-rank">#{idx + 1}</span>
+                          <span className="sw-title">{sw.name}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className="sw-qty-badge">{sw.quantity} {sw.unit}</span>
+                      </td>
+                      <td className="text-right">
+                        <strong className="sw-rev-text">₹{sw.revenue.toLocaleString('en-IN')}</strong>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Cashier Shift Reconciliation */}
+      <section className="cashier-reconciliation-section">
+        <h3 className="section-subtitle">Cashier Shift &amp; Drawer Settlement</h3>
+        <div className="cashier-table-wrap">
+          <table className="cashier-table">
+            <thead>
+              <tr>
+                <th>Cashier Staff</th>
+                <th>Counter Terminal</th>
+                <th>Total Bills</th>
+                <th>Cash in Drawer</th>
+                <th>UPI Collected</th>
+                <th>Card Collected</th>
+                <th className="text-right">Total Shift Sales</th>
+              </tr>
+            </thead>
+            <tbody>
+              {cashierSettlement.map((c) => (
+                <tr key={c.id}>
+                  <td>
+                    <strong>{c.name}</strong>
+                  </td>
+                  <td>
+                    <span className="terminal-badge">{c.counter}</span>
+                  </td>
+                  <td>{c.bills}</td>
+                  <td>
+                    <span className="t-cash">₹{c.cash.toLocaleString('en-IN')}</span>
+                  </td>
+                  <td>
+                    <span className="t-upi">₹{c.upi.toLocaleString('en-IN')}</span>
+                  </td>
+                  <td>
+                    <span className="t-card">₹{c.card.toLocaleString('en-IN')}</span>
+                  </td>
+                  <td className="text-right">
+                    <strong className="t-total">₹{c.total.toLocaleString('en-IN')}</strong>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Daily Bills Transaction Log */}
+      <section className="daily-bills-section">
+        <div className="bills-header-line">
+          <h3 className="section-subtitle">
+            Bills &amp; Invoices Log ({daySales.length} Transactions)
+          </h3>
+          <div className="search-bills-box">
+            <input
+              type="text"
+              placeholder="Search invoice #, customer name or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bills-search-input"
+            />
+          </div>
+        </div>
+
+        {daySales.length === 0 ? (
+          <div className="empty-day-state">
+            <p>No transaction records found matching the selected date and filters.</p>
+          </div>
+        ) : (
+          <div className="daily-bills-table-wrap">
+            <table className="daily-bills-table">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Time</th>
+                  <th>Customer</th>
+                  <th>Payment</th>
+                  <th>Cashier</th>
+                  <th>Items</th>
+                  <th className="text-right">Amount</th>
+                  <th className="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {daySales.map((s) => {
+                  const pm = (s.paymentMethod || 'cash').toLowerCase();
+                  return (
+                    <tr key={s.id || s.invoiceNumber}>
+                      <td>
+                        <strong className="inv-badge">{s.invoiceNumber || s.id}</strong>
+                      </td>
+                      <td>
+                        <span className="time-text">{s.orderTime || (s.createdAt ? new Date(s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-')}</span>
+                      </td>
+                      <td>
+                        <div className="cust-info">
+                          <span>{s.customer?.fullName || 'Walk-in Customer'}</span>
+                          {s.customer?.phone && <small>{s.customer.phone}</small>}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`pm-badge ${pm}`}>{s.paymentMethod || 'Cash'}</span>
+                      </td>
+                      <td>{s.cashier?.name || 'Counter Staff'}</td>
+                      <td>
+                        <span className="items-summary-badge">
+                          {(s.items || []).length} items
+                        </span>
+                      </td>
+                      <td className="text-right">
+                        <strong className="bill-amt">₹{(s.grandTotal || 0).toLocaleString('en-IN')}</strong>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          type="button"
+                          className="view-bill-btn"
+                          onClick={() => onOpenInvoice && onOpenInvoice(s)}
+                          title="View & Print Tax Invoice"
+                        >
+                          View Bill
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Printable Z-Report Modal */}
+      <AnimatePresence>
+        {isZReportOpen && (
+          <div className="z-report-overlay" onClick={() => setIsZReportOpen(false)}>
+            <motion.div
+              className="z-report-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              {/* Modal Top Actions */}
+              <div className="z-report-actions no-print">
+                <button
+                  type="button"
+                  className="z-print-btn"
+                  onClick={handlePrintZReport}
+                >
+                  🖨️ Print Slip
+                </button>
+                <button
+                  type="button"
+                  className="z-close-btn"
+                  onClick={() => setIsZReportOpen(false)}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Thermal Register Slip (80mm Formatted) */}
+              <div className="z-report-slip" id="z-report-print-area">
+                <div className="z-slip-header">
+                  <h3>THENISAI PALKOVA &amp; SWEETS</h3>
+                  <p>Nattamai Kottai, Near HP Petrol Bunk</p>
+                  <p>NH 44, Krishnagiri, Tamil Nadu - 635001</p>
+                  <p>Phone: +91 93448 93547 · GSTIN: 33AABCT9988C1Z4</p>
+                  <div className="slip-divider-double" />
+                  <h4>*** DAILY REGISTER Z-REPORT ***</h4>
+                  <div className="slip-divider" />
+                </div>
+
+                <div className="z-slip-meta">
+                  <div className="slip-row">
+                    <span>Date:</span>
+                    <strong>{formatDateLabel(activeDateString || todayKey)}</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>Generated At:</span>
+                    <span>{new Date().toLocaleTimeString('en-IN')}</span>
+                  </div>
+                  <div className="slip-row">
+                    <span>Register:</span>
+                    <span>Counter Terminal #01</span>
+                  </div>
+                  <div className="slip-row">
+                    <span>Report Type:</span>
+                    <span>Day-End Closing Settlement</span>
+                  </div>
+                </div>
+
+                <div className="slip-divider" />
+
+                <div className="z-slip-section">
+                  <div className="slip-row title">
+                    <strong>FINANCIAL SUMMARY</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>Total Invoices Count:</span>
+                    <strong>{totalBills}</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>Net Taxable Sales:</span>
+                    <span>₹{Math.round(netSales).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="slip-row">
+                    <span>CGST (2.5%):</span>
+                    <span>₹{Math.round(cgstAmount).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="slip-row">
+                    <span>SGST (2.5%):</span>
+                    <span>₹{Math.round(sgstAmount).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="slip-divider" />
+                  <div className="slip-row total">
+                    <strong>GROSS DAY REVENUE:</strong>
+                    <strong>₹{grossRevenue.toLocaleString('en-IN')}</strong>
+                  </div>
+                </div>
+
+                <div className="slip-divider" />
+
+                <div className="z-slip-section">
+                  <div className="slip-row title">
+                    <strong>TENDER RECONCILIATION</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>Cash in Drawer:</span>
+                    <strong>₹{tenderSummary.cash.amount.toLocaleString('en-IN')} ({tenderSummary.cash.count})</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>UPI / QR Received:</span>
+                    <strong>₹{tenderSummary.upi.amount.toLocaleString('en-IN')} ({tenderSummary.upi.count})</strong>
+                  </div>
+                  <div className="slip-row">
+                    <span>Card Received:</span>
+                    <strong>₹{tenderSummary.card.amount.toLocaleString('en-IN')} ({tenderSummary.card.count})</strong>
+                  </div>
+                </div>
+
+                <div className="slip-divider" />
+
+                <div className="z-slip-signatures">
+                  <div className="sig-line">
+                    <p>Cashier Signature</p>
+                  </div>
+                  <div className="sig-line">
+                    <p>Manager Verification</p>
+                  </div>
+                </div>
+
+                <div className="z-slip-footer">
+                  <p>*** END OF DAY Z-REPORT ***</p>
+                  <p>Thenisai Traditional Sweets Since 2006</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
