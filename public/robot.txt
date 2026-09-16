@@ -8,6 +8,7 @@ Allow: /products/
 Allow: /*.jpg$
 Allow: /*.png$
 Allow: /*.svg$
+Allow: /*.ico$
 Allow: /*.css$
 Allow: /*.js$
 

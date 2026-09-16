@@ -13,6 +13,8 @@ Allow: /*.jpeg$
 Allow: /*.png$
 Allow: /*.webp$
 Allow: /*.svg$
+Allow: /*.ico$
+Allow: /site.webmanifest
 Allow: /*.css$
 Allow: /*.js$
 
@@ -41,6 +43,7 @@ Allow: /*.jpg$
 Allow: /*.png$
 Allow: /*.webp$
 Allow: /*.svg$
+Allow: /*.ico$
 
 # Crawl rate
 Crawl-delay: 1
