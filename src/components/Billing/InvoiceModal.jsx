@@ -17,6 +17,16 @@ export default function InvoiceModal() {
     }
   }, [activeInvoice]);
 
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      if (activeInvoice) {
+        closeInvoice();
+      }
+    };
+    window.addEventListener('afterprint', handleAfterPrint);
+    return () => window.removeEventListener('afterprint', handleAfterPrint);
+  }, [activeInvoice, closeInvoice]);
+
   if (!activeInvoice) return null;
 
   const {
