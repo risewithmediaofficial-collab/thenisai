@@ -48,13 +48,11 @@
             gap: 16px;
           }
           .header-logo {
-            width: 64px;
-            height: 64px;
-            background: #ffffff;
-            border-radius: 50%;
-            padding: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            height: 52px;
+            width: auto;
+            max-width: 200px;
             object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
           }
           .header-title h1 {
             font-size: 26px;
@@ -207,7 +205,7 @@
         <div class="container">
           <div class="header">
             <div class="header-brand">
-              <img src="/logo-icon.png" alt="Thenisai Logo" class="header-logo" />
+              <img src="/logo-light.png" alt="Thenisai Palkova &amp; Sweets" class="header-logo" />
               <div class="header-title">
                 <h1>Thenisai Palkova &amp; Sweets</h1>
                 <p>Official XML Sitemap for Search Engines (Google, Bing, Yahoo)</p>
@@ -234,7 +232,7 @@
               <div class="stat-number">
                 <xsl:value-of select="count(sitemap:urlset/sitemap:url/image:image)"/>
               </div>
-              <div class="stat-label">Indexed Images</div>
+              <div class="stat-label">Indexed Brand Logo</div>
             </div>
           </div>
 
@@ -279,18 +277,23 @@
                       <xsl:value-of select="sitemap:lastmod"/>
                     </td>
                     <td>
-                      <xsl:if test="image:image">
-                        <span class="badge badge-images">
-                          <xsl:value-of select="count(image:image)"/> images
-                        </span>
-                        <ul class="image-list">
-                          <xsl:for-each select="image:image">
-                            <li>
-                              <xsl:value-of select="image:title"/>
-                            </li>
-                          </xsl:for-each>
-                        </ul>
-                      </xsl:if>
+                      <xsl:choose>
+                        <xsl:when test="image:image">
+                          <span class="badge badge-images">
+                            <xsl:value-of select="count(image:image)"/> logo
+                          </span>
+                          <ul class="image-list">
+                            <xsl:for-each select="image:image">
+                              <li>
+                                <xsl:value-of select="image:title"/>
+                              </li>
+                            </xsl:for-each>
+                          </ul>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <span style="color: #94a3b8; font-size: 13px;">—</span>
+                        </xsl:otherwise>
+                      </xsl:choose>
                     </td>
                   </tr>
                 </xsl:for-each>
