@@ -44,10 +44,10 @@ jobs:
               git clone https://github.com/risewithmediaofficial-collab/thenisai.git .
             fi
 
-            # Build and deploy Docker containers
-            echo "==> Starting Docker Compose build..."
-            docker compose down || true
-            docker compose up -d --build
+            # Zero-downtime deployment: Build image first while existing container continues serving traffic
+            echo "==> Building updated Docker images in background..."
+            docker compose build
+            docker compose up -d
 
             # Clean up old unused images to save disk space
             echo "==> Pruning dangling images..."
