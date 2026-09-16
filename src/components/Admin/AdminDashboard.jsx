@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -19,9 +19,40 @@ export default function AdminDashboard() {
     navigateTo,
   } = useCart();
 
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'sales'
+  const resolveAdminTabFromHash = () => {
+    const h = window.location.hash.toLowerCase();
+    if (h.includes('daily') || h.includes('revenue')) return 'daily-revenue';
+    if (h.includes('sales') || h.includes('ledger')) return 'sales';
+    return 'orders';
+  };
+
+  const [activeTab, setActiveTab] = useState(resolveAdminTabFromHash);
   const [orderFilter, setOrderFilter] = useState('all'); // 'all' | 'New' | 'Accepted' | 'Dispatched' | 'Delivered'
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Sync hash routing for admin tabs on back/forward/direct link
+  useEffect(() => {
+    const handleAdminHashSync = () => {
+      const h = window.location.hash.toLowerCase();
+      if (!h.startsWith('#admin')) return;
+      setActiveTab(resolveAdminTabFromHash());
+    };
+    window.addEventListener('hashchange', handleAdminHashSync);
+    return () => window.removeEventListener('hashchange', handleAdminHashSync);
+  }, []);
+
+  const handleSwitchAdminTab = (tab) => {
+    setActiveTab(tab);
+    if (tab === 'orders') {
+      window.location.hash = '#admin/orders';
+    } else if (tab === 'sales') {
+      window.location.hash = '#admin/sales';
+      handleSyncAllSales();
+    } else if (tab === 'daily-revenue') {
+      window.location.hash = '#admin/daily-revenue';
+      handleSyncAllSales();
+    }
+  };
 
   // Sales Tab Filters & States
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
@@ -161,16 +192,17 @@ export default function AdminDashboard() {
       <SideNavbar
         currentSection={`admin-${activeTab}`}
         onSelectSection={(sec) => {
-          if (sec === 'admin-orders') setActiveTab('orders');
-          else if (sec === 'admin-sales') {
-            setActiveTab('sales');
-            handleSyncAllSales();
-          } else if (sec === 'admin-daily-revenue') {
-            setActiveTab('daily-revenue');
-            handleSyncAllSales();
-          }
+          if (sec === 'admin-orders') handleSwitchAdminTab('orders');
+          else if (sec === 'admin-sales') handleSwitchAdminTab('sales');
+          else if (sec === 'admin-daily-revenue') handleSwitchAdminTab('daily-revenue');
+          else if (sec === 'pos-register') navigateTo('billing', 'register');
+          else if (sec === 'pos-bills') navigateTo('billing', 'bills');
+          else if (sec === 'pos-online') navigateTo('billing', 'orders');
+          else if (sec === 'pos-daily-sales') navigateTo('billing', 'daily-sales');
+          else if (sec === 'storefront') navigateTo('storefront');
         }}
         pendingOnlineCount={pendingOrders.length}
+        shiftBillsCount={counterSales.length}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
@@ -207,7 +239,7 @@ export default function AdminDashboard() {
         <section className="admin-kpi-grid">
           <div
             className="kpi-card revenue"
-            onClick={() => setActiveTab('daily-revenue')}
+            onClick={() => handleSwitchAdminTab('daily-revenue')}
             title="Click to view Daily Sales & Revenue Breakdown"
             style={{ cursor: 'pointer' }}
           >

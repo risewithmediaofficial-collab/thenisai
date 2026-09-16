@@ -74,9 +74,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     if (onCancel) {
       onCancel();
     } else {
-      window.location.hash = '';
-      window.history.pushState(null, '', window.location.pathname);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      navigateTo('storefront');
     }
   };
 

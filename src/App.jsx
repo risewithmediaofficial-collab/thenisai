@@ -61,7 +61,7 @@ function ModuleLoader({ label = 'Loading Thenisai...' }) {
 }
 
 function AppContent({ isLoaded, handleLoadComplete }) {
-  const { currentView } = useCart();
+  const { currentView, navigateTo } = useCart();
   const { isAdmin, isCashier } = useAuth();
 
   // Route to Admin Dashboard UI (Protected)
@@ -69,7 +69,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     if (!isAdmin) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
-          <StaffLoginModal initialRole="admin" onCancel={() => { window.location.hash = ''; }} />
+          <StaffLoginModal initialRole="admin" onCancel={() => navigateTo('storefront')} />
         </Suspense>
       );
     }
@@ -86,7 +86,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     if (!isCashier) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
-          <StaffLoginModal initialRole="cashier" onCancel={() => { window.location.hash = ''; }} />
+          <StaffLoginModal initialRole="cashier" onCancel={() => navigateTo('storefront')} />
         </Suspense>
       );
     }

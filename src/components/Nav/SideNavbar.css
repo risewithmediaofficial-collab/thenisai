@@ -162,6 +162,10 @@
   width: 20px;
 }
 
+.nav-icon-svg {
+  flex-shrink: 0;
+}
+
 .nav-text {
   flex: 1;
   white-space: nowrap;

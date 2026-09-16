@@ -754,6 +754,10 @@ export default function BillingCounter() {
           else if (sec === 'pos-online') handleSwitchTab('online-orders');
           else if (sec === 'pos-daily-sales') handleSwitchTab('daily-sales');
           else if (sec === 'pos-inventory') handleSwitchTab('inventory');
+          else if (sec === 'admin-orders') navigateTo('admin', 'orders');
+          else if (sec === 'admin-sales') navigateTo('admin', 'sales');
+          else if (sec === 'admin-daily-revenue') navigateTo('admin', 'daily-revenue');
+          else if (sec === 'storefront') navigateTo('storefront');
         }}
         onOpenRefill={() => {
           setRefillTargetSweetId(null);

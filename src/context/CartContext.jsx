@@ -131,8 +131,20 @@ export function CartProvider({ children }) {
     const search = new URLSearchParams(window.location.search);
     const viewParam = search.get('view')?.toLowerCase();
 
-    if (hash.startsWith('#admin') || pathname.endsWith('/admin') || viewParam === 'admin') return 'admin';
-    if (hash.startsWith('#billing') || pathname.endsWith('/billing') || viewParam === 'billing') return 'billing';
+    // 1. Query parameter override
+    if (viewParam === 'admin') return 'admin';
+    if (viewParam === 'billing') return 'billing';
+    if (viewParam === 'storefront' || viewParam === 'store') return 'storefront';
+
+    // 2. Hash routing has HIGHEST priority in SPA
+    if (hash.startsWith('#billing')) return 'billing';
+    if (hash.startsWith('#admin')) return 'admin';
+    if (hash === '#storefront' || hash === '#store' || hash === '#home') return 'storefront';
+
+    // 3. Fallback to pathname (only when no hash specified)
+    if (pathname.endsWith('/billing') || pathname === '/billing') return 'billing';
+    if (pathname.endsWith('/admin') || pathname === '/admin') return 'admin';
+
     return 'storefront';
   };
 
@@ -198,17 +210,24 @@ export function CartProvider({ children }) {
     };
   }, []);
 
-  const navigateTo = (view) => {
+  const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (view === 'admin') {
-      window.location.hash = '#admin';
+      const targetHash = subTab && subTab !== 'orders' ? `#admin/${subTab}` : '#admin';
+      window.location.hash = targetHash;
     } else if (view === 'billing') {
-      window.location.hash = '#billing';
+      const targetHash = subTab && subTab !== 'register' ? `#billing/${subTab}` : '#billing';
+      window.location.hash = targetHash;
     } else {
-      window.location.hash = '';
-      if (window.history.pushState) {
-        window.history.pushState(null, '', window.location.pathname + window.location.search);
+      // Storefront: Clear any path /admin or /billing back to /
+      if (window.location.pathname !== '/') {
+        if (window.history.pushState) {
+          window.history.pushState(null, '', '/');
+        } else {
+          window.location.href = '/';
+        }
       }
+      window.location.hash = '';
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
