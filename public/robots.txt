@@ -5,17 +5,9 @@
 # Website: https://thenisai.com
 # ==============================================================================
 
-# Search Engine Crawlers (Google, Bing, Yahoo, DuckDuckGo, Applebot)
+# All search engine crawlers — allow full public site
 User-agent: *
 Allow: /
-Allow: /#hero
-Allow: /#collection
-Allow: /#palkova
-Allow: /#story
-Allow: /#ingredients
-Allow: /#tradition
-Allow: /#reviews
-Allow: /#contact
 Allow: /*.jpg$
 Allow: /*.jpeg$
 Allow: /*.png$
@@ -24,31 +16,25 @@ Allow: /*.svg$
 Allow: /*.css$
 Allow: /*.js$
 
-# Disallow Private Administrative, Cashier Billing, and Internal APIs
+# Disallow private admin, cashier billing, and internal API paths
 Disallow: /admin
-Disallow: /#admin
 Disallow: /billing
-Disallow: /#billing
 Disallow: /api/
 Disallow: /backend/
 Disallow: /scratch/
-Disallow: /*?*admin*
-Disallow: /*?*billing*
 
-# Dedicated Googlebot Rules
+# Dedicated Googlebot rules
 User-agent: Googlebot
 Allow: /
 Allow: /*.jpg$
 Allow: /*.png$
 Allow: /*.webp$
 Disallow: /admin
-Disallow: /#admin
 Disallow: /billing
-Disallow: /#billing
 Disallow: /api/
 Disallow: /backend/
 
-# Dedicated Googlebot Image Crawler Rules
+# Googlebot Image Crawler
 User-agent: Googlebot-Image
 Allow: /
 Allow: /*.jpg$
@@ -56,9 +42,8 @@ Allow: /*.png$
 Allow: /*.webp$
 Allow: /*.svg$
 
-# Crawl-rate and Host Directives
+# Crawl rate
 Crawl-delay: 1
-Host: https://thenisai.com
 
-# XML Sitemap Index
+# Canonical sitemap location
 Sitemap: https://thenisai.com/sitemap.xml
