@@ -810,7 +810,7 @@ export default function BillingCounter() {
       customer: {
         fullName: customerInfo.fullName.trim() || 'Walk-in Guest',
         phone: customerInfo.phone.trim() || 'Store Counter',
-        email: 'counter@thenisai.com',
+        email: 'counter@thenisaisweets.com',
       },
       shippingAddress: {
         doorNo: 'Store Counter Pick-up',

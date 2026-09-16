@@ -1023,7 +1023,7 @@ export const STORE_DETAILS = {
   phone: '+91 93448 93547',
   secondaryPhone: '+91 86818 58723',
   whatsappNumber: '919344893547',
-  email: 'orders@thenisai.com',
+  email: 'orders@thenisaisweets.com',
   secondaryContact: '+91 86818 58723',
   gstin: '33AABCT9988C1Z4',
   fssai: '12423011000452',

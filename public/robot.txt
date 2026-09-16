@@ -1,5 +1,5 @@
 # robots.txt for Thenisai Sweets & Beverages
-# Website: https://thenisai.com
+# Website: https://thenisaisweets.com
 
 User-agent: *
 Allow: /
@@ -22,4 +22,4 @@ Disallow: /billing
 Crawl-delay: 1
 
 # Sitemap Location
-Sitemap: https://thenisai.com/sitemap.xml
+Sitemap: https://thenisaisweets.com/sitemap.xml

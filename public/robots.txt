@@ -2,7 +2,7 @@
 # Robots.txt for Thenisai Palkova & Sweets (Krishnagiri, Tamil Nadu)
 # Business: Thenisai Palkova & Sweets
 # Location: Nattamai Kottai, Near H.P. Petrol Bunk, NH 44, Krishnagiri - 635001
-# Website: https://thenisai.com
+# Website: https://thenisaisweets.com
 # ==============================================================================
 
 # All search engine crawlers — allow full public site
@@ -49,4 +49,4 @@ Allow: /*.ico$
 Crawl-delay: 1
 
 # Canonical sitemap location
-Sitemap: https://thenisai.com/sitemap.xml
+Sitemap: https://thenisaisweets.com/sitemap.xml
