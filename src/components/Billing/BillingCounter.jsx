@@ -288,6 +288,16 @@ export default function BillingCounter() {
     setEditingWeight(null);
   };
 
+  const handleSwitchInlineUnit = (newUnit) => {
+    if (inlineUnit !== newUnit) {
+      setInlineUnit(newUnit);
+      setInlineVal('');
+      setTimeout(() => {
+        inlineInputRef.current?.focus();
+      }, 50);
+    }
+  };
+
   const confirmInlineWeight = (sweet) => {
     const num = parseFloat(inlineVal);
     if (isNaN(num) || num <= 0) return;
@@ -994,7 +1004,7 @@ export default function BillingCounter() {
             </span>
           </button>
           <div className="mobile-strip-brand">
-            <img src="/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
+            <img src="/images/branding/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
             <div className="mobile-strip-brand-text">
               <strong>THENISAI POS</strong>
               <span>
@@ -1409,12 +1419,12 @@ export default function BillingCounter() {
                                         <button
                                           type="button"
                                           className={`iwp-unit-btn ${inlineUnit === 'ml' ? 'active' : ''}`}
-                                          onClick={() => setInlineUnit('ml')}
+                                          onClick={() => handleSwitchInlineUnit('ml')}
                                         >ml</button>
                                         <button
                                           type="button"
                                           className={`iwp-unit-btn ${inlineUnit === 'L' ? 'active' : ''}`}
-                                          onClick={() => setInlineUnit('L')}
+                                          onClick={() => handleSwitchInlineUnit('L')}
                                         >L</button>
                                       </>
                                     ) : (
@@ -1422,12 +1432,12 @@ export default function BillingCounter() {
                                         <button
                                           type="button"
                                           className={`iwp-unit-btn ${inlineUnit === 'g' ? 'active' : ''}`}
-                                          onClick={() => setInlineUnit('g')}
+                                          onClick={() => handleSwitchInlineUnit('g')}
                                         >g</button>
                                         <button
                                           type="button"
                                           className={`iwp-unit-btn ${inlineUnit === 'kg' ? 'active' : ''}`}
-                                          onClick={() => setInlineUnit('kg')}
+                                          onClick={() => handleSwitchInlineUnit('kg')}
                                         >kg</button>
                                       </>
                                     )}

@@ -8,7 +8,7 @@ const frames = [
     label: 'The Source',
     subheading: 'Pure Farm Milk',
     caption: 'Fresh whole milk collected daily at dawn from local heritage farms in Tamil Nadu, preserving unmatched rich sweetness and purity.',
-    img: '/ingredients.jpg',
+    img: '/images/story/ingredients.jpg',
   },
   {
     id: 'frame-2',
@@ -16,7 +16,7 @@ const frames = [
     label: 'The Process',
     subheading: 'Slow Stirred with Love',
     caption: 'Patiently stirred for 4+ continuous hours over gentle fire with pure country cow ghee, allowing milk solids to naturally coalesce.',
-    img: '/brand_story.jpg',
+    img: '/images/story/brand_story.jpg',
   },
   {
     id: 'frame-3',
@@ -24,7 +24,7 @@ const frames = [
     label: 'The Craft',
     subheading: 'Melt-in-Mouth Perfection',
     caption: 'Finished to rich, velvety goodness without artificial essence or preservatives — authentic South Indian Palkova as tradition intended.',
-    img: '/palkova_hero.jpg',
+    img: '/images/products/palkova_hero.jpg',
   },
 ];
 

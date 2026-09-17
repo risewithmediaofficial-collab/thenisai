@@ -256,7 +256,7 @@ export default function InvoiceModal() {
         {/* Header */}
         <div className="inv-header">
           <div className="inv-brand-with-logo">
-            <img src="/logo.png" alt="Thenisai Sweets Logo" className="inv-brand-logo-img" />
+            <img src="/images/branding/logo.png" alt="Thenisai Sweets Logo" className="inv-brand-logo-img" />
             <div className="inv-brand">
               <h1 className="inv-brand-name">{STORE_DETAILS.brandName}</h1>
               <p className="inv-brand-sub">{STORE_DETAILS.tagline}</p>

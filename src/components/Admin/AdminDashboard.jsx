@@ -237,7 +237,7 @@ export default function AdminDashboard() {
             </span>
           </button>
           <div className="mobile-strip-brand">
-            <img src="/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
+            <img src="/images/branding/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
             <div className="mobile-strip-brand-text">
               <strong>THENISAI ADMIN</strong>
               <span>Orders &amp; Sales Portal</span>

@@ -66,8 +66,8 @@ const INITIAL_ORDERS = [
     customer: { fullName: 'Anitha Sundaram', phone: '9845012398', email: 'anitha.s@gmail.com' },
     shippingAddress: { doorNo: '72, 4th Cross', street: 'Koramangala 5th Block', landmark: 'Near Sony World Signal', city: 'Bengaluru', state: 'Karnataka', pincode: '560095' },
     items: [
-      { id: '13', name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு', weight: '500g', price: 340, quantity: 1, image: '/palkova_card.jpg', hsn: '2106' },
-      { id: 'palkova', name: 'Signature Palkova — பாரம்பரிய பால்கோவா', weight: '1kg', price: 680, quantity: 1, image: '/palkova_card.jpg', hsn: '0402' },
+      { id: '13', name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு', weight: '500g', price: 340, quantity: 1, image: '/images/products/palkova_card.jpg', hsn: '2106' },
+      { id: 'palkova', name: 'Signature Palkova — பாரம்பரிய பால்கோவா', weight: '1kg', price: 680, quantity: 1, image: '/images/products/palkova_card.jpg', hsn: '0402' },
     ],
     subtotal: 1020,
     taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },
@@ -87,7 +87,7 @@ const INITIAL_ORDERS = [
     customer: { fullName: 'Karthik Raja', phone: '9789012345', email: 'karthik.raja@yahoo.com' },
     shippingAddress: { doorNo: '18/B', street: 'Sipcot Phase 2', landmark: 'Opposite Ashok Leyland', city: 'Hosur', state: 'Tamil Nadu', pincode: '635126' },
     items: [
-      { id: 'mysore-pak', name: 'Ghee Mysore Pak — நெய் மைசூர் பாக்', weight: '500g', price: 380, quantity: 2, image: '/mysore_pak.jpg', hsn: '2106' },
+      { id: 'mysore-pak', name: 'Ghee Mysore Pak — நெய் மைசூர் பாக்', weight: '500g', price: 380, quantity: 2, image: '/images/products/mysore_pak.jpg', hsn: '2106' },
     ],
     subtotal: 760,
     taxBreakdown: { rate: 5, totalTax: 38, cgst: 19, sgst: 19, igst: 0, isInterState: false },
@@ -106,8 +106,8 @@ const INITIAL_ORDERS = [
     customer: { fullName: 'Venkatesh Raman', phone: '9840123456', email: 'venkat@gmail.com' },
     shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'Krishnagiri', state: 'Tamil Nadu', pincode: '635001' },
     items: [
-      { id: 'palkova', name: 'Signature Palkova', weight: '500g', price: 340, quantity: 2, image: '/palkova_card.jpg', hsn: '0402' },
-      { id: 'mysore-pak', name: 'Royal Mysore Pak', weight: '250g', price: 190, quantity: 1, image: '/mysore_pak.jpg', hsn: '2106' },
+      { id: 'palkova', name: 'Signature Palkova', weight: '500g', price: 340, quantity: 2, image: '/images/products/palkova_card.jpg', hsn: '0402' },
+      { id: 'mysore-pak', name: 'Royal Mysore Pak', weight: '250g', price: 190, quantity: 1, image: '/images/products/mysore_pak.jpg', hsn: '2106' },
     ],
     subtotal: 870,
     taxBreakdown: { rate: 5, totalTax: 43.5, cgst: 21.75, sgst: 21.75, igst: 0, isInterState: false },
@@ -126,7 +126,7 @@ const INITIAL_ORDERS = [
     customer: { fullName: 'Lakshmi Narayanan', phone: '9443219876', email: 'lakshmi@outlook.com' },
     shippingAddress: { doorNo: '12', street: 'Anna Nagar West', landmark: '', city: 'Chennai', state: 'Tamil Nadu', pincode: '600040' },
     items: [
-      { id: 'kaju-katli', name: 'Kaju Katli — காஜு கத்லி', weight: '1kg', price: 1020, quantity: 1, image: '/kaju_katli.jpg', hsn: '2106' },
+      { id: 'kaju-katli', name: 'Kaju Katli — காஜு கத்லி', weight: '1kg', price: 1020, quantity: 1, image: '/images/products/kaju_katli.jpg', hsn: '2106' },
     ],
     subtotal: 1020,
     taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },

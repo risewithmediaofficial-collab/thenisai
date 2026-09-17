@@ -33,7 +33,7 @@ function InteractivePalkova() {
   // Load authentic food photo as high-res PBR texture
   const texture = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    const tex = loader.load('/palkova_card.jpg');
+    const tex = loader.load('/images/products/palkova_card.jpg');
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;

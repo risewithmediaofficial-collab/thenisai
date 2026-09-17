@@ -42,7 +42,7 @@ const inventorySchema = new mongoose.Schema({
   batchDate: String,
   batchNote: String,
   batchCode: String,
-  image: { type: String, default: '/palkova_card.jpg' },
+  image: { type: String, default: '/images/products/palkova_card.jpg' },
   category: { type: String, default: 'Ghee Sweets' },
   hsn: { type: String, default: '2106' },
 });
@@ -139,19 +139,19 @@ async function seedIfEmpty() {
   }
 
   const defaultItems = [
-    { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/products/tea.svg' },
-    { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/products/coffee.svg' },
-    { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/products/filter-coffee.svg' },
-    { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', pricePerKg: 20, hsn: '0401', category: 'Hot Beverages', image: '/products/milk.svg' },
-    { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/products/horlicks.svg' },
-    { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/products/boost.svg' },
-    { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', pricePerKg: 25, hsn: '0401', category: 'Hot Beverages', image: '/products/badam-milk.svg' },
-    { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Traditional ragi brew', pricePerKg: 25, hsn: '1904', category: 'Hot Beverages', image: '/products/ragi-malt.svg' },
-    { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh lemon tea brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/products/lemon-tea.svg' },
-    { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/products/sugu-tea.svg' },
-    { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/products/magu-tea.svg' },
-    { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh ginger & lemon brew', pricePerKg: 20, hsn: '2202', category: 'Hot Beverages', image: '/products/ginger-lemon.svg' },
-    { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, hsn: '1905', category: 'Snacks & Savories', image: '/products/vada.svg' },
+    { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/tea.svg' },
+    { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/images/products/coffee.svg' },
+    { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/images/products/filter-coffee.svg' },
+    { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', pricePerKg: 20, hsn: '0401', category: 'Hot Beverages', image: '/images/products/milk.svg' },
+    { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/images/products/horlicks.svg' },
+    { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/images/products/boost.svg' },
+    { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', pricePerKg: 25, hsn: '0401', category: 'Hot Beverages', image: '/images/products/badam-milk.svg' },
+    { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Traditional ragi brew', pricePerKg: 25, hsn: '1904', category: 'Hot Beverages', image: '/images/products/ragi-malt.svg' },
+    { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh lemon tea brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/lemon-tea.svg' },
+    { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/sugu-tea.svg' },
+    { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/magu-tea.svg' },
+    { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh ginger & lemon brew', pricePerKg: 20, hsn: '2202', category: 'Hot Beverages', image: '/images/products/ginger-lemon.svg' },
+    { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, hsn: '1905', category: 'Snacks & Savories', image: '/images/products/vada.svg' },
   ];
 
   // Purge any obsolete sweet items
@@ -462,7 +462,7 @@ app.post('/api/inventory/products', async (req, res) => {
     stockKg: parseFloat(initialStockKg) || 10,
     minThreshold: 8,
     batchDate: 'Today', batchNote: 'New kitchen batch',
-    image: image || '/palkova_card.jpg',
+    image: image || '/images/products/palkova_card.jpg',
     category: category || 'Ghee Sweets',
     hsn: '2106',
   });

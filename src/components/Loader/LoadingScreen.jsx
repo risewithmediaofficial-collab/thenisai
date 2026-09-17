@@ -60,7 +60,7 @@ export default function LoadingScreen({ onComplete }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
-              <img src="/logo-icon.png" alt="Thenisai Logo" className="loader__emblem-img" />
+              <img src="/images/branding/logo-icon.png" alt="Thenisai Logo" className="loader__emblem-img" />
             </motion.div>
 
             {/* Logo letters grouped by word for responsive wrapping */}

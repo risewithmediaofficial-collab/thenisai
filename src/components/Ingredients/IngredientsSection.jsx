@@ -67,7 +67,7 @@ export default function IngredientsSection() {
   return (
     <section className="ingredients section">
       <div className="ingredients__bg-img">
-        <img src="/ingredients.jpg" alt="Ingredients" loading="lazy" />
+        <img src="/images/story/ingredients.jpg" alt="Ingredients" loading="lazy" />
         <div className="ingredients__bg-overlay" />
       </div>
 

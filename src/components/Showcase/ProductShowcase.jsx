@@ -79,7 +79,7 @@ export default function ProductShowcase() {
             style={{ transformStyle: 'preserve-3d' }}
           >
             <img
-              src="/sweet_box.jpg"
+              src="/images/products/sweet_box.jpg"
               alt="Thenisai premium sweet box"
               className="showcase__img"
               loading="lazy"

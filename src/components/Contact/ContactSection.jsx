@@ -89,7 +89,7 @@ export default function ContactSection() {
     <section id="contact" className="contact section">
       {/* Background image */}
       <div className="contact__bg">
-        <img src="/palkova_hero.jpg" alt="" className="contact__bg-img" loading="lazy" aria-hidden="true" />
+        <img src="/images/products/palkova_hero.jpg" alt="" className="contact__bg-img" loading="lazy" aria-hidden="true" />
         <div className="contact__bg-overlay" />
       </div>
 
