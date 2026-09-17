@@ -960,13 +960,13 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  margin-top: 6px;
-  padding: 10px 12px;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 14px 16px;
   background: #FFFFFF;
-  border: 1.5px solid #6366F1;
-  border-radius: 10px;
-  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.18);
+  border: 2px solid #6366F1;
+  border-radius: 12px;
+  box-shadow: 0 6px 22px rgba(99, 102, 241, 0.20);
   width: 100%;
   animation: iwpSlideDown 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
@@ -978,26 +978,110 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Quick Presets row (100g, 250g, 500g, 1kg, 2kg or 250ml, 500ml, 1L, 2L) */
-.iwp-presets {
+@keyframes iwpFadeIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Product Weight/Volume Entry Popover ── */
+.iwp-step-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  animation: iwpFadeIn 0.15s ease-out;
+}
+
+.iwp-entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 2px;
+}
+
+/* Enlarged touch-friendly MODE section */
+.iwp-mode-tabs {
   display: flex;
   align-items: center;
   gap: 6px;
+  background: #F8FAFC;
+  padding: 5px 8px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+}
+
+.iwp-mode-tabs-label {
+  font-size: 0.90rem;
+  font-weight: 900;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-right: 6px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.iwp-tab-btn {
+  padding: 6px 16px;
+  min-height: 38px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1.5px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iwp-tab-btn:hover {
+  background: #EEF2FF;
+  border-color: #6366F1;
+  color: #4338CA;
+  transform: translateY(-1px);
+}
+
+.iwp-tab-btn.active {
+  background: #4F46E5;
+  border-color: #4338CA;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+  font-weight: 900;
+}
+
+.iwp-tab-btn.mode-rs-tab.active {
+  background: #D97706;
+  border-color: #B45309;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.35);
+  font-weight: 900;
+}
+
+/* Quick Presets row */
+.iwp-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .iwp-preset-pill {
-  padding: 4px 10px;
+  padding: 7px 14px;
   background: #F8FAFC;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 6px;
-  color: #334155;
-  font-size: 0.75rem;
-  font-weight: 700;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  color: #1E293B;
+  font-size: 0.88rem;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.14s ease;
   font-family: 'JetBrains Mono', monospace;
   white-space: nowrap;
+  min-height: 38px;
 }
 
 .iwp-preset-pill:hover {
@@ -1011,70 +1095,81 @@
   background: #6366F1;
   border-color: #4F46E5;
   color: #FFFFFF;
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
 }
 
-/* Controls row (unit toggle, custom number input, live price, confirm button) */
+.iwp-preset-pill.rs-pill {
+  border-color: #FDE68A;
+  background: #FFFDF5;
+  color: #92400E;
+}
+
+.iwp-preset-pill.rs-pill:hover {
+  background: #FEF3C7;
+  border-color: #D97706;
+  color: #78350F;
+}
+
+.iwp-preset-pill.rs-pill.active {
+  background: #D97706;
+  border-color: #B45309;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
+}
+
+/* Controls row (input with affix, live price/quantity, confirm button) */
 .iwp-controls-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* Unit toggle pills */
-.iwp-unit-row {
+.iwp-input-wrapper {
   display: flex;
-  border-radius: 7px;
+  align-items: center;
+  background: #FFFFFF;
+  border: 2px solid #CBD5E1;
+  border-radius: 8px;
   overflow: hidden;
-  border: 1.5px solid #E2E8F0;
-  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
 
-.iwp-unit-btn {
-  padding: 5px 10px;
-  background: #F8FAFC;
-  border: none;
-  color: #64748B;
-  font-size: 0.76rem;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.12s ease;
-  line-height: 1;
-  font-family: 'JetBrains Mono', monospace;
+.iwp-input-wrapper:focus-within {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
 }
 
-.iwp-unit-btn + .iwp-unit-btn {
-  border-left: 1.5px solid #E2E8F0;
-}
-
-.iwp-unit-btn.active {
-  background: #6366F1;
-  color: #FFFFFF;
-}
-
-.iwp-unit-btn:hover:not(.active) {
+.iwp-input-affix {
+  padding: 0 10px;
+  font-size: 0.95rem;
+  font-weight: 900;
   background: #EEF2FF;
   color: #4F46E5;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  border-right: 1.5px solid #CBD5E1;
+  user-select: none;
 }
 
 /* Number input */
 .iwp-input {
   flex: 1;
-  min-width: 60px;
-  max-width: 90px;
-  height: 32px;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 7px;
-  padding: 0 8px;
+  min-width: 90px;
+  max-width: 120px;
+  height: 40px;
+  border: none;
+  padding: 0 10px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: 1.15rem;
+  font-weight: 800;
   color: #0F172A;
-  background: #F8FAFC;
+  background: transparent;
   outline: none;
   text-align: center;
-  transition: border-color 0.15s ease;
   -moz-appearance: textfield;
 }
 
@@ -1084,31 +1179,43 @@
   margin: 0;
 }
 
-.iwp-input:focus {
-  border-color: #6366F1;
-  background: #FFFFFF;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-/* Live price badge */
+/* Live price pill */
 .iwp-price {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.82rem;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #15803D;
+  background: #DCFCE7;
+  border: 1.5px solid #86EFAC;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Live rupee calculated quantity badge */
+.iwp-rs-preview {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #16A34A;
+  color: #B45309;
+  background: #FEF3C7;
+  border: 1.5px solid #FDE68A;
+  padding: 6px 12px;
+  border-radius: 8px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 /* Confirm button */
 .iwp-confirm-btn {
-  height: 32px;
-  padding: 0 12px;
+  height: 40px;
+  padding: 0 18px;
   border: none;
-  border-radius: 7px;
+  border-radius: 8px;
   background: #6366F1;
   color: #FFFFFF;
-  font-size: 0.76rem;
+  font-size: 0.88rem;
   font-weight: 800;
   cursor: pointer;
   white-space: nowrap;
@@ -1120,7 +1227,7 @@
 
 .iwp-confirm-btn:hover:not(:disabled) {
   background: #4F46E5;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.38);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.38);
   transform: translateY(-1px);
 }
 
@@ -1989,7 +2096,7 @@
 /* Pay Mode Buttons */
 .pos-pay-modes {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin-top: 4px;
 }
@@ -1999,12 +2106,13 @@
   border: 1px solid #CBD5E1;
   border-radius: 8px;
   padding: 8px 4px;
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   font-weight: 700;
   color: #475569;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  white-space: nowrap;
 }
 
 .pay-mode-btn:hover {
@@ -2016,6 +2124,275 @@
   background: #0F172A;
   color: #FFFFFF;
   border-color: #0F172A;
+}
+
+.pay-mode-btn.split-pay-btn.active {
+  background: linear-gradient(135deg, #78350F 0%, #B45309 100%);
+  color: #FFFFFF;
+  border-color: #78350F;
+  box-shadow: 0 2px 8px rgba(180, 83, 9, 0.25);
+}
+
+/* Split Payment Interactive Configuration Box */
+.pos-split-box {
+  background: #FFFDF8;
+  border: 1.5px solid #FDE68A;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 8px;
+  box-shadow: 0 4px 14px rgba(180, 83, 9, 0.08);
+  animation: posSplitFadeIn 0.2s ease-out;
+}
+
+@keyframes posSplitFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pos-split-box__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed #FDE68A;
+}
+
+.split-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.split-icon-badge {
+  font-size: 1.1rem;
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.split-box-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #92400E;
+}
+
+.split-box-sub {
+  display: block;
+  font-size: 0.68rem;
+  color: #B45309;
+}
+
+.split-presets {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-split-preset {
+  background: #FFFFFF;
+  border: 1px solid #FDE68A;
+  color: #92400E;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-split-preset:hover {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+}
+
+.pos-split-inputs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.split-input-card {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  transition: all 0.2s ease;
+}
+
+.split-input-card.cash-card {
+  border-color: #BBF7D0;
+  background: #F0FDF4;
+}
+
+.split-input-card.upi-card {
+  border-color: #BFDBFE;
+  background: #EFF6FF;
+}
+
+.split-input-card.cash-card.is-active-input {
+  border-color: #16A34A;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.18);
+}
+
+.split-input-card.upi-card.is-active-input {
+  border-color: #2563EB;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+}
+
+.split-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.split-card-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.split-rem-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #047857;
+  background: #D1FAE5;
+  border: 1px solid #A7F3D0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  animation: pulseTag 1.5s infinite;
+}
+
+.split-input-card.upi-card .split-rem-tag {
+  color: #1D4ED8;
+  background: #DBEAFE;
+  border-color: #BFDBFE;
+}
+
+@keyframes pulseTag {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.03); }
+}
+
+.split-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.split-currency-symbol {
+  position: absolute;
+  left: 8px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #64748B;
+  pointer-events: none;
+}
+
+.split-num-input {
+  width: 100%;
+  padding: 6px 26px 6px 22px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0F172A;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: #FFFFFF;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.split-num-input:focus {
+  border-color: #64748B;
+}
+
+.split-input-clear {
+  position: absolute;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: #CBD5E1;
+  color: #475569;
+  border-radius: 50%;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.split-input-clear:hover {
+  background: #94A3B8;
+  color: #FFFFFF;
+}
+
+.split-field-hint {
+  font-size: 0.65rem;
+  color: #64748B;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.split-field-hint .rem-hint {
+  color: #0F766E;
+  font-weight: 700;
+}
+
+.split-input-card.upi-card .split-field-hint .rem-hint {
+  color: #1D4ED8;
+  font-weight: 700;
+}
+
+/* Status Banner */
+.pos-split-status-banner {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  display: flex;
+  align-items: center;
+}
+
+.pos-split-status-banner.status-ok {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+}
+
+.pos-split-status-banner.status-pending {
+  background: #FFFBEB;
+  border: 1px solid #FCD34D;
+  color: #92400E;
+}
+
+.pos-split-status-banner.status-excess {
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+}
+
+.split-status-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 /* Pos Mode Summary Card (Auto-Calculated Cart Settle) */
@@ -2800,6 +3177,12 @@
   background: #F5F3FF;
   color: #5B21B6;
   border: 1px solid #DDD6FE;
+}
+
+.payment-pill.split {
+  background: #FFFBEB;
+  color: #92400E;
+  border: 1px solid #FCD34D;
 }
 
 .shift-amount {
@@ -5851,5 +6234,610 @@
     padding: 16px;
   }
 }
+
+/* =========================================================
+   PRICE OVERRIDE & INVENTORY MANAGEMENT STYLES
+   ========================================================= */
+
+.clickable-rate {
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+.clickable-rate:hover {
+  background: rgba(212, 168, 67, 0.15);
+  color: #b45309;
+}
+
+.price-overridden-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+
+/* Modal Backdrop & Box */
+.pos-price-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.pos-price-modal-box {
+  background: #ffffff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.pos-price-modal-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: #f8fafc;
+}
+
+.pos-price-modal-header .modal-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #d4a843;
+  margin-bottom: 4px;
+}
+
+.pos-price-modal-header .modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.pos-price-modal-header .modal-subtitle {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
+}
+
+.btn-modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.btn-modal-close:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.pos-price-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.price-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.comp-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+}
+
+.comp-card.new {
+  border-color: #d4a843;
+  background: #fffdf7;
+}
+
+.comp-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.comp-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.comp-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.comp-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border: 2px solid #d4a843;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.currency-prefix {
+  font-size: 16px;
+  font-weight: 700;
+  color: #d4a843;
+}
+
+.custom-price-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  background: transparent;
+}
+
+.price-diff-badge {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.price-diff-badge.discount {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.price-diff-badge.markup {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.price-diff-badge.neutral {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.override-reason-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.override-reason-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.reason-quick-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.btn-reason-pill {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-weight: 500;
+}
+
+.btn-reason-pill:hover {
+  background: #e2e8f0;
+}
+
+.btn-reason-pill.active {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.custom-reason-input {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.custom-reason-input:focus {
+  border-color: #d4a843;
+}
+
+.pos-price-modal-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn-modal-cancel {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.btn-modal-cancel:hover {
+  background: #f1f5f9;
+}
+
+.btn-modal-save {
+  background: linear-gradient(135deg, #d4a843, #b8860b);
+  border: none;
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(212, 168, 67, 0.35);
+  transition: all 0.15s;
+}
+
+.btn-modal-save:hover {
+  opacity: 0.95;
+  transform: translateY(-1px);
+}
+
+/* Unavailable row in inventory */
+.row-unavailable {
+  background: #fcfcfc;
+  opacity: 0.75;
+}
+
+.status-badge.masked-out {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Out of Stock Card Masking in Catalog */
+.pos-product-card.is-unavailable {
+  position: relative;
+  opacity: 0.55;
+  filter: grayscale(0.7);
+  pointer-events: auto;
+}
+
+.pos-product-card.is-unavailable:hover {
+  opacity: 0.8;
+  filter: grayscale(0.3);
+}
+
+.out-of-stock-mask-banner {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+.btn-card-reactivate {
+  background: #22c55e;
+  color: #ffffff;
+  border: none;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Quick "Off" button on POS list card to immediately mask depleted stock */
+.btn-pos-quick-off {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-left: 6px;
+  transition: all 0.15s ease;
+  opacity: 0.6;
+}
+
+.btn-pos-quick-off:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+  opacity: 1;
+  transform: scale(1.04);
+}
+
+/* POS List Row - Out of Stock state */
+.pos-list-row.is-out-of-stock {
+  background: #f8fafc !important;
+  border: 1px dashed #cbd5e1 !important;
+  opacity: 0.72;
+  cursor: not-allowed;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.pos-list-row.is-out-of-stock:hover {
+  opacity: 0.95;
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+.pos-out-of-stock-pill {
+  display: inline-flex;
+  align-items: center;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.pos-list-stock-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.btn-reactivate-stock {
+  display: inline-flex;
+  align-items: center;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 4px rgba(22, 163, 74, 0.25);
+  white-space: nowrap;
+}
+
+.btn-reactivate-stock:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(21, 128, 61, 0.35);
+}
+
+/* Clickable rate in active bill line items */
+.clickable-rate {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 1px 4px;
+  transition: all 0.15s ease;
+}
+
+.clickable-rate:hover {
+  background: #fef3c7;
+  color: #92400e;
+  outline: 1px dashed #f59e0b;
+}
+
+.price-overridden-badge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* ==========================================================================
+   PRODUCTS & INVENTORY MASTER TABLE (MATCHING ADMIN CATALOG TABLE)
+   ========================================================================== */
+.inventory-table-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.inventory-table th {
+  background: #f8fafc;
+  padding: 12px 16px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.inventory-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  color: #334155;
+  font-size: 0.85rem;
+}
+
+.inventory-table tr:hover td {
+  background: #f8fafc;
+}
+
+.stock-toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  border: none;
+  background: none;
+  padding: 4px;
+}
+
+.toggle-track {
+  width: 42px;
+  height: 22px;
+  border-radius: 12px;
+  background: #cbd5e1;
+  position: relative;
+  transition: background 0.25s ease;
+}
+
+.toggle-track.active {
+  background: #16a34a;
+}
+
+.toggle-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-track.active .toggle-thumb {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.toggle-label.active {
+  color: #16a34a;
+}
+
+.toggle-label.inactive {
+  color: #dc2626;
+}
+
+.btn-inline-price {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  transition: all 0.2s ease;
+}
+
+.btn-inline-price:hover {
+  background: #e2e8f0;
+}
+
+.btn-delete-prod {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-prod:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+
+
 
 

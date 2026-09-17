@@ -60,7 +60,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
         onSuccess(res.user);
       } else {
         if (res.user?.role === 'admin') {
-          navigateTo(initialRole === 'cashier' ? 'billing' : 'admin');
+          navigateTo('admin');
         } else if (res.user?.role === 'cashier') {
           navigateTo('billing');
         }

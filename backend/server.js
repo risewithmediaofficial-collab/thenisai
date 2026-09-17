@@ -34,17 +34,46 @@ const staffSchema = new mongoose.Schema({
 const inventorySchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  nameTa: String,
   tagline: String,
   description: String,
   pricePerKg: { type: Number, default: 500 },
+  unitPrice: { type: Number, default: 0 },
+  unit: { type: String, default: 'kg' },
+  itemNumber: Number,
   stockKg: { type: Number, default: 0 },
   minThreshold: { type: Number, default: 8 },
+  isInactive: { type: Boolean, default: false },
+  isCustom: { type: Boolean, default: false },
   batchDate: String,
   batchNote: String,
   batchCode: String,
   image: { type: String, default: '/images/products/palkova_card.jpg' },
   category: { type: String, default: 'Ghee Sweets' },
   hsn: { type: String, default: '2106' },
+});
+
+const priceOverrideLogSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  invoiceNumber: { type: String, default: 'COUNTER-DRAFT' },
+  cashier: {
+    id: String,
+    name: String,
+    role: String,
+    username: String,
+    counter: String,
+  },
+  productId: String,
+  productName: String,
+  weightOrUnit: String,
+  originalRate: Number,
+  customRate: Number,
+  difference: Number,
+  quantity: { type: Number, default: 1 },
+  reason: { type: String, default: 'Customer Request / Special Rate' },
+  timestamp: { type: Number, default: Date.now },
+  dateStr: String,
+  timeStr: String,
 });
 
 const otpSchema = new mongoose.Schema({
@@ -93,6 +122,10 @@ const billSchema = new mongoose.Schema({
   taxBreakdown: mongoose.Schema.Types.Mixed,
   grandTotal: Number,
   paymentMethod: String,
+  splitCash: Number,
+  splitUpi: Number,
+  paymentDetails: mongoose.Schema.Types.Mixed,
+  upiUtr: String,
   cashier: {
     id: String,
     name: String,
@@ -115,12 +148,48 @@ const customerSchema = new mongoose.Schema({
   lastLogin: { type: Number, default: Date.now },
 });
 
+const deletedBillSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  invoiceNumber: String,
+  billData: mongoose.Schema.Types.Mixed,
+  deletedBy: {
+    id: String,
+    name: String,
+    username: String,
+    role: String,
+  },
+  deletionReason: { type: String, required: true },
+  deletedAt: { type: Number, default: Date.now },
+  expiresAt: { type: Number, default: () => Date.now() + 30 * 24 * 60 * 60 * 1000 }, // 30 days retention
+});
+
+const activityLogSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  actionType: { type: String, required: true }, // 'BILL_DELETED' | 'BILL_RESTORED' | 'BILL_PERMANENTLY_PURGED' | 'PRICE_OVERRIDE' | 'PRODUCT_ADDED' | 'PRODUCT_PRICE_UPDATED' | 'PRODUCT_DELETED' | 'STOCK_TOGGLED'
+  performedBy: {
+    id: String,
+    name: String,
+    username: String,
+    role: String,
+  },
+  targetId: String,
+  targetName: String,
+  details: mongoose.Schema.Types.Mixed,
+  reason: String,
+  timestamp: { type: Number, default: Date.now },
+  dateStr: String,
+  timeStr: String,
+});
+
 const Staff = mongoose.model('Staff', staffSchema);
 const Inventory = mongoose.model('Inventory', inventorySchema);
 const Otp = mongoose.model('Otp', otpSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Bill = mongoose.model('Bill', billSchema);
 const Customer = mongoose.model('Customer', customerSchema);
+const PriceOverrideLog = mongoose.model('PriceOverrideLog', priceOverrideLogSchema);
+const DeletedBill = mongoose.model('DeletedBill', deletedBillSchema);
+const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
 // In-memory sessions store
 const activeSessions = new Map();
@@ -139,29 +208,25 @@ async function seedIfEmpty() {
   }
 
   const defaultItems = [
-    { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/tea.svg' },
-    { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/images/products/coffee.svg' },
-    { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, hsn: '0901', category: 'Hot Beverages', image: '/images/products/filter-coffee.svg' },
-    { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', pricePerKg: 20, hsn: '0401', category: 'Hot Beverages', image: '/images/products/milk.svg' },
-    { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/images/products/horlicks.svg' },
-    { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', pricePerKg: 25, hsn: '1901', category: 'Hot Beverages', image: '/images/products/boost.svg' },
-    { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', pricePerKg: 25, hsn: '0401', category: 'Hot Beverages', image: '/images/products/badam-milk.svg' },
-    { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Traditional ragi brew', pricePerKg: 25, hsn: '1904', category: 'Hot Beverages', image: '/images/products/ragi-malt.svg' },
-    { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh lemon tea brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/lemon-tea.svg' },
-    { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/sugu-tea.svg' },
-    { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', pricePerKg: 20, hsn: '0902', category: 'Hot Beverages', image: '/images/products/magu-tea.svg' },
-    { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh ginger & lemon brew', pricePerKg: 20, hsn: '2202', category: 'Hot Beverages', image: '/images/products/ginger-lemon.svg' },
-    { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, hsn: '1905', category: 'Snacks & Savories', image: '/images/products/vada.svg' },
+    { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/tea.svg' },
+    { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0901', category: 'Hot Beverages', image: '/images/products/coffee.svg' },
+    { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0901', category: 'Hot Beverages', image: '/images/products/filter-coffee.svg' },
+    { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0401', category: 'Hot Beverages', image: '/images/products/milk.svg' },
+    { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1901', category: 'Hot Beverages', image: '/images/products/horlicks.svg' },
+    { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1901', category: 'Hot Beverages', image: '/images/products/boost.svg' },
+    { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '0401', category: 'Hot Beverages', image: '/images/products/badam-milk.svg' },
+    { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Traditional ragi brew', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1904', category: 'Hot Beverages', image: '/images/products/ragi-malt.svg' },
+    { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh lemon tea brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/lemon-tea.svg' },
+    { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/sugu-tea.svg' },
+    { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/magu-tea.svg' },
+    { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh ginger & lemon brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '2202', category: 'Hot Beverages', image: '/images/products/ginger-lemon.svg' },
+    { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, unitPrice: 20, unit: '1 Pc', hsn: '1905', category: 'Snacks & Savories', image: '/images/products/vada.svg' },
   ];
-
-  // Purge any obsolete sweet items
-  const validIds = defaultItems.map((d) => d.id);
-  await Inventory.deleteMany({ id: { $nin: validIds } });
 
   for (const it of defaultItems) {
     await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
   }
-  console.log('[Seed] Inventory verified/seeded for exclusive 13 items');
+  console.log('[Seed] Inventory verified/seeded for standard items');
 }
 
 // ============================================================
@@ -448,27 +513,192 @@ app.post('/api/inventory/stock', async (req, res) => {
 });
 
 app.post('/api/inventory/products', async (req, res) => {
-  const { name, tagline, description, pricePerKg, initialStockKg, image, category } = req.body;
-  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+  try {
+    const {
+      id: customId,
+      name,
+      nameTa,
+      tagline,
+      description,
+      price,
+      pricePerKg,
+      unitPrice,
+      unit,
+      initialStockKg,
+      stockKg,
+      minThreshold,
+      image,
+      category,
+      hsn,
+    } = req.body;
 
-  const existing = await Inventory.findOne({ id });
-  if (existing) return res.status(400).json({ success: false, message: 'A sweet with this name already exists.' });
+    const id = customId || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-  const newProduct = await Inventory.create({
-    id, name,
-    tagline: tagline || 'Traditional specialty',
-    description: description || 'Fresh handcrafted sweet',
-    pricePerKg: parseFloat(pricePerKg) || 500,
-    stockKg: parseFloat(initialStockKg) || 10,
-    minThreshold: 8,
-    batchDate: 'Today', batchNote: 'New kitchen batch',
-    image: image || '/images/products/palkova_card.jpg',
-    category: category || 'Ghee Sweets',
-    hsn: '2106',
-  });
+    const existing = await Inventory.findOne({ id });
+    if (existing) return res.status(400).json({ success: false, message: 'A product with this identifier or name already exists.' });
 
-  const inventory = await Inventory.find({});
-  res.json({ success: true, message: `Added '${name}' to catalog.`, product: newProduct, inventory });
+    const finalPrice = parseFloat(price || unitPrice || pricePerKg) || 500;
+    const newProduct = await Inventory.create({
+      id,
+      name,
+      nameTa: nameTa || '',
+      tagline: tagline || 'Traditional specialty',
+      description: description || 'Fresh handcrafted item',
+      pricePerKg: finalPrice,
+      unitPrice: finalPrice,
+      unit: unit || 'kg',
+      stockKg: parseFloat(stockKg || initialStockKg) || 10,
+      minThreshold: parseFloat(minThreshold) || 8,
+      isInactive: false,
+      isCustom: true,
+      batchDate: 'Today',
+      batchNote: 'New item addition',
+      image: image || '/images/products/palkova_card.jpg',
+      category: category || 'Ghee Sweets',
+      hsn: hsn || '2106',
+    });
+
+    const inventory = await Inventory.find({});
+    console.log(`[Inventory] Added product '${name}' (${id}) to catalog.`);
+    res.json({ success: true, message: `Added '${name}' to catalog.`, product: newProduct, inventory });
+  } catch (err) {
+    console.error('[Inventory] Error adding product:', err);
+    res.status(500).json({ success: false, message: 'Failed to add product: ' + err.message });
+  }
+});
+
+// Toggle stock availability (Off the stock / Inactive masking & reactivation)
+app.patch('/api/inventory/:id/availability', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isInactive } = req.body;
+
+    let item = await Inventory.findOne({ id });
+    if (!item) {
+      // If not yet in Inventory collection (e.g. from static sweetsData), insert record
+      item = await Inventory.create({
+        id,
+        name: id,
+        isInactive: Boolean(isInactive),
+      });
+    } else {
+      item.isInactive = Boolean(isInactive);
+      await item.save();
+    }
+
+    console.log(`[Inventory] Product ${item.name || id} availability set to: ${item.isInactive ? '🔴 INACTIVE (Out of Stock)' : '🟢 ACTIVE (In Stock)'}`);
+    res.json({ success: true, isInactive: item.isInactive, item });
+  } catch (err) {
+    console.error('[Inventory] Error toggling availability:', err);
+    res.status(500).json({ success: false, message: 'Failed to update availability: ' + err.message });
+  }
+});
+
+// Update master catalog unit price
+app.patch('/api/inventory/:id/price', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { price } = req.body;
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice) || numPrice < 0) {
+      return res.status(400).json({ success: false, message: 'Invalid price value.' });
+    }
+
+    let item = await Inventory.findOne({ id });
+    if (!item) {
+      item = await Inventory.create({
+        id,
+        name: id,
+        pricePerKg: numPrice,
+        unitPrice: numPrice,
+      });
+    } else {
+      item.pricePerKg = numPrice;
+      item.unitPrice = numPrice;
+      await item.save();
+    }
+
+    console.log(`[Inventory] Product ${item.name || id} master price updated to: ₹${numPrice}`);
+    res.json({ success: true, message: `Price updated to ₹${numPrice}`, price: numPrice, item });
+  } catch (err) {
+    console.error('[Inventory] Error updating price:', err);
+    res.status(500).json({ success: false, message: 'Failed to update price: ' + err.message });
+  }
+});
+
+// Delete product from catalog
+app.delete('/api/inventory/products/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Inventory.findOneAndDelete({ id });
+    console.log(`[Inventory] Deleted product ${id}`);
+    res.json({ success: true, message: `Product ${id} removed from catalog.`, deleted });
+  } catch (err) {
+    console.error('[Inventory] Error deleting product:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete product: ' + err.message });
+  }
+});
+
+// ============================================================
+// 3B. PRICE OVERRIDE AUDIT LOGGING (FOR ADMIN VISIBILITY)
+// ============================================================
+
+app.post('/api/audit/price-override', async (req, res) => {
+  try {
+    const entries = Array.isArray(req.body) ? req.body : [req.body];
+    const createdLogs = [];
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    for (const entry of entries) {
+      if (!entry.productName && !entry.productId) continue;
+      const log = await PriceOverrideLog.create({
+        id: entry.id || `ovr-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+        invoiceNumber: entry.invoiceNumber || 'COUNTER-DRAFT',
+        cashier: entry.cashier || { name: 'Counter Staff', role: 'cashier', counter: 'Desk 01' },
+        productId: entry.productId || '',
+        productName: entry.productName || entry.item || 'Unknown Sweet',
+        weightOrUnit: entry.weightOrUnit || entry.weight || 'unit',
+        originalRate: Number(entry.originalRate || entry.originalPrice || 0),
+        customRate: Number(entry.customRate || entry.customPrice || entry.overriddenPrice || 0),
+        difference: Number(entry.difference ?? (Number(entry.customRate || entry.customPrice || 0) - Number(entry.originalRate || entry.originalPrice || 0))),
+        quantity: Number(entry.quantity || 1),
+        reason: entry.reason || 'Counter Customer Negotiation / Discount',
+        timestamp: entry.timestamp || Date.now(),
+        dateStr: entry.dateStr || dateStr,
+        timeStr: entry.timeStr || timeStr,
+      });
+      createdLogs.push(log);
+    }
+
+    console.log(`[Audit] Recorded ${createdLogs.length} price override event(s)`);
+    res.json({ success: true, count: createdLogs.length, logs: createdLogs });
+  } catch (err) {
+    console.error('[Audit] Error recording price override log:', err);
+    res.status(500).json({ success: false, message: 'Failed to record audit log: ' + err.message });
+  }
+});
+
+app.get('/api/audit/price-overrides', async (req, res) => {
+  try {
+    const { cashierId, limit = 500 } = req.query;
+    const filter = {};
+    if (cashierId && cashierId !== 'all') {
+      filter.$or = [
+        { 'cashier.id': cashierId },
+        { 'cashier.username': cashierId },
+        { 'cashier.name': cashierId },
+      ];
+    }
+
+    const logs = await PriceOverrideLog.find(filter).sort({ timestamp: -1 }).limit(Number(limit));
+    res.json({ success: true, logs });
+  } catch (err) {
+    console.error('[Audit] Error fetching price override logs:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch audit logs' });
+  }
 });
 
 // ============================================================
@@ -608,6 +838,253 @@ app.get('/api/bills', async (req, res) => {
     res.status(500).json({ success: false, message: 'Failed to fetch bills' });
   }
 });
+
+// ─── Delete Bill (Move to 30-Day Recycle Bin) ──────────────────────────────
+app.delete('/api/bills/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason, deletedBy } = req.body || {};
+
+    if (!reason || !reason.trim()) {
+      return res.status(400).json({ success: false, message: 'A mandatory deletion reason is required.' });
+    }
+
+    const bill = await Bill.findOne({
+      $or: [{ id }, { invoiceNumber: id }],
+    });
+
+    if (!bill) {
+      return res.status(404).json({ success: false, message: 'Bill not found in active bills.' });
+    }
+
+    const billObj = bill.toObject ? bill.toObject() : bill;
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const activeDeletedBy = (deletedBy && deletedBy.id) ? deletedBy : {
+      id: deletedBy?.id || (deletedBy?.role === 'cashier' ? 'staff-2' : 'staff-1'),
+      username: deletedBy?.username || (deletedBy?.role === 'cashier' ? 'cashier' : 'admin'),
+      name: (deletedBy?.name && deletedBy.name !== 'Staff') ? deletedBy.name : (deletedBy?.role === 'cashier' ? 'M. Kannan' : 'S. Ramanathan'),
+      role: deletedBy?.role || 'admin',
+    };
+
+    // Store in Recycle Bin with 30 days retention
+    const deletedRecord = await DeletedBill.create({
+      id: billObj.id,
+      invoiceNumber: billObj.invoiceNumber,
+      billData: billObj,
+      deletedBy: activeDeletedBy,
+      deletionReason: reason.trim(),
+      deletedAt: Date.now(),
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+    });
+
+    // Remove from active bills
+    await Bill.deleteOne({ id: billObj.id });
+
+    // Log Activity for Admin
+    await ActivityLog.create({
+      id: `act-del-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_DELETED',
+      performedBy: activeDeletedBy,
+      targetId: billObj.invoiceNumber,
+      targetName: `Invoice #${billObj.invoiceNumber} (₹${billObj.grandTotal})`,
+      details: {
+        invoiceNumber: billObj.invoiceNumber,
+        grandTotal: billObj.grandTotal,
+        itemsCount: billObj.items?.length || 0,
+        customer: billObj.customer,
+        paymentMethod: billObj.paymentMethod,
+      },
+      reason: reason.trim(),
+      timestamp: Date.now(),
+      dateStr,
+      timeStr,
+    });
+
+    console.log(`[Recycle Bin] Bill ${billObj.invoiceNumber} moved to recycle bin. Reason: ${reason}`);
+    res.json({ success: true, message: `Invoice #${billObj.invoiceNumber} moved to Admin Recycle Bin (30-day retention).`, deletedRecord });
+  } catch (err) {
+    console.error('[Recycle Bin] Error deleting bill:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete bill: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Fetch deleted bills (Auto-purges expired > 30 days) ───────
+app.get('/api/recycle-bin/bills', async (req, res) => {
+  try {
+    const now = Date.now();
+    // Auto purge expired items older than 30 days
+    await DeletedBill.deleteMany({ expiresAt: { $lt: now } });
+
+    const deletedBills = await DeletedBill.find({}).sort({ deletedAt: -1 });
+    res.json({ success: true, deletedBills });
+  } catch (err) {
+    console.error('[Recycle Bin] Error fetching deleted bills:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch recycle bin' });
+  }
+});
+
+// ─── Recycle Bin: Restore Bill back to active sales ──────────────────────────
+app.post('/api/recycle-bin/bills/:id/restore', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { restoredBy } = req.body || {};
+
+    const deletedRecord = await DeletedBill.findOne({
+      $or: [{ id }, { invoiceNumber: id }],
+    });
+
+    if (!deletedRecord) {
+      return res.status(404).json({ success: false, message: 'Deleted bill not found in Recycle Bin.' });
+    }
+
+    const billData = deletedRecord.billData;
+    // Re-insert into active bills collection
+    await Bill.create(billData);
+    // Remove from recycle bin
+    await DeletedBill.deleteOne({ id: deletedRecord.id });
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const activeRestoredBy = (restoredBy && restoredBy.id) ? restoredBy : {
+      id: restoredBy?.id || 'staff-1',
+      username: restoredBy?.username || 'admin',
+      name: (restoredBy?.name && restoredBy.name !== 'Staff') ? restoredBy.name : 'S. Ramanathan',
+      role: restoredBy?.role || 'admin',
+    };
+
+    // Log Activity for Admin
+    await ActivityLog.create({
+      id: `act-rst-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_RESTORED',
+      performedBy: activeRestoredBy,
+      targetId: billData.invoiceNumber,
+      targetName: `Invoice #${billData.invoiceNumber} (₹${billData.grandTotal})`,
+      details: {
+        invoiceNumber: billData.invoiceNumber,
+        grandTotal: billData.grandTotal,
+      },
+      reason: 'Restored from Recycle Bin by Administrator',
+      timestamp: Date.now(),
+      dateStr,
+      timeStr,
+    });
+
+    console.log(`[Recycle Bin] Restored bill ${billData.invoiceNumber} to active bills.`);
+    res.json({ success: true, message: `Invoice #${billData.invoiceNumber} successfully restored!`, bill: billData });
+  } catch (err) {
+    console.error('[Recycle Bin] Error restoring bill:', err);
+    res.status(500).json({ success: false, message: 'Failed to restore bill: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Permanent Purge ───────────────────────────────────────────
+app.delete('/api/recycle-bin/bills/:id/permanent', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { purgedBy } = req.body || {};
+
+    const deletedRecord = await DeletedBill.findOneAndDelete({
+      $or: [{ id }, { invoiceNumber: id }],
+    });
+
+    if (!deletedRecord) {
+      return res.status(404).json({ success: false, message: 'Record not found in Recycle Bin.' });
+    }
+
+    const activePurgedBy = (purgedBy && purgedBy.id) ? purgedBy : {
+      id: purgedBy?.id || 'staff-1',
+      username: purgedBy?.username || 'admin',
+      name: (purgedBy?.name && purgedBy.name !== 'Staff') ? purgedBy.name : 'S. Ramanathan',
+      role: purgedBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-prg-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_PERMANENTLY_PURGED',
+      performedBy: activePurgedBy,
+      targetId: deletedRecord.invoiceNumber,
+      targetName: `Invoice #${deletedRecord.invoiceNumber}`,
+      details: { invoiceNumber: deletedRecord.invoiceNumber },
+      reason: 'Permanently deleted by Administrator',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Permanently deleted invoice #${deletedRecord.invoiceNumber}`);
+    res.json({ success: true, message: `Invoice #${deletedRecord.invoiceNumber} permanently removed.` });
+  } catch (err) {
+    console.error('[Recycle Bin] Error permanently deleting bill:', err);
+    res.status(500).json({ success: false, message: 'Failed to permanently delete bill' });
+  }
+});
+
+// ─── Generic Admin Activity Logging ─────────────────────────────────────────
+app.get('/api/audit/activities', async (req, res) => {
+  try {
+    const { limit = 300, type } = req.query;
+    const filter = {};
+    if (type && type !== 'all') {
+      filter.actionType = type;
+    }
+    const activities = await ActivityLog.find(filter).sort({ timestamp: -1 }).limit(Number(limit));
+
+    // Normalize and sanitize any legacy records where performedBy was generic 'Staff' or missing id
+    const sanitized = activities.map((act) => {
+      const p = act.performedBy || {};
+      if (!p.id || p.name === 'Staff' || p.id === 'staff-1' || p.username === 'admin') {
+        const isCashier = act.actionType === 'PRICE_OVERRIDE' && p.role === 'cashier' && p.id !== 'staff-1';
+        act.performedBy = isCashier
+          ? { id: p.id || 'staff-2', username: p.username || 'cashier', name: p.name && p.name !== 'Staff' ? p.name : 'M. Kannan', role: 'cashier', title: 'Counter Cashier' }
+          : { id: 'staff-1', username: 'admin', name: p.name && p.name !== 'Staff' ? p.name : 'S. Ramanathan', role: 'admin', title: 'Kitchen Operations Head' };
+      }
+      return act;
+    });
+
+    res.json({ success: true, activities: sanitized });
+  } catch (err) {
+    console.error('[Audit] Error fetching activities:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch activities' });
+  }
+});
+
+app.post('/api/audit/activity', async (req, res) => {
+  try {
+    const entry = req.body;
+    const now = new Date();
+    let performer = entry.performedBy;
+    if (!performer || performer.name === 'Staff' || !performer.id || performer.id === 'staff-1' || performer.username === 'admin') {
+      const isCashier = entry.actionType === 'PRICE_OVERRIDE' && performer?.role === 'cashier' && performer?.id !== 'staff-1';
+      performer = isCashier
+        ? { id: performer?.id || 'staff-2', username: performer?.username || 'cashier', name: (performer?.name && performer.name !== 'Staff') ? performer.name : 'M. Kannan', role: 'cashier', title: 'Counter Cashier' }
+        : { id: 'staff-1', username: 'admin', name: (performer?.name && performer.name !== 'Staff') ? performer.name : 'S. Ramanathan', role: 'admin', title: 'Kitchen Operations Head' };
+    }
+
+    const created = await ActivityLog.create({
+      id: entry.id || `act-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: entry.actionType || 'GENERIC_ACTIVITY',
+      performedBy: performer,
+      targetId: entry.targetId || '',
+      targetName: entry.targetName || '',
+      details: entry.details || {},
+      reason: entry.reason || '',
+      timestamp: entry.timestamp || Date.now(),
+      dateStr: entry.dateStr || now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: entry.timeStr || now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+    res.json({ success: true, activity: created });
+  } catch (err) {
+    console.error('[Audit] Error recording activity:', err);
+    res.status(500).json({ success: false, message: 'Failed to record activity' });
+  }
+});
+
 
 // ─── Offline Batch Sync ──────────────────────────────────────────────────────
 app.post('/api/bills/sync-batch', async (req, res) => {

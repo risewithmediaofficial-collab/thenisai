@@ -6,50 +6,81 @@ const AuthContext = createContext();
 const AUTH_TOKEN_KEY = 'thenisai_auth_token';
 const AUTH_USER_KEY = 'thenisai_auth_user';
 const ADMIN_SESSION_KEY = 'thenisai_admin_session_unlocked';
+const BILLING_SESSION_KEY = 'thenisai_billing_session_unlocked';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem(AUTH_USER_KEY);
+      // Clear legacy persistent localStorage to prevent unauthorized auto-login
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+
+      const saved = sessionStorage.getItem(AUTH_USER_KEY);
       const parsed = saved ? JSON.parse(saved) : null;
-      // Admin portal requires active session verification — never auto-bypass login
-      if (parsed && parsed.role === 'admin') {
-        const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-        return isSessionUnlocked ? parsed : null;
+      if (!parsed) return null;
+
+      // Both Admin and Billing counter require active session unlock in the current tab
+      if (parsed.role === 'admin') {
+        return sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true' ? parsed : null;
       }
-      return parsed;
+      if (parsed.role === 'cashier') {
+        return sessionStorage.getItem(BILLING_SESSION_KEY) === 'true' ? parsed : null;
+      }
+      return null;
     } catch {
       return null;
     }
   });
 
   const [token, setToken] = useState(() => {
-    const savedUser = localStorage.getItem(AUTH_USER_KEY);
-    if (savedUser && savedUser.includes('"role":"admin"')) {
-      const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-      if (!isSessionUnlocked) return null;
+    try {
+      const savedUser = sessionStorage.getItem(AUTH_USER_KEY);
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) !== 'true') return null;
+        if (parsed?.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) !== 'true') return null;
+      }
+      return sessionStorage.getItem(AUTH_TOKEN_KEY) || null;
+    } catch {
+      return null;
     }
-    return localStorage.getItem(AUTH_TOKEN_KEY) || null;
   });
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Validate existing stored session on initial page load
+  // Validate existing session on initial page load
   useEffect(() => {
     async function verifySession() {
-      const savedUser = localStorage.getItem(AUTH_USER_KEY);
-      if (savedUser && savedUser.includes('"role":"admin"')) {
-        const isSessionUnlocked = sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true';
-        if (!isSessionUnlocked) {
-          setUser(null);
-          setToken(null);
-          setLoading(false);
-          return;
-        }
+      // Clean up any legacy localStorage
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+
+      const savedUser = sessionStorage.getItem(AUTH_USER_KEY);
+      const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+
+      if (!parsedUser) {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        return;
       }
 
-      const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (parsedUser.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) !== 'true') {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        return;
+      }
+
+      if (parsedUser.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) !== 'true') {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        return;
+      }
+
+      const savedToken = sessionStorage.getItem(AUTH_TOKEN_KEY);
       if (!savedToken) {
         setLoading(false);
         return;
@@ -59,26 +90,38 @@ export function AuthProvider({ children }) {
         const res = await api.get('/api/auth/me');
         if (res.success && res.user) {
           setUser(res.user);
+          sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
           if (res.user.role === 'admin') {
             sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+          } else if (res.user.role === 'cashier') {
+            sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
           }
-          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
         } else {
           setToken(null);
           setUser(null);
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          localStorage.removeItem(AUTH_USER_KEY);
+          sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          sessionStorage.removeItem(AUTH_USER_KEY);
         }
       } catch (err) {
-        console.warn('[Auth] Session validation failed or backend offline, using cached credentials:', err);
+        if (err.status === 401) {
+          setToken(null);
+          setUser(null);
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(AUTH_TOKEN_KEY);
+          sessionStorage.removeItem(AUTH_USER_KEY);
+        } else {
+          console.debug('[Auth] Session offline check:', err?.message || err);
+        }
       } finally {
         setLoading(false);
       }
     }
 
     verifySession();
-  }, []); // Run ONLY on initial mount, not on every login!
+  }, []);
 
   const login = async (credentials) => {
     setError(null);
@@ -87,11 +130,21 @@ export function AuthProvider({ children }) {
       if (res.success && res.token) {
         setToken(res.token);
         setUser(res.user);
+
+        sessionStorage.setItem(AUTH_TOKEN_KEY, res.token);
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
+
         if (res.user?.role === 'admin') {
           sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
+          sessionStorage.removeItem(BILLING_SESSION_KEY);
+        } else if (res.user?.role === 'cashier') {
+          sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
         }
-        localStorage.setItem(AUTH_TOKEN_KEY, res.token);
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(res.user));
+
+        // Clean out legacy persistent storage
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
         return { success: true, user: res.user };
       }
       throw new Error(res.message || 'Login failed');
@@ -99,7 +152,14 @@ export function AuthProvider({ children }) {
       // Fallback for sample credentials if backend is unreachable
       const u = String(credentials.username || '').trim().toLowerCase();
       const p = String(credentials.password || '').trim();
+      const requestedRole = credentials.role || (u.includes('admin') ? 'admin' : 'cashier');
+
       if ((u === 'admin' || u === 'staff-1') && p === 'admin123') {
+        if (requestedRole && requestedRole !== 'admin') {
+          const msg = 'Role mismatch: admin credentials cannot be used as cashier.';
+          setError(msg);
+          return { success: false, error: msg };
+        }
         const fallbackAdmin = {
           id: 'staff-1',
           username: 'admin',
@@ -112,12 +172,20 @@ export function AuthProvider({ children }) {
         setToken(tokenVal);
         setUser(fallbackAdmin);
         sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
-        localStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackAdmin));
+        sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackAdmin));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
         return { success: true, user: fallbackAdmin };
       }
 
       if ((u === 'cashier' || u === 'staff-2') && p === 'cashier123') {
+        if (requestedRole && requestedRole !== 'cashier') {
+          const msg = 'Role mismatch: cashier credentials cannot be used as admin.';
+          setError(msg);
+          return { success: false, error: msg };
+        }
         const fallbackCashier = {
           id: 'staff-2',
           username: 'cashier',
@@ -129,8 +197,12 @@ export function AuthProvider({ children }) {
         const tokenVal = `thenisai_session_staff-2_${Date.now()}`;
         setToken(tokenVal);
         setUser(fallbackCashier);
-        localStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
-        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackCashier));
+        sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackCashier));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
         return { success: true, user: fallbackCashier };
       }
 
@@ -150,6 +222,9 @@ export function AuthProvider({ children }) {
       setUser(null);
       setError(null);
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      sessionStorage.removeItem(BILLING_SESSION_KEY);
+      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USER_KEY);
     }
@@ -163,8 +238,8 @@ export function AuthProvider({ children }) {
     login,
     logout,
     isAuthenticated: Boolean(user && token),
-    isAdmin: Boolean(user && user.role === 'admin'),
-    isCashier: Boolean(user && (user.role === 'cashier' || user.role === 'admin')),
+    isAdmin: Boolean(user && user.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'),
+    isCashier: Boolean(user && user.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) === 'true'),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

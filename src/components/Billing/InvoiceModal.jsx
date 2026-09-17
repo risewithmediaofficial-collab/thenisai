@@ -1,31 +1,66 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
-import { STORE_DETAILS } from '../../data/sweetsData';
+import { STORE_DETAILS, ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import './InvoiceModal.css';
 
 export default function InvoiceModal() {
   const { activeInvoice, closeInvoice, taxSettings } = useCart();
   const invoiceRef = useRef();
 
-  // Default format: 'thermal' (80mm POS slip) for counter POS, 'a4' for online deliveries
-  const [billFormat, setBillFormat] = useState('thermal');
+  // Format: 'thermal' (standard thermal roll), 'a4' (A4 sheet)
+  const [billFormat, setBillFormat] = useState(() => {
+    const saved = localStorage.getItem('thenisai_pos_roll_format');
+    return saved === 'a4' ? 'a4' : 'thermal';
+  });
+
+  // Copies to print: 'both' (Default: 2 separate cut copies for customer and shop) | 'customer' (1 copy) | 'shop' (1 copy)
+  const [printCopies, setPrintCopies] = useState(() => {
+    return localStorage.getItem('thenisai_pos_print_copies') || 'both';
+  });
+
+  const handleSelectFormat = (fmt) => {
+    setBillFormat(fmt);
+    localStorage.setItem('thenisai_pos_roll_format', fmt);
+  };
+
+  const handleSelectCopies = (copies) => {
+    setPrintCopies(copies);
+    localStorage.setItem('thenisai_pos_print_copies', copies);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   useEffect(() => {
     if (activeInvoice) {
-      setBillFormat(activeInvoice.source === 'online' ? 'a4' : 'thermal');
+      if (activeInvoice.source === 'online') {
+        setBillFormat('a4');
+      } else {
+        setBillFormat('thermal');
+      }
+      // Guarantee default is ALWAYS 2 separate cut copies (Customer Copy + Shop Copy)
+      setPrintCopies('both');
     }
   }, [activeInvoice]);
 
+  // Keep invoice mounted during printing so browser print spooler/preview renders all text and tables without blanking
   useEffect(() => {
-    const handleAfterPrint = () => {
-      if (activeInvoice) {
-        closeInvoice();
-      }
+    const handleBeforePrint = () => {
+      document.body.classList.add('is-printing-invoice');
     };
+    const handleAfterPrint = () => {
+      document.body.classList.remove('is-printing-invoice');
+    };
+    window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
-    return () => window.removeEventListener('afterprint', handleAfterPrint);
-  }, [activeInvoice, closeInvoice]);
+    return () => {
+      window.removeEventListener('beforeprint', handleBeforePrint);
+      window.removeEventListener('afterprint', handleAfterPrint);
+      document.body.classList.remove('is-printing-invoice');
+    };
+  }, []);
 
   if (!activeInvoice) return null;
 
@@ -41,6 +76,9 @@ export default function InvoiceModal() {
     upiUtr = '',
     orderStatus = 'Completed',
   } = activeInvoice;
+
+  const splitCash = activeInvoice.splitCash ?? activeInvoice.paymentDetails?.cash ?? 0;
+  const splitUpi = activeInvoice.splitUpi ?? activeInvoice.paymentDetails?.upi ?? 0;
 
   const subtotal = Number(activeInvoice.subtotal) || 0;
   const deliveryFee = Number(activeInvoice.deliveryFee) || 0;
@@ -64,15 +102,32 @@ export default function InvoiceModal() {
     gstin: activeGstin,
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
 
-  const copiesToRender = ['customer'];
+  const copiesToRender = printCopies === 'both'
+    ? ['customer', 'shop']
+    : printCopies === 'shop'
+    ? ['shop']
+    : ['customer'];
 
-  // Pre-filled WhatsApp message
+  // Determine if this is a Counter/POS bill or an Online Website order
+  const isOnlineOrder = activeInvoice.source === 'online';
+  const isPosSale = !isOnlineOrder || String(invoiceNumber).startsWith('POS-');
+
+  // Customer name & phone formatting
+  const rawCustomerName = (customer?.fullName || '').trim();
+  const rawCustomerPhone = (customer?.phone || '').trim();
+  const hasCustomerName = rawCustomerName && rawCustomerName.toLowerCase() !== 'walk-in customer';
+  const hasCustomerPhone = rawCustomerPhone && rawCustomerPhone.toLowerCase() !== 'store counter' && rawCustomerPhone.toLowerCase() !== 'counter desk 01';
+
+  const customerDisplay = hasCustomerName
+    ? `${rawCustomerName}${hasCustomerPhone ? ` (${rawCustomerPhone})` : ''}`
+    : (hasCustomerPhone ? rawCustomerPhone : 'Walk-in Customer');
+
+  const greetingName = hasCustomerName ? rawCustomerName : '';
+
+  // Formatted items list for message
   const itemsText = items
-    .map((item) => `• ${item.name} (${item.weight}) × ${item.quantity} = ₹${item.price * item.quantity}`)
+    .map((item) => `• ${item.name} (${item.weight || item.unit || '1 Pc'}) × ${item.quantity} = ₹${(Number(item.price || 0) * Number(item.quantity || 1))}`)
     .join('\n');
 
   const fullAddress = shippingAddress?.doorNo
@@ -80,21 +135,129 @@ export default function InvoiceModal() {
     }, ${shippingAddress.city || ''}, ${shippingAddress.state || ''} - ${shippingAddress.pincode || ''}`
     : 'In-Store Counter Walk-in';
 
-  const whatsappMessage = encodeURIComponent(
-    `🙏 *Namaste Thenisai Sweets!* \nI just placed an order on your website.\n\n` +
-    `🧾 *Invoice No:* ${invoiceNumber}\n` +
-    `👤 *Customer:* ${customer?.fullName || 'Walk-in Guest'}${customer?.phone ? ` (${customer.phone})` : ''}\n` +
-    `📍 *Delivery Address:* ${fullAddress}\n\n` +
-    `📦 *Order Items:*\n${itemsText}\n\n` +
-    `💰 *Total Amount:* ₹${grandTotal}\n` +
-    `💳 *Payment Mode:* ${paymentMethod === 'upi' ? `Instant UPI (UTR: ${upiUtr || 'Paid'})` : 'Pay on Delivery (COD)'}\n` +
-    (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
-    `\nPlease confirm order packing and dispatch. Thank you!`
-  );
+  // Accurate Payment Mode label (no accidental "Pay on Delivery" on Cash counter bills)
+  const paymentModeLabel = paymentMethod === 'split'
+    ? `Split Payment (Cash: ₹${splitCash} + UPI: ₹${splitUpi})`
+    : paymentMethod === 'cash' || paymentMethod === 'Cash'
+    ? 'Cash (Paid at Counter)'
+    : paymentMethod === 'upi' || paymentMethod === 'UPI'
+    ? `UPI / QR (${upiUtr || 'Paid'})`
+    : paymentMethod === 'card' || paymentMethod === 'Card'
+    ? 'Card / POS'
+    : isPosSale
+    ? 'Cash (Paid at Counter)'
+    : 'Pay on Delivery (COD)';
 
-  const whatsappUrl = `https://wa.me/${STORE_DETAILS.whatsappNumber}?text=${whatsappMessage}`;
+  const formattedTotal = Number(grandTotal) % 1 === 0 ? Number(grandTotal).toFixed(0) : Number(grandTotal).toFixed(2);
 
-  // Helper to render 80mm Thermal Receipt Copy
+  // Separate message templates:
+  // 1) In-Store POS Bill: Thank the customer, provide bill summary, and promote online order with doorstep delivery
+  // 2) Online Web Order: Order confirmation for delivery
+  const whatsappMessageText = isPosSale
+    ? `${greetingName ? `🙏 *Namaste ${greetingName}!*` : `🙏 *Namaste!*`}\n` +
+      `Thank you for shopping at *Thenisai Sweets*! 🍯✨\n\n` +
+      `🧾 *Invoice No:* ${invoiceNumber}\n` +
+      `📅 *Date:* ${orderDate} ${orderTime}\n` +
+      `👤 *Customer:* ${customerDisplay}\n\n` +
+      `📦 *Order Items:*\n${itemsText}\n\n` +
+      `💰 *Total Amount:* ₹${formattedTotal}\n` +
+      `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
+      `🚚 *Order Online & Get Doorstep Delivery!* 📦\n` +
+      `Did you know? You can now order your favorite traditional sweets & savouries online at *www.thenisaisweets.com* and get doorstep delivery right to your home across India!\n\n` +
+      `🌐 *Order Online:* https://www.thenisaisweets.com\n` +
+      `📞 *Counter & Orders Helpline:* +91 93448 93547\n\n` +
+      `Thank you! Visit us again! 🙏✨`
+    : `🙏 *Namaste Thenisai Sweets!*\n` +
+      `I just placed an online order on your website.\n\n` +
+      `🧾 *Invoice No:* ${invoiceNumber}\n` +
+      `👤 *Customer:* ${customerDisplay}\n` +
+      `📍 *Delivery Address:* ${fullAddress}\n\n` +
+      `📦 *Order Items:*\n${itemsText}\n\n` +
+      `💰 *Total Amount:* ₹${formattedTotal}\n` +
+      `💳 *Payment Mode:* ${paymentModeLabel}\n` +
+      (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
+      `\nPlease confirm order packing and dispatch for delivery. Thank you!`;
+
+  const whatsappMessage = encodeURIComponent(whatsappMessageText);
+
+  // If customer's 10-digit phone number is entered, open chat with customer; otherwise open store WhatsApp
+  const cleanPhone = (hasCustomerPhone ? rawCustomerPhone : '').replace(/\D/g, '');
+  const targetPhone = isPosSale && cleanPhone.length >= 10
+    ? (cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone)
+    : STORE_DETAILS.whatsappNumber;
+
+  const whatsappUrl = `https://wa.me/${targetPhone}?text=${whatsappMessage}`;
+
+  // Helper to format item weight/quantity, rate, and amount matching the authentic sweet shop POS layout
+  const formatItemDetails = (item) => {
+    let wtQty = '1x';
+    let rate = Number(item.price || 0).toFixed(2);
+    const amt = (Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2);
+
+    const wt = String(item.weight || '').toLowerCase().trim();
+    const qty = Number(item.quantity || 1);
+
+    if (wt.includes('kg')) {
+      const num = parseFloat(wt) || 1;
+      wtQty = (num * qty).toFixed(3);
+      rate = (Number(item.price || 0) / num).toFixed(2);
+    } else if (wt.includes('g')) {
+      const grams = parseFloat(wt) || 250;
+      const kg = grams / 1000;
+      wtQty = (kg * qty).toFixed(3);
+      rate = (Number(item.price || 0) / kg).toFixed(2);
+    } else {
+      wtQty = `${qty}x`;
+      rate = Number(item.price || 0).toFixed(2);
+    }
+
+    return { wtQty, rate, amt };
+  };
+
+  // Helper to get official inventory item number code (#01, #02, etc.)
+  const getInventoryCode = (item, idx) => {
+    if (item.itemNumber) return String(item.itemNumber).padStart(2, '0');
+    if (item.code) return String(item.code).padStart(2, '0');
+    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
+      const match = ALL_BILLING_ITEMS.find(
+        (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
+      );
+      if (match?.itemNumber) return String(match.itemNumber).padStart(2, '0');
+    }
+    return String(idx + 1).padStart(2, '0');
+  };
+
+  // Calculate stats for the footer line
+  const totalWeightKg = items.reduce((sum, item) => {
+    const wt = String(item.weight || '').toLowerCase().trim();
+    const qty = Number(item.quantity || 1);
+    if (wt.includes('kg')) {
+      return sum + (parseFloat(wt) || 1) * qty;
+    } else if (wt.includes('g')) {
+      return sum + ((parseFloat(wt) || 250) / 1000) * qty;
+    }
+    return sum;
+  }, 0);
+
+  const totalPieces = items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+  const roundOff = (Math.round(grandTotal) - grandTotal).toFixed(2);
+  const storeCell = STORE_DETAILS.phone.replace(/[^0-9]/g, '').slice(-10);
+
+  // Helper to clean item title (uppercase English name matching authentic POS thermal style)
+  const getItemDisplayName = (item) => {
+    if (item.englishName) return item.englishName.toUpperCase();
+    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
+      const match = ALL_BILLING_ITEMS.find(
+        (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
+      );
+      if (match?.englishName) return match.englishName.toUpperCase();
+    }
+    const raw = item.name || '';
+    const cleaned = raw.split('—')[0].split('-')[0].trim();
+    return (cleaned || raw).toUpperCase();
+  };
+
+  // Helper to render POS Thermal Receipt Copy (Authentic Indian Sweet Shop Format)
   const renderThermalReceiptCopy = (copyType, index) => {
     const isShopCopy = copyType === 'shop';
 
@@ -108,136 +271,119 @@ export default function InvoiceModal() {
           </div>
         )}
 
-        <div className={`thermal-receipt-document copy-${copyType}`}>
-          {/* Thermal Header - Compact, No Logo, High Visibility */}
-          <div className="thermal-header">
-            <h2 className="thermal-brand-name">{STORE_DETAILS.brandName}</h2>
-            <p className="thermal-addr-line">NH 44, Nattamai Kottai, Krishnagiri · Ph: {STORE_DETAILS.phone.replace('+91 ', '')}</p>
-            <p className="thermal-tax-line">
-              GSTIN: <strong>{activeGstin}</strong> | FSSAI: <strong>{STORE_DETAILS.fssai}</strong>
-            </p>
-          </div>
-
-          <div className="thermal-divider-dashed" />
-
-          {/* Compact Title Bar */}
-          <div className="thermal-title-bar">
-            TAX INVOICE · {isShopCopy ? 'SHOP COPY' : 'CUSTOMER COPY'}
-          </div>
-
-          <div className="thermal-divider-dashed" />
-
-          {/* Metadata */}
-          <div className="thermal-meta-block">
-            <div className="thermal-meta-row">
-              <span>BILL: <strong>{invoiceNumber}</strong></span>
-              <span>{orderDate} {orderTime}</span>
-            </div>
-            <div className="thermal-meta-row">
-              <span>CUST: <strong>{customer.fullName || 'Walk-in Guest'}</strong>{customer.phone ? ` (${customer.phone})` : ''}</span>
-              <span className="thermal-pay-mode-tag">
-                {paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'CARD' : 'CASH'}
-              </span>
+        <div className={`thermal-receipt-document pos-slip-document copy-${copyType}`}>
+          {/* Header matching exact layout without GST */}
+          <div className="pos-slip-header">
+            <div className="pos-store-name">{STORE_DETAILS.brandName.toUpperCase()}</div>
+            <div className="pos-store-sub">NATTAMAI KOTTAI, NH 44, KRISHNAGIRI</div>
+            <div className="pos-store-cell">CELL: {storeCell}</div>
+            <div className="pos-slip-title">
+              {isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT'}
             </div>
           </div>
 
-          <div className="thermal-divider-dashed" />
+          <div className="pos-slip-dashed-line" />
 
-          {/* Items Table - Clean & Compact */}
-          <table className="thermal-items-table">
-            <thead>
-              <tr>
-                <th className="text-left" style={{ width: '48%' }}>ITEM</th>
-                <th className="text-center" style={{ width: '12%' }}>QTY</th>
-                <th className="text-right" style={{ width: '18%' }}>RATE</th>
-                <th className="text-right" style={{ width: '22%' }}>AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, idx) => (
-                <tr key={idx}>
-                  <td className="thermal-item-title">
-                    <span className="item-name">{item.name}</span>
-                    {item.weight && <span className="item-wt"> ({item.weight})</span>}
-                  </td>
-                  <td className="text-center"><strong>{item.quantity}</strong></td>
-                  <td className="text-right">{Number(item.price || 0).toFixed(0)}</td>
-                  <td className="text-right"><strong>{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</strong></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* Bill & Date Row */}
+          <div className="pos-slip-bill-row">
+            <span className="pos-bill-no">BILL: {invoiceNumber}</span>
+            <span className="pos-bill-date">{orderDate} {orderTime}</span>
+          </div>
 
-          <div className="thermal-divider-dashed" />
+          <div className="pos-slip-dashed-line" />
 
-          {/* Totals Calculation */}
-          <div className="thermal-totals-box">
-            <div className="thermal-calc-row">
-              <span>Items: <strong>{items.length}</strong> (Qty: <strong>{items.reduce((sum, it) => sum + (it.quantity || 1), 0)}</strong>)</span>
-              <span>Subtotal: <strong>₹{subtotal.toFixed(2)}</strong></span>
-            </div>
+          {/* Table Header */}
+          <div className="pos-slip-table-head">
+            <span className="col-item">ITEM</span>
+            <span className="col-wt">WT/QTY</span>
+            <span className="col-price">PRICE</span>
+            <span className="col-amt">AMT</span>
+          </div>
 
-            {(taxBreakdown?.cgst > 0 || taxBreakdown?.sgst > 0) && (
-              <div className="thermal-calc-row">
-                <span>CGST ({taxBreakdown.cgstRate}%): ₹{taxBreakdown.cgst.toFixed(2)}</span>
-                <span>SGST ({taxBreakdown.sgstRate}%): ₹{taxBreakdown.sgst.toFixed(2)}</span>
-              </div>
-            )}
-            {taxBreakdown?.igst > 0 && (
-              <div className="thermal-calc-row">
-                <span>IGST ({taxBreakdown.totalTaxRate}%):</span>
-                <span>₹{taxBreakdown.igst.toFixed(2)}</span>
-              </div>
-            )}
-            {deliveryFee > 0 && (
-              <div className="thermal-calc-row">
-                <span>Delivery:</span>
-                <span>₹{deliveryFee.toFixed(2)}</span>
-              </div>
-            )}
+          <div className="pos-slip-dashed-line" />
 
-            <div className="thermal-divider-solid" />
-
-            <div className="thermal-grand-total">
-              <span className="grand-lbl">NET PAYABLE:</span>
-              <span className="grand-val">₹{grandTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="thermal-divider-solid" />
-
-            <div className="thermal-pay-info">
-              <div className="thermal-pay-row">
-                <span>Payment: <strong>{paymentMethod === 'upi' ? 'UPI QR DIGITAL' : paymentMethod === 'card' ? 'CARD / EDC' : 'CASH COUNTER'}</strong></span>
-                <span>Status: <strong>{orderStatus}</strong></span>
-              </div>
-              {upiUtr && (
-                <div className="thermal-pay-row">
-                  <span>UTR: {upiUtr}</span>
+          {/* Items List - 2-line layout with Inventory Number */}
+          <div className="pos-slip-items">
+            {items.map((item, idx) => {
+              const code = getInventoryCode(item, idx);
+              const { wtQty, rate, amt } = formatItemDetails(item);
+              const displayName = getItemDisplayName(item);
+              return (
+                <div key={idx} className="pos-slip-item-row">
+                  <div className="pos-item-title-line">
+                    <span className="pos-item-code">#{code}</span>
+                    <span className="pos-item-name">{displayName}</span>
+                  </div>
+                  <div className="pos-item-math-line">
+                    <span className="col-indent" />
+                    <span className="col-wt">{wtQty}</span>
+                    <span className="col-price">{rate}</span>
+                    <span className="col-amt">{amt}</span>
+                  </div>
                 </div>
-              )}
-            </div>
+              );
+            })}
           </div>
 
-          {/* Shop Copy Audit Block */}
-          {isShopCopy && (
-            <div className="thermal-shop-audit-block">
-              <div className="thermal-divider-dashed" />
-              <div className="thermal-audit-row">
-                <span>Desk: {activeInvoice.cashier?.counter || 'Counter 01'}</span>
-                <span>Staff: {activeInvoice.cashier?.name || activeInvoice.cashier?.username || 'Staff'}</span>
-              </div>
-              <div className="thermal-audit-signatures">
-                <div className="sign-line">Sign: __________________________</div>
-              </div>
+          <div className="pos-slip-dashed-line" />
+
+          {/* Net Rs (Prominent Bold Amount - Without GST) */}
+          <div className="pos-slip-net-row">
+            <span className="net-lbl">Net Rs:</span>
+            <span className="net-val">{grandTotal.toFixed(2)}</span>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Packing Summary & Payment Mode */}
+          <div className="pos-slip-stats-block">
+            <div className="pos-stats-line">
+              <span>Items: {items.length}</span>
+              <span>Qty: {totalPieces}</span>
+              <span>Weight: {totalWeightKg > 0 ? `${totalWeightKg.toFixed(3)} kg` : `${totalPieces} pcs`}</span>
             </div>
-          )}
+            {Number(roundOff) !== 0 && (
+              <div className="pos-stats-line pos-stats-roundoff">
+                <span>Round Off</span>
+                <span>₹{roundOff}</span>
+              </div>
+            )}
+            {paymentMethod === 'split' ? (
+              <>
+                <div className="pos-stats-line pos-slip-split-header">
+                  <span>PAY MODE:</span>
+                  <strong>SPLIT PAY</strong>
+                </div>
+                <div className="pos-stats-line pos-slip-split-line">
+                  <span>├ CASH PAID:</span>
+                  <strong>₹{Number(splitCash || 0).toFixed(2)}</strong>
+                </div>
+                <div className="pos-stats-line pos-slip-split-line">
+                  <span>└ UPI PAID:</span>
+                  <strong>₹{Number(splitUpi || 0).toFixed(2)}</strong>
+                </div>
+              </>
+            ) : (
+              <div className="pos-stats-line pos-slip-pay-line">
+                <span>PAY MODE:</span>
+                <strong>{(paymentMethod || 'CASH').toUpperCase()}</strong>
+              </div>
+            )}
+          </div>
 
-          <div className="thermal-divider-dashed" />
+          <div className="pos-slip-dashed-line" />
 
-          {/* Thermal Footer Notice - Compact */}
-          <div className="thermal-footer-box">
-            <p className="thermal-thank-you">*** THANK YOU! VISIT AGAIN ***</p>
-            <p className="thermal-sub-msg">Goods once sold cannot be returned</p>
+          {/* Online Order & Doorstep Delivery Note */}
+          <div className="pos-slip-online-note">
+            <div className="pos-online-label">FOR ONLINE ORDER & DOORSTEP DELIVERY VISIT</div>
+            <div className="pos-online-web">www.thenisaisweets.com</div>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Footer message */}
+          <div className="pos-slip-thank-you">
+            !! THANK YOU..VISIT AGAIN !!
           </div>
         </div>
       </div>
@@ -307,7 +453,7 @@ export default function InvoiceModal() {
         <div className="inv-parties">
           <div className="inv-party-card">
             <h4 className="party-title">{shippingAddress?.doorNo ? 'Billed & Shipped To:' : 'Billed To (Counter):'}</h4>
-            <p className="party-name">{customer?.fullName || 'Walk-in Guest'}</p>
+            <p className="party-name">{customer?.fullName || 'Walk-in Customer'}</p>
             {shippingAddress?.doorNo && (
               <p className="party-line">{shippingAddress.doorNo}, {shippingAddress.street}</p>
             )}
@@ -330,10 +476,34 @@ export default function InvoiceModal() {
             <p className="party-line">
               Mode:{' '}
               <strong>
-                {paymentMethod === 'upi' ? 'Direct UPI (GPay / PhonePe)' : 'Cash / UPI on Delivery (COD)'}
+                {paymentMethod === 'split'
+                  ? 'Split Payment (Cash + UPI)'
+                  : paymentMethod === 'upi'
+                  ? 'Direct UPI (GPay / PhonePe)'
+                  : paymentMethod === 'card'
+                  ? 'Card / POS Terminal'
+                  : 'Cash / COD'}
               </strong>
             </p>
-            {upiUtr && <p className="party-line">UPI UTR Ref: <strong>{upiUtr}</strong></p>}
+            {paymentMethod === 'split' && (
+              <div className="a4-split-breakdown" style={{ display: 'flex', gap: '8px', margin: '4px 0 6px' }}>
+                <span style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', borderRadius: '4px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                  </svg>
+                  Cash: ₹{Number(splitCash || 0).toFixed(2)}
+                </span>
+                <span style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <line x1="12" y1="18" x2="12.01" y2="18" />
+                  </svg>
+                  UPI: ₹{Number(splitUpi || 0).toFixed(2)}
+                </span>
+              </div>
+            )}
+            {upiUtr && <p className="party-line">Ref / Details: <strong>{upiUtr}</strong></p>}
             {giftNote && (
               <p className="party-line gift-note">
                 Gift Message: <em>"{giftNote}"</em>
@@ -383,7 +553,8 @@ export default function InvoiceModal() {
             <ol>
               <li>Perishable sweets: Keep in cool place or refrigerate after opening.</li>
               <li>Goods once sold are freshly prepared and dispatched directly from kitchen.</li>
-              <li>All disputes subject to krishnagiri jurisdiction only.</li>
+              <li>For online orders & doorstep delivery across India, visit: <strong>www.thenisaisweets.com</strong></li>
+              <li>All disputes subject to Krishnagiri jurisdiction only.</li>
             </ol>
           </div>
 
@@ -459,7 +630,7 @@ export default function InvoiceModal() {
 
         {/* Modal Window */}
         <motion.div
-          className={`invoice-modal-wrap ${billFormat === 'thermal' ? 'wrap-thermal' : 'wrap-a4'}`}
+          className={`invoice-modal-wrap ${billFormat === 'a4' ? 'wrap-a4' : billFormat === 'thermal-58' ? 'wrap-thermal-58' : 'wrap-thermal'}`}
           data-lenis-prevent
           initial={{ opacity: 0, scale: 0.94, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -476,22 +647,22 @@ export default function InvoiceModal() {
                 <button
                   type="button"
                   className={`format-btn ${billFormat === 'thermal' ? 'active' : ''}`}
-                  onClick={() => setBillFormat('thermal')}
-                  title="POS thermal receipt printer layout"
+                  onClick={() => handleSelectFormat('thermal')}
+                  title="POS thermal receipt roll"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
-                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
                     <path d="M8 7h8" />
                     <path d="M8 11h8" />
                     <path d="M8 15h5" />
                   </svg>
-                  <span>Thermal</span>
+                  <span>Thermal Roll</span>
                 </button>
                 <button
                   type="button"
                   className={`format-btn ${billFormat === 'a4' ? 'active' : ''}`}
-                  onClick={() => setBillFormat('a4')}
-                  title="Standard A4 tax invoice layout"
+                  onClick={() => handleSelectFormat('a4')}
+                  title="Standard A4 sheet layout"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -500,19 +671,48 @@ export default function InvoiceModal() {
                     <line x1="16" y1="17" x2="8" y2="17" />
                     <polyline points="10 9 9 9 8 9" />
                   </svg>
-                  <span>A4 Invoice</span>
+                  <span>A4 Sheet</span>
                 </button>
               </div>
             </div>
 
             <div className="invoice-toolbar-actions">
+              {/* Copies Switcher: 2 Copies (Customer + Shop) vs 1 Copy */}
+              <div className="invoice-copies-switcher">
+                <button
+                  type="button"
+                  className={`copies-btn ${printCopies === 'both' ? 'active' : ''}`}
+                  onClick={() => handleSelectCopies('both')}
+                  title="Print 2 separate cut slips: 1 for Customer and 1 for Shop"
+                >
+                  <span className="copies-icon">✂</span>
+                  <span>2 Copies (Cut Seperate)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`copies-btn ${printCopies === 'customer' ? 'active' : ''}`}
+                  onClick={() => handleSelectCopies('customer')}
+                  title="Print 1 slip: Customer copy only"
+                >
+                  <span>Customer (1 Copy)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`copies-btn ${printCopies === 'shop' ? 'active' : ''}`}
+                  onClick={() => handleSelectCopies('shop')}
+                  title="Print 1 slip: Shop copy only"
+                >
+                  <span>Shop (1 Copy)</span>
+                </button>
+              </div>
+
               <button className="toolbar-btn print-btn" onClick={handlePrint}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>Print {billFormat === 'thermal' ? 'Receipt' : 'Invoice'}</span>
+                <span>Print {printCopies === 'both' ? '2 Cut Slips' : 'Bill'}</span>
               </button>
 
               <a
@@ -520,11 +720,12 @@ export default function InvoiceModal() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="toolbar-btn whatsapp-btn"
+                title={isPosSale && hasCustomerPhone ? `Send bill & online delivery link to ${customerDisplay} on WhatsApp` : 'Share Bill on WhatsApp'}
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.75 1.21 5.48 0 9.93-4.45 9.93-9.93 0-5.48-4.45-9.9-9.93-9.9zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.36c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.7 8.22-8.23 8.22zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.78.98-.14.16-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.41.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.76-1.85-.2-.49-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.01 2.57.12.16 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.1-.22-.16-.47-.29z" />
                 </svg>
-                <span>WhatsApp</span>
+                <span>WhatsApp {isPosSale && hasCustomerPhone ? 'to Customer' : 'Bill'}</span>
               </a>
 
               <button
@@ -545,19 +746,19 @@ export default function InvoiceModal() {
 
           {/* Printable Invoice Sheet */}
           <div className="printable-invoice-container" data-lenis-prevent>
-            {billFormat === 'thermal' ? (
-              <div
-                className={`thermal-receipt-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''}`}
-                ref={invoiceRef}
-              >
-                {copiesToRender.map((copyType, index) => renderThermalReceiptCopy(copyType, index))}
-              </div>
-            ) : (
+            {billFormat === 'a4' ? (
               <div
                 className={`a4-invoices-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''}`}
                 ref={invoiceRef}
               >
                 {copiesToRender.map((copyType, index) => renderA4InvoiceCopy(copyType, index))}
+              </div>
+            ) : (
+              <div
+                className={`thermal-receipt-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''} ${billFormat === 'thermal-58' ? 'thermal-58-wrap' : ''}`}
+                ref={invoiceRef}
+              >
+                {copiesToRender.map((copyType, index) => renderThermalReceiptCopy(copyType, index))}
               </div>
             )}
           </div>

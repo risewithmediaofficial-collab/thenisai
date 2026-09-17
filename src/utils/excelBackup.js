@@ -93,6 +93,13 @@ export function exportBillsToExcel(bills = [], filename = null, sheetTitle = nul
     const subtotal = safeNum(bill.subtotal || bill.grandTotal || 0);
     const gst = safeNum(bill.taxBreakdown?.totalTax || (subtotal * 0.05));
     const grand = safeNum(bill.grandTotal || subtotal + gst);
+    let payText = (bill.paymentMethod || bill.paymentMode || 'cash').toUpperCase();
+    if ((bill.paymentMethod || '').toLowerCase() === 'split') {
+      const c = bill.paymentDetails?.cash ?? bill.splitCash ?? 0;
+      const u = bill.paymentDetails?.upi ?? bill.splitUpi ?? 0;
+      payText = `SPLIT (Cash ₹${c} + UPI ₹${u})`;
+    }
+
     return [
       i + 1,
       formatDateTime(bill.createdAt),
@@ -104,7 +111,7 @@ export function exportBillsToExcel(bills = [], filename = null, sheetTitle = nul
       subtotal,
       gst,
       grand,
-      (bill.paymentMethod || bill.paymentMode || 'cash').toUpperCase(),
+      payText,
       bill.source === 'online' ? 'Online' : 'Counter',
       bill.status || 'Completed',
     ];
@@ -113,10 +120,18 @@ export function exportBillsToExcel(bills = [], filename = null, sheetTitle = nul
   // Compute totals
   const totalGross = ledgerRows.reduce((s, r) => s + safeNum(r[9]), 0);
   const totalGst = ledgerRows.reduce((s, r) => s + safeNum(r[8]), 0);
-  const totalCash = bills.filter(b => (b.paymentMethod || b.paymentMode || '').toLowerCase() === 'cash')
-    .reduce((s, b) => s + safeNum(b.grandTotal), 0);
-  const totalUpi = bills.filter(b => (b.paymentMethod || b.paymentMode || '').toLowerCase() === 'upi')
-    .reduce((s, b) => s + safeNum(b.grandTotal), 0);
+  const totalCash = bills.reduce((s, b) => {
+    const pm = (b.paymentMethod || b.paymentMode || '').toLowerCase();
+    if (pm === 'cash') return s + safeNum(b.grandTotal);
+    if (pm === 'split') return s + safeNum(b.paymentDetails?.cash ?? b.splitCash ?? 0);
+    return s;
+  }, 0);
+  const totalUpi = bills.reduce((s, b) => {
+    const pm = (b.paymentMethod || b.paymentMode || '').toLowerCase();
+    if (pm === 'upi') return s + safeNum(b.grandTotal);
+    if (pm === 'split') return s + safeNum(b.paymentDetails?.upi ?? b.splitUpi ?? 0);
+    return s;
+  }, 0);
   const totalCard = bills.filter(b => (b.paymentMethod || b.paymentMode || '').toLowerCase() === 'card')
     .reduce((s, b) => s + safeNum(b.grandTotal), 0);
 

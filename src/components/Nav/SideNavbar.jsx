@@ -16,7 +16,7 @@ export default function SideNavbar({
   onCloseMobile,
 }) {
   const { user, logout } = useAuth();
-  const { navigateTo, taxSettings } = useCart();
+  const { navigateTo, taxSettings, recycleBinBills } = useCart();
 
   const handleNav = (action) => {
     if (onCloseMobile) onCloseMobile();
@@ -69,7 +69,7 @@ export default function SideNavbar({
         <nav className="pos-sidebar__nav">
           {user?.role === 'admin' ? (
             <>
-              {/* 1. ADMIN MANAGEMENT (ONLINE ORDERS, SALES & LEDGER, DAILY REVENUE) */}
+              {/* 1. ADMIN MANAGEMENT (ONLINE ORDERS, PRODUCTS, SALES & LEDGER, REVENUE, AUDIT, RECYCLE BIN) */}
               <div className="sidebar-nav-group">
                 <span className="sidebar-nav-label">ADMIN MANAGEMENT</span>
 
@@ -93,6 +93,22 @@ export default function SideNavbar({
                   {pendingOnlineCount > 0 && (
                     <span className="nav-badge alert">{pendingOnlineCount} New</span>
                   )}
+                </button>
+
+                <button
+                  type="button"
+                  className={`sidebar-nav-item ${currentSection === 'admin-inventory' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('admin-inventory');
+                      else navigateTo('admin', 'inventory');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <span className="nav-text">Products &amp; Inventory</span>
                 </button>
 
                 <button
@@ -135,6 +151,49 @@ export default function SideNavbar({
                   )}
                 </button>
 
+                <button
+                  type="button"
+                  className={`sidebar-nav-item ${currentSection === 'admin-activity-logs' || currentSection === 'admin-price-logs' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('admin-activity-logs');
+                      else navigateTo('admin', 'activity-logs');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <path d="M12 8v4l3 3" />
+                    <circle cx="12" cy="12" r="9" />
+                    <line x1="12" y1="2" x2="12" y2="4" />
+                  </svg>
+                  <span className="nav-text">Activity Audit Logs</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`sidebar-nav-item ${currentSection === 'admin-recycle-bin' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('admin-recycle-bin');
+                      else navigateTo('admin', 'recycle-bin');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    <line x1="10" y1="11" x2="10" y2="17" />
+                    <line x1="14" y1="11" x2="14" y2="17" />
+                  </svg>
+                  <span className="nav-text">Recycle Bin (30 Days)</span>
+                  {(recycleBinBills?.length || 0) > 0 && (
+                    <span className="nav-badge" style={{ background: '#fee2e2', color: '#b91c1c', fontWeight: 700 }}>
+                      {recycleBinBills.length}
+                    </span>
+                  )}
+                </button>
+
+
                 {onOpenGstSettings && (
                   <button
                     type="button"
@@ -176,6 +235,24 @@ export default function SideNavbar({
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                   </svg>
                   <span className="nav-text">POS Billing</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`sidebar-nav-item ${currentSection === 'pos-inventory' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('pos-inventory');
+                      else navigateTo('billing', 'inventory');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                  <span className="nav-text">Products &amp; Inventory</span>
                 </button>
 
                 <button
@@ -269,6 +346,24 @@ export default function SideNavbar({
                     <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
                   </svg>
                   <span className="nav-text">POS Billing</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`sidebar-nav-item ${currentSection === 'pos-inventory' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('pos-inventory');
+                      else navigateTo('billing', 'inventory');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                  <span className="nav-text">Products &amp; Inventory</span>
                 </button>
 
                 <button

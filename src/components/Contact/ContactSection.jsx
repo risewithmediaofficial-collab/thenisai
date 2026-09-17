@@ -12,7 +12,7 @@ const contactInfo = [
     label: 'Store Location (Krishnagiri)',
     value: 'Nattamai Kottai, Near H.P. Petrol Bunk\nNH 44 (Bangalore–Salem Highway)\nKrishnagiri, Tamil Nadu - 635001',
     link: 'https://www.google.com/maps/search/?api=1&query=Thenisai+Palkova+and+Sweets+Nattamai+Kottai+Krishnagiri',
-    actionText: '📍 Open in Google Maps',
+    actionText: 'Open in Google Maps',
   },
   {
     icon: (
@@ -23,7 +23,7 @@ const contactInfo = [
     label: 'Orders & Customer Care',
     value: '+91 93448 93547\n+91 86818 58723',
     link: 'tel:+919344893547',
-    actionText: '📞 Call for Orders & Delivery',
+    actionText: 'Call for Orders & Delivery',
   },
   {
     icon: (
@@ -49,7 +49,7 @@ const contactInfo = [
     label: 'NH 44 Highway Pitstop',
     value: 'Bangalore – Salem Highway\nEasy Parking next to HP Bunk\nIdeal gift box stop for travelers',
     link: 'https://www.google.com/maps/search/?api=1&query=Thenisai+Palkova+and+Sweets+Nattamai+Kottai+Krishnagiri',
-    actionText: '🚗 Plan Highway Pitstop',
+    actionText: 'Plan Highway Pitstop',
   },
 ];
 
@@ -147,7 +147,13 @@ export default function ContactSection() {
             viewport={{ once: true }}
           >
             <div className="catchment__badge">
-              <span>📍 Delivery Catchment &amp; Interstate Highway Service Hub</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                Delivery Catchment &amp; Interstate Highway Service Hub
+              </span>
             </div>
             <p className="catchment__description">
               Direct counter pickup, travel parcel packaging &amp; fast doorstep deliveries across Krishnagiri, Hosur, Tamil Nadu, and NH 44 interstate travelers:

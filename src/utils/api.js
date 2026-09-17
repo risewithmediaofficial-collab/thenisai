@@ -17,6 +17,7 @@ const DEFAULT_TIMEOUT_MS = 10000; // 10 seconds
 /**
  * Builds clean query string from an object of params (Rule 10)
  */
+
 export function buildQueryString(params = {}) {
   const query = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
@@ -82,7 +83,7 @@ export async function request(endpoint, options = {}) {
   }
 
   // Rule 8 & 11: Request Interceptor (Inject auth token and required headers)
-  const token = localStorage.getItem('thenisai_auth_token');
+  const token = sessionStorage.getItem('thenisai_auth_token') || localStorage.getItem('thenisai_auth_token');
   const headers = {
     'Content-Type': 'application/json',
     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -125,6 +126,10 @@ export async function request(endpoint, options = {}) {
     if (!res.ok) {
       if (res.status === 401) {
         localStorage.removeItem('thenisai_auth_token');
+        sessionStorage.removeItem('thenisai_auth_token');
+        sessionStorage.removeItem('thenisai_auth_user');
+        sessionStorage.removeItem('thenisai_admin_session');
+        sessionStorage.removeItem('thenisai_billing_session');
       }
       const errorMsg = normalizeHttpStatusError(res.status, data.message || data.error);
       const error = new Error(errorMsg);
@@ -145,7 +150,12 @@ export async function request(endpoint, options = {}) {
     }
 
     if (import.meta.env.DEV) {
-      console.error(`[API Error] ${method} ${url}:`, err);
+      if (endpoint === '/api/auth/me' && err.status === 401) {
+        // Expected when user is not yet logged in or session expired
+        console.debug(`[API] Not logged in on ${endpoint}`);
+      } else {
+        console.error(`[API Error] ${method} ${url}:`, err);
+      }
     }
     throw err;
   }

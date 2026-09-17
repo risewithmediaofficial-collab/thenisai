@@ -72,9 +72,10 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       // Check payment filter
       if (selectedPaymentFilter !== 'all') {
         const pm = (sale.paymentMethod || '').toLowerCase();
-        if (selectedPaymentFilter === 'cash' && pm !== 'cash') return false;
-        if (selectedPaymentFilter === 'upi' && pm !== 'upi') return false;
+        if (selectedPaymentFilter === 'cash' && pm !== 'cash' && pm !== 'split') return false;
+        if (selectedPaymentFilter === 'upi' && pm !== 'upi' && pm !== 'split') return false;
         if (selectedPaymentFilter === 'card' && pm !== 'card') return false;
+        if (selectedPaymentFilter === 'split' && pm !== 'split') return false;
       }
 
       // Check search query (invoice number, customer phone, customer name)
@@ -122,10 +123,10 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
   const totalBills = daySales.length;
   const avgOrderValue = totalBills > 0 ? Math.round(grossRevenue / totalBills) : 0;
 
-  // Tender Breakdown (Cash, UPI, Card)
+  // Tender Breakdown (Cash, UPI, Card, Split)
   const tenderSummary = useMemo(() => {
-    let cash = 0, upi = 0, card = 0;
-    let cashCount = 0, upiCount = 0, cardCount = 0;
+    let cash = 0, upi = 0, card = 0, split = 0;
+    let cashCount = 0, upiCount = 0, cardCount = 0, splitCount = 0;
 
     daySales.forEach((s) => {
       const amt = s.grandTotal || 0;
@@ -139,6 +140,13 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       } else if (pm === 'card') {
         card += amt;
         cardCount += 1;
+      } else if (pm === 'split') {
+        const c = s.paymentDetails?.cash ?? s.splitCash ?? 0;
+        const u = s.paymentDetails?.upi ?? s.splitUpi ?? 0;
+        cash += c;
+        upi += u;
+        split += amt;
+        splitCount += 1;
       } else {
         // Fallback default to cash if counter sale
         cash += amt;
@@ -150,6 +158,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       cash: { amount: cash, count: cashCount, percent: grossRevenue > 0 ? Math.round((cash / grossRevenue) * 100) : 0 },
       upi: { amount: upi, count: upiCount, percent: grossRevenue > 0 ? Math.round((upi / grossRevenue) * 100) : 0 },
       card: { amount: card, count: cardCount, percent: grossRevenue > 0 ? Math.round((card / grossRevenue) * 100) : 0 },
+      split: { amount: split, count: splitCount, percent: grossRevenue > 0 ? Math.round((split / grossRevenue) * 100) : 0 },
     };
   }, [daySales, grossRevenue]);
 
@@ -306,7 +315,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
 
           <h2 className="daily-title-h2">Daily Revenue &amp; Shift Bills</h2>
           <p className="daily-title-sub">
-            Shift Register Audit &amp; Day-End Settlement · Real-time GST &amp; Tender Reconciliation
+            Shift Register Audit &amp; Day-End Settlement · Real-time Revenue &amp; Tender Reconciliation
           </p>
         </div>
 
@@ -395,51 +404,54 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
         </div>
       </div>
 
-      {/* Primary KPI Metrics Grid */}
+      {/* Primary KPI Metrics Grid — Clean Revenue & Operations (No GST) */}
       <section className="revenue-kpi-grid">
         <div className="rev-card gross">
-          <span className="rev-label">TOTAL GROSS REVENUE</span>
+          <span className="rev-label">TOTAL SALES REVENUE</span>
           <div className="rev-value">₹{grossRevenue.toLocaleString('en-IN')}</div>
           <span className="rev-foot">{totalBills} Bills / Transactions</span>
         </div>
 
         <div className="rev-card net">
-          <span className="rev-label">NET TAXABLE SALES</span>
-          <div className="rev-value">₹{Math.round(netSales).toLocaleString('en-IN')}</div>
-          <span className="rev-foot">Excluding GST</span>
-        </div>
-
-        <div className="rev-card gst">
-          <span className="rev-label">
-            {taxSettings?.taxEnabled !== false
-              ? `GST ${taxSettings?.totalGstRate ?? 5}% TAX COLLECTED`
-              : 'TAX COLLECTED (0% NIL)'}
-          </span>
-          <div className="rev-value">₹{Math.round(totalTax).toLocaleString('en-IN')}</div>
-          <span className="rev-foot">
-            CGST ({taxSettings?.cgstRate ?? 2.5}%): ₹{Math.round(cgstAmount)} · SGST ({taxSettings?.sgstRate ?? 2.5}%): ₹{Math.round(sgstAmount)}
-          </span>
-        </div>
-
-        <div className="rev-card aov">
           <span className="rev-label">AVERAGE ORDER VALUE</span>
           <div className="rev-value">₹{avgOrderValue.toLocaleString('en-IN')}</div>
           <span className="rev-foot">Per Customer Bill</span>
         </div>
+
+        <div className="rev-card aov">
+          <span className="rev-label">TOTAL ITEMS SOLD</span>
+          <div className="rev-value">
+            {daySales.reduce((acc, s) => acc + (s.items || []).reduce((iSum, it) => iSum + (Number(it.quantity) || 1), 0), 0)}
+          </div>
+          <span className="rev-foot">Cups, Sweets &amp; Savories</span>
+        </div>
+
+        <div className="rev-card gst">
+          <span className="rev-label">SETTLED TRANSACTIONS</span>
+          <div className="rev-value">{totalBills}</div>
+          <span className="rev-foot">Cash: ₹{tenderSummary.cash.amount.toLocaleString('en-IN')} · UPI: ₹{tenderSummary.upi.amount.toLocaleString('en-IN')}</span>
+        </div>
       </section>
 
-      {/* Tender Breakdown Cards (Cash vs UPI vs Card) */}
+      {/* Tender Breakdown Cards (Cash vs UPI vs Card) with SVG Strokes instead of emojis */}
       <section className="tender-section">
         <h3 className="section-subtitle">Payment Mode &amp; Drawer Tender Breakdown</h3>
         <div className="tender-cards-grid">
           <div
             className={`tender-card cash ${selectedPaymentFilter === 'cash' ? 'selected' : ''}`}
-            onClick={() => setSelectedPaymentFilter((prev) => prev === 'cash' ? 'all' : 'cash')}
+            onClick={() => setSelectedPaymentFilter((prev) => (prev === 'cash' ? 'all' : 'cash'))}
             role="button"
             tabIndex={0}
           >
             <div className="tender-top">
-              <span className="tender-badge cash">💵 Cash in Drawer</span>
+              <span className="tender-badge cash">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M6 12h.01M18 12h.01" />
+                </svg>
+                Cash in Drawer
+              </span>
               <span className="tender-percent">{tenderSummary.cash.percent}%</span>
             </div>
             <div className="tender-amt">₹{tenderSummary.cash.amount.toLocaleString('en-IN')}</div>
@@ -448,12 +460,18 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
 
           <div
             className={`tender-card upi ${selectedPaymentFilter === 'upi' ? 'selected' : ''}`}
-            onClick={() => setSelectedPaymentFilter((prev) => prev === 'upi' ? 'all' : 'upi')}
+            onClick={() => setSelectedPaymentFilter((prev) => (prev === 'upi' ? 'all' : 'upi'))}
             role="button"
             tabIndex={0}
           >
             <div className="tender-top">
-              <span className="tender-badge upi">📱 UPI / QR Code</span>
+              <span className="tender-badge upi">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+                UPI / QR Code
+              </span>
               <span className="tender-percent">{tenderSummary.upi.percent}%</span>
             </div>
             <div className="tender-amt">₹{tenderSummary.upi.amount.toLocaleString('en-IN')}</div>
@@ -462,12 +480,18 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
 
           <div
             className={`tender-card card ${selectedPaymentFilter === 'card' ? 'selected' : ''}`}
-            onClick={() => setSelectedPaymentFilter((prev) => prev === 'card' ? 'all' : 'card')}
+            onClick={() => setSelectedPaymentFilter((prev) => (prev === 'card' ? 'all' : 'card'))}
             role="button"
             tabIndex={0}
           >
             <div className="tender-top">
-              <span className="tender-badge card">💳 Card / Swipe</span>
+              <span className="tender-badge card">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                  <line x1="1" y1="10" x2="23" y2="10" />
+                </svg>
+                Card / Swipe
+              </span>
               <span className="tender-percent">{tenderSummary.card.percent}%</span>
             </div>
             <div className="tender-amt">₹{tenderSummary.card.amount.toLocaleString('en-IN')}</div>
@@ -699,8 +723,14 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   type="button"
                   className="z-print-btn"
                   onClick={handlePrintZReport}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  🖨️ Print Slip
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="8" />
+                  </svg>
+                  Print Slip
                 </button>
                 <button
                   type="button"

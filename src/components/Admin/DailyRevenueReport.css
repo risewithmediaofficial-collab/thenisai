@@ -954,25 +954,49 @@
 }
 
 /* ==============================================================================
-   10. Print Rules
+   10. Dedicated Print Rules for Day Z-Report
    ============================================================================== */
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  #z-report-print-area,
-  #z-report-print-area * {
-    visibility: visible;
-  }
-  #z-report-print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
-    margin: 0;
-    padding: 10mm 5mm;
-  }
-  .no-print {
+  /* When Z-report slip is active, hide everything else */
+  .z-report-modal-backdrop,
+  .z-report-modal-header,
+  .z-report-actions,
+  .daily-revenue-container,
+  .daily-revenue-header,
+  .daily-revenue-summary,
+  .daily-breakdown-card,
+  .daily-table-wrapper {
     display: none !important;
+  }
+
+  .z-report-modal-content {
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+  }
+
+  #z-report-print-area {
+    display: block !important;
+    position: static !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    margin: 0 auto !important;
+    padding: 3mm 2mm !important;
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  #z-report-print-area * {
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

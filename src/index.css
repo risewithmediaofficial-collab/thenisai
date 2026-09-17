@@ -490,5 +490,25 @@ time, .hours {
   font-style: normal;
 }
 
+/* ============================================================
+   GLOBAL PRINT ENGINE RESET
+   Ensures print preview is never clipped or suppressed by layout locks
+   ============================================================ */
+@media print {
+  html,
+  body {
+    overflow: visible !important;
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    background: #FFFFFF !important;
+  }
 
-
+  #root {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+}

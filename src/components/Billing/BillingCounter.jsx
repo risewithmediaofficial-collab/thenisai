@@ -7,21 +7,25 @@ import { ALL_BILLING_ITEMS, GST_RATE } from '../../data/sweetsData';
 import { exportBillsToExcel, downloadOfflineBillingTemplate, importBillsFromExcel } from '../../utils/excelBackup';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
+import AddNewProductModal from '../Inventory/AddNewProductModal';
+import DeleteBillModal from './DeleteBillModal';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import GstSettingsModal from '../Admin/GstSettingsModal';
 import './BillingCounter.css';
 
-// Predefined categories for fast sweets & beverages POS filtering
+// Predefined categories for fast sweets, savouries & beverages POS filtering
 const CATEGORIES = [
-  { id: 'all', label: `All Sweets (${ALL_BILLING_ITEMS.length})` },
+  { id: 'all', label: 'All Items' },
+  { id: 'beverages', label: 'Tea & Fast Sellers (13)' },
+  { id: 'sweets', label: 'Sweets (62)' },
+  { id: 'spices', label: 'Spices & Kara (50)' },
   { id: 'halwa', label: 'Halwa (அல்வா)' },
   { id: 'mysore-pak', label: 'Mysore Pak & Ghee' },
   { id: 'cashew-rolls', label: 'Cashew & Rolls' },
   { id: 'milk-bengali', label: 'Milk & Bengali' },
   { id: 'traditional', label: 'Traditional Sweets' },
   { id: 'pieces-packets', label: 'Pieces & Packets' },
-  { id: 'beverages', label: 'Tea & Beverages' },
 ];
 
 export default function BillingCounter() {
@@ -42,9 +46,23 @@ export default function BillingCounter() {
     offlinePendingCount,
     syncOfflineBills,
     taxSettings,
+    allBillingProducts,
+    customProducts,
+    productAvailabilityMap,
+    toggleProductAvailability,
+    addNewProduct,
+    deleteProduct,
+    updateProductMasterPrice,
+    deleteBill,
   } = useCart();
 
   const [isGstModalOpen, setIsGstModalOpen] = useState(false);
+  const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
+  const [editingPriceItem, setEditingPriceItem] = useState(null); // { item, newPrice, reason }
+  const [editingMasterPriceItem, setEditingMasterPriceItem] = useState(null); // { id, name, price }
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState(null); // { id, name }
+  const [deleteBillModalItem, setDeleteBillModalItem] = useState(null); // bill to delete with reason
+
 
   // Excel Backup State
   const [isExcelMenuOpen, setIsExcelMenuOpen] = useState(false);
@@ -144,16 +162,20 @@ export default function BillingCounter() {
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
   const [customerInfo, setCustomerInfo] = useState({
-    fullName: 'Walk-in Guest',
+    fullName: '',
     phone: '',
   });
-  const [paymentMode, setPaymentMode] = useState('cash'); // 'cash' | 'upi' | 'card'
+  const [paymentMode, setPaymentMode] = useState('cash'); // 'cash' | 'upi' | 'card' | 'split'
+  const [splitCash, setSplitCash] = useState('');
+  const [splitUpi, setSplitUpi] = useState('');
+  const [lastEditedSplit, setLastEditedSplit] = useState('cash'); // 'cash' | 'upi'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Inventory Page Search & Category Filter states
   const [inventorySearch, setInventorySearch] = useState('');
   const [invCategoryFilter, setInvCategoryFilter] = useState('all');
+  const [invStatusFilter, setInvStatusFilter] = useState('all');
 
   // Hold / Recall Bills state
   const [heldBills, setHeldBills] = useState([]);
@@ -239,13 +261,16 @@ export default function BillingCounter() {
   const [inlineWeightId, setInlineWeightId] = useState(null); // sweet.id of open popover
   const [editingWeight, setEditingWeight] = useState(null); // original weight if editing existing line
   const [inlineVal, setInlineVal] = useState('');
-  const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg' | 'ml' | 'L'
+  const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg' | 'ml' | 'L' | 'rs'
+  const [inlineMode, setInlineMode] = useState(null); // null | 'g' | 'kg' | 'ml' | 'L' | 'rs'
   const inlineInputRef = useRef(null);
 
   const openInlineWeight = (sweet, existingWeight) => {
     if (inlineWeightId === sweet.id && !existingWeight) {
-      setInlineWeightId(null); // toggle off
+      setInlineWeightId(null);
       setEditingWeight(null);
+      setInlineMode(null);
+      setInlineVal('');
       return;
     }
     setInlineWeightId(sweet.id);
@@ -257,25 +282,39 @@ export default function BillingCounter() {
       if (ew.includes('ml')) {
         setInlineVal(ew.replace(/[^0-9.]/g, ''));
         setInlineUnit('ml');
+        setInlineMode('ml');
       } else if (ew.includes('l') || ew.includes('litre')) {
         setInlineVal(ew.replace(/[^0-9.]/g, ''));
         setInlineUnit('L');
+        setInlineMode('L');
       } else if (ew.includes('kg')) {
         setInlineVal(ew.replace(/[^0-9.]/g, ''));
         setInlineUnit('kg');
+        setInlineMode('kg');
       } else if (ew.includes('g')) {
         setInlineVal(ew.replace(/[^0-9.]/g, ''));
         setInlineUnit('g');
+        setInlineMode('g');
       } else {
-        setInlineVal(isLitre ? '500' : '250');
-        setInlineUnit(isLitre ? 'ml' : 'g');
+        setInlineVal(isLitre ? '1' : '1');
+        setInlineUnit(isLitre ? 'L' : 'kg');
+        setInlineMode(isLitre ? 'L' : 'kg');
       }
     } else {
-      setInlineVal('');
-      setInlineUnit(isLitre ? 'ml' : 'g');
+      // Directly open in entry mode (image format)
+      if (isLitre) {
+        setInlineVal('1');
+        setInlineUnit('L');
+        setInlineMode('L');
+      } else {
+        setInlineVal('1');
+        setInlineUnit('kg');
+        setInlineMode('kg');
+      }
     }
 
     setTimeout(() => {
+      inlineInputRef.current?.focus();
       const rowEl = document.getElementById(`pos-row-${sweet.id}`);
       if (rowEl) {
         rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -286,36 +325,91 @@ export default function BillingCounter() {
   const closeInlineWeight = () => {
     setInlineWeightId(null);
     setEditingWeight(null);
+    setInlineMode(null);
+    setInlineVal('');
+  };
+
+  const handleSelectUnitMode = (mode) => {
+    setInlineMode(mode);
+    if (mode === 'g') {
+      setInlineUnit('g');
+      setInlineVal('250');
+    } else if (mode === 'kg') {
+      setInlineUnit('kg');
+      setInlineVal('1');
+    } else if (mode === 'ml') {
+      setInlineUnit('ml');
+      setInlineVal('500');
+    } else if (mode === 'L' || mode === 'l') {
+      setInlineUnit('L');
+      setInlineVal('1');
+    } else if (mode === 'rs') {
+      setInlineUnit('rs');
+      setInlineVal('100');
+    }
+    setTimeout(() => {
+      inlineInputRef.current?.focus();
+    }, 60);
+  };
+
+  const getRupeePreview = (sweet, amountStr) => {
+    const amt = parseFloat(amountStr);
+    if (isNaN(amt) || amt <= 0) return '';
+    const rate = Number(sweet.price) || 0;
+    if (rate <= 0) return '';
+    if (isLitreItem(sweet)) {
+      const ml = Math.round((amt / rate) * 1000);
+      if (ml >= 1000) {
+        const l = parseFloat((ml / 1000).toFixed(3));
+        return `= ${l}L (${ml}ml)`;
+      }
+      return `= ${ml}ml`;
+    } else {
+      const grams = Math.round((amt / rate) * 1000);
+      if (grams >= 1000) {
+        const kg = parseFloat((grams / 1000).toFixed(3));
+        return `= ${kg} kg (${grams}g)`;
+      }
+      return `= ${grams}g`;
+    }
   };
 
   const handleSwitchInlineUnit = (newUnit) => {
-    if (inlineUnit !== newUnit) {
-      setInlineUnit(newUnit);
-      setInlineVal('');
-      setTimeout(() => {
-        inlineInputRef.current?.focus();
-      }, 50);
-    }
+    handleSelectUnitMode(newUnit);
   };
 
   const confirmInlineWeight = (sweet) => {
     const num = parseFloat(inlineVal);
     if (isNaN(num) || num <= 0) return;
     let formatted;
-    if (isLitreItem(sweet)) {
-      formatted = (inlineUnit === 'L' || inlineUnit === 'Litre') ? `${num}L` : `${num}ml`;
+    let finalPrice = null;
+
+    if (inlineMode === 'rs') {
+      const rupeeAmount = Math.round(num);
+      const perUnitRate = Number(sweet.price) || 0;
+      if (perUnitRate <= 0) return;
+      if (isLitreItem(sweet)) {
+        const ml = Math.round((rupeeAmount / perUnitRate) * 1000);
+        formatted = ml >= 1000 ? `${parseFloat((ml / 1000).toFixed(3))}L` : `${ml}ml`;
+      } else {
+        const grams = Math.round((rupeeAmount / perUnitRate) * 1000);
+        formatted = grams >= 1000 ? `${parseFloat((grams / 1000).toFixed(3))} kg` : `${grams}g`;
+      }
+      finalPrice = rupeeAmount;
+    } else if (isLitreItem(sweet)) {
+      formatted = (inlineUnit === 'L' || inlineUnit === 'Litre' || inlineMode === 'L' || inlineMode === 'l') ? `${num}L` : `${num}ml`;
     } else {
-      formatted = inlineUnit === 'kg' ? `${num} kg` : `${num}g`;
+      formatted = (inlineUnit === 'kg' || inlineMode === 'kg') ? `${num} kg` : `${num}g`;
     }
 
     if (editingWeight && editingWeight !== formatted) {
       setBillItems((prev) => {
         const withoutOld = prev.filter((i) => !(i.id === sweet.id && i.weight === editingWeight));
-        const price = computeItemPrice(sweet, formatted);
+        const price = finalPrice !== null ? finalPrice : computeItemPrice(sweet, formatted);
         const existingIdx = withoutOld.findIndex((i) => i.id === sweet.id && i.weight === formatted);
         if (existingIdx > -1) {
           const updated = [...withoutOld];
-          updated[existingIdx] = { ...updated[existingIdx], quantity: updated[existingIdx].quantity + 1 };
+          updated[existingIdx] = { ...updated[existingIdx], quantity: updated[existingIdx].quantity + 1, price };
           return updated;
         }
         return [
@@ -333,11 +427,13 @@ export default function BillingCounter() {
         ];
       });
     } else {
-      handleAddSweetToBill(sweet, formatted, 1);
+      handleAddSweetToBill(sweet, formatted, 1, finalPrice);
     }
 
     setEditingWeight(null);
     setInlineWeightId(null);
+    setInlineMode(null);
+    setInlineVal('');
   };
 
   useEffect(() => {
@@ -384,18 +480,18 @@ export default function BillingCounter() {
         setPosTab('online-orders');
       } else if (h.includes('daily') || h.includes('revenue') || h.includes('sales')) {
         setPosTab('daily-sales');
+      } else if (h.includes('inventory') || h.includes('stock') || h.includes('products')) {
+        setPosTab('inventory');
       } else {
         setPosTab('register');
       }
     };
+    handleHashSync();
     window.addEventListener('hashchange', handleHashSync);
     return () => window.removeEventListener('hashchange', handleHashSync);
   }, []);
 
   const handleSwitchTab = (newTab) => {
-    if (newTab === 'inventory') {
-      newTab = 'register';
-    }
     setPosTab(newTab);
     if (newTab === 'register') {
       window.location.hash = '#billing';
@@ -408,6 +504,8 @@ export default function BillingCounter() {
     } else if (newTab === 'daily-sales') {
       window.location.hash = '#billing/daily-sales';
       handleRefreshShiftBills();
+    } else if (newTab === 'inventory') {
+      window.location.hash = '#billing/inventory';
     }
   };
 
@@ -424,8 +522,17 @@ export default function BillingCounter() {
   });
 
   const filteredShiftBills = myShiftBills.filter((b) => {
-    if (billPaymentFilter !== 'all' && (b.paymentMethod || '').toLowerCase() !== billPaymentFilter) {
-      return false;
+    if (billPaymentFilter !== 'all') {
+      const pm = (b.paymentMethod || '').toLowerCase();
+      if (billPaymentFilter === 'split') {
+        if (pm !== 'split') return false;
+      } else if (billPaymentFilter === 'cash') {
+        if (pm !== 'cash' && pm !== 'split') return false;
+      } else if (billPaymentFilter === 'upi') {
+        if (pm !== 'upi' && pm !== 'split') return false;
+      } else if (billPaymentFilter === 'card') {
+        if (pm !== 'card') return false;
+      }
     }
     if (billSearchTerm.trim()) {
       const term = billSearchTerm.toLowerCase();
@@ -438,8 +545,18 @@ export default function BillingCounter() {
   });
 
   const myShiftTotalRevenue = myShiftBills.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
-  const myShiftCashTotal = myShiftBills.filter((b) => b.paymentMethod === 'cash').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
-  const myShiftUpiTotal = myShiftBills.filter((b) => b.paymentMethod === 'upi').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
+  const myShiftCashTotal = myShiftBills.reduce((sum, b) => {
+    const pm = (b.paymentMethod || '').toLowerCase();
+    if (pm === 'cash') return sum + (b.grandTotal || 0);
+    if (pm === 'split') return sum + (b.paymentDetails?.cash ?? b.splitCash ?? 0);
+    return sum;
+  }, 0);
+  const myShiftUpiTotal = myShiftBills.reduce((sum, b) => {
+    const pm = (b.paymentMethod || '').toLowerCase();
+    if (pm === 'upi') return sum + (b.grandTotal || 0);
+    if (pm === 'split') return sum + (b.paymentDetails?.upi ?? b.splitUpi ?? 0);
+    return sum;
+  }, 0);
   const myShiftCardTotal = myShiftBills.filter((b) => b.paymentMethod === 'card').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
 
   const handleRefreshShiftBills = async () => {
@@ -546,19 +663,32 @@ export default function BillingCounter() {
     setIsRefillOpen(true);
   };
 
-  // Filtered inventory stock items for live counter tracker
+  // Filtered inventory products matching all catalog items
   const filteredInventory = useMemo(() => {
-    return (inventory || []).filter((item) => {
+    return (allBillingProducts || []).filter((item) => {
       const cat = (item.category || '').toLowerCase();
       const subcat = (item.subcategory || '').toLowerCase();
 
-      if (invCategoryFilter === 'spices') {
-        if (cat !== 'spices' && !subcat.includes('kara')) return false;
-      } else if (invCategoryFilter === 'beverages') {
-        if (cat !== 'beverages' && !subcat.includes('tea') && !subcat.includes('coffee') && !subcat.includes('malt')) return false;
-      } else if (invCategoryFilter === 'sweets') {
-        if (cat !== 'sweets') return false;
+      if (invCategoryFilter !== 'all') {
+        if (invCategoryFilter === 'spices' || invCategoryFilter === 'spices-masalas') {
+          if (cat !== 'spices' && cat !== 'spices-masalas' && !subcat.includes('kara') && !subcat.includes('spice')) return false;
+        } else if (invCategoryFilter === 'beverages') {
+          if (cat !== 'beverages' && !subcat.includes('tea') && !subcat.includes('coffee') && !subcat.includes('malt') && !subcat.includes('snack') && cat !== 'snacks') return false;
+        } else if (invCategoryFilter === 'sweets') {
+          if (cat !== 'sweets' && !subcat.includes('sweet') && !subcat.includes('halwa') && !subcat.includes('pak') && !subcat.includes('roll') && !subcat.includes('bengali') && !subcat.includes('palkova')) return false;
+        } else if (invCategoryFilter === 'savouries') {
+          if (cat !== 'savouries' && !subcat.includes('mixture') && !subcat.includes('sev') && !subcat.includes('murukku')) return false;
+        } else if (cat !== invCategoryFilter) {
+          return false;
+        }
       }
+
+      const isInactive = productAvailabilityMap[item.id] !== undefined
+        ? Boolean(productAvailabilityMap[item.id])
+        : Boolean(item.isInactive || inventory?.find((i) => i.id === item.id)?.isInactive);
+
+      if (invStatusFilter === 'active' && isInactive) return false;
+      if (invStatusFilter === 'inactive' && !isInactive) return false;
 
       if (inventorySearch.trim()) {
         const q = inventorySearch.trim().toLowerCase();
@@ -567,12 +697,13 @@ export default function BillingCounter() {
           (item.englishName || '').toLowerCase().includes(q) ||
           (item.tamilName || '').includes(inventorySearch.trim()) ||
           (item.id || '').toLowerCase().includes(q) ||
-          subcat.includes(q);
+          subcat.includes(q) ||
+          String(item.itemNumber || '').includes(q);
         if (!matches) return false;
       }
       return true;
     });
-  }, [inventory, invCategoryFilter, inventorySearch]);
+  }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventory]);
 
   // Dynamic POS Tax Calculations from Admin Settings
   const totalTaxPct = typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : 5;
@@ -581,10 +712,10 @@ export default function BillingCounter() {
   const isTaxEnabled = taxSettings?.taxEnabled !== false && totalTaxPct > 0;
 
   const billSubtotal = billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
-  const billCgst = isTaxEnabled && billItems.length > 0 ? Math.round(billSubtotal * (cgstPct / 100) * 100) / 100 : 0;
-  const billSgst = isTaxEnabled && billItems.length > 0 ? Math.round(billSubtotal * (sgstPct / 100) * 100) / 100 : 0;
-  const billGst = Math.round((billCgst + billSgst) * 100) / 100;
-  const billGrandTotal = Math.round(billSubtotal + billGst);
+  const billCgst = 0;
+  const billSgst = 0;
+  const billGst = 0;
+  const billGrandTotal = Math.round(billSubtotal);
 
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
   const computeItemPrice = (sweet, weight) => {
@@ -652,12 +783,13 @@ export default function BillingCounter() {
   };
 
   // Add product to bill with chosen cup/pc/weight/volume quantity
-  const handleAddSweetToBill = (sweet, weight, addQty = 1) => {
+  const handleAddSweetToBill = (sweet, weight, addQty = 1, overridePrice = null) => {
     const qty = parseInt(addQty, 10) || 1;
     const isKg = isKgItem(sweet);
     const isLitre = isLitreItem(sweet);
     const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweet.unit) || '1 Cup';
-    const price = computeItemPrice(sweet, itemWeight);
+    const computedPrice = computeItemPrice(sweet, itemWeight);
+    const price = overridePrice !== null && !isNaN(overridePrice) ? Number(overridePrice) : computedPrice;
 
     setBillItems((prev) => {
       const idx = prev.findIndex((i) => i.id === sweet.id && i.weight === itemWeight);
@@ -671,6 +803,7 @@ export default function BillingCounter() {
           {
             id: sweet.id,
             name: sweet.name,
+            itemNumber: sweet.itemNumber,
             weight: itemWeight,
             price,
             quantity: qty,
@@ -723,6 +856,7 @@ export default function BillingCounter() {
           {
             id,
             name: sweetObj?.name || id,
+            itemNumber: sweetObj?.itemNumber,
             weight: itemWeight,
             price,
             quantity: val,
@@ -754,9 +888,111 @@ export default function BillingCounter() {
     setBillItems((prev) => prev.filter((it) => !(it.id === id && it.weight === weight)));
   };
 
+  // Handle Bidirectional Split Calculations (Cash <-> UPI)
+  const handleSplitCashChange = (val) => {
+    setLastEditedSplit('cash');
+    if (val === '') {
+      setSplitCash('');
+      setSplitUpi(billGrandTotal > 0 ? String(billGrandTotal) : '');
+      return;
+    }
+    const cleanVal = val.replace(/[^0-9.]/g, '');
+    setSplitCash(cleanVal);
+    const num = parseFloat(cleanVal);
+    if (!isNaN(num)) {
+      const remaining = Math.max(0, Math.round((billGrandTotal - num) * 100) / 100);
+      setSplitUpi(String(remaining));
+    }
+  };
+
+  const handleSplitUpiChange = (val) => {
+    setLastEditedSplit('upi');
+    if (val === '') {
+      setSplitUpi('');
+      setSplitCash(billGrandTotal > 0 ? String(billGrandTotal) : '');
+      return;
+    }
+    const cleanVal = val.replace(/[^0-9.]/g, '');
+    setSplitUpi(cleanVal);
+    const num = parseFloat(cleanVal);
+    if (!isNaN(num)) {
+      const remaining = Math.max(0, Math.round((billGrandTotal - num) * 100) / 100);
+      setSplitCash(String(remaining));
+    }
+  };
+
+  // Sync split remainder when bill total updates
+  useEffect(() => {
+    if (paymentMode === 'split' && billGrandTotal > 0) {
+      if (lastEditedSplit === 'cash' && splitCash !== '') {
+        const c = parseFloat(splitCash) || 0;
+        const rem = Math.max(0, Math.round((billGrandTotal - c) * 100) / 100);
+        setSplitUpi(String(rem));
+      } else if (lastEditedSplit === 'upi' && splitUpi !== '') {
+        const u = parseFloat(splitUpi) || 0;
+        const rem = Math.max(0, Math.round((billGrandTotal - u) * 100) / 100);
+        setSplitCash(String(rem));
+      }
+    }
+  }, [billGrandTotal, paymentMode]);
+
+  const splitCashNum = parseFloat(splitCash) || 0;
+  const splitUpiNum = parseFloat(splitUpi) || 0;
+  const totalSplitPaid = Math.round((splitCashNum + splitUpiNum) * 100) / 100;
+  const splitDiff = Math.round((billGrandTotal - totalSplitPaid) * 100) / 100;
+
+  const handleSelectSplitMode = () => {
+    setPaymentMode('split');
+    if (!splitCash && !splitUpi && billGrandTotal > 0) {
+      setLastEditedSplit('cash');
+    }
+  };
+
   const handleClearBill = () => {
     setBillItems([]);
-    setCustomerInfo({ fullName: 'Walk-in Guest', phone: '' });
+    setCustomerInfo({ fullName: '', phone: '' });
+    setSplitCash('');
+    setSplitUpi('');
+    setLastEditedSplit('cash');
+  };
+
+  // Staff & Admin Price Override handler
+  const handleConfirmPriceOverride = () => {
+    if (!editingPriceItem) return;
+    const priceNum = parseFloat(editingPriceItem.newPrice);
+    if (isNaN(priceNum) || priceNum < 0) return;
+
+    setBillItems((prev) =>
+      prev.map((it) => {
+        if (it.id === editingPriceItem.item.id && it.weight === editingPriceItem.item.weight) {
+          const orig = it.originalPrice !== undefined ? it.originalPrice : it.price;
+          return {
+            ...it,
+            price: priceNum,
+            originalPrice: orig,
+            isPriceOverridden: priceNum !== orig,
+            overrideReason: editingPriceItem.reason || 'Staff Price Adjustment',
+          };
+        }
+        return it;
+      })
+    );
+    setEditingPriceItem(null);
+  };
+
+  const handleConfirmMasterPriceUpdate = async () => {
+    if (!editingMasterPriceItem) return;
+    const num = parseFloat(editingMasterPriceItem.price);
+    if (!isNaN(num) && num >= 0) {
+      await updateProductMasterPrice(editingMasterPriceItem.id, num, user);
+    }
+    setEditingMasterPriceItem(null);
+  };
+
+  const handleConfirmDeleteProduct = async () => {
+    if (!deleteConfirmItem) return;
+    await deleteProduct(deleteConfirmItem.id, user);
+    setDeleteConfirmItem(null);
   };
 
   // Hold active bill
@@ -766,6 +1002,9 @@ export default function BillingCounter() {
       id: Date.now(),
       billItems: [...billItems],
       customerInfo: { ...customerInfo },
+      paymentMode,
+      splitCash,
+      splitUpi,
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       total: billGrandTotal,
     };
@@ -786,6 +1025,9 @@ export default function BillingCounter() {
         id: Date.now(),
         billItems: [...billItems],
         customerInfo: { ...customerInfo },
+        paymentMode,
+        splitCash,
+        splitUpi,
         time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
         total: billGrandTotal,
       };
@@ -794,6 +1036,9 @@ export default function BillingCounter() {
 
     setBillItems(target.billItems);
     setCustomerInfo(target.customerInfo);
+    if (target.paymentMode) setPaymentMode(target.paymentMode);
+    if (target.splitCash !== undefined) setSplitCash(target.splitCash);
+    if (target.splitUpi !== undefined) setSplitUpi(target.splitUpi);
     setHeldBills(updatedHeld);
   };
 
@@ -809,12 +1054,36 @@ export default function BillingCounter() {
 
     if (billItems.length === 0) return;
 
+    // Split validation
+    let finalSplitCash = parseFloat(splitCash) || 0;
+    let finalSplitUpi = parseFloat(splitUpi) || 0;
+
+    if (paymentMode === 'split') {
+      const c = parseFloat(splitCash);
+      const u = parseFloat(splitUpi);
+      // If neither entered yet, prompt or default cash to billGrandTotal
+      if (isNaN(c) && isNaN(u)) {
+        alert(`Please enter the Cash or UPI amount for the split payment of ₹${billGrandTotal}.`);
+        return;
+      }
+      finalSplitCash = isNaN(c) ? 0 : c;
+      finalSplitUpi = isNaN(u) ? 0 : u;
+      const enteredSum = Math.round((finalSplitCash + finalSplitUpi) * 100) / 100;
+
+      if (enteredSum < billGrandTotal) {
+        const remaining = Math.round((billGrandTotal - enteredSum) * 100) / 100;
+        alert(`⚠️ Split payment incomplete!\n\nTotal Bill: ₹${billGrandTotal}\nEntered: ₹${enteredSum} (Cash: ₹${finalSplitCash} + UPI: ₹${finalSplitUpi})\n\nRemaining pending: ₹${remaining}\n\nPlease balance the split amount before settling.`);
+        return;
+      }
+    }
+
     const year = new Date().getFullYear();
     const seq = Math.floor(1000 + Math.random() * 9000);
     const invoiceNumber = `POS-${year}-${seq}`;
     const now = new Date();
 
     const saleData = {
+      source: 'pos',
       invoiceNumber,
       orderDate: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       orderTime: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
@@ -826,7 +1095,7 @@ export default function BillingCounter() {
         counter: user?.counter || 'Counter Desk 01',
       },
       customer: {
-        fullName: customerInfo.fullName.trim() || 'Walk-in Guest',
+        fullName: customerInfo.fullName.trim() || 'Walk-in Customer',
         phone: customerInfo.phone.trim() || 'Store Counter',
         email: 'counter@thenisaisweets.com',
       },
@@ -854,7 +1123,23 @@ export default function BillingCounter() {
       deliveryFee: 0,
       grandTotal: billGrandTotal,
       paymentMethod: paymentMode,
-      upiUtr: paymentMode === 'upi' ? 'Counter POS UPI QR' : null,
+      splitCash: paymentMode === 'split' ? finalSplitCash : null,
+      splitUpi: paymentMode === 'split' ? finalSplitUpi : null,
+      paymentDetails: paymentMode === 'split' ? {
+        mode: 'split',
+        cash: finalSplitCash,
+        upi: finalSplitUpi,
+        total: billGrandTotal,
+        changeDue: Math.max(0, Math.round((finalSplitCash + finalSplitUpi - billGrandTotal) * 100) / 100),
+      } : {
+        mode: paymentMode,
+        total: billGrandTotal,
+      },
+      upiUtr: paymentMode === 'split'
+        ? `Split: Cash ₹${finalSplitCash} + UPI ₹${finalSplitUpi}`
+        : paymentMode === 'upi'
+        ? 'Counter POS UPI QR'
+        : null,
       orderStatus: 'Completed (Paid at Counter)',
     };
 
@@ -870,7 +1155,7 @@ export default function BillingCounter() {
   };
 
   // Filtered and orderwise products based on search and category
-  const allProducts = ALL_BILLING_ITEMS;
+  const allProducts = allBillingProducts && allBillingProducts.length > 0 ? allBillingProducts : ALL_BILLING_ITEMS;
 
   const rawFiltered = allProducts.filter((sw, idx) => {
     const itemNum = sw.itemNumber || idx + 1;
@@ -879,6 +1164,15 @@ export default function BillingCounter() {
 
     if (!q) {
       if (selectedCategory === 'all') return true;
+      if (selectedCategory === 'beverages') {
+        return (itemNum >= 1 && itemNum <= 13) || sw.category === 'beverages' || sw.category === 'snacks';
+      }
+      if (selectedCategory === 'sweets') {
+        return (itemNum >= 14 && itemNum <= 75) || sw.category === 'sweets';
+      }
+      if (selectedCategory === 'spices') {
+        return (itemNum >= 76 && itemNum <= 125) || sw.category === 'spices' || sw.subcategory === 'Spices (Kara Vagai)';
+      }
       if (selectedCategory === 'halwa') {
         return sw.subcategory === 'Halwa' || sw.name.toLowerCase().includes('halwa') || (sw.tamilName && sw.tamilName.includes('அல்வா'));
       }
@@ -889,16 +1183,13 @@ export default function BillingCounter() {
         return sw.subcategory === 'Cashew & Rolls' || sw.name.toLowerCase().includes('roll') || sw.name.toLowerCase().includes('cashew') || sw.name.toLowerCase().includes('kaju') || sw.name.toLowerCase().includes('pista');
       }
       if (selectedCategory === 'milk-bengali') {
-        return sw.subcategory === 'Milk & Bengali' || sw.name.toLowerCase().includes('milk') || sw.name.toLowerCase().includes('khoa') || sw.name.toLowerCase().includes('peda') || sw.name.toLowerCase().includes('bengali') || sw.name.toLowerCase().includes('ras');
+        return sw.subcategory === 'Milk & Bengali' || sw.name.toLowerCase().includes('milk') || sw.name.toLowerCase().includes('palkova') || sw.name.toLowerCase().includes('palcova') || sw.name.toLowerCase().includes('khoa') || sw.name.toLowerCase().includes('peda') || sw.name.toLowerCase().includes('bengali') || sw.name.toLowerCase().includes('ras');
       }
       if (selectedCategory === 'traditional') {
         return sw.subcategory === 'Traditional Sweets' || sw.name.toLowerCase().includes('laddu') || sw.name.toLowerCase().includes('jangiri') || sw.name.toLowerCase().includes('poli') || sw.name.toLowerCase().includes('athirasam');
       }
       if (selectedCategory === 'pieces-packets') {
         return sw.unit === 'Pc' || sw.unit === 'Pkt';
-      }
-      if (selectedCategory === 'beverages') {
-        return sw.category === 'beverages' || sw.category === 'snacks';
       }
       return true;
     }
@@ -913,11 +1204,12 @@ export default function BillingCounter() {
       if (sw.price === searchNum) return true;
     }
 
-    // Text search (English, Tamil, ID)
+    // Text search (English, Tamil, ID, Tagline)
     const matchesText =
       sw.name.toLowerCase().includes(q) ||
       (sw.tamilName && sw.tamilName.includes(qRaw)) ||
       (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
+      (sw.tagline && sw.tagline.toLowerCase().includes(q)) ||
       sw.id.toLowerCase().includes(q);
 
     return matchesText;
@@ -1014,7 +1306,9 @@ export default function BillingCounter() {
                   ? 'Shift Ledger'
                   : posTab === 'online-orders'
                   ? 'Online Dispatch'
-                  : 'Counter Stock'}
+                  : posTab === 'daily-sales'
+                  ? 'Daily Revenue'
+                  : 'Products & Inventory'}
               </span>
             </div>
           </div>
@@ -1190,7 +1484,7 @@ export default function BillingCounter() {
                               </div>
                               <div className="held-popover-desc">
                                 <span>{h.billItems.length} {h.billItems.length === 1 ? 'item' : 'items'}</span>
-                                {h.customerInfo?.fullName && h.customerInfo.fullName !== 'Walk-in Guest' && (
+                                {h.customerInfo?.fullName && h.customerInfo.fullName !== 'Walk-in Guest' && h.customerInfo.fullName !== 'Walk-in Customer' && (
                                   <>
                                     <span className="dot-sep">·</span>
                                     <span className="held-cust-name">{h.customerInfo.fullName}</span>
@@ -1243,6 +1537,21 @@ export default function BillingCounter() {
                     </svg>
                     <span>Daily Revenue</span>
                   </button>
+
+                  <button
+                    type="button"
+                    className="btn-held-trigger toolbar"
+                    onClick={() => handleSwitchTab('inventory')}
+                    title="Manage Products & Inventory (பொருட்கள் & இருப்பு)"
+                    style={{ marginLeft: 8 }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                      <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                    <span>Products &amp; Inventory</span>
+                  </button>
                 </div>
               </div>
 
@@ -1287,14 +1596,67 @@ export default function BillingCounter() {
 
                     const isInlineOpen = inlineWeightId === sweet.id;
                     const inlinePrice = isInlineOpen
-                      ? (isLitre
-                          ? (inlineUnit === 'L' || inlineUnit === 'Litre'
-                              ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
-                              : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000))
-                          : (inlineUnit === 'kg'
-                              ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
-                              : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000)))
+                      ? (inlineMode === 'rs'
+                          ? Math.round(parseFloat(inlineVal || '0'))
+                          : (isLitre
+                              ? (inlineUnit === 'L' || inlineUnit === 'Litre'
+                                  ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
+                                  : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000))
+                              : (inlineUnit === 'kg'
+                                  ? Math.round((Number(sweet.price) || 0) * parseFloat(inlineVal || '0'))
+                                  : Math.round(((Number(sweet.price) || 0) * parseFloat(inlineVal || '0')) / 1000))))
                       : 0;
+                    const rsPreview = isInlineOpen && inlineMode === 'rs' ? getRupeePreview(sweet, inlineVal) : '';
+
+                    const isUnavailable = productAvailabilityMap[sweet.id] !== undefined
+                      ? Boolean(productAvailabilityMap[sweet.id])
+                      : Boolean(sweet.isInactive || inventory?.find((i) => i.id === sweet.id)?.isInactive);
+
+                    if (isUnavailable) {
+                      return (
+                        <div
+                          key={sweet.id}
+                          id={`pos-row-${sweet.id}`}
+                          className="pos-list-row is-out-of-stock"
+                          title={`${sweet.name} — Currently Out of Stock`}
+                        >
+                          <div className="pos-list-info">
+                            <div className="pos-list-title-wrap">
+                              <span className="pos-item-num-badge">#{itemNum}</span>
+                              <h4 className="pos-list-title" style={{ textDecoration: 'line-through', opacity: 0.65 }}>
+                                {sweet.name}
+                              </h4>
+                              <span className="pos-out-of-stock-pill">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <circle cx="12" cy="12" r="10" />
+                                  <line x1="15" y1="9" x2="9" y2="15" />
+                                  <line x1="9" y1="9" x2="15" y2="15" />
+                                </svg>
+                                Out of Stock / இருப்பு இல்லை
+                              </span>
+                            </div>
+                            <span className="pos-list-rate" style={{ opacity: 0.6 }}>₹{sweet.price}</span>
+                          </div>
+
+                          <div className="pos-list-stock-action" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="btn-reactivate-stock"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProductAvailability(sweet.id, false, user);
+                              }}
+                              title="Fresh stock arrived? Click to reactivate item"
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              Reactivate / இருப்பு வந்தது
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
 
                     return (
                       <div
@@ -1315,6 +1677,17 @@ export default function BillingCounter() {
                           <div className="pos-list-title-wrap">
                             <span className="pos-item-num-badge">#{itemNum}</span>
                             <h4 className="pos-list-title">{sweet.name}</h4>
+                            <button
+                              type="button"
+                              className="btn-pos-quick-off"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleProductAvailability(sweet.id, true, user);
+                              }}
+                              title="Mark this item Out of Stock / இருப்பு இல்லை"
+                            >
+                              Off
+                            </button>
                           </div>
                           <span className="pos-list-rate">
                             ₹{sweet.price}
@@ -1355,121 +1728,169 @@ export default function BillingCounter() {
                             {/* ── Inline weight / volume popover ── */}
                             {isInlineOpen && (
                               <div className="inline-weight-popover" onClick={(e) => e.stopPropagation()}>
-                                {/* Quick Presets for fast 1-tap selection */}
-                                <div className="iwp-presets">
-                                  {isLitre ? (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '250' && inlineUnit === 'ml' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('250'); setInlineUnit('ml'); }}
-                                      >250ml</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '500' && inlineUnit === 'ml' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('500'); setInlineUnit('ml'); }}
-                                      >500ml</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '1' && (inlineUnit === 'L' || inlineUnit === 'Litre') ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('1'); setInlineUnit('L'); }}
-                                      >1L</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '2' && (inlineUnit === 'L' || inlineUnit === 'Litre') ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('2'); setInlineUnit('L'); }}
-                                      >2L</button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '100' && inlineUnit === 'g' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('100'); setInlineUnit('g'); }}
-                                      >100g</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '250' && inlineUnit === 'g' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('250'); setInlineUnit('g'); }}
-                                      >250g</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '500' && inlineUnit === 'g' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('500'); setInlineUnit('g'); }}
-                                      >500g</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '1' && inlineUnit === 'kg' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('1'); setInlineUnit('kg'); }}
-                                      >1kg</button>
-                                      <button
-                                        type="button"
-                                        className={`iwp-preset-pill ${inlineVal === '2' && inlineUnit === 'kg' ? 'active' : ''}`}
-                                        onClick={() => { setInlineVal('2'); setInlineUnit('kg'); }}
-                                      >2kg</button>
-                                    </>
-                                  )}
-                                </div>
-
-                                {/* Custom Input & Unit Toggle */}
-                                <div className="iwp-controls-row">
-                                  <div className="iwp-unit-row">
-                                    {isLitre ? (
-                                      <>
-                                        <button
-                                          type="button"
-                                          className={`iwp-unit-btn ${inlineUnit === 'ml' ? 'active' : ''}`}
-                                          onClick={() => handleSwitchInlineUnit('ml')}
-                                        >ml</button>
-                                        <button
-                                          type="button"
-                                          className={`iwp-unit-btn ${inlineUnit === 'L' ? 'active' : ''}`}
-                                          onClick={() => handleSwitchInlineUnit('L')}
-                                        >L</button>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <button
-                                          type="button"
-                                          className={`iwp-unit-btn ${inlineUnit === 'g' ? 'active' : ''}`}
-                                          onClick={() => handleSwitchInlineUnit('g')}
-                                        >g</button>
-                                        <button
-                                          type="button"
-                                          className={`iwp-unit-btn ${inlineUnit === 'kg' ? 'active' : ''}`}
-                                          onClick={() => handleSwitchInlineUnit('kg')}
-                                        >kg</button>
-                                      </>
-                                    )}
+                                <div className="iwp-step-entry">
+                                  {/* Mode switcher tabs (enlarged & touch-friendly) */}
+                                  <div className="iwp-entry-header">
+                                    <div className="iwp-mode-tabs">
+                                      <span className="iwp-mode-tabs-label">MODE:</span>
+                                      {isLitre ? (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${inlineMode === 'ml' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('ml')}
+                                          >
+                                            ml
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${inlineMode === 'L' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('L')}
+                                          >
+                                            L
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('rs')}
+                                          >
+                                            ₹ rs
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${inlineMode === 'g' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('g')}
+                                          >
+                                            g
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${inlineMode === 'kg' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('kg')}
+                                          >
+                                            kg
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('rs')}
+                                          >
+                                            ₹ rs
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
                                   </div>
 
-                                  <input
-                                    ref={inlineInputRef}
-                                    type="number"
-                                    min="1"
-                                    step={inlineUnit === 'L' || inlineUnit === 'kg' ? '0.1' : '1'}
-                                    className="iwp-input"
-                                    value={inlineVal}
-                                    placeholder="0"
-                                    onChange={(e) => setInlineVal(e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') confirmInlineWeight(sweet);
-                                      if (e.key === 'Escape') closeInlineWeight();
-                                    }}
-                                  />
+                                  {/* Quick Presets for fast 1-tap selection (when not in direct kg mode) */}
+                                  {inlineMode !== 'kg' && (
+                                    <div className="iwp-presets">
+                                      {inlineMode === 'g' && (
+                                        <>
+                                          {['100', '250', '500', '750'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                              onClick={() => setInlineVal(val)}
+                                            >
+                                              {val}g
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
 
-                                  {inlineVal && parseFloat(inlineVal) > 0 && (
-                                    <span className="iwp-price">₹{inlinePrice}</span>
+                                      {inlineMode === 'ml' && (
+                                        <>
+                                          {['100', '250', '500', '750'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                              onClick={() => setInlineVal(val)}
+                                            >
+                                              {val}ml
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+                                      {inlineMode === 'L' && (
+                                        <>
+                                          {['1', '2', '5'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                              onClick={() => setInlineVal(val)}
+                                            >
+                                              {val}L
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+                                      {inlineMode === 'rs' && (
+                                        <>
+                                          {['50', '100', '150', '200', '500'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill rs-pill ${inlineVal === val ? 'active' : ''}`}
+                                              onClick={() => setInlineVal(val)}
+                                            >
+                                              ₹{val}
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+                                    </div>
                                   )}
 
-                                  <button
-                                    type="button"
-                                    className="iwp-confirm-btn"
-                                    disabled={!inlineVal || parseFloat(inlineVal) <= 0}
-                                    onClick={() => confirmInlineWeight(sweet)}
-                                  >
-                                    Add to Bill
-                                  </button>
+                                  {/* Custom Input & Controls */}
+                                  <div className="iwp-controls-row">
+                                    <div className="iwp-input-wrapper">
+                                      <span className="iwp-input-affix">
+                                        {inlineMode === 'rs' ? '₹' : inlineMode === 'kg' ? 'kg' : inlineMode === 'L' ? 'L' : inlineMode === 'ml' ? 'ml' : 'g'}
+                                      </span>
+                                      <input
+                                        ref={inlineInputRef}
+                                        type="number"
+                                        min={inlineMode === 'kg' || inlineMode === 'L' ? '0.1' : '1'}
+                                        step={inlineMode === 'kg' || inlineMode === 'L' ? '0.1' : '1'}
+                                        className="iwp-input"
+                                        value={inlineVal}
+                                        placeholder={inlineMode === 'rs' ? 'Amount (₹)' : inlineMode === 'kg' ? '1' : inlineMode === 'L' ? '1' : '250'}
+                                        onChange={(e) => setInlineVal(e.target.value)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') confirmInlineWeight(sweet);
+                                          if (e.key === 'Escape') closeInlineWeight();
+                                        }}
+                                      />
+                                    </div>
+
+                                    {inlineMode === 'rs' ? (
+                                      rsPreview ? (
+                                        <span className="iwp-rs-preview" title="Calculated quantity for entered amount">
+                                          {rsPreview}
+                                        </span>
+                                      ) : null
+                                    ) : (
+                                      inlineVal && parseFloat(inlineVal) > 0 && (
+                                        <span className="iwp-price">₹{inlinePrice}</span>
+                                      )
+                                    )}
+
+                                    <button
+                                      type="button"
+                                      className="iwp-confirm-btn"
+                                      disabled={!inlineVal || parseFloat(inlineVal) <= 0}
+                                      onClick={() => confirmInlineWeight(sweet)}
+                                    >
+                                      Add to Bill
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1652,7 +2073,7 @@ export default function BillingCounter() {
                 </div>
                 <input
                   type="text"
-                  placeholder="Guest Name (Optional)"
+                  placeholder="Walk-in Customer"
                   value={customerInfo.fullName}
                   onChange={(e) =>
                     setCustomerInfo((prev) => ({ ...prev, fullName: e.target.value }))
@@ -1693,9 +2114,28 @@ export default function BillingCounter() {
                                 }}
                                 title="Click to change or retype weight / volume"
                               >
-                                {item.weight || item.unit || '1 Cup'} ✎
+                                {item.weight || item.unit || '1 Cup'}
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.6 }}>
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
                               </span>
-                              <span className="line-rate-info">₹{item.price} × {item.quantity}</span>
+                              <span
+                                className="line-rate-info clickable-rate"
+                                onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
+                                title="Click to edit/override price (விலை மாற்றவும்)"
+                              >
+                                ₹{item.price} × {item.quantity}
+                                {item.isPriceOverridden && (
+                                  <span className="price-overridden-badge" title={`Original: ₹${item.originalPrice} (${item.overrideReason || 'Staff override'})`}>
+                                    *CUSTOM
+                                  </span>
+                                )}
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.7 }}>
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                              </span>
                             </div>
                           </div>
 
@@ -1739,7 +2179,13 @@ export default function BillingCounter() {
                             </button>
                           </div>
 
-                          <span className="pos-line-price">₹{item.price * item.quantity}</span>
+                          <span
+                            className="pos-line-price clickable-rate"
+                            onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
+                            title="Click to override rate (விலை மாற்றவும்)"
+                          >
+                            ₹{item.price * item.quantity}
+                          </span>
 
                           <button
                             type="button"
@@ -1767,16 +2213,6 @@ export default function BillingCounter() {
                   <span className="calc-val-bold">
                     {billItems.reduce((sum, it) => sum + it.quantity, 0)} cups/items ({billItems.length} items)
                   </span>
-                </div>
-                <div className="calc-item">
-                  <span>Subtotal</span>
-                  <span>₹{billSubtotal.toFixed(2)}</span>
-                </div>
-                <div className="calc-item">
-                  <span>
-                    {isTaxEnabled ? `GST @ ${totalTaxPct}% (CGST ${cgstPct}% + SGST ${sgstPct}%)` : 'Tax (Exempt 0%)'}
-                  </span>
-                  <span>₹{billGst.toFixed(2)}</span>
                 </div>
                 <div className="calc-item total">
                   <span>Total Payable</span>
@@ -1821,7 +2257,226 @@ export default function BillingCounter() {
                     </svg>
                     Card / POS
                   </button>
+                  <button
+                    type="button"
+                    className={`pay-mode-btn split-pay-btn ${paymentMode === 'split' ? 'active' : ''}`}
+                    onClick={handleSelectSplitMode}
+                    title="Split payment between Cash and UPI"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                      <circle cx="6" cy="6" r="3" />
+                      <circle cx="6" cy="18" r="3" />
+                      <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                      <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                      <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                    </svg>
+                    Split Pay
+                  </button>
                 </div>
+
+                {/* Split Payment Interactive Configuration Box */}
+                {paymentMode === 'split' && (
+                  <div className="pos-split-box">
+                    <div className="pos-split-box__header">
+                      <div className="split-header-left">
+                        <span className="split-icon-badge">
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="6" cy="6" r="3" />
+                            <circle cx="6" cy="18" r="3" />
+                            <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                            <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                            <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                          </svg>
+                        </span>
+                        <div>
+                          <strong className="split-box-title">Split Payment (Cash + UPI)</strong>
+                          <span className="split-box-sub">Enter Cash or UPI — other fills remaining</span>
+                        </div>
+                      </div>
+                      <div className="split-presets">
+                        <button
+                          type="button"
+                          className="btn-split-preset"
+                          onClick={() => {
+                            const half = Math.round((billGrandTotal / 2) * 100) / 100;
+                            const other = Math.round((billGrandTotal - half) * 100) / 100;
+                            setSplitCash(String(half));
+                            setSplitUpi(String(other));
+                            setLastEditedSplit('cash');
+                          }}
+                          title="50% in Cash and 50% in UPI"
+                        >
+                          50 / 50
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-split-preset"
+                          onClick={() => {
+                            setSplitCash(String(billGrandTotal));
+                            setSplitUpi('0');
+                            setLastEditedSplit('cash');
+                          }}
+                          title="Full bill in Cash"
+                        >
+                          All Cash
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-split-preset"
+                          onClick={() => {
+                            setSplitCash('0');
+                            setSplitUpi(String(billGrandTotal));
+                            setLastEditedSplit('upi');
+                          }}
+                          title="Full bill in UPI"
+                        >
+                          All UPI
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pos-split-inputs-grid">
+                      {/* Cash Input */}
+                      <div className={`split-input-card cash-card ${lastEditedSplit === 'cash' ? 'is-active-input' : ''}`}>
+                        <div className="split-card-top">
+                          <label htmlFor="split-cash-input" className="split-card-label">
+                            <span className="split-card-icon cash">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <path d="M6 12h.01M18 12h.01" />
+                              </svg>
+                            </span>
+                            Cash Amount
+                          </label>
+                          {lastEditedSplit === 'upi' && splitCash !== '' && (
+                            <span className="split-rem-tag">Remaining</span>
+                          )}
+                        </div>
+                        <div className="split-input-wrapper">
+                          <span className="split-currency-symbol">₹</span>
+                          <input
+                            id="split-cash-input"
+                            type="text"
+                            inputMode="decimal"
+                            className="split-num-input"
+                            placeholder={billGrandTotal > 0 ? (lastEditedSplit === 'upi' ? splitCash || '0' : '0') : '0'}
+                            value={splitCash}
+                            onChange={(e) => handleSplitCashChange(e.target.value)}
+                            onFocus={() => setLastEditedSplit('cash')}
+                          />
+                          {splitCash !== '' && (
+                            <button
+                              type="button"
+                              className="split-input-clear"
+                              onClick={() => handleSplitCashChange('')}
+                              title="Clear Cash"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        <div className="split-field-hint">
+                          {lastEditedSplit === 'cash' ? (
+                            <span>Entered in Cash</span>
+                          ) : (
+                            <span className="rem-hint">Auto remaining: ₹{splitCash || 0}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* UPI Input */}
+                      <div className={`split-input-card upi-card ${lastEditedSplit === 'upi' ? 'is-active-input' : ''}`}>
+                        <div className="split-card-top">
+                          <label htmlFor="split-upi-input" className="split-card-label">
+                            <span className="split-card-icon upi">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                                <line x1="12" y1="18" x2="12.01" y2="18" />
+                              </svg>
+                            </span>
+                            UPI / QR Amount
+                          </label>
+                          {lastEditedSplit === 'cash' && splitUpi !== '' && (
+                            <span className="split-rem-tag">Remaining</span>
+                          )}
+                        </div>
+                        <div className="split-input-wrapper">
+                          <span className="split-currency-symbol">₹</span>
+                          <input
+                            id="split-upi-input"
+                            type="text"
+                            inputMode="decimal"
+                            className="split-num-input"
+                            placeholder={billGrandTotal > 0 ? (lastEditedSplit === 'cash' ? splitUpi || '0' : '0') : '0'}
+                            value={splitUpi}
+                            onChange={(e) => handleSplitUpiChange(e.target.value)}
+                            onFocus={() => setLastEditedSplit('upi')}
+                          />
+                          {splitUpi !== '' && (
+                            <button
+                              type="button"
+                              className="split-input-clear"
+                              onClick={() => handleSplitUpiChange('')}
+                              title="Clear UPI"
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                        <div className="split-field-hint">
+                          {lastEditedSplit === 'upi' ? (
+                            <span>Entered in UPI</span>
+                          ) : (
+                            <span className="rem-hint">Auto remaining: ₹{splitUpi || 0}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live Validation & Status Banner */}
+                    <div className={`pos-split-status-banner ${splitDiff === 0 && billGrandTotal > 0 && (splitCash !== '' || splitUpi !== '') ? 'status-ok' : splitDiff > 0 ? 'status-pending' : 'status-excess'}`}>
+                      {splitDiff === 0 && billGrandTotal > 0 && (splitCash !== '' || splitUpi !== '') ? (
+                        <div className="split-status-content">
+                          <span className="split-status-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          </span>
+                          <span className="split-status-text">
+                            <strong>Exact Split:</strong> Cash ₹{splitCash || 0} + UPI ₹{splitUpi || 0} = <strong>₹{billGrandTotal}</strong>
+                          </span>
+                        </div>
+                      ) : splitDiff > 0 ? (
+                        <div className="split-status-content">
+                          <span className="split-status-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                              <line x1="12" y1="9" x2="12" y2="13" />
+                              <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                          </span>
+                          <span className="split-status-text">
+                            <strong>₹{splitDiff} Remaining:</strong> Collect ₹{splitDiff} more to settle ₹{billGrandTotal} bill
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="split-status-content">
+                          <span className="split-status-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="12" y1="16" x2="12" y2="12" />
+                              <line x1="12" y1="8" x2="12.01" y2="8" />
+                            </svg>
+                          </span>
+                          <span className="split-status-text">
+                            <strong>Change to return: ₹{Math.abs(splitDiff)}</strong> (Received ₹{totalSplitPaid} for ₹{billGrandTotal} bill)
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Single Unified Action Button: Bill & Print */}
                 <div className="pos-bill-actions-single">
@@ -1842,7 +2497,11 @@ export default function BillingCounter() {
                     <span className="pos-btn-labels">
                       <strong className="pos-btn-title">Bill &amp; Print</strong>
                       <small className="pos-btn-sub">
-                        {billItems.length === 0 ? 'Settle & Print (Enter / F9)' : `₹${billGrandTotal} · Settle & Print Bill`}
+                        {billItems.length === 0
+                          ? 'Settle & Print (Enter / F9)'
+                          : paymentMode === 'split' && splitDiff === 0 && (splitCash !== '' || splitUpi !== '')
+                          ? `₹${billGrandTotal} · Split (Cash ₹${splitCash || 0} + UPI ₹${splitUpi || 0})`
+                          : `₹${billGrandTotal} · Settle & Print Bill`}
                       </small>
                     </span>
                   </button>
@@ -1932,11 +2591,59 @@ export default function BillingCounter() {
                         onChange={handleImportExcelFile}
                       />
                       {[
-                        { icon: '📥', label: "Export Today's Shift (.xlsx)", onClick: handleExportShiftExcel },
-                        { icon: '📁', label: 'Export All Bills (.xlsx)', onClick: handleExportAllBillsExcel },
-                        { icon: '📋', label: 'Download Offline Billing Template', onClick: handleDownloadOfflineTemplate },
-                        { icon: '📤', label: `Import Excel Bills${isImporting ? ' (Importing...)' : ''}`, onClick: () => excelImportRef.current?.click() },
-                        { icon: '🔄', label: `Sync Offline Bills${offlinePendingCount > 0 ? ` (${offlinePendingCount} pending)` : ''}${isSyncing ? ' — Syncing...' : ''}`, onClick: handleSyncOfflineBills, disabled: isSyncing || !hasOfflinePending },
+                        {
+                          icon: (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="7 10 12 15 17 10" />
+                              <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                          ),
+                          label: "Export Today's Shift (.xlsx)",
+                          onClick: handleExportShiftExcel
+                        },
+                        {
+                          icon: (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                            </svg>
+                          ),
+                          label: 'Export All Bills (.xlsx)',
+                          onClick: handleExportAllBillsExcel
+                        },
+                        {
+                          icon: (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                            </svg>
+                          ),
+                          label: 'Download Offline Billing Template',
+                          onClick: handleDownloadOfflineTemplate
+                        },
+                        {
+                          icon: (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                          ),
+                          label: `Import Excel Bills${isImporting ? ' (Importing...)' : ''}`,
+                          onClick: () => excelImportRef.current?.click()
+                        },
+                        {
+                          icon: (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="23 4 23 10 17 10" />
+                              <polyline points="1 20 1 14 7 14" />
+                              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                            </svg>
+                          ),
+                          label: `Sync Offline Bills${offlinePendingCount > 0 ? ` (${offlinePendingCount} pending)` : ''}${isSyncing ? ' — Syncing...' : ''}`,
+                          onClick: handleSyncOfflineBills,
+                          disabled: isSyncing || !hasOfflinePending
+                        },
                       ].map((item, idx) => (
                         <button
                           key={idx}
@@ -1954,7 +2661,7 @@ export default function BillingCounter() {
                           onMouseEnter={(e) => { if (!item.disabled) e.currentTarget.style.background = '#f8fafc'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
                         >
-                          <span style={{ fontSize: '16px' }}>{item.icon}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', color: '#1D6F42' }}>{item.icon}</span>
                           <span>{item.label}</span>
                         </button>
                       ))}
@@ -1965,9 +2672,12 @@ export default function BillingCounter() {
                 {syncResult && (
                   <span style={{
                     background: '#dcfce7', color: '#15803d', borderRadius: '8px', padding: '4px 10px',
-                    fontSize: '12px', fontWeight: 600, border: '1px solid #86efac'
+                    fontSize: '12px', fontWeight: 600, border: '1px solid #86efac', display: 'inline-flex', alignItems: 'center', gap: '4px'
                   }}>
-                    ✅ {syncResult.synced} synced{syncResult.failed > 0 ? `, ${syncResult.failed} failed` : ''}
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {syncResult.synced} synced{syncResult.failed > 0 ? `, ${syncResult.failed} failed` : ''}
                   </span>
                 )}
 
@@ -2061,6 +2771,7 @@ export default function BillingCounter() {
                   { id: 'cash', label: 'Cash' },
                   { id: 'upi', label: 'UPI' },
                   { id: 'card', label: 'Card' },
+                  { id: 'split', label: 'Split (Cash+UPI)' },
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -2105,7 +2816,7 @@ export default function BillingCounter() {
                             <span className="shift-time">{bill.orderTime || 'Just now'}</span>
                           </td>
                           <td>
-                            <strong>{bill.customer?.fullName || 'Walk-in Guest'}</strong>
+                            <strong>{bill.customer?.fullName || 'Walk-in Customer'}</strong>
                             <div className="cust-phone-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
@@ -2130,7 +2841,18 @@ export default function BillingCounter() {
                           </td>
                           <td>
                             <span className={`payment-pill ${bill.paymentMethod?.toLowerCase()}`}>
-                              {bill.paymentMethod === 'upi' ? (
+                              {bill.paymentMethod === 'split' ? (
+                                <span title={`Cash: ₹${bill.paymentDetails?.cash ?? bill.splitCash ?? 0} | UPI: ₹${bill.paymentDetails?.upi ?? bill.splitUpi ?? 0}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="6" cy="6" r="3" />
+                                    <circle cx="6" cy="18" r="3" />
+                                    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                                    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                                    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                                  </svg>
+                                  Split (₹{bill.paymentDetails?.cash ?? bill.splitCash ?? 0}+₹{bill.paymentDetails?.upi ?? bill.splitUpi ?? 0})
+                                </span>
+                              ) : bill.paymentMethod === 'upi' ? (
                                 <>
                                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
                                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
@@ -2167,13 +2889,40 @@ export default function BillingCounter() {
                             </span>
                           </td>
                           <td>
-                            <button
-                              type="button"
-                              className="btn-shift-print-inv"
-                              onClick={() => openInvoice(bill)}
-                            >
-                              Print Bill
-                            </button>
+                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                              <button
+                                type="button"
+                                className="btn-shift-print-inv"
+                                onClick={() => openInvoice(bill)}
+                              >
+                                Print Bill
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-shift-del-inv"
+                                onClick={() => setDeleteBillModalItem(bill)}
+                                title="Delete invoice (moved to 30-day Admin Recycle Bin with mandatory reason)"
+                                style={{
+                                  background: '#fee2e2',
+                                  color: '#dc2626',
+                                  border: '1px solid #fca5a5',
+                                  borderRadius: '6px',
+                                  padding: '5px 9px',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                }}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -2460,75 +3209,67 @@ export default function BillingCounter() {
            =================================================== */}
         {posTab === 'inventory' && (
           <main className="pos-inventory-page" data-lenis-prevent="true">
-            <div className="inventory-page-header">
+            <div className="inventory-page-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
-                <span className="inventory-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <span className="inventory-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#d4a843', letterSpacing: '0.08em' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10" />
-                    <line x1="12" y1="20" x2="12" y2="4" />
-                    <line x1="6" y1="20" x2="6" y2="14" />
+                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
-                  LIVE COUNTER INVENTORY
+                  CATALOG &amp; STOCK MASTER
                 </span>
-                <h2 className="inventory-title">Counter Stock &amp; Refill Tracker</h2>
-                <div className="inventory-meta-badges">
-                  <span className="meta-badge count" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                    </svg>
-                    <strong>{totalStockVarieties} Beverage &amp; Snack Varieties</strong>
-                  </span>
-                  {lowStockCount > 0 ? (
-                    <span className="meta-badge alert" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                      </svg>
-                      <strong>{lowStockCount} Items Low Stock</strong>
-                    </span>
-                  ) : (
-                    <span className="meta-badge done" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      All trays adequately stocked
-                    </span>
-                  )}
-                </div>
+                <h2 className="inventory-title" style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
+                  Products &amp; Inventory Management
+                </h2>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                  Master control for adjusting selling prices, masking out-of-stock items, and managing products.
+                </p>
               </div>
 
-              <div className="inventory-header-right">
+              <div className="inventory-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <button
                   type="button"
-                  className="btn-inventory-refill"
-                  onClick={() => {
-                    setRefillTargetSweetId(null);
-                    setIsRefillOpen(true);
+                  className="btn-inventory-add-product"
+                  onClick={() => setIsAddNewProductOpen(true)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '9px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
-                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                  </svg>
-                  Refill Trays
-                </button>
-                <button
-                  type="button"
-                  className="btn-inventory-add"
-                  onClick={() => setIsAddStockOpen(true)}
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
-                  Add New Stock
+                  Add New Product
                 </button>
                 <button
                   type="button"
                   className="btn-return-pos"
                   onClick={() => handleSwitchTab('register')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#f1f5f9',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                    padding: '9px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                     <line x1="3" y1="6" x2="21" y2="6" />
                     <path d="M16 10a4 4 0 0 1-8 0" />
@@ -2538,170 +3279,185 @@ export default function BillingCounter() {
               </div>
             </div>
 
-            {/* Inventory KPI Summary */}
-            <div className="inventory-kpis-grid">
-              <div className="inv-kpi-card total">
-                <span className="kpi-label">Active Products</span>
-                <div className="kpi-val">{totalStockVarieties}</div>
-                <span className="kpi-sub">{totalStockVarieties} Varieties Across All Categories</span>
-              </div>
-              <div className={`inv-kpi-card ${lowStockCount > 0 ? 'warning' : 'healthy'}`}>
-                <span className="kpi-label">Low Stock Alerts</span>
-                <div className="kpi-val">{lowStockCount}</div>
-                <span className="kpi-sub">
-                  {lowStockCount > 0 ? 'Require immediate counter refill' : 'All trays ample'}
-                </span>
-              </div>
-              <div className="inv-kpi-card ready">
-                <span className="kpi-label">Healthy Trays</span>
-                <div className="kpi-val">{totalStockVarieties - lowStockCount} Ready</div>
-                <span className="kpi-sub">Serving walk-in customers</span>
-              </div>
-            </div>
+            {/* Filter & Search Bar */}
+            <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div className="inventory-filter-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <select
+                  value={invCategoryFilter}
+                  onChange={(e) => setInvCategoryFilter(e.target.value)}
+                  className="admin-select-filter"
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', color: '#334155', fontWeight: 600 }}
+                >
+                  <option value="all">All Categories ({allBillingProducts.length})</option>
+                  <option value="beverages">Beverages &amp; Fast Sellers</option>
+                  <option value="sweets">Traditional Sweets</option>
+                  <option value="spices">Spices &amp; Kara Vagai</option>
+                  <option value="savouries">Savouries &amp; Mixtures</option>
+                </select>
 
-            {/* Inventory Quick Search & Category Filter Toolbar */}
-            <div className="inventory-toolbar">
-              <div className="inventory-search-box">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon-svg">
+                <select
+                  value={invStatusFilter}
+                  onChange={(e) => setInvStatusFilter(e.target.value)}
+                  className="admin-select-filter"
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', color: '#334155', fontWeight: 600 }}
+                >
+                  <option value="all">All Stock Status</option>
+                  <option value="active">Active (In Stock Only)</option>
+                  <option value="inactive">Masked (Out of Stock Only)</option>
+                </select>
+              </div>
+
+              <div className="inventory-search-wrap" style={{ flex: 1, position: 'relative', minWidth: '220px' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <input
                   type="text"
-                  placeholder="Search inventory (Murukku, முறுக்கு, Sevu, Tea, Coffee)..."
+                  placeholder="Search product by English or Tamil name..."
                   value={inventorySearch}
                   onChange={(e) => setInventorySearch(e.target.value)}
+                  style={{ width: '100%', padding: '8px 36px 8px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
                 />
                 {inventorySearch && (
-                  <button type="button" onClick={() => setInventorySearch('')} className="search-clear-btn" aria-label="Clear">
+                  <button
+                    type="button"
+                    onClick={() => setInventorySearch('')}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '13px' }}
+                  >
                     ✕
                   </button>
                 )}
               </div>
-              <div className="inventory-filter-chips">
-                <span className="filter-label">Filter:</span>
-                <button
-                  type="button"
-                  className={`filter-chip ${invCategoryFilter === 'all' ? 'active' : ''}`}
-                  onClick={() => setInvCategoryFilter('all')}
-                >
-                  All ({inventory.length})
-                </button>
-                <button
-                  type="button"
-                  className={`filter-chip ${invCategoryFilter === 'spices' ? 'active' : ''}`}
-                  onClick={() => setInvCategoryFilter('spices')}
-                >
-                  Spices (Kara Vagai) ({inventory.filter((i) => i.category === 'spices' || (i.subcategory && i.subcategory.includes('Kara'))).length})
-                </button>
-                <button
-                  type="button"
-                  className={`filter-chip ${invCategoryFilter === 'beverages' ? 'active' : ''}`}
-                  onClick={() => setInvCategoryFilter('beverages')}
-                >
-                  Beverages &amp; Teas
-                </button>
-                <button
-                  type="button"
-                  className={`filter-chip ${invCategoryFilter === 'sweets' ? 'active' : ''}`}
-                  onClick={() => setInvCategoryFilter('sweets')}
-                >
-                  Ghee Sweets
-                </button>
-              </div>
             </div>
 
-            {/* Counter Stock Table */}
+            {/* Products Table (7 Columns: #, PRODUCT DETAILS, CATEGORY, UNIT, SELLING PRICE, COUNTER AVAILABILITY, ACTIONS) */}
             <div className="inventory-table-wrap">
-              <div className="inventory-table-card">
-                <table className="inventory-stock-table">
+              {filteredInventory.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
+                    <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <h3 style={{ fontSize: '16px', color: '#1e293b', margin: '0 0 4px' }}>No Products Found</h3>
+                  <p style={{ fontSize: '13px', margin: 0 }}>No catalog items match your search or filter selection.</p>
+                </div>
+              ) : (
+                <table className="inventory-table">
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Product</th>
-                      <th>Category</th>
-                      <th>Unit Price</th>
-                      <th>Tray Stock Available</th>
-                      <th>Min Alert</th>
-                      <th>Status</th>
-                      <th>Action</th>
+                      <th>PRODUCT DETAILS</th>
+                      <th>CATEGORY</th>
+                      <th>UNIT</th>
+                      <th>SELLING PRICE</th>
+                      <th>COUNTER AVAILABILITY</th>
+                      <th>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInventory.map((item, idx) => {
-                      const itemNum = idx + 1;
-                      const isLow = (item.stockKg || 0) <= (item.minThreshold || 10);
-                      const unit = item.unit || 'Cup';
+                    {filteredInventory.map((prod, idx) => {
+                      const isInactive = productAvailabilityMap[prod.id] !== undefined
+                        ? Boolean(productAvailabilityMap[prod.id])
+                        : Boolean(prod.isInactive || inventory?.find((i) => i.id === prod.id)?.isInactive);
                       return (
-                        <tr key={item.id} className={isLow ? 'row-low-stock' : ''}>
+                        <tr key={prod.id || idx} style={{ opacity: isInactive ? 0.75 : 1 }}>
                           <td>
-                            <span className="item-num-badge">#{itemNum}</span>
+                            <span className="item-num-badge">#{prod.itemNumber || idx + 1}</span>
                           </td>
                           <td>
-                            <strong className="item-title">{item.name}</strong>
-                            <div className="item-desc-sub">{item.batchNote || 'Fresh counter brew'}</div>
-                          </td>
-                          <td>
-                            <span className="category-pill">{item.subcategory || (item.category === 'spices' ? 'Spices (Kara Vagai)' : item.unit === 'Pc' ? 'Snack' : item.unit === 'kg' ? 'Spices (Kara Vagai)' : 'Beverage')}</span>
-                          </td>
-                          <td>
-                            <strong className="price-tag">₹{item.price}{item.unit === 'kg' ? ' / kg' : item.unit === 'Pkt' ? ' / pkt' : ''}</strong>
-                          </td>
-                          <td>
-                            <div className="stock-level-cell">
-                              <span className="stock-value">{item.stockKg} {item.unit === 'kg' ? 'kg' : item.unit === 'Pkt' ? 'Pkts' : item.unit === 'Bottle' ? 'Bottles' : unit + 's'}</span>
-                              <div className="stock-progress-bar">
-                                <div
-                                  className={`progress-fill ${isLow ? 'low' : 'normal'}`}
-                                  style={{
-                                    width: `${Math.min(100, Math.max(10, ((item.stockKg || 0) / (item.unit === 'kg' ? 50 : 100)) * 100))}%`,
-                                  }}
-                                />
-                              </div>
+                            <div>
+                              <strong style={{ fontSize: '14px', color: '#0f172a' }}>
+                                {prod.englishName || prod.name.split('—')[0].trim()}
+                              </strong>
+                              {(prod.tamilName || (prod.name.includes('—') ? prod.name.split('—')[1].trim() : '')) && (
+                                <span style={{ display: 'block', fontSize: '12px', color: '#b45309', fontWeight: 600 }}>
+                                  {prod.tamilName || (prod.name.includes('—') ? prod.name.split('—')[1].trim() : '')}
+                                </span>
+                              )}
+                              {prod.isCustom && (
+                                <span style={{ display: 'inline-block', marginTop: '2px', fontSize: '10px', background: '#e0e7ff', color: '#3730a3', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
+                                  CUSTOM ITEM
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td>
-                            <span className="min-threshold-sub">{item.minThreshold || 10} {item.unit === 'kg' ? 'kg' : item.unit === 'Pkt' ? 'Pkts' : item.unit === 'Bottle' ? 'Bottles' : unit + 's'}</span>
+                            <span style={{ fontSize: '12px', color: '#475569', fontWeight: 600, textTransform: 'capitalize' }}>
+                              {prod.category?.replace('-', ' ') || 'General'}
+                            </span>
                           </td>
                           <td>
-                            <span className={`status-badge ${isLow ? 'low' : 'ok'}`}>
-                              {isLow ? (
-                                <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
-                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                    <line x1="12" y1="9" x2="12" y2="13" />
-                                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                                  </svg>
-                                  LOW STOCK
-                                </>
-                              ) : (
-                                <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
-                                    <polyline points="20 6 9 17 4 12" />
-                                  </svg>
-                                  In Stock
-                                </>
-                              )}
+                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                              {prod.unit || 'kg'}
                             </span>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                              <strong style={{ fontSize: '15px', color: '#0f172a' }}>
+                                ₹{prod.price || prod.unitPrice || 0}
+                              </strong>
+                              <button
+                                type="button"
+                                className="btn-inline-price"
+                                onClick={() => {
+                                  setEditingMasterPriceItem({ id: prod.id, name: prod.name, price: String(prod.price || prod.unitPrice || '') });
+                                }}
+                                title="Change Master Selling Price"
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                </svg>
+                                Edit Price
+                              </button>
+                            </div>
                           </td>
                           <td>
                             <button
                               type="button"
-                              className="btn-quick-refill-item"
-                              onClick={() => handleOpenRefillItem(item.id)}
+                              className="stock-toggle-switch"
+                              onClick={() => toggleProductAvailability(prod.id, !isInactive, user)}
+                              title={isInactive ? 'Click to mark In Stock / Active' : 'Click to mask Out of Stock'}
                             >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
-                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                              </svg>
-                              Refill
+                              <div className={`toggle-track ${!isInactive ? 'active' : ''}`}>
+                                <div className="toggle-thumb" />
+                              </div>
+                              <span className={`toggle-label ${!isInactive ? 'active' : 'inactive'}`}>
+                                {!isInactive ? 'IN STOCK' : 'OUT OF STOCK'}
+                              </span>
                             </button>
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <button
+                                type="button"
+                                className="btn-inline-price"
+                                style={{ margin: 0 }}
+                                onClick={() => {
+                                  setEditingMasterPriceItem({ id: prod.id, name: prod.name, price: String(prod.price || prod.unitPrice || '') });
+                                }}
+                              >
+                                Edit Price
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-delete-prod"
+                                onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name })}
+                                title="Delete Product from Catalog"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
-              </div>
+              )}
             </div>
           </main>
         )}
@@ -2719,7 +3475,6 @@ export default function BillingCounter() {
         )}
       </div>
 
-
       {/* MODALS */}
       <AddStockModal
         isOpen={isAddStockOpen}
@@ -2735,9 +3490,255 @@ export default function BillingCounter() {
         initialSweetId={refillTargetSweetId}
       />
 
+      <AddNewProductModal
+        isOpen={isAddNewProductOpen}
+        onClose={() => setIsAddNewProductOpen(false)}
+        onAddProduct={(p) => addNewProduct(p, user)}
+      />
+
       <GstSettingsModal
         isOpen={isGstModalOpen}
         onClose={() => setIsGstModalOpen(false)}
+      />
+
+      {/* Staff / Admin Price Override Modal */}
+      {editingPriceItem && (
+        <div className="pos-price-modal-backdrop" onClick={() => setEditingPriceItem(null)}>
+          <div className="pos-price-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pos-price-modal-header">
+              <div>
+                <span className="modal-eyebrow">STAFF &amp; ADMIN PRICE OVERRIDE</span>
+                <h3 className="modal-title">{editingPriceItem.item.name}</h3>
+                <span className="modal-subtitle">
+                  Unit: <strong>{editingPriceItem.item.weight || editingPriceItem.item.unit || 'Standard'}</strong> &bull; Qty: <strong>{editingPriceItem.item.quantity}</strong>
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setEditingPriceItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="pos-price-modal-body">
+              <div className="price-comparison-grid">
+                <div className="comp-card original">
+                  <span className="comp-label">Standard Price</span>
+                  <div className="comp-val">₹{editingPriceItem.item.originalPrice !== undefined ? editingPriceItem.item.originalPrice : editingPriceItem.item.price}</div>
+                  <span className="comp-sub">Per unit rate</span>
+                </div>
+                <div className="comp-card new">
+                  <span className="comp-label">New Custom Rate</span>
+                  <div className="comp-input-wrap">
+                    <span className="currency-prefix">₹</span>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      autoFocus
+                      className="custom-price-input"
+                      value={editingPriceItem.newPrice}
+                      onChange={(e) => setEditingPriceItem({ ...editingPriceItem, newPrice: e.target.value })}
+                      placeholder="Enter rate"
+                    />
+                  </div>
+                  <span className="comp-sub">
+                    Line Total: ₹{((parseFloat(editingPriceItem.newPrice) || 0) * (editingPriceItem.item.quantity || 1)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Difference Badge */}
+              {(() => {
+                const orig = Number(editingPriceItem.item.originalPrice !== undefined ? editingPriceItem.item.originalPrice : editingPriceItem.item.price);
+                const cur = parseFloat(editingPriceItem.newPrice);
+                if (!isNaN(cur) && orig > 0) {
+                  const diff = cur - orig;
+                  return (
+                    <div className={`price-diff-badge ${diff < 0 ? 'discount' : diff > 0 ? 'markup' : 'neutral'}`}>
+                      {diff < 0
+                        ? `Discount: ₹${Math.abs(diff)} off standard price (${Math.round((Math.abs(diff) / orig) * 100)}% off)`
+                        : diff > 0
+                        ? `Markup: +₹${diff} above standard price`
+                        : 'Standard catalog rate (No change)'}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Reason Selection */}
+              <div className="override-reason-field">
+                <label className="override-reason-label">
+                  Reason for Price Adjustment (Logged to Admin Activity Audit)
+                </label>
+                <div className="reason-quick-pills">
+                  {['Festival Discount', 'Bulk Order Concession', 'Management Approval', 'Damaged Pack / Clearance', 'Counter Special Rate'].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      className={`btn-reason-pill ${editingPriceItem.reason === preset ? 'active' : ''}`}
+                      onClick={() => setEditingPriceItem({ ...editingPriceItem, reason: preset })}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  className="custom-reason-input"
+                  placeholder="Or type custom reason (e.g. Authorized by Manager)..."
+                  value={editingPriceItem.reason}
+                  onChange={(e) => setEditingPriceItem({ ...editingPriceItem, reason: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="pos-price-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setEditingPriceItem(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-save"
+                onClick={handleConfirmPriceOverride}
+              >
+                Apply Price Override &amp; Log
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Master Price Edit Modal */}
+      {editingMasterPriceItem && (
+        <div className="pos-price-modal-backdrop" onClick={() => setEditingMasterPriceItem(null)}>
+          <div className="pos-price-modal-box master-price-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pos-price-modal-header">
+              <div>
+                <span className="modal-eyebrow">UPDATE MASTER CATALOG PRICE</span>
+                <h3 className="modal-title">{editingMasterPriceItem.name}</h3>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setEditingMasterPriceItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="pos-price-modal-body">
+              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+                Update the standard selling price for this product across POS billing and inventory.
+              </p>
+              <div className="override-reason-field">
+                <label className="override-reason-label">New Selling Price (₹)</label>
+                <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
+                  <span className="currency-prefix">₹</span>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    autoFocus
+                    className="custom-price-input"
+                    value={editingMasterPriceItem.price}
+                    onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, price: e.target.value })}
+                    placeholder="e.g. 380"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="pos-price-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setEditingMasterPriceItem(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-save"
+                onClick={handleConfirmMasterPriceUpdate}
+              >
+                Update Catalog Price
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Product Confirmation Modal */}
+      {deleteConfirmItem && (
+        <div className="pos-price-modal-backdrop" onClick={() => setDeleteConfirmItem(null)}>
+          <div className="pos-price-modal-box delete-confirm-box" onClick={(e) => e.stopPropagation()}>
+            <div className="pos-price-modal-header">
+              <div>
+                <span className="modal-eyebrow" style={{ color: '#dc2626' }}>CONFIRM PRODUCT DELETION</span>
+                <h3 className="modal-title">Delete {deleteConfirmItem.name}?</h3>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setDeleteConfirmItem(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="pos-price-modal-body">
+              <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.5 }}>
+                Are you sure you want to delete this product from the inventory and billing catalog? It will be removed from the active items list.
+              </p>
+            </div>
+            <div className="pos-price-modal-footer">
+              <button
+                type="button"
+                className="btn-modal-cancel"
+                onClick={() => setDeleteConfirmItem(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-modal-delete-confirm"
+                onClick={handleConfirmDeleteProduct}
+                style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '10px 18px',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Yes, Delete Product
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Bill Modal (30-day Recycle Bin with Mandatory Reason) */}
+      <DeleteBillModal
+        isOpen={Boolean(deleteBillModalItem)}
+        bill={deleteBillModalItem}
+        onClose={() => setDeleteBillModalItem(null)}
+        onConfirmDelete={async (bill, reason) => {
+          await deleteBill(bill.id, reason, {
+            id: user?.id || user?._id || 'staff',
+            name: user?.name || 'Counter Staff',
+            role: user?.role || 'cashier',
+          });
+          setDeleteBillModalItem(null);
+        }}
+        user={user}
       />
     </div>
   );

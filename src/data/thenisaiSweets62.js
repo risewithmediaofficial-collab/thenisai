@@ -4,7 +4,7 @@
 export const THENISAI_SWEETS_62 = [
   {
     id: 'burfi',
-    itemNumber: 1,
+    itemNumber: 14,
     name: 'Burfi — பர்பி',
     englishName: 'Burfi',
     tamilName: 'பர்பி',
@@ -17,22 +17,23 @@ export const THENISAI_SWEETS_62 = [
     description: 'Traditional sweet milk burfi prepared fresh daily.',
   },
   {
-    id: 'khoa',
-    itemNumber: 2,
-    name: 'Khoa — கோவா',
-    englishName: 'Khoa',
-    tamilName: 'கோவா',
-    tagline: 'Rich Simmered Milk Mawa · கோவா',
+    id: 'palkova',
+    itemNumber: 15,
+    name: 'Palkova — பால்கோவா',
+    englishName: 'Palkova',
+    tamilName: 'பால்கோவா',
+    tagline: 'Signature Traditional Sweet · பால்கோவா · Palcova',
     category: 'sweets',
     subcategory: 'Milk & Bengali',
     price: 300,
     unit: 'kg',
     hsn: '0402',
-    description: 'Slow-simmered unsweetened fresh milk khoa / mawa for traditional recipes.',
+    image: '/images/products/palkova_card.jpg',
+    description: 'Our traditional signature Thenisai Palkova slow-simmered in brass urulis with fresh milk and pure cow ghee.',
   },
   {
     id: 'ghee',
-    itemNumber: 3,
+    itemNumber: 16,
     name: 'Ghee — நெய்',
     englishName: 'Ghee',
     tamilName: 'நெய்',
@@ -54,7 +55,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'arcot-makkan-peda',
-    itemNumber: 4,
+    itemNumber: 17,
     name: 'Arcot Makkan Peda — ஆற்காடு மக்கன் பேடா',
     englishName: 'Arcot Makkan Peda',
     tamilName: 'ஆற்காடு மக்கன் பேடா',
@@ -68,7 +69,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'bengali-sweet',
-    itemNumber: 5,
+    itemNumber: 18,
     name: 'Bengali — பெங்காலி',
     englishName: 'Bengali',
     tamilName: 'பெங்காலி',
@@ -82,7 +83,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'suryakala',
-    itemNumber: 6,
+    itemNumber: 19,
     name: 'Suryakala — சூரியகலா',
     englishName: 'Suryakala',
     tamilName: 'சூரியகலா',
@@ -96,7 +97,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'jamun',
-    itemNumber: 7,
+    itemNumber: 20,
     name: 'Jamun — ஜாமூன்',
     englishName: 'Jamun',
     tamilName: 'ஜாமூன்',
@@ -110,7 +111,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'cashew-cake-kaju-katli',
-    itemNumber: 8,
+    itemNumber: 21,
     name: 'Cashew Cake (Kaju Katli) — முந்திரி கேக்',
     englishName: 'Cashew Cake (Kaju Katli)',
     tamilName: 'முந்திரி கேக்',
@@ -124,7 +125,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'cashew-halwa',
-    itemNumber: 9,
+    itemNumber: 22,
     name: 'Cashew Halwa — முந்திரி அல்வா',
     englishName: 'Cashew Halwa',
     tamilName: 'முந்திரி அல்வா',
@@ -138,7 +139,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'horlicks-burfi',
-    itemNumber: 10,
+    itemNumber: 23,
     name: 'Horlicks Burfi — ஆர்லக்ஸ் பர்பி',
     englishName: 'Horlicks Burfi',
     tamilName: 'ஆர்லக்ஸ் பர்பி',
@@ -152,7 +153,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'mini-jangiri',
-    itemNumber: 11,
+    itemNumber: 24,
     name: 'Mini Jangiri — மினி ஜாங்கிரி',
     englishName: 'Mini Jangiri',
     tamilName: 'மினி ஜாங்கிரி',
@@ -166,7 +167,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'jangiri',
-    itemNumber: 12,
+    itemNumber: 25,
     name: 'Jangiri — ஜாங்கிரி',
     englishName: 'Jangiri',
     tamilName: 'ஜாங்கிரி',
@@ -180,7 +181,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'motichoor-laddu-pc',
-    itemNumber: 13,
+    itemNumber: 26,
     name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு',
     englishName: 'Motichoor Laddu',
     tamilName: 'மோட்டிச்சூர் லட்டு',
@@ -194,7 +195,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'sp-soan-papdi',
-    itemNumber: 14,
+    itemNumber: 27,
     name: 'S.P. Soan Papdi — S.P. சோன பட்டி',
     englishName: 'S.P. Soan Papdi',
     tamilName: 'S.P. சோன பட்டி',
@@ -208,7 +209,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'ghee-mysore-pak',
-    itemNumber: 15,
+    itemNumber: 28,
     name: 'Ghee Mysore Pak — நெய் மைசூர்பாகு',
     englishName: 'Ghee Mysore Pak',
     tamilName: 'நெய் மைசூர்பாகு',
@@ -222,7 +223,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'sada-mysore-pak',
-    itemNumber: 16,
+    itemNumber: 29,
     name: 'Sada Mysore Pak — சாதா மைசூர்பாகு',
     englishName: 'Sada Mysore Pak',
     tamilName: 'சாதா மைசூர்பாகு',
@@ -236,7 +237,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'ashoka-makkan-peda',
-    itemNumber: 17,
+    itemNumber: 30,
     name: 'Ashoka Makkan Peda — அசோகா மக்கன் பேடா',
     englishName: 'Ashoka Makkan Peda',
     tamilName: 'அசோகா மக்கன் பேடா',
@@ -250,7 +251,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'dry-fruit-halwa',
-    itemNumber: 18,
+    itemNumber: 31,
     name: 'Dry Fruit Halwa — ட்ரை ஃப்ரூட் அல்வா',
     englishName: 'Dry Fruit Halwa',
     tamilName: 'ட்ரை ஃப்ரூட் அல்வா',
@@ -264,7 +265,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'baby-milk',
-    itemNumber: 19,
+    itemNumber: 32,
     name: 'Baby Milk — பேபி மில்க்',
     englishName: 'Baby Milk',
     tamilName: 'பேபி மில்க்',
@@ -278,7 +279,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'sandwich-sweet',
-    itemNumber: 20,
+    itemNumber: 33,
     name: 'Sandwich — சாண்ட்விச்',
     englishName: 'Sandwich',
     tamilName: 'சாண்ட்விச்',
@@ -292,7 +293,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'badusha',
-    itemNumber: 21,
+    itemNumber: 34,
     name: 'Badusha — பாதுஷா',
     englishName: 'Badusha',
     tamilName: 'பாதுஷா',
@@ -306,7 +307,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'rasbhari',
-    itemNumber: 22,
+    itemNumber: 35,
     name: 'Rasbhari — ரசபரி',
     englishName: 'Rasbhari',
     tamilName: 'ரசபரி',
@@ -320,7 +321,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'basundi',
-    itemNumber: 23,
+    itemNumber: 36,
     name: 'Basundi — பாசுந்தி',
     englishName: 'Basundi',
     tamilName: 'பாசுந்தி',
@@ -334,7 +335,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'rasmalai',
-    itemNumber: 24,
+    itemNumber: 37,
     name: 'Rasmalai — ரசமலாய்',
     englishName: 'Rasmalai',
     tamilName: 'ரசமலாய்',
@@ -348,7 +349,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'carrot-halwa',
-    itemNumber: 25,
+    itemNumber: 38,
     name: 'Carrot Halwa — கேரட் அல்வா',
     englishName: 'Carrot Halwa',
     tamilName: 'கேரட் அல்வா',
@@ -362,7 +363,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'mini-jamun',
-    itemNumber: 26,
+    itemNumber: 39,
     name: 'Mini Jamun — மினி ஜாமூன்',
     englishName: 'Mini Jamun',
     tamilName: 'மினி ஜாமூன்',
@@ -376,7 +377,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'pomegranate-halwa',
-    itemNumber: 27,
+    itemNumber: 40,
     name: 'Pomegranate Halwa — மாதுளை அல்வா',
     englishName: 'Pomegranate Halwa',
     tamilName: 'மாதுளை அல்வா',
@@ -390,7 +391,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'dal-poli',
-    itemNumber: 28,
+    itemNumber: 41,
     name: 'Dal Poli (Paruppu Poli) — பருப்பு போளி',
     englishName: 'Dal Poli (Paruppu Poli)',
     tamilName: 'பருப்பு போளி',
@@ -404,7 +405,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'coconut-poli',
-    itemNumber: 29,
+    itemNumber: 42,
     name: 'Coconut Poli (Thengai Poli) — தேங்காய் போளி',
     englishName: 'Coconut Poli (Thengai Poli)',
     tamilName: 'தேங்காய் போளி',
@@ -418,7 +419,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'athirasam',
-    itemNumber: 30,
+    itemNumber: 43,
     name: 'Athirasam — அதிரசம்',
     englishName: 'Athirasam',
     tamilName: 'அதிரசம்',
@@ -432,7 +433,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'pori-urundai',
-    itemNumber: 31,
+    itemNumber: 44,
     name: 'Pori Urundai — பொரி உருண்டை',
     englishName: 'Pori Urundai',
     tamilName: 'பொரி உருண்டை',
@@ -446,7 +447,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'ellu-urundai-adai',
-    itemNumber: 32,
+    itemNumber: 45,
     name: 'Sesame Sweet (Ellu Urundai) — எள் உருண்டை / அடை',
     englishName: 'Sesame Sweet (Ellu Urundai)',
     tamilName: 'எள் உருண்டை / அடை',
@@ -460,7 +461,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'ellu-urundai',
-    itemNumber: 33,
+    itemNumber: 46,
     name: 'Ellu Urundai — எள் உருண்டை',
     englishName: 'Ellu Urundai',
     tamilName: 'எள் உருண்டை',
@@ -474,7 +475,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'milk-cake',
-    itemNumber: 34,
+    itemNumber: 47,
     name: 'Milk Cake — மில்க் கேக்',
     englishName: 'Milk Cake',
     tamilName: 'மில்க் கேக்',
@@ -488,7 +489,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'paal-peni',
-    itemNumber: 35,
+    itemNumber: 48,
     name: 'Paal Peni — பால் பேனி',
     englishName: 'Paal Peni',
     tamilName: 'பால் பேனி',
@@ -502,7 +503,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'motichoor-laddu',
-    itemNumber: 36,
+    itemNumber: 49,
     name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு',
     englishName: 'Motichoor Laddu',
     tamilName: 'மோட்டிச்சூர் லட்டு',
@@ -516,7 +517,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'agra-burfi',
-    itemNumber: 37,
+    itemNumber: 50,
     name: 'Agra Burfi — ஆக்ரா பர்பி',
     englishName: 'Agra Burfi',
     tamilName: 'ஆக்ரா பர்பி',
@@ -530,7 +531,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'tender-coconut-halwa',
-    itemNumber: 38,
+    itemNumber: 51,
     name: 'Tender Coconut Halwa — இளநீர் அல்வா',
     englishName: 'Tender Coconut Halwa',
     tamilName: 'இளநீர் அல்வா',
@@ -544,7 +545,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'badam-pillow',
-    itemNumber: 39,
+    itemNumber: 52,
     name: 'Badam Pillow — பாதாம் பிலோவ்',
     englishName: 'Badam Pillow',
     tamilName: 'பாதாம் பிலோவ்',
@@ -558,7 +559,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'kaju-pista-roll',
-    itemNumber: 40,
+    itemNumber: 53,
     name: 'Kaju Pista Roll — காஜூ பிஸ்தா ரோல்',
     englishName: 'Kaju Pista Roll',
     tamilName: 'காஜூ பிஸ்தா ரோல்',
@@ -572,7 +573,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'badam-halwa',
-    itemNumber: 41,
+    itemNumber: 54,
     name: 'Badam Halwa — பாதாம் அல்வா',
     englishName: 'Badam Halwa',
     tamilName: 'பாதாம் அல்வா',
@@ -586,7 +587,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'gulkand-laddu',
-    itemNumber: 42,
+    itemNumber: 55,
     name: 'Gulkand Laddu — குல்கந்து லட்டு',
     englishName: 'Gulkand Laddu',
     tamilName: 'குல்கந்து லட்டு',
@@ -599,36 +600,36 @@ export const THENISAI_SWEETS_62 = [
     description: 'Exquisite sweet laddu featuring a refreshing core of natural sun-cured rose petal gulkand.',
   },
   {
-    id: 'sugar-palkova',
-    itemNumber: 43,
-    name: 'Sugar Palkova — சர்க்கரை பால்கோவா',
-    englishName: 'Sugar Palkova',
-    tamilName: 'சர்க்கரை பால்கோவா',
-    tagline: 'Traditional Sweetened Palkova · சர்க்கரை பால்கோவா',
+    id: 'sugarless-badusha',
+    itemNumber: 56,
+    name: 'Sugarless Badusha — சுகர்லெஸ் பாதுஷா',
+    englishName: 'Sugarless Badusha',
+    tamilName: 'சுகர்லெஸ் பாதுஷா',
+    tagline: 'Zero Added Sugar Flaky Badusha · சுகர்லெஸ் பாதுஷா',
     category: 'sweets',
-    subcategory: 'Milk & Bengali',
+    subcategory: 'Traditional Sweets',
     price: 450,
     unit: 'kg',
-    hsn: '0402',
-    description: 'Slow-simmered whole milk caramelized in traditional brass urulis with pure cane sugar.',
+    hsn: '2106',
+    description: 'Crisp and flaky layered traditional badusha prepared without refined sugar, crafted for healthy sweet cravings.',
   },
   {
-    id: 'dal-kaju-cake',
-    itemNumber: 44,
-    name: 'Dal Kaju Cake — பருப்பு முந்திரி கேக்',
-    englishName: 'Dal Kaju Cake',
-    tamilName: 'பருப்பு முந்திரி கேக்',
-    tagline: 'Lentil & Whole Cashew Fudge · பருப்பு முந்திரி கேக்',
+    id: 'karupatti-kaju-cake',
+    itemNumber: 57,
+    name: 'Karupatti Kaju Cake — கருப்பட்டி முந்திரி கேக்',
+    englishName: 'Karupatti Kaju Cake',
+    tamilName: 'கருப்பட்டி முந்திரி கேக்',
+    tagline: 'Organic Palm Jaggery Cashew Fudge · கருப்பட்டி முந்திரி கேக்',
     category: 'sweets',
     subcategory: 'Cashew & Rolls',
     price: 1100,
     unit: 'kg',
     hsn: '2106',
-    description: 'Rich fudge combining roasted lentils and high-grade roasted cashews with ghee.',
+    description: 'Royal cashew cake crafted with premium organic palm jaggery (karupatti), whole cashews, and pure ghee.',
   },
   {
     id: 'honey-nuts-burfi',
-    itemNumber: 45,
+    itemNumber: 58,
     name: 'Honey Nuts Burfi — ஹனி நட்ஸ் பர்பி',
     englishName: 'Honey Nuts Burfi',
     tamilName: 'ஹனி நட்ஸ் பர்பி',
@@ -642,7 +643,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'muscoth-halwa',
-    itemNumber: 46,
+    itemNumber: 59,
     name: 'Muscoth Halwa — மஸ்கோத் அல்வா',
     englishName: 'Muscoth Halwa',
     tamilName: 'மஸ்கோத் அல்வா',
@@ -656,7 +657,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'red-rose-gulkand',
-    itemNumber: 47,
+    itemNumber: 60,
     name: 'Red Rose Gulkand — ரெட் ரோஸ் குல்கந்து',
     englishName: 'Red Rose Gulkand',
     tamilName: 'ரெட் ரோஸ் குல்கந்து',
@@ -670,7 +671,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'flax-seed-laddu',
-    itemNumber: 48,
+    itemNumber: 61,
     name: 'Flax Seed Laddu — ஃபிளாக்ஸ் சீட் லட்டு',
     englishName: 'Flax Seed Laddu',
     tamilName: 'ஃபிளாக்ஸ் சீட் லட்டு',
@@ -684,7 +685,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'carrot-mysore-pak',
-    itemNumber: 49,
+    itemNumber: 62,
     name: 'Carrot Mysore Pak — கேரட் மைசூர்பாகு',
     englishName: 'Carrot Mysore Pak',
     tamilName: 'கேரட் மைசூர்பாகு',
@@ -698,7 +699,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'beetroot-mysore-pak',
-    itemNumber: 50,
+    itemNumber: 63,
     name: 'Beetroot Mysore Pak — பீட்ரூட் மைசூர்பாகு',
     englishName: 'Beetroot Mysore Pak',
     tamilName: 'பீட்ரூட் மைசூர்பாகு',
@@ -712,7 +713,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'poritta-mysore-pak',
-    itemNumber: 51,
+    itemNumber: 64,
     name: 'Poritta Mysore Pak — பொரிட்டை மைசூர்பாகு',
     englishName: 'Poritta Mysore Pak',
     tamilName: 'பொரிட்டை மைசூர்பாகு',
@@ -726,7 +727,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'tender-coconut-mysore-pak',
-    itemNumber: 52,
+    itemNumber: 65,
     name: 'Tender Coconut Mysore Pak — இளநீர் மைசூர்பாகு',
     englishName: 'Tender Coconut Mysore Pak',
     tamilName: 'இளநீர் மைசூர்பாகு',
@@ -740,7 +741,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'karupatti-mysore-pak',
-    itemNumber: 53,
+    itemNumber: 66,
     name: 'Karupatti Mysore Pak — கருப்பட்டி மைசூர்பாகு',
     englishName: 'Karupatti Mysore Pak',
     tamilName: 'கருப்பட்டி மைசூர்பாகு',
@@ -754,7 +755,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'onion-milk-halwa',
-    itemNumber: 54,
+    itemNumber: 67,
     name: 'Onion Milk Halwa — வெங்காயப்பால் அல்வா',
     englishName: 'Onion Milk Halwa',
     tamilName: 'வெங்காயப்பால் அல்வா',
@@ -768,7 +769,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'kiwi-halwa',
-    itemNumber: 55,
+    itemNumber: 68,
     name: 'Kiwi Halwa — கிவி அல்வா',
     englishName: 'Kiwi Halwa',
     tamilName: 'கிவி அல்வா',
@@ -782,7 +783,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'ashoka-halwa',
-    itemNumber: 56,
+    itemNumber: 69,
     name: 'Ashoka Halwa — அசோகா அல்வா',
     englishName: 'Ashoka Halwa',
     tamilName: 'அசோகா அல்வா',
@@ -796,7 +797,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'nendran-roll',
-    itemNumber: 57,
+    itemNumber: 70,
     name: 'Nendran Roll — நேந்திரன் ரோல்',
     englishName: 'Nendran Roll',
     tamilName: 'நேந்திரன் ரோல்',
@@ -810,7 +811,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'badam-roll',
-    itemNumber: 58,
+    itemNumber: 71,
     name: 'Badam Roll — பாதாம் ரோல்',
     englishName: 'Badam Roll',
     tamilName: 'பாதாம் ரோல்',
@@ -824,7 +825,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'pista-roll',
-    itemNumber: 59,
+    itemNumber: 72,
     name: 'Pista Roll — பிஸ்தா ரோல்',
     englishName: 'Pista Roll',
     tamilName: 'பிஸ்தா ரோல்',
@@ -838,7 +839,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'pista-burfi',
-    itemNumber: 60,
+    itemNumber: 73,
     name: 'Pista Burfi — பிஸ்தா பர்பி',
     englishName: 'Pista Burfi',
     tamilName: 'பிஸ்தா பர்பி',
@@ -852,7 +853,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'low-sugar-cashew-burfi',
-    itemNumber: 61,
+    itemNumber: 74,
     name: 'Low Sugar Cashew Burfi — லோ சுகர் முந்திரி பர்பி',
     englishName: 'Low Sugar Cashew Burfi',
     tamilName: 'லோ சுகர் முந்திரி பர்பி',
@@ -866,7 +867,7 @@ export const THENISAI_SWEETS_62 = [
   },
   {
     id: 'low-sugar-fig-burfi',
-    itemNumber: 62,
+    itemNumber: 75,
     name: 'Low Sugar Fig Burfi — லோ சுகர் அத்திப்பழ பர்பி',
     englishName: 'Low Sugar Fig Burfi',
     tamilName: 'லோ சுகர் அத்திப்பழ பர்பி',

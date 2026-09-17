@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG } from '../data/sweetsData';
-import { THENISAI_SWEETS_62 } from '../data/thenisaiSweets62';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../data/sweetsData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
 
@@ -14,48 +13,45 @@ const BILLS_CACHE_KEY = 'thenisai_bills_cache';
 const OFFLINE_LEDGER_KEY = 'thenisai_offline_backup_ledger';
 const OFFLINE_QUEUE_KEY = 'thenisai_offline_sync_queue';
 const TAX_SETTINGS_STORAGE_KEY = 'thenisai_tax_settings_v1';
+const PRODUCT_AVAILABILITY_KEY = 'thenisai_product_availability_v1';
+const CUSTOM_PRODUCTS_KEY = 'thenisai_custom_products_v1';
+const PRICE_OVERRIDE_LOGS_KEY = 'thenisai_price_override_logs_v1';
+const RECYCLE_BIN_STORAGE_KEY = 'thenisai_recycle_bin_bills_v1';
+const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
+
 
 export const DEFAULT_TAX_SETTINGS = {
-  totalGstRate: 5,   // 5% Total GST
-  cgstRate: 2.5,     // 2.5% Central GST
-  sgstRate: 2.5,     // 2.5% State GST
+  totalGstRate: 0,   // 0% Total GST
+  cgstRate: 0,       // 0% Central GST
+  sgstRate: 0,       // 0% State GST
   gstin: '33AABCT9988Q1Z5',
-  taxEnabled: true,
-  lastUpdated: '16 Sep 2026',
+  taxEnabled: false,
+  lastUpdated: '17 Sep 2026',
 };
 
-const SWEETS_62_INVENTORY = THENISAI_SWEETS_62.map((item) => ({
-  id: item.id,
-  name: item.name,
-  englishName: item.englishName,
-  tamilName: item.tamilName,
-  stockKg: item.unit === 'kg' ? 35 : item.unit === 'Litre' ? 25 : 60,
-  minThreshold: item.unit === 'kg' ? 8 : 10,
-  batchDate: 'Today 06:30 AM',
-  batchNote: item.description || 'Fresh kitchen batch',
-  unit: item.unit || 'kg',
-  price: item.price,
-  category: item.category || 'sweets',
-  subcategory: item.subcategory || 'Traditional Sweets',
-  hsn: item.hsn || '2106',
-}));
+const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
+  const isKg = item.unit === 'kg';
+  const isLitre = item.unit === 'Litre' || item.unit === '1 Litre';
+  const isCup = item.unit === 'Cup' || item.unit === '1 Cup';
+  const isPc = item.unit === 'Pc' || item.unit === '1 Pc';
 
-const DEFAULT_INVENTORY = [
-  ...SWEETS_62_INVENTORY,
-  { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh hot brew counter', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
-  { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh brew counter', unit: 'Cup', category: 'beverages', subcategory: 'Coffees', price: 20 },
-  { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', unit: 'Cup', category: 'beverages', subcategory: 'Coffees', price: 20 },
-  { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 20 },
-  { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
-  { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
-  { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
-  { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh traditional ragi brew', unit: 'Cup', category: 'beverages', subcategory: 'Milk & Malts', price: 25 },
-  { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh citrus infusion', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
-  { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
-  { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
-  { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh crushed ginger & lemon', unit: 'Cup', category: 'beverages', subcategory: 'Teas', price: 20 },
-  { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Crispy warm medu vada', unit: 'Pc', category: 'snacks', subcategory: 'Snacks (Vada)', price: 20 },
-];
+  return {
+    id: item.id,
+    itemNumber: item.itemNumber,
+    name: item.name,
+    englishName: item.englishName,
+    tamilName: item.tamilName,
+    stockKg: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
+    minThreshold: isKg ? 8 : 10,
+    batchDate: 'Today 06:30 AM',
+    batchNote: item.description || 'Fresh counter stock',
+    unit: item.unit || 'kg',
+    price: item.price,
+    category: item.category || 'sweets',
+    subcategory: item.subcategory || (item.category === 'spices' ? 'Spices (Kara Vagai)' : item.category === 'beverages' ? 'Beverages' : 'Traditional Sweets'),
+    hsn: item.hsn || '2106',
+  };
+});
 
 const INITIAL_ORDERS = [
   {
@@ -157,6 +153,61 @@ function getWeightInKg(weightStr) {
   return 0.5;
 }
 
+export const resolveActiveUser = (explicitUser = null) => {
+  if (explicitUser && (explicitUser.name || explicitUser.id || explicitUser.username)) {
+    const isAdminUser = explicitUser.role === 'admin' || explicitUser.id === 'staff-1' || explicitUser.username === 'admin' || explicitUser.name?.includes('Ramanathan');
+    const role = isAdminUser ? 'admin' : (explicitUser.role || (typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('admin') ? 'admin' : 'cashier'));
+    const isAdmin = role === 'admin';
+    return {
+      id: explicitUser.id || (isAdmin ? 'staff-1' : 'staff-2'),
+      username: explicitUser.username || (isAdmin ? 'admin' : 'cashier'),
+      name: (explicitUser.name && explicitUser.name !== 'Staff') ? explicitUser.name : (isAdmin ? 'S. Ramanathan' : 'M. Kannan'),
+      role,
+      title: explicitUser.title || (isAdmin ? 'Kitchen Operations Head' : 'Counter Cashier'),
+    };
+  }
+
+  try {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const saved = sessionStorage.getItem('thenisai_auth_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && (parsed.name || parsed.username || parsed.id)) {
+          const isAdminUser = parsed.role === 'admin' || parsed.id === 'staff-1' || parsed.username === 'admin' || parsed.name?.includes('Ramanathan');
+          const role = isAdminUser ? 'admin' : (parsed.role || (window.location.hash.toLowerCase().includes('admin') ? 'admin' : 'cashier'));
+          const isAdmin = role === 'admin';
+          return {
+            id: parsed.id || (isAdmin ? 'staff-1' : 'staff-2'),
+            username: parsed.username || (isAdmin ? 'admin' : 'cashier'),
+            name: (parsed.name && parsed.name !== 'Staff') ? parsed.name : (isAdmin ? 'S. Ramanathan' : 'M. Kannan'),
+            role,
+            title: parsed.title || (isAdmin ? 'Kitchen Operations Head' : 'Counter Cashier'),
+          };
+        }
+      }
+    }
+  } catch {}
+
+  const isAdminRoute = typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('admin');
+  if (isAdminRoute) {
+    return {
+      id: 'staff-1',
+      username: 'admin',
+      name: 'S. Ramanathan',
+      role: 'admin',
+      title: 'Kitchen Operations Head',
+    };
+  }
+
+  return {
+    id: 'staff-2',
+    username: 'cashier',
+    name: 'M. Kannan',
+    role: 'cashier',
+    title: 'Counter Cashier',
+  };
+};
+
 export function CartProvider({ children }) {
   const [cart, setCart] = useState(() => {
     try {
@@ -253,20 +304,118 @@ export function CartProvider({ children }) {
     });
   };
 
-  // Inventory state (Exclusively the 13 products)
+  // Custom Products added by Admin / Staff
+  const [customProducts, setCustomProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_PRODUCTS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Product Availability Map: { [productId]: boolean } (true = Inactive / Out of Stock / Masked)
+  const [productAvailabilityMap, setProductAvailabilityMap] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PRODUCT_AVAILABILITY_KEY);
+      const parsed = saved ? JSON.parse(saved) : {};
+      // Reconcile with cached inventory if available
+      const invSaved = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      if (invSaved) {
+        const invParsed = JSON.parse(invSaved);
+        if (Array.isArray(invParsed)) {
+          invParsed.forEach((item) => {
+            if (item && item.id && item.isInactive !== undefined) {
+              parsed[item.id] = Boolean(item.isInactive);
+            }
+          });
+        }
+      }
+      return parsed;
+    } catch {
+      return {};
+    }
+  });
+
+  // Price Override Audit Logs (Admin visibility)
+  const [priceOverrideLogs, setPriceOverrideLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PRICE_OVERRIDE_LOGS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // 30-Day Recycle Bin for Deleted Bills
+  const [recycleBinBills, setRecycleBinBills] = useState(() => {
+    try {
+      const saved = localStorage.getItem(RECYCLE_BIN_STORAGE_KEY);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      const now = Date.now();
+      // Auto-purge any items older than 30 days
+      return Array.isArray(parsed) ? parsed.filter((b) => !b.expiresAt || b.expiresAt >= now) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Unified Admin Activity Logs (Sanitized to guarantee performer ID & name attribution)
+  const [activityLogs, setActivityLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ACTIVITY_LOGS_STORAGE_KEY);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((item) => {
+        if (!item.performedBy || item.performedBy.name === 'Staff' || !item.performedBy.id || item.performedBy.id === 'staff-1' || item.performedBy.username === 'admin') {
+          const isCashierAction = item.actionType === 'PRICE_OVERRIDE' && item.performedBy?.role === 'cashier' && item.performedBy?.id !== 'staff-1';
+          return {
+            ...item,
+            performedBy: isCashierAction
+              ? { id: item.performedBy?.id || 'staff-2', username: item.performedBy?.username || 'cashier', name: item.performedBy?.name || 'M. Kannan', role: 'cashier', title: 'Counter Cashier' }
+              : { id: 'staff-1', username: 'admin', name: (item.performedBy?.name && item.performedBy.name !== 'Staff') ? item.performedBy.name : 'S. Ramanathan', role: 'admin', title: 'Kitchen Operations Head' },
+          };
+        }
+        return item;
+      });
+    } catch {
+      return [];
+    }
+  });
+
+  // Combined Billing Items (Standard 125 + Custom Items)
+  const allBillingProducts = useMemo(() => {
+    const combined = [...ALL_BILLING_ITEMS];
+    customProducts.forEach((cp, idx) => {
+      if (!combined.some((it) => it.id === cp.id)) {
+        combined.push({
+          ...cp,
+          itemNumber: cp.itemNumber || (ALL_BILLING_ITEMS.length + idx + 1),
+        });
+      }
+    });
+    return combined;
+  }, [customProducts]);
+
+  // Inventory state
   const [inventory, setInventory] = useState(() => {
     try {
       const saved = localStorage.getItem(INVENTORY_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const validOnly = parsed.filter((p) => DEFAULT_INVENTORY.some((d) => d.id === p.id));
-          const missing = DEFAULT_INVENTORY.filter((d) => !validOnly.some((p) => p.id === d.id));
-          const finalInv = [...validOnly, ...missing];
-          if (finalInv.length > 0) {
-            localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(finalInv));
-            return finalInv;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          if (parsed.length < DEFAULT_INVENTORY.length) {
+            const existingIds = new Set(parsed.map((i) => i.id));
+            const missing = DEFAULT_INVENTORY.filter((i) => !existingIds.has(i.id));
+            const combined = [...parsed, ...missing];
+            try {
+              localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(combined));
+            } catch {}
+            return combined;
           }
+          return parsed;
         }
       }
       return DEFAULT_INVENTORY;
@@ -416,39 +565,111 @@ export function CartProvider({ children }) {
     }
   }, [inventory]);
 
-  // Fetch initial data from backend on mount
+  // Multi-tab synchronization for product availability and inventory
   useEffect(() => {
-    let isMounted = true;
-    async function syncWithBackend() {
-      try {
-        const [invRes, ordRes, billsRes] = await Promise.all([
-          api.get('/api/inventory').catch(() => null),
-          api.get('/api/orders').catch(() => null),
-          api.get('/api/bills').catch(() => null),
-        ]);
-        if (isMounted) {
-          if (invRes && invRes.success && Array.isArray(invRes.inventory) && invRes.inventory.length > 0) {
-            setInventory(invRes.inventory);
+    let bc = null;
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        bc = new BroadcastChannel('thenisai_inventory_channel');
+        bc.onmessage = (event) => {
+          if (event.data?.type === 'AVAILABILITY_CHANGED') {
+            const { productId, isInactive } = event.data;
+            setProductAvailabilityMap((prev) => ({ ...prev, [productId]: isInactive }));
+            setInventory((prev) =>
+              prev.map((item) => (item.id === productId ? { ...item, isInactive } : item))
+            );
           }
-          if (ordRes && ordRes.success && Array.isArray(ordRes.orders) && ordRes.orders.length > 0) {
-            setOrders(ordRes.orders);
-          }
-          if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
-            setBills(billsRes.bills);
-            try {
-              localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
-            } catch { }
-          }
-        }
-      } catch (err) {
-        console.warn('Backend sync fallback to local storage:', err);
+        };
       }
-    }
-    syncWithBackend();
+    } catch {}
+
+    const handleStorage = (e) => {
+      if (e.key === PRODUCT_AVAILABILITY_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed && typeof parsed === 'object') {
+            setProductAvailabilityMap(parsed);
+          }
+        } catch {}
+      }
+      if (e.key === INVENTORY_STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setInventory(parsed);
+          }
+        } catch {}
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
     return () => {
-      isMounted = false;
+      if (bc) bc.close();
+      window.removeEventListener('storage', handleStorage);
     };
   }, []);
+
+  // Fetch initial data from backend on mount and sync availability
+  const syncWithBackend = useCallback(async () => {
+    try {
+      const [invRes, ordRes, billsRes] = await Promise.all([
+        api.get('/api/inventory').catch(() => null),
+        api.get('/api/orders').catch(() => null),
+        api.get('/api/bills').catch(() => null),
+      ]);
+
+      if (invRes && invRes.success && Array.isArray(invRes.inventory) && invRes.inventory.length > 0) {
+        setInventory(invRes.inventory);
+
+        // Synchronize productAvailabilityMap with backend truth!
+        setProductAvailabilityMap((prev) => {
+          const updated = { ...prev };
+          invRes.inventory.forEach((item) => {
+            if (item && item.id) {
+              updated[item.id] = Boolean(item.isInactive);
+            }
+          });
+          try {
+            localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
+      }
+
+      if (ordRes && ordRes.success && Array.isArray(ordRes.orders) && ordRes.orders.length > 0) {
+        setOrders(ordRes.orders);
+      }
+
+      if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
+        setBills(billsRes.bills);
+        try {
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
+        } catch {}
+      }
+    } catch (err) {
+      console.warn('Backend sync fallback to local storage:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    syncWithBackend();
+
+    const handleFocus = () => syncWithBackend();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') syncWithBackend();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('hashchange', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('hashchange', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [syncWithBackend]);
 
   // Fetch bills with optional cashier filter
   const fetchBills = async (cashierId) => {
@@ -520,6 +741,517 @@ export function CartProvider({ children }) {
     return fullOrder;
   };
 
+  const recordPriceOverrideLog = async (entry) => {
+    const now = new Date();
+    const fullLog = {
+      ...entry,
+      id: entry.id || `ovr-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      timestamp: entry.timestamp || Date.now(),
+      dateStr: entry.dateStr || now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: entry.timeStr || now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    };
+
+    setPriceOverrideLogs((prev) => {
+      const updated = [fullLog, ...prev];
+      try {
+        localStorage.setItem(PRICE_OVERRIDE_LOGS_KEY, JSON.stringify(updated.slice(0, 1000)));
+      } catch {}
+      return updated;
+    });
+
+    try {
+      await api.post('/api/audit/price-override', fullLog);
+    } catch (err) {
+      console.warn('Backend price override audit sync failed, saved locally:', err);
+    }
+    return fullLog;
+  };
+
+  const fetchPriceOverrideLogs = async (cashierId) => {
+    try {
+      const endpoint = cashierId && cashierId !== 'all'
+        ? `/api/audit/price-overrides?cashierId=${encodeURIComponent(cashierId)}`
+        : '/api/audit/price-overrides';
+      const res = await api.get(endpoint);
+      if (res && res.success && Array.isArray(res.logs)) {
+        setPriceOverrideLogs(res.logs);
+        try {
+          localStorage.setItem(PRICE_OVERRIDE_LOGS_KEY, JSON.stringify(res.logs));
+        } catch {}
+        return res.logs;
+      }
+    } catch (err) {
+      console.warn('Failed to fetch price override logs from backend:', err);
+    }
+    return priceOverrideLogs;
+  };
+
+  const recordActivity = async (entry) => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const performer = resolveActiveUser(entry.performedBy);
+
+    const fullEntry = {
+      id: entry.id || `act-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: entry.actionType || 'ACTIVITY',
+      performedBy: performer,
+      targetId: entry.targetId || '',
+      targetName: entry.targetName || '',
+      details: entry.details || {},
+      reason: entry.reason || '',
+      timestamp: entry.timestamp || Date.now(),
+      dateStr: entry.dateStr || dateStr,
+      timeStr: entry.timeStr || timeStr,
+    };
+
+    setActivityLogs((prev) => {
+      const updated = [fullEntry, ...prev.filter((a) => a.id !== fullEntry.id)];
+      try {
+        localStorage.setItem(ACTIVITY_LOGS_STORAGE_KEY, JSON.stringify(updated.slice(0, 1000)));
+      } catch {}
+      return updated;
+    });
+
+    try {
+      await api.post('/api/audit/activity', fullEntry);
+    } catch (err) {
+      console.warn('Backend activity sync fallback locally:', err);
+    }
+
+    return fullEntry;
+  };
+
+  const fetchActivityLogs = async (type = 'all') => {
+    try {
+      const endpoint = type && type !== 'all' ? `/api/audit/activities?type=${encodeURIComponent(type)}` : '/api/audit/activities';
+      const res = await api.get(endpoint);
+      if (res && res.success && Array.isArray(res.activities)) {
+        const sanitized = res.activities.map((item) => {
+          if (!item.performedBy || item.performedBy.name === 'Staff' || !item.performedBy.id || item.performedBy.id === 'staff-1' || item.performedBy.username === 'admin') {
+            const isCashierAction = item.actionType === 'PRICE_OVERRIDE' && item.performedBy?.role === 'cashier' && item.performedBy?.id !== 'staff-1';
+            return {
+              ...item,
+              performedBy: isCashierAction
+                ? { id: item.performedBy?.id || 'staff-2', username: item.performedBy?.username || 'cashier', name: item.performedBy?.name || 'M. Kannan', role: 'cashier', title: 'Counter Cashier' }
+                : { id: 'staff-1', username: 'admin', name: (item.performedBy?.name && item.performedBy.name !== 'Staff') ? item.performedBy.name : 'S. Ramanathan', role: 'admin', title: 'Kitchen Operations Head' },
+            };
+          }
+          return item;
+        });
+        setActivityLogs(sanitized);
+        try {
+          localStorage.setItem(ACTIVITY_LOGS_STORAGE_KEY, JSON.stringify(sanitized));
+        } catch {}
+        return sanitized;
+      }
+    } catch (err) {
+      console.warn('Backend fetch activities failed:', err);
+    }
+    return activityLogs;
+  };
+
+  const fetchRecycleBinBills = async () => {
+    try {
+      const res = await api.get('/api/recycle-bin/bills');
+      if (res && res.success && Array.isArray(res.deletedBills)) {
+        setRecycleBinBills(res.deletedBills);
+        try {
+          localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(res.deletedBills));
+        } catch {}
+        return res.deletedBills;
+      }
+    } catch (err) {
+      console.warn('Backend fetch recycle bin failed:', err);
+    }
+    return recycleBinBills;
+  };
+
+  const deleteBill = async (billIdOrInv, reason, deletedBy = null) => {
+    if (!reason || !reason.trim()) {
+      throw new Error('Mandatory deletion reason is required.');
+    }
+
+    const activePerformer = resolveActiveUser(deletedBy);
+
+    // Locate target bill in bills state
+    const targetBill = bills.find((b) => b.id === billIdOrInv || b.invoiceNumber === billIdOrInv);
+    if (!targetBill) return false;
+
+    const now = Date.now();
+    const deletedRecord = {
+      id: targetBill.id,
+      invoiceNumber: targetBill.invoiceNumber,
+      billData: targetBill,
+      deletedBy: activePerformer,
+      deletionReason: reason.trim(),
+      deletedAt: now,
+      expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30-day retention
+    };
+
+    // 1. Remove from active bills state & cache
+    setBills((prev) => {
+      const updated = prev.filter((b) => b.id !== targetBill.id && b.invoiceNumber !== targetBill.invoiceNumber);
+      try {
+        localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Add to Recycle Bin state & cache
+    setRecycleBinBills((prev) => {
+      const updated = [deletedRecord, ...prev.filter((d) => d.id !== targetBill.id && d.invoiceNumber !== targetBill.invoiceNumber)];
+      try {
+        localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 3. Record Admin Activity
+    await recordActivity({
+      actionType: 'BILL_DELETED',
+      performedBy: activePerformer,
+      targetId: targetBill.invoiceNumber,
+      targetName: `Invoice #${targetBill.invoiceNumber} (₹${targetBill.grandTotal})`,
+      details: {
+        invoiceNumber: targetBill.invoiceNumber,
+        grandTotal: targetBill.grandTotal,
+        itemsCount: targetBill.items?.length || 0,
+        customer: targetBill.customer,
+        paymentMethod: targetBill.paymentMethod,
+      },
+      reason: reason.trim(),
+    });
+
+    // 4. Sync with Backend
+    try {
+      await api.delete(`/api/bills/${targetBill.id}`, { data: { reason: reason.trim(), deletedBy: activePerformer } });
+    } catch (err) {
+      console.warn('Backend bill deletion failed, saved to local recycle bin:', err);
+    }
+
+    return true;
+  };
+
+  const restoreBill = async (billIdOrInv, restoredBy = null) => {
+    const activePerformer = resolveActiveUser(restoredBy);
+    const record = recycleBinBills.find((d) => d.id === billIdOrInv || d.invoiceNumber === billIdOrInv);
+    if (!record || !record.billData) return false;
+
+    const restoredBill = record.billData;
+
+    // 1. Move back to active bills
+    setBills((prev) => {
+      const updated = [restoredBill, ...prev.filter((b) => b.id !== restoredBill.id && b.invoiceNumber !== restoredBill.invoiceNumber)];
+      try {
+        localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Remove from recycle bin
+    setRecycleBinBills((prev) => {
+      const updated = prev.filter((d) => d.id !== record.id && d.invoiceNumber !== record.invoiceNumber);
+      try {
+        localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 3. Record Admin Activity
+    await recordActivity({
+      actionType: 'BILL_RESTORED',
+      performedBy: activePerformer,
+      targetId: record.invoiceNumber,
+      targetName: `Invoice #${record.invoiceNumber} (₹${restoredBill.grandTotal})`,
+      details: { invoiceNumber: record.invoiceNumber, grandTotal: restoredBill.grandTotal },
+      reason: 'Restored from Recycle Bin by Administrator',
+    });
+
+    // 4. Sync with Backend
+    try {
+      await api.post(`/api/recycle-bin/bills/${record.id}/restore`, { restoredBy: activePerformer });
+    } catch (err) {
+      console.warn('Backend bill restore sync fallback:', err);
+    }
+
+    return true;
+  };
+
+  const permanentDeleteBill = async (billIdOrInv, purgedBy = null) => {
+    const activePerformer = resolveActiveUser(purgedBy);
+    const record = recycleBinBills.find((d) => d.id === billIdOrInv || d.invoiceNumber === billIdOrInv);
+    if (!record) return false;
+
+    // 1. Remove permanently from recycle bin
+    setRecycleBinBills((prev) => {
+      const updated = prev.filter((d) => d.id !== record.id && d.invoiceNumber !== record.invoiceNumber);
+      try {
+        localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Record Admin Activity
+    await recordActivity({
+      actionType: 'BILL_PERMANENTLY_PURGED',
+      performedBy: activePerformer,
+      targetId: record.invoiceNumber,
+      targetName: `Invoice #${record.invoiceNumber}`,
+      details: { invoiceNumber: record.invoiceNumber },
+      reason: 'Permanently deleted by Administrator',
+    });
+
+    // 3. Sync with Backend
+    try {
+      await api.delete(`/api/recycle-bin/bills/${record.id}/permanent`, { data: { purgedBy: activePerformer } });
+    } catch (err) {
+      console.warn('Backend permanent bill purge failed:', err);
+    }
+
+    return true;
+  };
+
+  const toggleProductAvailability = async (productId, explicitStateOrUser = null, maybeUser = null) => {
+    let nextInactive;
+    let userObj = null;
+
+    if (typeof explicitStateOrUser === 'boolean') {
+      nextInactive = explicitStateOrUser;
+      userObj = maybeUser;
+    } else if (typeof explicitStateOrUser === 'object' && explicitStateOrUser !== null) {
+      userObj = explicitStateOrUser;
+      const currentInactive = productAvailabilityMap[productId] !== undefined
+        ? Boolean(productAvailabilityMap[productId])
+        : Boolean(inventory.find((i) => i.id === productId)?.isInactive);
+      nextInactive = !currentInactive;
+    } else {
+      userObj = maybeUser;
+      const currentInactive = productAvailabilityMap[productId] !== undefined
+        ? Boolean(productAvailabilityMap[productId])
+        : Boolean(inventory.find((i) => i.id === productId)?.isInactive);
+      nextInactive = !currentInactive;
+    }
+
+    const activePerformer = resolveActiveUser(userObj);
+
+    // 1. Update availability map in state and localStorage
+    setProductAvailabilityMap((prev) => {
+      const updated = { ...prev, [productId]: nextInactive };
+      try {
+        localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Update inventory list state so both match in memory and storage
+    setInventory((prev) => {
+      const updated = prev.map((item) =>
+        item.id === productId ? { ...item, isInactive: nextInactive } : item
+      );
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 3. Broadcast to all open tabs/windows in real time
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('thenisai_inventory_channel');
+        bc.postMessage({ type: 'AVAILABILITY_CHANGED', productId, isInactive: nextInactive });
+        bc.close();
+      }
+    } catch {}
+
+    const item = allBillingProducts.find((it) => it.id === productId);
+    const prodName = item ? item.name : productId;
+
+    recordActivity({
+      actionType: 'STOCK_TOGGLED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: prodName,
+      details: { isInactive: nextInactive },
+      reason: nextInactive ? 'Marked Out of Stock / இருப்பு இல்லை' : 'Reactivated / இருப்பு வந்தது',
+    });
+
+    try {
+      await api.patch(`/api/inventory/${productId}/availability`, { isInactive: nextInactive });
+    } catch (err) {
+      console.warn('Backend availability sync failed, saved locally:', err);
+    }
+  };
+
+  const addNewProduct = async (productData, performedBy = null) => {
+    const activePerformer = resolveActiveUser(performedBy);
+
+    const nextItemNum = Math.max(
+      ...ALL_BILLING_ITEMS.map((it) => it.itemNumber || 0),
+      ...customProducts.map((it) => it.itemNumber || 0),
+      0
+    ) + 1;
+
+    const newId = productData.id || `custom-${Date.now()}`;
+    const unitPrice = parseFloat(productData.price || productData.unitPrice || 500);
+    const stockQty = parseFloat(productData.stockKg || productData.stock || 15);
+
+    const newProd = {
+      id: newId,
+      itemNumber: nextItemNum,
+      name: productData.name,
+      englishName: productData.englishName || productData.name.split('—')[0].trim(),
+      tamilName: productData.tamilName || (productData.name.includes('—') ? productData.name.split('—')[1].trim() : ''),
+      price: unitPrice,
+      unitPrice,
+      pricePerKg: unitPrice,
+      unit: productData.unit || 'kg',
+      category: productData.category || 'sweets',
+      subcategory: productData.subcategory || 'Special Sweets',
+      stockKg: stockQty,
+      minThreshold: parseFloat(productData.minThreshold || 8),
+      hsn: productData.hsn || '2106',
+      image: productData.image || '/images/products/palkova_card.jpg',
+      isCustom: true,
+      description: productData.description || 'Special preparation',
+    };
+
+    setCustomProducts((prev) => {
+      const updated = [...prev, newProd];
+      try {
+        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const updated = [...prev, {
+        id: newProd.id,
+        itemNumber: newProd.itemNumber,
+        name: newProd.name,
+        stockKg: stockQty,
+        minThreshold: newProd.minThreshold,
+        unit: newProd.unit,
+        price: newProd.price,
+        category: newProd.category,
+        subcategory: newProd.subcategory,
+        batchDate: 'Today Just now',
+        batchNote: 'New item addition',
+        hsn: newProd.hsn,
+        isCustom: true,
+      }];
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_ADDED',
+      performedBy: activePerformer,
+      targetId: newProd.id,
+      targetName: newProd.name,
+      details: { price: newProd.price, category: newProd.category, unit: newProd.unit, stock: stockQty },
+      reason: 'New product added to catalog',
+    });
+
+    try {
+      await api.post('/api/inventory/products', newProd);
+    } catch (err) {
+      console.warn('Backend product creation failed, saved locally:', err);
+    }
+
+    return newProd;
+  };
+
+  const deleteProduct = async (productId, performedBy = null) => {
+    const activePerformer = resolveActiveUser(performedBy);
+    const item = allBillingProducts.find((it) => it.id === productId);
+    const prodName = item ? item.name : productId;
+
+    setCustomProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Also mark in availability map as inactive
+    setProductAvailabilityMap((prev) => {
+      const updated = { ...prev, [productId]: true };
+      try {
+        localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_DELETED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: prodName,
+      reason: 'Product deleted from catalog',
+    });
+
+    try {
+      await api.delete(`/api/inventory/products/${productId}`);
+    } catch (err) {
+      console.warn('Backend product delete failed:', err);
+    }
+  };
+
+  const updateProductMasterPrice = async (productId, newPrice, performedBy = null) => {
+    const numPrice = parseFloat(newPrice);
+    if (isNaN(numPrice) || numPrice < 0) return;
+
+    const activePerformer = resolveActiveUser(performedBy);
+    const item = allBillingProducts.find((it) => it.id === productId);
+    const prodName = item ? item.name : productId;
+    const oldPrice = item ? item.price : 0;
+
+    setCustomProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice } : p));
+      try {
+        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice } : p));
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_PRICE_UPDATED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: prodName,
+      details: { oldPrice, newPrice: numPrice },
+      reason: `Master catalog price changed: ₹${oldPrice} → ₹${numPrice}`,
+    });
+
+    try {
+      await api.patch(`/api/inventory/${productId}/price`, { price: numPrice });
+    } catch (err) {
+      console.warn('Backend price update failed:', err);
+    }
+  };
+
+
   const addCounterSale = async (saleData) => {
     const fullOrder = {
       ...saleData,
@@ -528,6 +1260,29 @@ export function CartProvider({ children }) {
       status: 'Completed',
       createdAt: Date.now(),
     };
+
+    // Auto-detect and record Price Override audit logs for any price-overridden items
+    if (Array.isArray(saleData.items)) {
+      saleData.items.forEach((item) => {
+        if (item.isPriceOverridden || (item.originalPrice !== undefined && Number(item.originalPrice) !== Number(item.price))) {
+          const orig = Number(item.originalPrice ?? item.price);
+          const current = Number(item.price);
+          recordPriceOverrideLog({
+            invoiceNumber: fullOrder.invoiceNumber,
+            cashier: fullOrder.cashier,
+            productId: item.id,
+            productName: item.name,
+            weightOrUnit: item.weight || item.unit || 'unit',
+            originalRate: orig,
+            customRate: current,
+            difference: current - orig,
+            quantity: item.quantity || 1,
+            reason: item.overrideReason || 'Staff Counter Price Adjustment',
+            timestamp: Date.now(),
+          });
+        }
+      });
+    }
 
     // Counter sales strictly belong in bills (Shift Bills & Daily Revenue), NOT in online orders
     setBills((prev) => [fullOrder, ...prev]);
@@ -827,7 +1582,29 @@ export function CartProvider({ children }) {
         openCheckout,
         closeCheckout,
         openInvoice,
-        closeInvoice,
+        // Dynamic Products & Availability
+        allBillingProducts,
+        customProducts,
+        productAvailabilityMap,
+        toggleProductAvailability,
+        refreshInventory: syncWithBackend,
+        addNewProduct,
+        deleteProduct,
+        updateProductMasterPrice,
+        // Price Override Auditing
+        priceOverrideLogs,
+        recordPriceOverrideLog,
+        fetchPriceOverrideLogs,
+        // Bill Deletion & 30-Day Recycle Bin
+        recycleBinBills,
+        deleteBill,
+        restoreBill,
+        permanentDeleteBill,
+        fetchRecycleBinBills,
+        // Unified Activity Audit Trail
+        activityLogs,
+        recordActivity,
+        fetchActivityLogs,
         subtotal,
         totalItems,
         freeDeliveryRemaining,
