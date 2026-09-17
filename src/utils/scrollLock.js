@@ -1,6 +1,13 @@
 let lockCount = 0;
 let savedScrollY = 0;
 
+function isWorkspaceRoute() {
+  if (typeof window === 'undefined') return false;
+  const hash = (window.location.hash || '').toLowerCase();
+  const path = (window.location.pathname || '').toLowerCase();
+  return hash.startsWith('#billing') || hash.startsWith('#admin') || path.includes('/billing') || path.includes('/admin');
+}
+
 function isInsideScrollable(target) {
   if (!target || !target.closest) return false;
 
@@ -15,6 +22,11 @@ function isInsideScrollable(target) {
     return false;
   }
 
+  // Inside workspace (billing/admin), anything inside the workspace should scroll freely
+  if (target.closest('.billing-pos-root, .admin-portal-root, .pos-content-area, .pos-inventory-page, .inventory-table-wrap, .pos-catalog-pane, .pos-bill-pane, .admin-content-area, [data-lenis-prevent]')) {
+    return true;
+  }
+
   // Allow internal scroll only for designated modal content cards / drawer bodies
   return Boolean(
     target.closest(
@@ -24,6 +36,15 @@ function isInsideScrollable(target) {
 }
 
 function handleWheel(e) {
+  // Never block wheel scroll in billing or admin workspace
+  if (isWorkspaceRoute()) {
+    if (e.target && e.target.closest && e.target.closest('.cust-auth-backdrop, .cart-backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-modal-backdrop')) {
+      if (isInsideScrollable(e.target)) return;
+      e.preventDefault();
+    }
+    return;
+  }
+
   // Check if wheel occurred inside an active scrollable popup element
   if (isInsideScrollable(e.target)) {
     return; // Allow popup to scroll internally
@@ -33,6 +54,15 @@ function handleWheel(e) {
 }
 
 function handleTouchMove(e) {
+  // Never block touch scroll in billing or admin workspace
+  if (isWorkspaceRoute()) {
+    if (e.target && e.target.closest && e.target.closest('.cust-auth-backdrop, .cart-backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-modal-backdrop')) {
+      if (isInsideScrollable(e.target)) return;
+      e.preventDefault();
+    }
+    return;
+  }
+
   if (isInsideScrollable(e.target)) {
     return; // Allow popup to scroll internally
   }
@@ -42,6 +72,10 @@ function handleTouchMove(e) {
 function handleKeyDown(e) {
   const scrollKeys = ['Space', ' ', 'PageUp', 'PageDown', 'End', 'Home', 'ArrowUp', 'ArrowDown'];
   if (!scrollKeys.includes(e.key)) return;
+
+  if (isWorkspaceRoute()) {
+    return; // Never block keyboard scroll in billing or admin workspace
+  }
 
   const target = e.target;
   const isEditable = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
@@ -55,6 +89,7 @@ function handleKeyDown(e) {
 }
 
 function handleScroll() {
+  if (isWorkspaceRoute()) return; // Never reset scroll position on billing or admin pages
   if (lockCount > 0 && typeof savedScrollY === 'number') {
     if (window.__lenis) {
       window.__lenis.scrollTo(savedScrollY, { immediate: true });

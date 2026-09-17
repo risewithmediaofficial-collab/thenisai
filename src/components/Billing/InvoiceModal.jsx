@@ -62,6 +62,28 @@ export default function InvoiceModal() {
     };
   }, []);
 
+  const handleClose = (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    if (typeof closeInvoice === 'function') {
+      closeInvoice();
+    }
+  };
+
+  // Keyboard shortcut: Press Escape to close invoice modal
+  useEffect(() => {
+    if (!activeInvoice) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose(e);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeInvoice, closeInvoice]);
+
   if (!activeInvoice) return null;
 
   const {
@@ -262,7 +284,7 @@ export default function InvoiceModal() {
     const isShopCopy = copyType === 'shop';
 
     return (
-      <div key={copyType} className="thermal-single-copy-wrap">
+      <div key={copyType} className={`thermal-single-copy-wrap copy-${copyType} ${index > 0 ? 'page-break-before' : ''}`}>
         {index > 0 && (
           <div className="thermal-receipt-divider-cut">
             <span className="cut-icon">✂</span>
@@ -625,21 +647,21 @@ export default function InvoiceModal() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          onClick={closeInvoice}
+          onClick={handleClose}
         />
 
         {/* Modal Window */}
         <motion.div
-          className={`invoice-modal-wrap ${billFormat === 'a4' ? 'wrap-a4' : billFormat === 'thermal-58' ? 'wrap-thermal-58' : 'wrap-thermal'}`}
+          className={`invoice-modal-wrap ${billFormat === 'a4' ? 'wrap-a4' : 'wrap-thermal'}`}
           data-lenis-prevent
           initial={{ opacity: 0, scale: 0.94, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.94, y: 25 }}
           transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Action Toolbar with Format Switcher & Quick Actions */}
+          {/* Action Toolbar with Format Switcher & Quick Actions matching Screenshot 2 */}
           <div className="invoice-toolbar">
-            <div className="invoice-toolbar-left">
+            <div className="invoice-toolbar-top-row">
               <span className="invoice-quick-inv-badge">{invoiceNumber}</span>
 
               {/* Format Switcher Pills */}
@@ -648,21 +670,21 @@ export default function InvoiceModal() {
                   type="button"
                   className={`format-btn ${billFormat === 'thermal' ? 'active' : ''}`}
                   onClick={() => handleSelectFormat('thermal')}
-                  title="POS thermal receipt roll"
+                  title="POS thermal receipt printer layout"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
-                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
                     <path d="M8 7h8" />
                     <path d="M8 11h8" />
                     <path d="M8 15h5" />
                   </svg>
-                  <span>Thermal Roll</span>
+                  <span>Thermal</span>
                 </button>
                 <button
                   type="button"
                   className={`format-btn ${billFormat === 'a4' ? 'active' : ''}`}
                   onClick={() => handleSelectFormat('a4')}
-                  title="Standard A4 sheet layout"
+                  title="Standard A4 tax invoice layout"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -671,48 +693,19 @@ export default function InvoiceModal() {
                     <line x1="16" y1="17" x2="8" y2="17" />
                     <polyline points="10 9 9 9 8 9" />
                   </svg>
-                  <span>A4 Sheet</span>
+                  <span>A4 Invoice</span>
                 </button>
               </div>
             </div>
 
             <div className="invoice-toolbar-actions">
-              {/* Copies Switcher: 2 Copies (Customer + Shop) vs 1 Copy */}
-              <div className="invoice-copies-switcher">
-                <button
-                  type="button"
-                  className={`copies-btn ${printCopies === 'both' ? 'active' : ''}`}
-                  onClick={() => handleSelectCopies('both')}
-                  title="Print 2 separate cut slips: 1 for Customer and 1 for Shop"
-                >
-                  <span className="copies-icon">✂</span>
-                  <span>2 Copies (Cut Seperate)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`copies-btn ${printCopies === 'customer' ? 'active' : ''}`}
-                  onClick={() => handleSelectCopies('customer')}
-                  title="Print 1 slip: Customer copy only"
-                >
-                  <span>Customer (1 Copy)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`copies-btn ${printCopies === 'shop' ? 'active' : ''}`}
-                  onClick={() => handleSelectCopies('shop')}
-                  title="Print 1 slip: Shop copy only"
-                >
-                  <span>Shop (1 Copy)</span>
-                </button>
-              </div>
-
               <button className="toolbar-btn print-btn" onClick={handlePrint}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>Print {printCopies === 'both' ? '2 Cut Slips' : 'Bill'}</span>
+                <span>Print Receipt</span>
               </button>
 
               <a
@@ -725,17 +718,17 @@ export default function InvoiceModal() {
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.75 1.21 5.48 0 9.93-4.45 9.93-9.93 0-5.48-4.45-9.9-9.93-9.9zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.36c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.7 8.22-8.23 8.22zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.78.98-.14.16-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.41.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.76-1.85-.2-.49-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.01 2.57.12.16 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.1-.22-.16-.47-.29z" />
                 </svg>
-                <span>WhatsApp {isPosSale && hasCustomerPhone ? 'to Customer' : 'Bill'}</span>
+                <span>WhatsApp</span>
               </a>
 
               <button
                 type="button"
                 className="toolbar-btn close-btn"
-                onClick={closeInvoice}
+                onClick={handleClose}
                 aria-label="Close"
                 title="Close"
               >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -755,7 +748,7 @@ export default function InvoiceModal() {
               </div>
             ) : (
               <div
-                className={`thermal-receipt-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''} ${billFormat === 'thermal-58' ? 'thermal-58-wrap' : ''}`}
+                className={`thermal-receipt-wrapper ${copiesToRender.length > 1 ? 'has-multiple' : ''}`}
                 ref={invoiceRef}
               >
                 {copiesToRender.map((copyType, index) => renderThermalReceiptCopy(copyType, index))}

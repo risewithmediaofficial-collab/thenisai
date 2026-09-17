@@ -954,7 +954,337 @@
 }
 
 /* ==============================================================================
-   10. Dedicated Print Rules for Day Z-Report
+   9. Cashier Shift Banner & Admin Staff Filter Controls
+   ============================================================================== */
+.daily-cashier-shift-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.cashier-shift-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #059669;
+  color: #FFFFFF;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.cashier-shift-user-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #065F46;
+  font-size: 13px;
+}
+
+.shift-counter-id {
+  color: #047857;
+  background: #D1FAE5;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cashier-shift-scope-note {
+  font-size: 11.5px;
+  color: #059669;
+  font-weight: 500;
+}
+
+.daily-filter-strip.cashier-mode {
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+  padding: 10px 18px;
+}
+
+.cashier-shift-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #166534;
+  font-size: 13.5px;
+}
+
+.shift-live-tag {
+  background: #22C55E;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.03em;
+}
+
+.daily-filter-right-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.staff-filter-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-staff-select {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 220px;
+}
+
+.admin-staff-select:focus {
+  border-color: #B45309;
+  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
+}
+
+/* ==============================================================================
+   10. Table Action Buttons & Edited Badge
+   ============================================================================== */
+.inv-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edited-badge {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.table-actions-cell {
+  white-space: nowrap;
+}
+
+.table-actions-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 11px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edit-bill-btn:hover {
+  background: #1D4ED8;
+  color: #FFFFFF;
+  border-color: #1D4ED8;
+}
+
+.delete-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.delete-bill-btn:hover {
+  background: #DC2626;
+  color: #FFFFFF;
+  border-color: #DC2626;
+}
+
+/* ==============================================================================
+   11. Delete Confirmation Modal (30-Day Recycle Bin)
+   ============================================================================== */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.delete-modal-card {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.delete-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px;
+  background: #FEF2F2;
+  border-bottom: 1px solid #FEE2E2;
+}
+
+.del-icon-circle {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.delete-modal-header h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #991B1B;
+}
+
+.del-modal-sub {
+  margin: 0;
+  font-size: 12.5px;
+  color: #B91C1C;
+  font-weight: 500;
+}
+
+.delete-modal-body {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.del-warning-text {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.del-reason-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1E293B;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.del-reason-label .req {
+  color: #DC2626;
+}
+
+.del-reason-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 13.5px;
+  color: #0F172A;
+  outline: none;
+  transition: all 0.15s ease;
+}
+
+.del-reason-input:focus {
+  border-color: #DC2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+}
+
+.del-cancel-btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.del-cancel-btn:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.del-confirm-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 700;
+  background: #DC2626;
+  border: 1px solid #DC2626;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.del-confirm-btn:hover:not(:disabled) {
+  background: #B91C1C;
+}
+
+.del-confirm-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==============================================================================
+   12. Dedicated Print Rules for Day Z-Report
    ============================================================================== */
 @media print {
   /* When Z-report slip is active, hide everything else */

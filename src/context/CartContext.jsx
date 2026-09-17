@@ -53,88 +53,7 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
   };
 });
 
-const INITIAL_ORDERS = [
-  {
-    id: 'ord-103',
-    invoiceNumber: 'THN-2026-5120',
-    orderDate: '16 Sep 2026',
-    orderTime: '02:15 PM',
-    customer: { fullName: 'Anitha Sundaram', phone: '9845012398', email: 'anitha.s@gmail.com' },
-    shippingAddress: { doorNo: '72, 4th Cross', street: 'Koramangala 5th Block', landmark: 'Near Sony World Signal', city: 'Bengaluru', state: 'Karnataka', pincode: '560095' },
-    items: [
-      { id: '13', name: 'Motichoor Laddu — மோட்டிச்சூர் லட்டு', weight: '500g', price: 340, quantity: 1, image: '/images/products/palkova_card.jpg', hsn: '2106' },
-      { id: 'palkova', name: 'Signature Palkova — பாரம்பரிய பால்கோவா', weight: '1kg', price: 680, quantity: 1, image: '/images/products/palkova_card.jpg', hsn: '0402' },
-    ],
-    subtotal: 1020,
-    taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },
-    deliveryFee: 0,
-    grandTotal: 1071,
-    paymentMethod: 'upi',
-    upiUtr: '425983719283',
-    source: 'online',
-    status: 'New',
-    createdAt: Date.now() - 1800000,
-  },
-  {
-    id: 'ord-102',
-    invoiceNumber: 'THN-2026-6418',
-    orderDate: '16 Sep 2026',
-    orderTime: '11:30 AM',
-    customer: { fullName: 'Karthik Raja', phone: '9789012345', email: 'karthik.raja@yahoo.com' },
-    shippingAddress: { doorNo: '18/B', street: 'Sipcot Phase 2', landmark: 'Opposite Ashok Leyland', city: 'Hosur', state: 'Tamil Nadu', pincode: '635126' },
-    items: [
-      { id: 'mysore-pak', name: 'Ghee Mysore Pak — நெய் மைசூர் பாக்', weight: '500g', price: 380, quantity: 2, image: '/images/products/mysore_pak.jpg', hsn: '2106' },
-    ],
-    subtotal: 760,
-    taxBreakdown: { rate: 5, totalTax: 38, cgst: 19, sgst: 19, igst: 0, isInterState: false },
-    deliveryFee: 0,
-    grandTotal: 798,
-    paymentMethod: 'card',
-    source: 'online',
-    status: 'Accepted',
-    createdAt: Date.now() - 7200000,
-  },
-  {
-    id: 'ord-101',
-    invoiceNumber: 'THN-2026-4821',
-    orderDate: '16 Sep 2026',
-    orderTime: '09:42 AM',
-    customer: { fullName: 'Venkatesh Raman', phone: '9840123456', email: 'venkat@gmail.com' },
-    shippingAddress: { doorNo: '45/A', street: 'KK Nagar', landmark: 'Near Temple', city: 'Krishnagiri', state: 'Tamil Nadu', pincode: '635001' },
-    items: [
-      { id: 'palkova', name: 'Signature Palkova', weight: '500g', price: 340, quantity: 2, image: '/images/products/palkova_card.jpg', hsn: '0402' },
-      { id: 'mysore-pak', name: 'Royal Mysore Pak', weight: '250g', price: 190, quantity: 1, image: '/images/products/mysore_pak.jpg', hsn: '2106' },
-    ],
-    subtotal: 870,
-    taxBreakdown: { rate: 5, totalTax: 43.5, cgst: 21.75, sgst: 21.75, igst: 0, isInterState: false },
-    deliveryFee: 0,
-    grandTotal: 914,
-    paymentMethod: 'cod',
-    source: 'online',
-    status: 'Dispatched',
-    createdAt: Date.now() - 14400000,
-  },
-  {
-    id: 'ord-100',
-    invoiceNumber: 'THN-2026-3912',
-    orderDate: '15 Sep 2026',
-    orderTime: '08:15 AM',
-    customer: { fullName: 'Lakshmi Narayanan', phone: '9443219876', email: 'lakshmi@outlook.com' },
-    shippingAddress: { doorNo: '12', street: 'Anna Nagar West', landmark: '', city: 'Chennai', state: 'Tamil Nadu', pincode: '600040' },
-    items: [
-      { id: 'kaju-katli', name: 'Kaju Katli — காஜு கத்லி', weight: '1kg', price: 1020, quantity: 1, image: '/images/products/kaju_katli.jpg', hsn: '2106' },
-    ],
-    subtotal: 1020,
-    taxBreakdown: { rate: 5, totalTax: 51, cgst: 25.5, sgst: 25.5, igst: 0, isInterState: false },
-    deliveryFee: 0,
-    grandTotal: 1071,
-    paymentMethod: 'upi',
-    upiUtr: '425983719283',
-    source: 'online',
-    status: 'Delivered',
-    createdAt: Date.now() - 86400000,
-  },
-];
+const INITIAL_ORDERS = [];
 
 function getWeightInKg(weightStr) {
   if (!weightStr) return 0.5;
@@ -637,8 +556,11 @@ export function CartProvider({ children }) {
         });
       }
 
-      if (ordRes && ordRes.success && Array.isArray(ordRes.orders) && ordRes.orders.length > 0) {
+      if (ordRes && ordRes.success && Array.isArray(ordRes.orders)) {
         setOrders(ordRes.orders);
+        try {
+          localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(ordRes.orders));
+        } catch {}
       }
 
       if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
@@ -932,6 +854,79 @@ export function CartProvider({ children }) {
     }
 
     return true;
+  };
+
+  const editBill = async (billIdOrInv, updatedFields, reason = '', editedBy = null) => {
+    const activePerformer = resolveActiveUser(editedBy);
+    const targetBill = bills.find((b) => b.id === billIdOrInv || b.invoiceNumber === billIdOrInv);
+    if (!targetBill) return { success: false, message: 'Bill not found' };
+
+    const originalGrandTotal = Number(targetBill.grandTotal || 0);
+    const newGrandTotal = updatedFields.grandTotal !== undefined ? Number(updatedFields.grandTotal) : originalGrandTotal;
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    const editEvent = {
+      id: `edit-${Date.now()}`,
+      editedAt: Date.now(),
+      dateStr,
+      timeStr,
+      editedBy: activePerformer,
+      reason: reason?.trim() || 'Billing correction',
+      originalGrandTotal,
+      newGrandTotal,
+      difference: Math.round((newGrandTotal - originalGrandTotal) * 100) / 100,
+    };
+
+    const existingHistory = Array.isArray(targetBill.editHistory) ? targetBill.editHistory : [];
+    const updatedBill = {
+      ...targetBill,
+      ...updatedFields,
+      isEdited: true,
+      editHistory: [...existingHistory, editEvent],
+    };
+
+    // 1. Update bills state & local storage cache
+    setBills((prev) => {
+      const updated = prev.map((b) => (b.id === targetBill.id || b.invoiceNumber === targetBill.invoiceNumber ? updatedBill : b));
+      try {
+        localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Record Activity Log
+    await recordActivity({
+      actionType: 'BILL_EDITED',
+      performedBy: activePerformer,
+      targetId: targetBill.invoiceNumber,
+      targetName: `Invoice #${targetBill.invoiceNumber}`,
+      details: {
+        invoiceNumber: targetBill.invoiceNumber,
+        originalGrandTotal,
+        newGrandTotal,
+        difference: editEvent.difference,
+      },
+      reason: reason?.trim() || 'Billing correction',
+    });
+
+    // 3. Sync with Backend
+    try {
+      const res = await api.put(`/api/bills/${targetBill.id || targetBill.invoiceNumber}`, {
+        ...updatedFields,
+        editReason: reason?.trim() || 'Billing correction',
+        editedBy: activePerformer,
+      });
+      if (res && res.success && res.bill) {
+        return { success: true, bill: res.bill };
+      }
+    } catch (err) {
+      console.warn('Backend bill edit failed, saved locally:', err);
+    }
+
+    return { success: true, bill: updatedBill };
   };
 
   const restoreBill = async (billIdOrInv, restoredBy = null) => {
@@ -1582,6 +1577,7 @@ export function CartProvider({ children }) {
         openCheckout,
         closeCheckout,
         openInvoice,
+        closeInvoice,
         // Dynamic Products & Availability
         allBillingProducts,
         customProducts,
@@ -1598,6 +1594,7 @@ export function CartProvider({ children }) {
         // Bill Deletion & 30-Day Recycle Bin
         recycleBinBills,
         deleteBill,
+        editBill,
         restoreBill,
         permanentDeleteBill,
         fetchRecycleBinBills,

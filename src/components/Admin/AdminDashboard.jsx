@@ -9,6 +9,7 @@ import DailyRevenueReport from './DailyRevenueReport';
 import GstSettingsModal from './GstSettingsModal';
 import AddNewProductModal from './AddNewProductModal';
 import DeleteBillModal from '../Billing/DeleteBillModal';
+import EditBillModal from '../Billing/EditBillModal';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -69,6 +70,7 @@ export default function AdminDashboard() {
   const [billToDelete, setBillToDelete] = useState(null);
   const [billToRestore, setBillToRestore] = useState(null);
   const [billToPurge, setBillToPurge] = useState(null);
+  const [editBillModalItem, setEditBillModalItem] = useState(null);
 
   // Inventory filter state
   const [inventorySearchTerm, setInventorySearchTerm] = useState('');
@@ -485,92 +487,6 @@ export default function AdminDashboard() {
           </div>
         </section>
 
-        {/* Quick Admin Tabs Navigation Bar */}
-        <div className="admin-tab-nav-pills">
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('orders')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="2" y1="12" x2="22" y2="12" />
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-            </svg>
-            Online Orders
-            {pendingOrders.length > 0 && (
-              <span className="admin-tab-badge danger">{pendingOrders.length}</span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'inventory' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('inventory')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            Products &amp; Inventory
-            <span className="admin-tab-badge">{allBillingProducts.length}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'sales' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('sales')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
-              <polyline points="17 6 23 6 23 12" />
-            </svg>
-            Sales &amp; Invoices
-            <span className="admin-tab-badge">{allSales.length}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'daily-revenue' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('daily-revenue')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-            </svg>
-            Daily Revenue &amp; Shift Bills
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'activity-logs' || activeTab === 'price-logs' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('activity-logs')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 8v4l3 3" />
-              <circle cx="12" cy="12" r="9" />
-            </svg>
-            Activity Audit Logs
-            <span className="admin-tab-badge">{(activityLogs?.length || 0) + (priceOverrideLogs?.length || 0)}</span>
-          </button>
-
-          <button
-            type="button"
-            className={`admin-tab-nav-btn ${activeTab === 'recycle-bin' ? 'active' : ''}`}
-            onClick={() => handleSwitchAdminTab('recycle-bin')}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-            </svg>
-            Recycle Bin (30 Days)
-            {(recycleBinBills?.length || 0) > 0 && (
-              <span className="admin-tab-badge danger">{recycleBinBills.length}</span>
-            )}
-          </button>
-        </div>
-
         {/* =========================================
             TAB 1: ONLINE ORDERS PROCESSING
            ========================================= */}
@@ -835,15 +751,15 @@ export default function AdminDashboard() {
             </div>
 
             {/* Catalog KPIs */}
-            <div className="inventory-kpis-grid" style={{ marginBottom: '20px' }}>
-              <div className="inv-kpi-card total">
+            <div className="admin-kpi-grid inventory-kpis-grid" style={{ marginBottom: '20px' }}>
+              <div className="kpi-card inv-kpi-card total">
                 <span className="kpi-label">Total Catalog Items</span>
-                <div className="kpi-val">{allBillingProducts.length}</div>
+                <div className="kpi-value kpi-val">{allBillingProducts.length}</div>
                 <span className="kpi-sub">Products available</span>
               </div>
-              <div className="inv-kpi-card ready">
+              <div className="kpi-card inv-kpi-card ready">
                 <span className="kpi-label">Active on Counter</span>
-                <div className="kpi-val">
+                <div className="kpi-value kpi-val">
                   {allBillingProducts.filter((p) => {
                     const isOff = productAvailabilityMap[p.id] !== undefined
                       ? Boolean(productAvailabilityMap[p.id])
@@ -853,9 +769,9 @@ export default function AdminDashboard() {
                 </div>
                 <span className="kpi-sub">Ready for POS billing</span>
               </div>
-              <div className="inv-kpi-card warning">
+              <div className="kpi-card inv-kpi-card warning">
                 <span className="kpi-label">Out of Stock / Masked</span>
-                <div className="kpi-val">
+                <div className="kpi-value kpi-val">
                   {allBillingProducts.filter((p) => {
                     const isOff = productAvailabilityMap[p.id] !== undefined
                       ? Boolean(productAvailabilityMap[p.id])
@@ -865,9 +781,9 @@ export default function AdminDashboard() {
                 </div>
                 <span className="kpi-sub">Hidden from active billing</span>
               </div>
-              <div className="inv-kpi-card total">
+              <div className="kpi-card inv-kpi-card total">
                 <span className="kpi-label">Custom Added Products</span>
-                <div className="kpi-val">{customProducts.length}</div>
+                <div className="kpi-value kpi-val">{customProducts.length}</div>
                 <span className="kpi-sub">Admin / staff additions</span>
               </div>
             </div>
@@ -1022,17 +938,6 @@ export default function AdminDashboard() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <button
                                 type="button"
-                                className="btn-inline-price"
-                                style={{ margin: 0 }}
-                                onClick={() => {
-                                  setEditingPriceProduct(prod);
-                                  setNewPriceInput(String(prod.price || prod.unitPrice || ''));
-                                }}
-                              >
-                                Edit Price
-                              </button>
-                              <button
-                                type="button"
                                 className="btn-delete-prod"
                                 onClick={() => setDeletingProduct(prod)}
                                 title="Delete Product from Catalog"
@@ -1064,9 +969,6 @@ export default function AdminDashboard() {
             <div className="tab-toolbar admin-sales-toolbar-top">
               <div>
                 <h3 className="section-title">All Sales, Cashier Desks & Invoices</h3>
-                <p className="section-desc">
-                  Unified audit log of all online delivery orders and counter POS sales stored in database.
-                </p>
               </div>
 
               <button
@@ -1475,6 +1377,19 @@ export default function AdminDashboard() {
                             </button>
                             <button
                               type="button"
+                              className="table-invoice-btn"
+                              onClick={() => setEditBillModalItem(sale)}
+                              title="Edit Bill Details &amp; Items"
+                              style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                              Edit
+                            </button>
+                            <button
+                              type="button"
                               className="table-delete-bill-btn"
                               onClick={() => setBillToDelete(sale)}
                               title="Delete Bill (Protected in 30-Day Recycle Bin)"
@@ -1505,6 +1420,8 @@ export default function AdminDashboard() {
               allSales={allSales}
               onOpenInvoice={openInvoice}
               onRefresh={handleSyncAllSales}
+              isCashierOnly={false}
+              currentUser={user}
             />
           </section>
         )}
@@ -1674,225 +1591,200 @@ export default function AdminDashboard() {
 
             {/* Activities Table */}
             <div className="inventory-table-wrap">
-              <div className="inventory-table-card">
-                {(() => {
-                  // Merge activityLogs and priceOverrideLogs into one unified timeline
-                  const mergedList = [];
-                  (activityLogs || []).forEach((act) => {
-                    mergedList.push({
-                      ...act,
-                      sortTime: act.timestamp || 0,
-                    });
+              {(() => {
+                // Merge activityLogs and priceOverrideLogs into one unified timeline
+                const mergedList = [];
+                (activityLogs || []).forEach((act) => {
+                  mergedList.push({
+                    ...act,
+                    sortTime: act.timestamp || 0,
                   });
-                  (priceOverrideLogs || []).forEach((ovr) => {
-                    const orig = Number(ovr.originalPrice) || 0;
-                    const cust = Number(ovr.customPrice) || 0;
-                    const diff = cust - orig;
-                    mergedList.push({
-                      id: ovr.id || `ovr-${ovr.timestamp}`,
-                      actionType: 'PRICE_OVERRIDE',
-                      performedBy: {
-                        id: ovr.cashier?.id || ovr.staffId || 'staff-2',
-                        username: ovr.cashier?.username || ovr.staffUsername || 'cashier',
-                        name: ovr.cashier?.name || ovr.staffName || 'Counter Cashier',
-                        role: ovr.cashier?.role || ovr.staffRole || 'cashier',
-                        title: ovr.cashier?.title || 'Counter Cashier',
-                      },
-                      targetId: ovr.invoiceNumber || 'POS Bill',
-                      targetName: `${ovr.productName} (${ovr.weight || 'unit'})`,
-                      reason: ovr.reason || 'Staff Price Adjustment',
-                      timestamp: ovr.timestamp || Date.now(),
-                      dateStr: ovr.dateStr,
-                      timeStr: ovr.timeStr,
-                      details: {
-                        originalPrice: orig,
-                        customPrice: cust,
-                        difference: diff,
-                        invoiceNumber: ovr.invoiceNumber,
-                      },
-                      sortTime: ovr.timestamp || 0,
-                    });
+                });
+                (priceOverrideLogs || []).forEach((ovr) => {
+                  const orig = Number(ovr.originalPrice) || 0;
+                  const cust = Number(ovr.customPrice) || 0;
+                  const diff = cust - orig;
+                  mergedList.push({
+                    id: ovr.id || `ovr-${ovr.timestamp}`,
+                    actionType: 'PRICE_OVERRIDE',
+                    performedBy: {
+                      id: ovr.cashier?.id || ovr.staffId || 'staff-2',
+                      username: ovr.cashier?.username || ovr.staffUsername || 'cashier',
+                      name: ovr.cashier?.name || ovr.staffName || 'Counter Cashier',
+                      role: ovr.cashier?.role || ovr.staffRole || 'cashier',
+                      title: ovr.cashier?.title || 'Counter Cashier',
+                    },
+                    targetId: ovr.invoiceNumber || 'POS Bill',
+                    targetName: `${ovr.productName} (${ovr.weight || 'unit'})`,
+                    reason: ovr.reason || 'Staff Price Adjustment',
+                    timestamp: ovr.timestamp || Date.now(),
+                    dateStr: ovr.dateStr,
+                    timeStr: ovr.timeStr,
+                    details: {
+                      originalPrice: orig,
+                      customPrice: cust,
+                      difference: diff,
+                      invoiceNumber: ovr.invoiceNumber,
+                    },
+                    sortTime: ovr.timestamp || 0,
                   });
+                });
 
-                  // Sort newest first
-                  mergedList.sort((a, b) => b.sortTime - a.sortTime);
+                // Sort newest first
+                mergedList.sort((a, b) => b.sortTime - a.sortTime);
 
-                  // Apply active filters
-                  const filtered = mergedList.filter((item) => {
-                    if (activityTypeFilter !== 'all' && item.actionType !== activityTypeFilter) return false;
-                    if (activitySearchTerm.trim()) {
-                      const q = activitySearchTerm.toLowerCase();
-                      const matchType = (item.actionType || '').toLowerCase().includes(q);
-                      const matchTarget = (item.targetName || item.targetId || '').toLowerCase().includes(q);
-                      const matchReason = (item.reason || '').toLowerCase().includes(q);
-                      const matchStaff = (item.performedBy?.name || '').toLowerCase().includes(q);
-                      if (!matchType && !matchTarget && !matchReason && !matchStaff) return false;
-                    }
-                    return true;
-                  });
-
-                  if (filtered.length === 0) {
-                    return (
-                      <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
-                          <path d="M12 8v4l3 3" />
-                          <circle cx="12" cy="12" r="9" />
-                        </svg>
-                        <h3 style={{ fontSize: '16px', color: '#1e293b', margin: '0 0 4px' }}>No Activity Records Found</h3>
-                        <p style={{ fontSize: '13px', margin: 0 }}>
-                          Staff operations, bill deletions, and price overrides are logged here automatically in real time.
-                        </p>
-                      </div>
-                    );
+                // Apply active filters
+                const filtered = mergedList.filter((item) => {
+                  if (activityTypeFilter !== 'all' && item.actionType !== activityTypeFilter) return false;
+                  if (activitySearchTerm.trim()) {
+                    const q = activitySearchTerm.toLowerCase();
+                    const matchType = (item.actionType || '').toLowerCase().includes(q);
+                    const matchTarget = (item.targetName || item.targetId || '').toLowerCase().includes(q);
+                    const matchReason = (item.reason || '').toLowerCase().includes(q);
+                    const matchStaff = (item.performedBy?.name || '').toLowerCase().includes(q);
+                    if (!matchType && !matchTarget && !matchReason && !matchStaff) return false;
                   }
+                  return true;
+                });
 
+                if (filtered.length === 0) {
                   return (
-                    <table className="inventory-stock-table">
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>Time &amp; Date</th>
-                          <th>Activity Type</th>
-                          <th>Staff / User ID</th>
-                          <th>Target Item / Invoice</th>
-                          <th>Impact / Difference</th>
-                          <th>Stated Reason &amp; Justification</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filtered.map((item, idx) => {
-                          const dateStr = item.timestamp
-                            ? new Date(item.timestamp).toLocaleString('en-IN', {
-                                day: '2-digit',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            : 'Recent';
+                    <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 12px' }}>
+                        <path d="M12 8v4l3 3" />
+                        <circle cx="12" cy="12" r="9" />
+                      </svg>
+                      <h3 style={{ fontSize: '16px', color: '#1e293b', margin: '0 0 4px' }}>No Activity Records Found</h3>
+                      <p style={{ fontSize: '13px', margin: 0 }}>
+                        Staff operations, bill deletions, and price overrides are logged here automatically in real time.
+                      </p>
+                    </div>
+                  );
+                }
 
-                          return (
-                            <tr key={item.id || idx}>
-                              <td>
-                                <span className="item-num-badge">#{idx + 1}</span>
-                              </td>
-                              <td>
-                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155' }}>{dateStr}</span>
-                              </td>
-                              <td>
-                                <span className={`audit-type-pill ${item.actionType}`}>
-                                  {item.actionType?.replace(/_/g, ' ')}
+                return (
+                  <table className="inventory-table activity-audit-table">
+                    <thead>
+                      <tr>
+                        <th className="col-audit-idx">#</th>
+                        <th className="col-audit-time">Time &amp; Date</th>
+                        <th className="col-audit-type">Activity Type</th>
+                        <th className="col-audit-staff">Staff / User ID</th>
+                        <th className="col-audit-target">Target Item / Invoice</th>
+                        <th className="col-audit-impact">Impact / Difference</th>
+                        <th className="col-audit-reason">Stated Reason &amp; Justification</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((item, idx) => {
+                        const dateStr = item.timestamp
+                          ? new Date(item.timestamp).toLocaleString('en-IN', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: true,
+                            })
+                          : 'Recent';
+
+                        return (
+                          <tr key={item.id || idx}>
+                            <td className="cell-audit-index">
+                              <span className="audit-num-badge">#{idx + 1}</span>
+                            </td>
+                            <td className="cell-audit-time">
+                              <span className="audit-timestamp">{dateStr}</span>
+                            </td>
+                            <td className="cell-audit-type">
+                              <span className={`audit-type-pill ${item.actionType}`}>
+                                {item.actionType?.replace(/_/g, ' ')}
+                              </span>
+                            </td>
+                            <td className="cell-audit-staff">
+                              <div className="audit-staff-cell">
+                                <span className="audit-staff-name">
+                                  {item.performedBy?.name || 'Staff User'}
                                 </span>
-                              </td>
-                              <td>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                                  <span style={{ fontSize: '12.5px', fontWeight: 700, color: '#0f172a' }}>
-                                    {item.performedBy?.name || 'Staff User'}
+                                <div className="audit-staff-meta">
+                                  <span className={`audit-role-tag role-${item.performedBy?.role || 'staff'}`}>
+                                    {item.performedBy?.role === 'admin' ? 'ADMINISTRATOR' : 'CASHIER'}
                                   </span>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                                    <span
-                                      style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        padding: '1px 6px',
-                                        borderRadius: '4px',
-                                        fontSize: '9.5px',
-                                        fontWeight: 800,
-                                        letterSpacing: '0.04em',
-                                        textTransform: 'uppercase',
-                                        background: item.performedBy?.role === 'admin' ? '#fef3c7' : '#e0f2fe',
-                                        color: item.performedBy?.role === 'admin' ? '#92400e' : '#0369a1',
-                                        border: item.performedBy?.role === 'admin' ? '1px solid #fde68a' : '1px solid #bae6fd',
-                                      }}
-                                    >
-                                      {item.performedBy?.role === 'admin' ? 'ADMINISTRATOR' : 'CASHIER'}
+                                  {(item.performedBy?.id || item.performedBy?.username) && (
+                                    <span className="audit-id-tag">
+                                      ID: {item.performedBy?.id || item.performedBy?.username}
+                                      {item.performedBy?.username && item.performedBy?.username !== item.performedBy?.id ? ` (@${item.performedBy.username})` : ''}
                                     </span>
-                                    {(item.performedBy?.id || item.performedBy?.username) && (
-                                      <span
-                                        style={{
-                                          display: 'inline-flex',
-                                          alignItems: 'center',
-                                          padding: '1px 5px',
-                                          borderRadius: '4px',
-                                          fontSize: '10px',
-                                          fontWeight: 600,
-                                          fontFamily: 'monospace',
-                                          background: '#f1f5f9',
-                                          color: '#475569',
-                                          border: '1px solid #e2e8f0',
-                                        }}
-                                      >
-                                        ID: {item.performedBy?.id || item.performedBy?.username}
-                                        {item.performedBy?.username && item.performedBy?.username !== item.performedBy?.id ? ` (@${item.performedBy.username})` : ''}
-                                      </span>
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
-                              </td>
-                              <td>
-                                <strong style={{ fontSize: '13px', color: '#0f172a' }}>
+                              </div>
+                            </td>
+                            <td className="cell-audit-target">
+                              <div className="audit-target-cell">
+                                <strong className="audit-target-title">
                                   {item.targetName || item.targetId}
                                 </strong>
                                 {item.targetId && item.targetName !== item.targetId && (
-                                  <span style={{ display: 'block', fontSize: '11px', color: '#0284c7' }}>
+                                  <span className="audit-target-ref">
                                     Ref: {item.targetId}
                                   </span>
                                 )}
-                              </td>
-                              <td>
-                                {item.actionType === 'PRICE_OVERRIDE' ? (
-                                  <span
-                                    style={{
-                                      display: 'inline-block',
-                                      padding: '3px 8px',
-                                      borderRadius: '6px',
-                                      fontSize: '11px',
-                                      fontWeight: 700,
-                                      background: (item.details?.difference || 0) < 0 ? '#dcfce7' : (item.details?.difference || 0) > 0 ? '#fef3c7' : '#f1f5f9',
-                                      color: (item.details?.difference || 0) < 0 ? '#15803d' : (item.details?.difference || 0) > 0 ? '#b45309' : '#64748b',
-                                      border: (item.details?.difference || 0) < 0 ? '1px solid #86efac' : '1px solid #fde68a',
-                                    }}
-                                  >
-                                    {(item.details?.difference || 0) < 0
-                                      ? `− ₹${Math.abs(item.details.difference)} Discount`
-                                      : (item.details?.difference || 0) > 0
-                                      ? `+ ₹${item.details.difference} Markup`
-                                      : 'Standard'}
-                                  </span>
-                                ) : item.actionType === 'BILL_DELETED' ? (
-                                  <span style={{ color: '#dc2626', fontWeight: 700, fontSize: '12px' }}>
-                                    ₹{item.details?.grandTotal || 0} Expunged
-                                  </span>
-                                ) : item.actionType === 'BILL_RESTORED' ? (
-                                  <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '12px' }}>
-                                    ₹{item.details?.grandTotal || 0} Re-activated
-                                  </span>
-                                ) : item.actionType === 'STOCK_TOGGLED' ? (
-                                  <span style={{ fontSize: '12px', fontWeight: 700, color: item.details?.isInactive ? '#dc2626' : '#16a34a' }}>
-                                    {item.details?.isInactive ? 'Masked Out of Stock' : 'Reactivated In Stock'}
-                                  </span>
-                                ) : item.actionType === 'PRODUCT_PRICE_UPDATED' ? (
-                                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#6d28d9' }}>
-                                    ₹{item.details?.oldPrice} → ₹{item.details?.newPrice}
-                                  </span>
-                                ) : (
-                                  <span style={{ fontSize: '12px', color: '#64748b' }}>
-                                    Recorded
-                                  </span>
-                                )}
-                              </td>
-                              <td>
-                                <span style={{ fontSize: '12px', color: '#334155', fontWeight: 500 }}>
-                                  {item.reason || 'Operational action'}
+                              </div>
+                            </td>
+                            <td className="cell-audit-impact">
+                              {item.actionType === 'PRICE_OVERRIDE' ? (
+                                <span
+                                  style={{
+                                    display: 'inline-block',
+                                    padding: '4px 9px',
+                                    borderRadius: '6px',
+                                    fontSize: '11px',
+                                    fontWeight: 700,
+                                    whiteSpace: 'nowrap',
+                                    background: (item.details?.difference || 0) < 0 ? '#dcfce7' : (item.details?.difference || 0) > 0 ? '#fef3c7' : '#f1f5f9',
+                                    color: (item.details?.difference || 0) < 0 ? '#15803d' : (item.details?.difference || 0) > 0 ? '#b45309' : '#64748b',
+                                    border: (item.details?.difference || 0) < 0 ? '1px solid #86efac' : '1px solid #fde68a',
+                                  }}
+                                >
+                                  {(item.details?.difference || 0) < 0
+                                    ? `− ₹${Math.abs(item.details.difference)} Discount`
+                                    : (item.details?.difference || 0) > 0
+                                    ? `+ ₹${item.details.difference} Markup`
+                                    : 'Standard'}
                                 </span>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  );
-                })()}
-              </div>
+                              ) : item.actionType === 'BILL_DELETED' ? (
+                                <span style={{ color: '#dc2626', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                  ₹{item.details?.grandTotal || 0} Expunged
+                                </span>
+                              ) : item.actionType === 'BILL_RESTORED' ? (
+                                <span style={{ color: '#16a34a', fontWeight: 700, fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                  ₹{item.details?.grandTotal || 0} Re-activated
+                                </span>
+                              ) : item.actionType === 'STOCK_TOGGLED' ? (
+                                <span className={`audit-impact-badge ${item.details?.isInactive ? 'inactive-stock' : 'active-stock'}`}>
+                                  {item.details?.isInactive ? 'Marked Out of Stock' : 'Reactivated In Stock'}
+                                </span>
+                              ) : item.actionType === 'PRODUCT_PRICE_UPDATED' ? (
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#6d28d9', whiteSpace: 'nowrap' }}>
+                                  ₹{item.details?.oldPrice} → ₹{item.details?.newPrice}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '12px', color: '#64748b', whiteSpace: 'nowrap' }}>
+                                  Recorded
+                                </span>
+                              )}
+                            </td>
+                            <td className="cell-audit-reason">
+                              <span className="audit-reason-text">
+                                {item.reason || 'Operational action'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                );
+              })()}
             </div>
           </section>
         )}
@@ -2398,6 +2290,19 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Edit Bill Modal */}
+        {editBillModalItem && (
+          <EditBillModal
+            bill={editBillModalItem}
+            onClose={() => setEditBillModalItem(null)}
+            onSuccess={() => {
+              setEditBillModalItem(null);
+              handleSyncAllSales();
+            }}
+            currentUser={user}
+          />
         )}
       </main>
       </div>

@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { STORE_DETAILS } from '../../data/sweetsData';
+import EditBillModal from '../Billing/EditBillModal';
 import './DailyRevenueReport.css';
 
 /**
@@ -28,19 +30,69 @@ function formatDateLabel(dateStr) {
   return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRefresh, onBack }) {
-  const { taxSettings } = useCart();
+export default function DailyRevenueReport({
+  allSales = [],
+  onOpenInvoice,
+  onRefresh,
+  onBack,
+  isCashierOnly = false,
+  currentUser = null,
+}) {
+  const { user: authUser } = useAuth();
+  const activeUser = currentUser || authUser;
+
+  // Determine if Cashier Mode is active:
+  // Strictly Cashier Mode if:
+  // - isCashierOnly is explicitly true
+  // - Or window hash starts with #billing
+  // - Or activeUser.role === 'cashier'
+  // - Or activeUser.role !== 'admin'
+  const isBillingScreen = typeof window !== 'undefined' && window.location.hash.toLowerCase().startsWith('#billing');
+  const isCashier = Boolean(
+    isCashierOnly ||
+    isBillingScreen ||
+    activeUser?.role === 'cashier' ||
+    (activeUser && activeUser.role !== 'admin')
+  );
+
+  const { taxSettings, deleteBill } = useCart();
   const todayKey = toDateKey(new Date());
 
-  // Date Selection: 'today', 'yesterday', 'custom', or 'all'
+  // Date Selection: For cashiers, strictly 'today' (no yesterday, no all-time)
   const [dateMode, setDateMode] = useState('today');
   const [customDate, setCustomDate] = useState(todayKey);
   const [selectedPaymentFilter, setSelectedPaymentFilter] = useState('all');
+  const [selectedStaffFilter, setSelectedStaffFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isZReportOpen, setIsZReportOpen] = useState(false);
 
+  // Edit and Delete Modals State
+  const [editBillModalItem, setEditBillModalItem] = useState(null);
+  const [deleteModalItem, setDeleteModalItem] = useState(null);
+  const [deleteReasonInput, setDeleteReasonInput] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Available Staff for Admin filter
+  const availableCashiers = useMemo(() => {
+    const staffMap = new Map();
+    allSales.forEach((s) => {
+      if (s.cashier?.name) {
+        const id = s.cashier.id || s.cashier.username || s.cashier.name;
+        staffMap.set(id, s.cashier.name + (s.cashier.counter ? ` (${s.cashier.counter})` : ''));
+      }
+    });
+    if (!staffMap.has('kannan') && !staffMap.has('staff-2')) {
+      staffMap.set('kannan', 'M. Kannan — Counter Desk 01');
+    }
+    if (!staffMap.has('ramanathan') && !staffMap.has('staff-1')) {
+      staffMap.set('ramanathan', 'S. Ramanathan — Operations Central');
+    }
+    return Array.from(staffMap.entries());
+  }, [allSales]);
+
   // Compute targeted date string
   const activeDateString = useMemo(() => {
+    if (isCashier) return todayKey; // Cashier is strictly locked to Today
     if (dateMode === 'today') return todayKey;
     if (dateMode === 'yesterday') {
       const yesterday = new Date();
@@ -49,23 +101,50 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
     }
     if (dateMode === 'custom') return customDate;
     return ''; // 'all' mode
-  }, [dateMode, todayKey, customDate]);
+  }, [isCashier, dateMode, todayKey, customDate]);
 
-  // Filter sales for the selected date
+  // Filter sales for the selected date and staff
   const daySales = useMemo(() => {
     return allSales.filter((sale) => {
-      // Check date matching
-      if (activeDateString) {
+      // Check date matching: Cashier strictly matches todayKey
+      const targetDateKey = isCashier ? todayKey : activeDateString;
+      if (targetDateKey) {
         const saleDateKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
-        // Fallback matching against string like "16 Sep 2026"
-        if (saleDateKey !== activeDateString) {
-          // If no timestamp, try orderDate
+        if (saleDateKey !== targetDateKey) {
           if (sale.orderDate) {
             const parsed = toDateKey(sale.orderDate);
-            if (parsed !== activeDateString) return false;
+            if (parsed !== targetDateKey) return false;
           } else {
             return false;
           }
+        }
+      }
+
+      // If in cashier mode, exclude online delivery orders from shift report
+      if (isCashier && sale.source === 'online') return false;
+
+      // If in cashier mode and specific cashier user is known, only show their shift bills
+      if (isCashier && activeUser) {
+        const uid = activeUser.id || activeUser._id || activeUser.username;
+        if (sale.cashier?.username && sale.cashier.username !== activeUser.username && sale.cashier?.id !== uid) {
+          return false;
+        }
+      }
+
+      // Staff filter for Admin view
+      if (!isCashier && selectedStaffFilter !== 'all') {
+        if (selectedStaffFilter === 'online') {
+          if (sale.source !== 'online') return false;
+        } else {
+          const cid = sale.cashier?.id || sale.cashier?.username || sale.cashier?.name;
+          const match =
+            cid === selectedStaffFilter ||
+            sale.cashier?.username === selectedStaffFilter ||
+            sale.cashier?.id === selectedStaffFilter ||
+            sale.cashier?.name === selectedStaffFilter ||
+            (selectedStaffFilter === 'kannan' && (sale.cashier?.name?.toLowerCase().includes('kannan') || sale.cashier?.id === 'staff-2')) ||
+            (selectedStaffFilter === 'ramanathan' && (sale.cashier?.name?.toLowerCase().includes('ramanathan') || sale.cashier?.id === 'staff-1'));
+          if (!match) return false;
         }
       }
 
@@ -78,20 +157,21 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
         if (selectedPaymentFilter === 'split' && pm !== 'split') return false;
       }
 
-      // Check search query (invoice number, customer phone, customer name)
+      // Check search query (invoice number, customer phone, customer name, cashier name)
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
         const inv = (sale.invoiceNumber || '').toLowerCase();
         const phone = (sale.customer?.phone || '').toLowerCase();
         const name = (sale.customer?.fullName || '').toLowerCase();
-        if (!inv.includes(q) && !phone.includes(q) && !name.includes(q)) {
+        const cName = (sale.cashier?.name || '').toLowerCase();
+        if (!inv.includes(q) && !phone.includes(q) && !name.includes(q) && !cName.includes(q)) {
           return false;
         }
       }
 
       return true;
     });
-  }, [allSales, activeDateString, selectedPaymentFilter, searchTerm]);
+  }, [allSales, activeDateString, isCashier, todayKey, activeUser, selectedStaffFilter, selectedPaymentFilter, searchTerm]);
 
   // Key Financial Calculations
   const grossRevenue = useMemo(() => {
@@ -305,17 +385,35 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
             </button>
           )}
 
-          <div className="daily-title-meta-row">
-            <div className="daily-title-badge">
-              <span className="live-dot" />
-              <span>FINANCIAL LEDGER &amp; CLOSING</span>
+          {isCashier ? (
+            <div className="daily-cashier-shift-banner">
+              <div className="cashier-shift-badge">
+                <span className="live-dot pulse" />
+                <span>ACTIVE CASHIER SHIFT</span>
+              </div>
+              <div className="cashier-shift-user-info">
+                <strong>{activeUser?.name || 'Counter Staff'}</strong>
+                <span className="shift-counter-id">Terminal: {activeUser?.counter || 'Counter Desk 01'}</span>
+              </div>
+              <span className="cashier-shift-scope-note">Today's Sales &amp; Register Ledger Only</span>
             </div>
-            <span className="daily-store-tag">Krishnagiri NH 44 Store</span>
-          </div>
+          ) : (
+            <div className="daily-title-meta-row">
+              <div className="daily-title-badge">
+                <span className="live-dot" />
+                <span>FINANCIAL LEDGER &amp; CLOSING</span>
+              </div>
+              <span className="daily-store-tag">Krishnagiri NH 44 Store</span>
+            </div>
+          )}
 
-          <h2 className="daily-title-h2">Daily Revenue &amp; Shift Bills</h2>
+          <h2 className="daily-title-h2">
+            {isCashier ? "Today's Register & Shift Revenue" : "Daily Revenue & Shift Bills"}
+          </h2>
           <p className="daily-title-sub">
-            Shift Register Audit &amp; Day-End Settlement · Real-time Revenue &amp; Tender Reconciliation
+            {isCashier
+              ? "Live Shift Transactions · Real-time Cash, UPI & Drawer Reconciliation"
+              : "Shift Register Audit & Day-End Settlement · Real-time Revenue & Tender Reconciliation"}
           </p>
         </div>
 
@@ -365,44 +463,76 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
       </div>
 
       {/* Date Filter Tabs & Selector */}
-      <div className="daily-filter-strip">
-        <div className="date-preset-pills">
-          <button
-            type="button"
-            className={`date-pill ${dateMode === 'today' ? 'active' : ''}`}
-            onClick={() => setDateMode('today')}
-          >
-            Today ({formatDateLabel(todayKey)})
-          </button>
-          <button
-            type="button"
-            className={`date-pill ${dateMode === 'yesterday' ? 'active' : ''}`}
-            onClick={() => setDateMode('yesterday')}
-          >
-            Yesterday
-          </button>
-          <button
-            type="button"
-            className={`date-pill ${dateMode === 'all' ? 'active' : ''}`}
-            onClick={() => setDateMode('all')}
-          >
-            All-Time Consolidated
-          </button>
+      {isCashier ? (
+        <div className="daily-filter-strip cashier-mode">
+          <div className="cashier-shift-status-pill">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            <span><strong>Today's Shift:</strong> {formatDateLabel(todayKey)}</span>
+            <span className="shift-live-tag">Active Shift</span>
+          </div>
         </div>
+      ) : (
+        <div className="daily-filter-strip">
+          <div className="date-preset-pills">
+            <button
+              type="button"
+              className={`date-pill ${dateMode === 'today' ? 'active' : ''}`}
+              onClick={() => setDateMode('today')}
+            >
+              Today ({formatDateLabel(todayKey)})
+            </button>
+            <button
+              type="button"
+              className={`date-pill ${dateMode === 'yesterday' ? 'active' : ''}`}
+              onClick={() => setDateMode('yesterday')}
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              className={`date-pill ${dateMode === 'all' ? 'active' : ''}`}
+              onClick={() => setDateMode('all')}
+            >
+              All-Time Consolidated
+            </button>
+          </div>
 
-        <div className="custom-date-picker">
-          <span className="picker-label">Pick Date:</span>
-          <input
-            type="date"
-            className="date-input"
-            value={dateMode === 'custom' ? customDate : activeDateString || todayKey}
-            onChange={(e) => {
-              setCustomDate(e.target.value);
-              setDateMode('custom');
-            }}
-          />
+          <div className="daily-filter-right-group">
+            <div className="staff-filter-select-wrap">
+              <span className="picker-label">Staff Filter:</span>
+              <select
+                className="admin-staff-select"
+                value={selectedStaffFilter}
+                onChange={(e) => setSelectedStaffFilter(e.target.value)}
+              >
+                <option value="all">All Staff &amp; Channels</option>
+                {availableCashiers.map(([id, label]) => (
+                  <option key={id} value={id}>{label}</option>
+                ))}
+                <option value="online">Online Web Orders</option>
+              </select>
+            </div>
+
+            <div className="custom-date-picker">
+              <span className="picker-label">Pick Date:</span>
+              <input
+                type="date"
+                className="date-input"
+                value={dateMode === 'custom' ? customDate : activeDateString || todayKey}
+                onChange={(e) => {
+                  setCustomDate(e.target.value);
+                  setDateMode('custom');
+                }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Primary KPI Metrics Grid — Clean Revenue & Operations (No GST) */}
       <section className="revenue-kpi-grid">
@@ -655,7 +785,7 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   <th>Cashier</th>
                   <th>Items</th>
                   <th className="text-right">Amount</th>
-                  <th className="text-center">Action</th>
+                  <th className="text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -664,7 +794,10 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   return (
                     <tr key={s.id || s.invoiceNumber}>
                       <td>
-                        <strong className="inv-badge">{s.invoiceNumber || s.id}</strong>
+                        <div className="inv-badge-wrap">
+                          <strong className="inv-badge">{s.invoiceNumber || s.id}</strong>
+                          {s.isEdited && <span className="edited-badge" title="This bill was edited">Edited</span>}
+                        </div>
                       </td>
                       <td>
                         <span className="time-text">{s.orderTime || (s.createdAt ? new Date(s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-')}</span>
@@ -687,15 +820,44 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                       <td className="text-right">
                         <strong className="bill-amt">₹{(s.grandTotal || 0).toLocaleString('en-IN')}</strong>
                       </td>
-                      <td className="text-center">
-                        <button
-                          type="button"
-                          className="view-bill-btn"
-                          onClick={() => onOpenInvoice && onOpenInvoice(s)}
-                          title="View & Print Tax Invoice"
-                        >
-                          View Bill
-                        </button>
+                      <td className="text-center table-actions-cell">
+                        <div className="table-actions-cluster">
+                          <button
+                            type="button"
+                            className="view-bill-btn"
+                            onClick={() => onOpenInvoice && onOpenInvoice(s)}
+                            title="View &amp; Print Tax Invoice"
+                          >
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            className="edit-bill-btn"
+                            onClick={() => setEditBillModalItem(s)}
+                            title="Edit Bill Details &amp; Items"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="delete-bill-btn"
+                            onClick={() => {
+                              setDeleteModalItem(s);
+                              setDeleteReasonInput('');
+                            }}
+                            title="Delete Bill to 30-Day Recycle Bin"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                            </svg>
+                            Del
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -723,14 +885,14 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   type="button"
                   className="z-print-btn"
                   onClick={handlePrintZReport}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  title="Print Thermal Slip"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 6 2 18 2 18 9" />
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                    <rect x="6" y="14" width="12" height="8" />
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9"/>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <rect x="6" y="14" width="12" height="8"/>
                   </svg>
-                  Print Slip
+                  <span>Print Slip</span>
                 </button>
                 <button
                   type="button"
@@ -741,34 +903,34 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                 </button>
               </div>
 
-              {/* Thermal Register Slip (80mm Formatted) */}
-              <div className="z-report-slip" id="z-report-print-area">
+              {/* Thermal Slip Content */}
+              <div className="z-slip-paper" id="daily-z-slip">
                 <div className="z-slip-header">
-                  <h3>THENISAI PALKOVA &amp; SWEETS</h3>
-                  <p>Nattamai Kottai, Near HP Petrol Bunk</p>
-                  <p>NH 44, Krishnagiri, Tamil Nadu - 635001</p>
-                  <p>Phone: +91 93448 93547 · GSTIN: {taxSettings?.gstin || '33AABCT9988Q1Z5'}</p>
-                  <div className="slip-divider-double" />
-                  <h4>*** DAILY REGISTER Z-REPORT ***</h4>
-                  <div className="slip-divider" />
+                  <h3 className="z-brand-title">{STORE_DETAILS.name}</h3>
+                  <p className="z-brand-sub">{STORE_DETAILS.tagline}</p>
+                  <p className="z-brand-loc">{STORE_DETAILS.address.line1}, {STORE_DETAILS.address.city}</p>
+                  <p className="z-brand-gst">GSTIN: {taxSettings?.gstin || STORE_DETAILS.gstin}</p>
+                  <p className="z-brand-fssai">FSSAI: {STORE_DETAILS.fssai}</p>
                 </div>
+
+                <div className="slip-divider" />
 
                 <div className="z-slip-meta">
                   <div className="slip-row">
-                    <span>Date:</span>
-                    <strong>{formatDateLabel(activeDateString || todayKey)}</strong>
+                    <span>REPORT TYPE:</span>
+                    <strong>DAILY Z-REPORT (FINANCIAL CLOSING)</strong>
                   </div>
                   <div className="slip-row">
-                    <span>Generated At:</span>
-                    <span>{new Date().toLocaleTimeString('en-IN')}</span>
+                    <span>REPORT DATE:</span>
+                    <strong>{activeDateString || todayKey}</strong>
                   </div>
                   <div className="slip-row">
-                    <span>Register:</span>
-                    <span>Counter Terminal #01</span>
+                    <span>PRINTED AT:</span>
+                    <span>{new Date().toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-row">
-                    <span>Report Type:</span>
-                    <span>Day-End Closing Settlement</span>
+                    <span>TERMINAL:</span>
+                    <span>{isCashier ? (activeUser?.counter || 'Counter Desk 01') : 'Master Terminal — POS 01'}</span>
                   </div>
                 </div>
 
@@ -779,22 +941,17 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                     <strong>FINANCIAL SUMMARY</strong>
                   </div>
                   <div className="slip-row">
-                    <span>Total Invoices Count:</span>
+                    <span>Total Invoices / Bills:</span>
                     <strong>{totalBills}</strong>
                   </div>
                   <div className="slip-row">
-                    <span>Net Taxable Sales:</span>
-                    <span>₹{Math.round(netSales).toLocaleString('en-IN')}</span>
+                    <span>Net Sales:</span>
+                    <span>₹{netSales.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-row">
-                    <span>CGST ({taxSettings?.cgstRate ?? 2.5}%):</span>
-                    <span>₹{Math.round(cgstAmount).toLocaleString('en-IN')}</span>
+                    <span>Total GST:</span>
+                    <span>₹{totalTax.toLocaleString('en-IN')}</span>
                   </div>
-                  <div className="slip-row">
-                    <span>SGST ({taxSettings?.sgstRate ?? 2.5}%):</span>
-                    <span>₹{Math.round(sgstAmount).toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="slip-divider" />
                   <div className="slip-row total">
                     <strong>GROSS DAY REVENUE:</strong>
                     <strong>₹{grossRevenue.toLocaleString('en-IN')}</strong>
@@ -836,6 +993,107 @@ export default function DailyRevenueReport({ allSales = [], onOpenInvoice, onRef
                   <p>*** END OF DAY Z-REPORT ***</p>
                   <p>Thenisai Traditional Sweets Since 2006</p>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Bill Modal */}
+      {editBillModalItem && (
+        <EditBillModal
+          bill={editBillModalItem}
+          onClose={() => setEditBillModalItem(null)}
+          onSuccess={(updated) => {
+            setEditBillModalItem(null);
+            if (onRefresh) onRefresh();
+          }}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteModalItem && (
+          <div className="delete-modal-overlay" role="dialog" aria-modal="true">
+            <motion.div
+              className="delete-modal-card"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <div className="delete-modal-header">
+                <div className="del-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <h4>Delete Bill #{deleteModalItem.invoiceNumber || deleteModalItem.id}</h4>
+                  <p className="del-modal-sub">Amount: ₹{(deleteModalItem.grandTotal || 0).toLocaleString('en-IN')} · Customer: {deleteModalItem.customer?.fullName || 'Walk-in'}</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn-modal-close"
+                  onClick={() => !isDeleting && setDeleteModalItem(null)}
+                  aria-label="Close"
+                  style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '16px', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="delete-modal-body">
+                <p className="del-warning-text">
+                  This bill will be removed from active sales, drawer tender totals will adjust, and it will be moved to the 30-day Recycle Bin.
+                </p>
+                <label className="del-reason-label">
+                  Reason for Deletion <span className="req">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="del-reason-input"
+                  placeholder="e.g., Customer cancelled order, duplicate entry..."
+                  value={deleteReasonInput}
+                  onChange={(e) => setDeleteReasonInput(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              <div className="delete-modal-actions">
+                <button
+                  type="button"
+                  className="del-cancel-btn"
+                  onClick={() => setDeleteModalItem(null)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="del-confirm-btn"
+                  disabled={isDeleting || !deleteReasonInput.trim()}
+                  onClick={async () => {
+                    if (!deleteReasonInput.trim()) return;
+                    setIsDeleting(true);
+                    try {
+                      const billId = deleteModalItem._id || deleteModalItem.id || deleteModalItem.invoiceNumber;
+                      await deleteBill(billId, deleteReasonInput.trim(), currentUser);
+                      setDeleteModalItem(null);
+                      if (onRefresh) onRefresh();
+                    } catch (err) {
+                      alert(err.message || 'Failed to delete bill');
+                    } finally {
+                      setIsDeleting(false);
+                    }
+                  }}
+                >
+                  {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                </button>
               </div>
             </motion.div>
           </div>

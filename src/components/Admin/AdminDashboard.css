@@ -1770,6 +1770,81 @@
   transform: translateY(-1px);
 }
 
+.inventory-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .inventory-kpis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .inventory-kpis-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.inv-kpi-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.inv-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border-color: #CBD5E1;
+}
+
+.inv-kpi-card .kpi-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #64748B;
+  font-weight: 700;
+}
+
+.inv-kpi-card .kpi-val,
+.inv-kpi-card .kpi-value {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.2;
+}
+
+.inv-kpi-card.ready .kpi-val,
+.inv-kpi-card.ready .kpi-value {
+  color: #10B981;
+}
+
+.inv-kpi-card.warning .kpi-val,
+.inv-kpi-card.warning .kpi-value {
+  color: #EF4444;
+}
+
+.inv-kpi-card .kpi-sub {
+  font-size: 0.76rem;
+  color: #64748B;
+  margin: 0;
+}
+
 .inventory-filter-bar {
   display: flex;
   align-items: center;
@@ -1814,8 +1889,28 @@
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  -webkit-overflow-scrolling: touch;
+}
+
+.inventory-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-track {
+  background: #F8FAFC;
+  border-radius: 3px;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
 }
 
 .inventory-table {
@@ -2027,12 +2122,13 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .audit-type-pill.BILL_DELETED {
@@ -2081,6 +2177,223 @@
   background: #F1F5F9;
   color: #475569;
   border: 1px solid #CBD5E1;
+}
+
+/* ==========================================================================
+   ACTIVITY AUDIT TABLE SPECIFIC LAYOUT & SPACING
+   ========================================================================== */
+.activity-audit-table {
+  width: 100%;
+  min-width: 1060px;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.activity-audit-table th {
+  background: #F8FAFC;
+  padding: 14px 16px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  border-bottom: 1.5px solid #E2E8F0;
+  white-space: nowrap;
+}
+
+.activity-audit-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #F1F5F9;
+  vertical-align: middle;
+  font-size: 0.86rem;
+  color: #334155;
+}
+
+.activity-audit-table tbody tr:hover td {
+  background: #F8FAFC;
+}
+
+.activity-audit-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Col 1: # */
+.activity-audit-table th.col-audit-idx,
+.activity-audit-table td.cell-audit-index {
+  width: 58px;
+  min-width: 58px;
+  text-align: center;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.activity-audit-table .audit-num-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  color: #64748B;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+}
+
+/* Col 2: Time & Date */
+.activity-audit-table th.col-audit-time,
+.activity-audit-table td.cell-audit-time {
+  width: 165px;
+  min-width: 165px;
+  white-space: nowrap;
+}
+
+.audit-timestamp {
+  display: inline-block;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #1E293B;
+  white-space: nowrap;
+}
+
+/* Col 3: Activity Type */
+.activity-audit-table th.col-audit-type,
+.activity-audit-table td.cell-audit-type {
+  width: 160px;
+  min-width: 160px;
+}
+
+/* Col 4: Staff / User ID */
+.activity-audit-table th.col-audit-staff,
+.activity-audit-table td.cell-audit-staff {
+  width: 210px;
+  min-width: 210px;
+}
+
+.audit-staff-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audit-staff-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.audit-staff-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.audit-role-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.audit-role-tag.role-admin {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.audit-role-tag.role-cashier,
+.audit-role-tag.role-staff {
+  background: #E0F2FE;
+  color: #0369A1;
+  border: 1px solid #BAE6FD;
+}
+
+.audit-id-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+/* Col 5: Target Item / Invoice */
+.activity-audit-table th.col-audit-target,
+.activity-audit-table td.cell-audit-target {
+  width: 195px;
+  min-width: 195px;
+}
+
+.audit-target-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.audit-target-ref {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #0284C7;
+  margin-top: 2px;
+}
+
+/* Col 6: Impact / Difference */
+.activity-audit-table th.col-audit-impact,
+.activity-audit-table td.cell-audit-impact {
+  width: 180px;
+  min-width: 180px;
+  white-space: nowrap;
+}
+
+.audit-impact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.audit-impact-badge.active-stock {
+  color: #16A34A;
+  background: #DCFCE7;
+  border: 1px solid #86EFAC;
+}
+
+.audit-impact-badge.inactive-stock {
+  color: #DC2626;
+  background: #FEE2E2;
+  border: 1px solid #FCA5A5;
+}
+
+/* Col 7: Stated Reason & Justification */
+.activity-audit-table th.col-audit-reason,
+.activity-audit-table td.cell-audit-reason {
+  min-width: 260px;
+}
+
+.audit-reason-text {
+  font-size: 0.84rem;
+  color: #334155;
+  font-weight: 500;
+  line-height: 1.45;
 }
 
 /* ==========================================================================

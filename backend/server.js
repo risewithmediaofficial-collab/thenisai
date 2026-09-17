@@ -135,6 +135,8 @@ const billSchema = new mongoose.Schema({
   },
   source: { type: String, default: 'counter' },
   status: { type: String, default: 'Completed' },
+  isEdited: { type: Boolean, default: false },
+  editHistory: [mongoose.Schema.Types.Mixed],
   createdAt: { type: Number, default: Date.now },
 });
 
@@ -836,6 +838,146 @@ app.get('/api/bills', async (req, res) => {
   } catch (err) {
     console.error('[POS Billing] Error fetching bills:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch bills' });
+  }
+});
+
+// ─── Edit Bill (With Inventory Reconciliation & Full Audit History) ─────────
+app.put('/api/bills/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      items,
+      customer,
+      paymentMethod,
+      paymentDetails,
+      splitCash,
+      splitUpi,
+      subtotal,
+      grandTotal,
+      taxBreakdown,
+      editReason,
+      editedBy,
+    } = req.body;
+
+    const bill = await Bill.findOne({
+      $or: [{ id }, { invoiceNumber: id }],
+    });
+
+    if (!bill) {
+      return res.status(404).json({ success: false, message: 'Invoice not found in database.' });
+    }
+
+    const previousItems = Array.isArray(bill.items) ? bill.items : [];
+    const originalGrandTotal = Number(bill.grandTotal || 0);
+    const originalSubtotal = Number(bill.subtotal || 0);
+    const updatedGrandTotal = grandTotal !== undefined ? Number(grandTotal) : originalGrandTotal;
+
+    // Helper for weight deduction
+    const getItemWeightKg = (item) => {
+      const w = String(item.weight || item.unit || '').toLowerCase();
+      if (w.includes('250g')) return 0.25;
+      if (w.includes('500g')) return 0.5;
+      if (w.includes('1kg')) return 1.0;
+      if (w.includes('kg')) return parseFloat(w) || 0.5;
+      if (w.includes('litre')) return 1.0;
+      return 0.1; // Default for cups/pieces
+    };
+
+    // 1. Reconcile inventory stock differences
+    if (items && Array.isArray(items)) {
+      // Restore previous inventory
+      for (const prevItem of previousItems) {
+        if (!prevItem.id) continue;
+        const inv = await Inventory.findOne({ id: prevItem.id });
+        if (inv) {
+          const wt = getItemWeightKg(prevItem);
+          const restoreAmt = wt * (Number(prevItem.quantity) || 1);
+          inv.stockKg = Math.round((inv.stockKg + restoreAmt) * 10) / 10;
+          await inv.save();
+        }
+      }
+      // Deduct new inventory
+      for (const newItem of items) {
+        if (!newItem.id) continue;
+        const inv = await Inventory.findOne({ id: newItem.id });
+        if (inv) {
+          const wt = getItemWeightKg(newItem);
+          const deductAmt = wt * (Number(newItem.quantity) || 1);
+          inv.stockKg = Math.max(0, Math.round((inv.stockKg - deductAmt) * 10) / 10);
+          await inv.save();
+        }
+      }
+    }
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+    const activeEditor = (editedBy && editedBy.name) ? editedBy : {
+      id: 'staff-2',
+      name: 'Counter Cashier',
+      role: 'cashier',
+      counter: 'Counter Desk 01',
+    };
+
+    const editEvent = {
+      id: `edit-${Date.now()}`,
+      editedAt: Date.now(),
+      dateStr,
+      timeStr,
+      editedBy: activeEditor,
+      reason: editReason?.trim() || 'Billing Correction',
+      originalGrandTotal,
+      newGrandTotal: updatedGrandTotal,
+      difference: Math.round((updatedGrandTotal - originalGrandTotal) * 100) / 100,
+      previousItemCount: previousItems.length,
+      newItemCount: (items || []).length,
+    };
+
+    const currentHistory = Array.isArray(bill.editHistory) ? bill.editHistory : [];
+    bill.editHistory = [...currentHistory, editEvent];
+    bill.isEdited = true;
+
+    if (items) bill.items = items;
+    if (customer) bill.customer = customer;
+    if (paymentMethod) bill.paymentMethod = paymentMethod;
+    if (paymentDetails) bill.paymentDetails = paymentDetails;
+    if (splitCash !== undefined) bill.splitCash = splitCash;
+    if (splitUpi !== undefined) bill.splitUpi = splitUpi;
+    if (subtotal !== undefined) bill.subtotal = Number(subtotal);
+    if (grandTotal !== undefined) bill.grandTotal = updatedGrandTotal;
+    if (taxBreakdown) bill.taxBreakdown = taxBreakdown;
+
+    await bill.save();
+
+    // Log Activity for Audit Trail
+    await ActivityLog.create({
+      id: `act-edit-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_EDITED',
+      performedBy: activeEditor,
+      targetId: bill.invoiceNumber,
+      targetName: `Invoice ${bill.invoiceNumber}`,
+      details: {
+        originalGrandTotal,
+        newGrandTotal: updatedGrandTotal,
+        difference: editEvent.difference,
+        itemCount: (items || []).length,
+      },
+      reason: editReason?.trim() || 'Billing correction',
+      timestamp: Date.now(),
+      dateStr,
+      timeStr,
+    });
+
+    console.log(`[POS Billing] Invoice ${bill.invoiceNumber} edited by ${activeEditor.name}: ₹${originalGrandTotal} → ₹${updatedGrandTotal}`);
+    res.json({
+      success: true,
+      bill,
+      message: `Invoice ${bill.invoiceNumber} updated successfully.`,
+    });
+  } catch (err) {
+    console.error('[POS Billing] Error updating bill:', err);
+    res.status(500).json({ success: false, message: 'Failed to update bill: ' + err.message });
   }
 });
 

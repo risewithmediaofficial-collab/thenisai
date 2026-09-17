@@ -9,6 +9,7 @@ import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import AddNewProductModal from '../Inventory/AddNewProductModal';
 import DeleteBillModal from './DeleteBillModal';
+import EditBillModal from './EditBillModal';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import GstSettingsModal from '../Admin/GstSettingsModal';
@@ -509,17 +510,58 @@ export default function BillingCounter() {
     }
   };
 
-  // Shift Ledger Filtering for Cashier
-  const myShiftBills = (bills || []).filter((b) => {
-    if (!user) return true;
-    if (user.role === 'admin') return true;
-    const uid = user.id || user._id || user.username;
-    return (
-      b.cashier?.id === uid ||
-      b.cashier?.username === user.username ||
-      !b.cashier?.username
-    );
-  });
+  // Helper to determine if a sale record belongs to Today's shift (strict cashier scoping)
+  const isTodaySale = (sale) => {
+    if (!sale) return false;
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const da = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yr}-${mo}-${da}`;
+
+    const checkMatch = (dVal) => {
+      if (!dVal) return false;
+      const d = new Date(dVal);
+      if (isNaN(d.getTime())) return false;
+      const dYr = d.getFullYear();
+      const dMo = String(d.getMonth() + 1).padStart(2, '0');
+      const dDa = String(d.getDate()).padStart(2, '0');
+      return `${dYr}-${dMo}-${dDa}` === todayStr;
+    };
+
+    if (sale.createdAt && checkMatch(sale.createdAt)) return true;
+    if (sale.orderDate) {
+      if (sale.orderDate.includes(todayStr)) return true;
+      if (checkMatch(sale.orderDate)) return true;
+    }
+    return false;
+  };
+
+  // Shift Ledger Filtering for Cashier: strictly TODAY's bills for active cashier desk
+  const myShiftBills = useMemo(() => {
+    return (bills || []).filter((b) => {
+      // Strict rule: Cashier UI sees ONLY today's bills
+      if (!isTodaySale(b)) return false;
+      if (!user || user.role === 'admin') return true;
+      const uid = user.id || user._id || user.username;
+      return (
+        b.cashier?.id === uid ||
+        b.cashier?.username === user.username ||
+        !b.cashier?.username
+      );
+    });
+  }, [bills, user]);
+
+  // Latest 10 Bills for Quick Editing & Mistakes Correction (strictly today's shift)
+  const recentBills = useMemo(() => {
+    return [...myShiftBills]
+      .sort((a, b) => (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime()))
+      .slice(0, 10);
+  }, [myShiftBills]);
+
+  // Recent Bills Popover & Edit Modal States
+  const [showRecentBillsDropdown, setShowRecentBillsDropdown] = useState(false);
+  const [editBillModalItem, setEditBillModalItem] = useState(null);
 
   const filteredShiftBills = myShiftBills.filter((b) => {
     if (billPaymentFilter !== 'all') {
@@ -1278,7 +1320,10 @@ export default function BillingCounter() {
       />
 
       {/* 2. MAIN POS WORKSPACE CONTENT AREA */}
-      <div className="pos-content-area" data-lenis-prevent="true">
+      <div
+        className={`pos-content-area ${posTab !== 'register' ? 'is-full-page-tab' : ''}`}
+        data-lenis-prevent="true"
+      >
         {/* Mobile-only compact control strip */}
         <header className="pos-mobile-strip mobile-only">
           <button
@@ -1522,36 +1567,125 @@ export default function BillingCounter() {
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    className="btn-held-trigger toolbar"
-                    onClick={() => handleSwitchTab('daily-sales')}
-                    title="View Daily Sales & Revenue Settlement"
-                    style={{ marginLeft: 8 }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span>Daily Revenue</span>
-                  </button>
+                  {/* Recent Bills (10) Popover Trigger — Quick Edit & Mistake Correction */}
+                  <div className="recent-bills-trigger-wrap" style={{ position: 'relative', display: 'inline-block', marginLeft: 8 }}>
+                    <button
+                      type="button"
+                      className={`btn-held-trigger toolbar recent ${showRecentBillsDropdown ? 'active' : ''}`}
+                      onClick={() => setShowRecentBillsDropdown((v) => !v)}
+                      title="View & Edit Latest 10 Bills (சமீபத்திய 10 ரசீதுகள்)"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </svg>
+                      <span>Recent ({recentBills.length})</span>
+                      {recentBills.length > 0 && (
+                        <span className="badge-count" style={{ background: '#059669', color: '#fff', fontSize: '10px', padding: '1px 5px', borderRadius: '9999px', fontWeight: 800 }}>
+                          {recentBills.length}
+                        </span>
+                      )}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="btn-held-trigger toolbar"
-                    onClick={() => handleSwitchTab('inventory')}
-                    title="Manage Products & Inventory (பொருட்கள் & இருப்பு)"
-                    style={{ marginLeft: 8 }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                      <line x1="12" y1="22.08" x2="12" y2="12" />
-                    </svg>
-                    <span>Products &amp; Inventory</span>
-                  </button>
+                    {/* Popover showing latest 10 bills with Edit, Delete, Print */}
+                    {showRecentBillsDropdown && (
+                      <div className="recent-bills-popover" data-lenis-prevent="true">
+                        <div className="recent-bills-popover-header">
+                          <div className="popover-title-row">
+                            <span className="popover-badge">RECENT 10 BILLS</span>
+                            <span className="popover-count">{recentBills.length} records</span>
+                          </div>
+                          <p className="popover-sub">
+                            Quick-fix billing errors · Edit quantities, items, payment or delete
+                          </p>
+                          <button
+                            type="button"
+                            className="btn-popover-close"
+                            onClick={() => setShowRecentBillsDropdown(false)}
+                            title="Close Popover"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="recent-bills-list">
+                          {recentBills.length === 0 ? (
+                            <div className="recent-bills-empty">
+                              <p>No bills found for current shift.</p>
+                            </div>
+                          ) : (
+                            recentBills.map((b) => {
+                              const pm = (b.paymentMethod || 'cash').toLowerCase();
+                              return (
+                                <div key={b.id || b.invoiceNumber} className="recent-bill-row">
+                                  <div className="rb-left">
+                                    <div className="rb-top">
+                                      <strong className="rb-inv">#{b.invoiceNumber || b.id}</strong>
+                                      <span className={`rb-pm-pill ${pm}`}>{b.paymentMethod || 'Cash'}</span>
+                                      {b.isEdited && <span className="rb-edited-tag">Edited</span>}
+                                    </div>
+                                    <div className="rb-meta">
+                                      <span className="rb-cust">{b.customer?.fullName || 'Walk-in'}</span>
+                                      <span className="rb-sep">·</span>
+                                      <span className="rb-time">{b.orderTime || (b.createdAt ? new Date(b.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}</span>
+                                      <span className="rb-sep">·</span>
+                                      <span className="rb-items">{b.items?.length || 0} items</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="rb-right">
+                                    <div className="rb-total">₹{(b.grandTotal || 0).toLocaleString('en-IN')}</div>
+                                    <div className="rb-actions">
+                                      <button
+                                        type="button"
+                                        className="rb-btn-edit"
+                                        onClick={() => {
+                                          setShowRecentBillsDropdown(false);
+                                          setEditBillModalItem(b);
+                                        }}
+                                        title="Edit this Bill"
+                                      >
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="rb-btn-print"
+                                        onClick={() => {
+                                          setShowRecentBillsDropdown(false);
+                                          openInvoice(b);
+                                        }}
+                                        title="Print Invoice"
+                                      >
+                                        Print
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="rb-btn-del"
+                                        onClick={() => {
+                                          setShowRecentBillsDropdown(false);
+                                          setDeleteBillModalItem(b);
+                                        }}
+                                        title="Delete Bill to 30-Day Recycle Bin"
+                                      >
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                          <polyline points="3 6 5 6 21 6" />
+                                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2602,7 +2736,7 @@ export default function BillingCounter() {
                           label: "Export Today's Shift (.xlsx)",
                           onClick: handleExportShiftExcel
                         },
-                        {
+                        ...(user?.role === 'admin' ? [{
                           icon: (
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
@@ -2610,7 +2744,7 @@ export default function BillingCounter() {
                           ),
                           label: 'Export All Bills (.xlsx)',
                           onClick: handleExportAllBillsExcel
-                        },
+                        }] : []),
                         {
                           icon: (
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2810,7 +2944,14 @@ export default function BillingCounter() {
                       {filteredShiftBills.map((bill) => (
                         <tr key={bill.id || bill.invoiceNumber}>
                           <td>
-                            <span className="shift-inv-badge">{bill.invoiceNumber}</span>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                              <span className="shift-inv-badge">{bill.invoiceNumber || bill.id}</span>
+                              {bill.isEdited && (
+                                <span style={{ fontSize: '10px', background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d', padding: '1px 5px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase' }}>
+                                  Edited
+                                </span>
+                              )}
+                            </div>
                           </td>
                           <td>
                             <span className="shift-time">{bill.orderTime || 'Just now'}</span>
@@ -2894,8 +3035,34 @@ export default function BillingCounter() {
                                 type="button"
                                 className="btn-shift-print-inv"
                                 onClick={() => openInvoice(bill)}
+                                title="View &amp; Print Thermal Bill"
                               >
                                 Print Bill
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-shift-edit-inv"
+                                onClick={() => setEditBillModalItem(bill)}
+                                title="Edit Bill Items, Quantities &amp; Details"
+                                style={{
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  border: '1px solid #bfdbfe',
+                                  borderRadius: '6px',
+                                  padding: '5px 9px',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                }}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                </svg>
+                                Edit
                               </button>
                               <button
                                 type="button"
@@ -3430,16 +3597,6 @@ export default function BillingCounter() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <button
                                 type="button"
-                                className="btn-inline-price"
-                                style={{ margin: 0 }}
-                                onClick={() => {
-                                  setEditingMasterPriceItem({ id: prod.id, name: prod.name, price: String(prod.price || prod.unitPrice || '') });
-                                }}
-                              >
-                                Edit Price
-                              </button>
-                              <button
-                                type="button"
                                 className="btn-delete-prod"
                                 onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name })}
                                 title="Delete Product from Catalog"
@@ -3466,10 +3623,12 @@ export default function BillingCounter() {
         {posTab === 'daily-sales' && (
           <main className="pos-daily-sales-page" data-lenis-prevent="true">
             <DailyRevenueReport
-              allSales={allSales}
+              allSales={myShiftBills}
               onOpenInvoice={openInvoice}
               onRefresh={fetchBills}
               onBack={() => handleSwitchTab('register')}
+              isCashierOnly={true}
+              currentUser={user}
             />
           </main>
         )}
@@ -3740,6 +3899,19 @@ export default function BillingCounter() {
         }}
         user={user}
       />
+
+      {/* Edit Bill Modal (Inventory Adjustment & Audit History) */}
+      {editBillModalItem && (
+        <EditBillModal
+          bill={editBillModalItem}
+          onClose={() => setEditBillModalItem(null)}
+          onSuccess={() => {
+            setEditBillModalItem(null);
+            fetchBills(user?.id || user?.username);
+          }}
+          currentUser={user}
+        />
+      )}
     </div>
   );
 }
