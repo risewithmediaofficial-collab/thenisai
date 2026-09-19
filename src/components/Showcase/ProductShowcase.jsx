@@ -4,8 +4,6 @@ import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
 import { useCart } from '../../context/CartContext';
 import { SPECIAL_BOX } from '../../data/sweetsData';
-import './ProductShowcase.css';
-
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ProductShowcase() {

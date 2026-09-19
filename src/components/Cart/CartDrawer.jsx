@@ -1,8 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { FREE_DELIVERY_THRESHOLD } from '../../data/sweetsData';
-import './CartDrawer.css';
-
 export default function CartDrawer() {
   const {
     cart,
@@ -209,7 +207,7 @@ export default function CartDrawer() {
                 <span className="cart-summary__val">₹{subtotal}</span>
               </div>
               <div className="cart-summary__row note">
-                <span>GST & Delivery charges</span>
+                <span>Delivery charges</span>
                 <span>Calculated at checkout</span>
               </div>
               <div className="gold-divider" />

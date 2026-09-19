@@ -1,6 +1,4 @@
 import { motion } from 'framer-motion';
-import './IngredientsSection.css';
-
 const MilkIcon = () => (
   <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <ellipse cx="24" cy="11" rx="9" ry="3.5" />

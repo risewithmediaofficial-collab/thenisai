@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import './TraditionSection.css';
-
 export default function TraditionSection() {
   const containerRef = useRef(null);
   const [sliderPos, setSliderPos] = useState(50);

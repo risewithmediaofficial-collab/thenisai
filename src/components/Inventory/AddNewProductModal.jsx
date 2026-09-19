@@ -2,10 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import './StockModals.css';
-
 export default function AddNewProductModal({ isOpen, onClose }) {
-  const { addNewProduct } = useCart();
+  const { addNewProduct, getNextAvailableSkuCode } = useCart();
 
   useScrollLock(isOpen);
 
@@ -15,9 +13,8 @@ export default function AddNewProductModal({ isOpen, onClose }) {
     category: 'sweets',
     unit: 'kg',
     price: '',
-    stockKg: '20',
-    minThreshold: '8',
-    description: '',
+    skuCode: '',
+    hsn: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,13 +28,22 @@ export default function AddNewProductModal({ isOpen, onClose }) {
         category: 'sweets',
         unit: 'kg',
         price: '',
-        stockKg: '20',
-        minThreshold: '8',
-        description: '',
+        skuCode: '',
+        hsn: '',
       });
       setErrorMsg('');
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const nextCode = getNextAvailableSkuCode();
+    setForm((prev) => ({
+      ...prev,
+      skuCode: prev.skuCode || nextCode,
+      hsn: prev.hsn || nextCode,
+    }));
+  }, [isOpen, getNextAvailableSkuCode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -75,6 +81,7 @@ export default function AddNewProductModal({ isOpen, onClose }) {
         sweets: 'Authentic Sweets',
         spices: 'Spices (Kara Vagai)',
         halwa: 'Halwa Specialties',
+        other: 'Other Products',
       };
 
       await addNewProduct({
@@ -84,11 +91,10 @@ export default function AddNewProductModal({ isOpen, onClose }) {
         category: form.category,
         subcategory: subcategoryMap[form.category] || 'Specialty Sweets',
         unit: form.unit,
+        skuCode: form.skuCode ? form.skuCode.trim() : undefined,
+        hsn: form.hsn || form.skuCode || undefined,
         price: priceNum,
         unitPrice: priceNum,
-        stockKg: parseFloat(form.stockKg) || 10,
-        minThreshold: parseFloat(form.minThreshold) || 8,
-        description: form.description.trim() || 'Fresh handcrafted specialty',
       });
 
       onClose();
@@ -181,6 +187,7 @@ export default function AddNewProductModal({ isOpen, onClose }) {
                   <option value="beverages">Tea &amp; Beverages (டீ &amp; பானங்கள்)</option>
                   <option value="spices">Spices &amp; Kara (கார வகைகள்)</option>
                   <option value="halwa">Halwa Specialties (அல்வா)</option>
+                  <option value="other">Other</option>
                 </select>
               </div>
 
@@ -222,31 +229,33 @@ export default function AddNewProductModal({ isOpen, onClose }) {
 
               <div className="stock-field">
                 <label>
-                  <span>Initial Stock / ஆரம்ப இருப்பு</span>
+                  <span>SKU / HSN Code (குறியீடு)</span>
                 </label>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.5"
+                  type="text"
                   className="stock-input"
-                  placeholder="e.g. 20"
-                  value={form.stockKg}
-                  onChange={(e) => setForm({ ...form, stockKg: e.target.value })}
+                  placeholder="Auto-generated next code"
+                  value={form.skuCode}
+                  readOnly
+                  onChange={(e) => setForm({ ...form, skuCode: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="stock-field">
-              <label>
-                <span>Kitchen Description / குறிப்பு</span>
-              </label>
-              <input
-                type="text"
-                className="stock-input"
-                placeholder="e.g. Fresh pure ghee batch prepared daily"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-              />
+            <div className="stock-form-row-2">
+              <div className="stock-field">
+                <label>
+                  <span>HSN Number</span>
+                </label>
+                <input
+                  type="text"
+                  className="stock-input"
+                  placeholder="Auto-generated HSN"
+                  value={form.hsn}
+                  readOnly
+                  onChange={(e) => setForm({ ...form, hsn: e.target.value })}
+                />
+              </div>
             </div>
           </div>
 

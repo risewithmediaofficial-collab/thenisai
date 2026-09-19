@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import './StockModals.css';
-
 export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const { inventory, addInventoryStock } = useCart();
 

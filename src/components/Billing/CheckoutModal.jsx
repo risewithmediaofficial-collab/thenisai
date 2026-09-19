@@ -3,12 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import {
   STORE_DETAILS,
-  GST_RATE,
   STANDARD_DELIVERY_FEE,
 } from '../../data/sweetsData';
 import api from '../../utils/api';
-import './CheckoutModal.css';
-
 const INDIAN_STATES = [
   'Tamil Nadu',
   'Karnataka',
@@ -74,19 +71,9 @@ export default function CheckoutModal() {
 
   if (!isCheckoutOpen) return null;
 
-  // Dynamic Tax Settings from Admin
   const isInterState = formData.state !== 'Tamil Nadu';
-  const totalTaxPct = typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : 5;
-  const cgstPct = typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5;
-  const sgstPct = typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5;
-  const isTaxEnabled = taxSettings?.taxEnabled !== false && totalTaxPct > 0;
-
-  const cgst = (!isInterState && isTaxEnabled) ? Math.round(subtotal * (cgstPct / 100) * 100) / 100 : 0;
-  const sgst = (!isInterState && isTaxEnabled) ? Math.round(subtotal * (sgstPct / 100) * 100) / 100 : 0;
-  const igst = (isInterState && isTaxEnabled) ? Math.round(subtotal * (totalTaxPct / 100) * 100) / 100 : 0;
-  const taxAmount = Math.round((cgst + sgst + igst) * 100) / 100;
   const deliveryFee = isFreeDelivery ? 0 : STANDARD_DELIVERY_FEE;
-  const grandTotal = Math.round(subtotal + taxAmount + deliveryFee);
+  const grandTotal = Math.round(subtotal + deliveryFee);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -230,15 +217,15 @@ export default function CheckoutModal() {
       items: [...cart],
       subtotal,
       taxBreakdown: {
-        rate: isTaxEnabled ? totalTaxPct : 0,
-        cgstRate: isTaxEnabled ? cgstPct : 0,
-        sgstRate: isTaxEnabled ? sgstPct : 0,
-        gstin: taxSettings?.gstin || '33AABCT9988Q1Z5',
-        isInterState,
-        cgst,
-        sgst,
-        igst,
-        totalTax: taxAmount,
+        rate: 0,
+        cgstRate: 0,
+        sgstRate: 0,
+        gstin: '',
+        isInterState: false,
+        cgst: 0,
+        sgst: 0,
+        igst: 0,
+        totalTax: 0,
       },
       deliveryFee,
       grandTotal,
@@ -451,7 +438,7 @@ export default function CheckoutModal() {
                 </div>
 
                 <div className="form-field">
-                  <label>Email Address (for Tax Invoice PDF) *</label>
+                  <label>Email Address (for Invoice / Receipt) *</label>
                   <input
                     type="email"
                     name="email"
@@ -691,20 +678,6 @@ export default function CheckoutModal() {
                 <div className="calc-row">
                   <span>Subtotal</span>
                   <span>₹{subtotal}</span>
-                </div>
-
-                <div className="calc-row">
-                  <span>
-                    {isTaxEnabled ? `GST (${totalTaxPct}%)` : 'Tax (Exempt 0%)'}
-                    <small className="calc-sub">
-                      {!isTaxEnabled
-                        ? ' (Tax Exempt)'
-                        : !isInterState
-                        ? ` (CGST ${cgstPct}% + SGST ${sgstPct}%)`
-                        : ` (IGST ${totalTaxPct}%)`}
-                    </small>
-                  </span>
-                  <span>₹{taxAmount.toFixed(2)}</span>
                 </div>
 
                 <div className="calc-row">

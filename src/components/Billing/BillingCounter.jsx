@@ -3,18 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { ALL_BILLING_ITEMS, GST_RATE } from '../../data/sweetsData';
-import { exportBillsToExcel, downloadOfflineBillingTemplate, importBillsFromExcel } from '../../utils/excelBackup';
+import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
-import AddNewProductModal from '../Inventory/AddNewProductModal';
+import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
+import PosBillCompletedCard from './PosBillCompletedCard';
+import PosThermalReceipt from './PosThermalReceipt';
 import DeleteBillModal from './DeleteBillModal';
 import EditBillModal from './EditBillModal';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
-import GstSettingsModal from '../Admin/GstSettingsModal';
-import './BillingCounter.css';
-
 // Predefined categories for fast sweets, savouries & beverages POS filtering
 const CATEGORIES = [
   { id: 'all', label: 'All Items' },
@@ -43,9 +41,6 @@ export default function BillingCounter() {
     openInvoice,
     navigateTo,
     isOnline,
-    hasOfflinePending,
-    offlinePendingCount,
-    syncOfflineBills,
     taxSettings,
     allBillingProducts,
     customProducts,
@@ -54,89 +49,23 @@ export default function BillingCounter() {
     addNewProduct,
     deleteProduct,
     updateProductMasterPrice,
+    updateProductDetails,
+    updateProductSkuCode,
     deleteBill,
+    deleteBills,
   } = useCart();
 
-  const [isGstModalOpen, setIsGstModalOpen] = useState(false);
   const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
   const [editingPriceItem, setEditingPriceItem] = useState(null); // { item, newPrice, reason }
   const [editingMasterPriceItem, setEditingMasterPriceItem] = useState(null); // { id, name, price }
+  const [editingSkuProduct, setEditingSkuProduct] = useState(null); // { id, name, skuCode }
+  const [newSkuInput, setNewSkuInput] = useState('');
+  const [skuError, setSkuError] = useState('');
   const [deleteConfirmItem, setDeleteConfirmItem] = useState(null); // { id, name }
   const [deleteBillModalItem, setDeleteBillModalItem] = useState(null); // bill to delete with reason
+  const [selectedShiftBillIds, setSelectedShiftBillIds] = useState([]);
+  const [bulkDeleteBills, setBulkDeleteBills] = useState(null);
 
-
-  // Excel Backup State
-  const [isExcelMenuOpen, setIsExcelMenuOpen] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState(null);
-  const [isImporting, setIsImporting] = useState(false);
-  const excelMenuRef = useRef(null);
-  const excelImportRef = useRef(null);
-
-  // Close Excel dropdown on outside click
-  useEffect(() => {
-    const handler = (e) => {
-      if (excelMenuRef.current && !excelMenuRef.current.contains(e.target)) {
-        setIsExcelMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  const handleExportShiftExcel = () => {
-    exportBillsToExcel(
-      myShiftBills,
-      `Thenisai_Shift_${user?.name || 'Staff'}_${new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, '_')}.xlsx`,
-      `Thenisai — Shift Ledger (${user?.name || 'Counter Staff'})`
-    );
-    setIsExcelMenuOpen(false);
-  };
-
-  const handleExportAllBillsExcel = () => {
-    exportBillsToExcel(bills || [], undefined, 'Thenisai — All Counter Bills');
-    setIsExcelMenuOpen(false);
-  };
-
-  const handleDownloadOfflineTemplate = () => {
-    downloadOfflineBillingTemplate();
-    setIsExcelMenuOpen(false);
-  };
-
-  const handleSyncOfflineBills = async () => {
-    setIsSyncing(true);
-    setSyncResult(null);
-    try {
-      const result = await syncOfflineBills();
-      setSyncResult(result);
-      setTimeout(() => setSyncResult(null), 5000);
-    } finally {
-      setIsSyncing(false);
-    }
-    setIsExcelMenuOpen(false);
-  };
-
-  const handleImportExcelFile = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setIsImporting(true);
-    importBillsFromExcel(file)
-      .then((importedBills) => {
-        alert(`✅ Imported ${importedBills.length} bills. They have been queued for sync.`);
-        // Queue them in offline sync
-        try {
-          const existing = JSON.parse(localStorage.getItem('thenisai_offline_sync_queue') || '[]');
-          const merged = [...importedBills, ...existing];
-          localStorage.setItem('thenisai_offline_sync_queue', JSON.stringify(merged));
-        } catch { /* ignore */ }
-      })
-      .catch((err) => alert(`❌ Import failed: ${err.message}`))
-      .finally(() => {
-        setIsImporting(false);
-        if (excelImportRef.current) excelImportRef.current.value = '';
-        setIsExcelMenuOpen(false);
-      });
-  };
 
   // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory'
   const [posTab, setPosTab] = useState(() => {
@@ -162,6 +91,8 @@ export default function BillingCounter() {
 
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
+  // In-Screen High-Speed POS Bill Completion Card state (No blocking popups)
+  const [lastCompletedBill, setLastCompletedBill] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({
     fullName: '',
     phone: '',
@@ -177,6 +108,7 @@ export default function BillingCounter() {
   const [inventorySearch, setInventorySearch] = useState('');
   const [invCategoryFilter, setInvCategoryFilter] = useState('all');
   const [invStatusFilter, setInvStatusFilter] = useState('all');
+  const [inventoryPage, setInventoryPage] = useState(1);
 
   // Hold / Recall Bills state
   const [heldBills, setHeldBills] = useState([]);
@@ -418,6 +350,8 @@ export default function BillingCounter() {
           {
             id: sweet.id,
             name: sweet.name,
+            itemNumber: sweet.itemNumber,
+            skuCode: sweet.skuCode || (sweet.itemNumber ? String(sweet.itemNumber) : ''),
             weight: formatted,
             price,
             quantity: 1,
@@ -474,14 +408,48 @@ export default function BillingCounter() {
   useEffect(() => {
     const handleHashSync = () => {
       const h = window.location.hash.toLowerCase();
-      if (!h.startsWith('#billing')) return;
+
+      // Admin hash interceptions (only when on #admin routes)
+      if (user?.role === 'admin' && h.startsWith('#admin/')) {
+        if (h.startsWith('#admin/inventory') || h === '#inventory') {
+          navigateTo('admin', 'inventory');
+          return;
+        }
+        if (h.startsWith('#admin/sales') || h === '#sales') {
+          navigateTo('admin', 'sales');
+          return;
+        }
+        if (h.startsWith('#admin/shift-bills') || h.startsWith('#admin/daily-revenue') || h === '#shift-bills' || h === '#daily-revenue') {
+          navigateTo('admin', 'shift-bills');
+          return;
+        }
+        if (h.startsWith('#admin/dispatch') || h.startsWith('#admin/orders') || h === '#dispatch' || h === '#orders') {
+          navigateTo('admin', 'dispatch');
+          return;
+        }
+        if (h.startsWith('#admin/activity-logs') || h === '#activity-logs') {
+          navigateTo('admin', 'activity-logs');
+          return;
+        }
+        if (h.startsWith('#admin/recycle-bin') || h === '#recycle-bin') {
+          navigateTo('admin', 'recycle-bin');
+          return;
+        }
+      }
+
+      if (!h.startsWith('#billing') && !h.startsWith('#admin/billing') && !h.startsWith('#admin/pos')) return;
+
       if (h.includes('bills')) {
         setPosTab('my-bills');
-      } else if (h.includes('orders') || h.includes('online')) {
+      } else if (h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
         setPosTab('online-orders');
       } else if (h.includes('daily') || h.includes('revenue') || h.includes('sales')) {
         setPosTab('daily-sales');
       } else if (h.includes('inventory') || h.includes('stock') || h.includes('products')) {
+        if (user?.role === 'admin' && h.startsWith('#admin')) {
+          navigateTo('admin', 'inventory');
+          return;
+        }
         setPosTab('inventory');
       } else {
         setPosTab('register');
@@ -489,24 +457,59 @@ export default function BillingCounter() {
     };
     handleHashSync();
     window.addEventListener('hashchange', handleHashSync);
-    return () => window.removeEventListener('hashchange', handleHashSync);
-  }, []);
+    window.addEventListener('popstate', handleHashSync);
+    return () => {
+      window.removeEventListener('hashchange', handleHashSync);
+      window.removeEventListener('popstate', handleHashSync);
+    };
+  }, [user]);
+
+  const syncBillingHash = (hash) => {
+    let target = hash;
+    if (user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin')) {
+      if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
+      else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/shift-bills';
+      else if (hash.startsWith('#billing/orders')) target = '#admin/dispatch';
+      else if (hash.startsWith('#billing/inventory')) target = '#admin/inventory';
+    }
+    if (window.location.hash !== target) {
+      window.location.hash = target;
+      return;
+    }
+
+    try {
+      const event = new HashChangeEvent('hashchange');
+      window.dispatchEvent(event);
+    } catch {
+      window.dispatchEvent(new Event('hashchange'));
+    }
+  };
 
   const handleSwitchTab = (newTab) => {
     setPosTab(newTab);
+    const isAdminMode = user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin');
     if (newTab === 'register') {
-      window.location.hash = '#billing';
+      syncBillingHash(isAdminMode ? '#admin/billing' : '#billing');
       setMobileTab('catalog');
-    } else if (newTab === 'my-bills') {
-      window.location.hash = '#billing/bills';
-      handleRefreshShiftBills();
+    } else if (newTab === 'my-bills' || newTab === 'daily-sales') {
+      if (isAdminMode) {
+        navigateTo('admin', 'shift-bills');
+      } else {
+        syncBillingHash('#billing/daily-sales');
+        handleRefreshShiftBills();
+      }
     } else if (newTab === 'online-orders') {
-      window.location.hash = '#billing/orders';
-    } else if (newTab === 'daily-sales') {
-      window.location.hash = '#billing/daily-sales';
-      handleRefreshShiftBills();
+      if (isAdminMode) {
+        navigateTo('admin', 'dispatch');
+      } else {
+        syncBillingHash('#billing/orders');
+      }
     } else if (newTab === 'inventory') {
-      window.location.hash = '#billing/inventory';
+      if (isAdminMode) {
+        navigateTo('admin', 'inventory');
+        return;
+      }
+      syncBillingHash('#billing/inventory');
     }
   };
 
@@ -586,6 +589,37 @@ export default function BillingCounter() {
     return true;
   });
 
+  const selectedShiftBills = useMemo(() => {
+    const selected = new Set(selectedShiftBillIds);
+    return myShiftBills.filter((bill) => selected.has(bill.id || bill.invoiceNumber));
+  }, [myShiftBills, selectedShiftBillIds]);
+
+  const allFilteredShiftBillsSelected = filteredShiftBills.length > 0 && filteredShiftBills.every(
+    (bill) => selectedShiftBillIds.includes(bill.id || bill.invoiceNumber)
+  );
+
+  useEffect(() => {
+    const activeIds = new Set(myShiftBills.map((bill) => bill.id || bill.invoiceNumber));
+    setSelectedShiftBillIds((previous) => previous.filter((id) => activeIds.has(id)));
+  }, [myShiftBills]);
+
+  const toggleShiftBillSelection = (bill) => {
+    const id = bill.id || bill.invoiceNumber;
+    setSelectedShiftBillIds((previous) => (
+      previous.includes(id) ? previous.filter((selectedId) => selectedId !== id) : [...previous, id]
+    ));
+  };
+
+  const toggleAllFilteredShiftBills = () => {
+    const filteredIds = filteredShiftBills.map((bill) => bill.id || bill.invoiceNumber);
+    setSelectedShiftBillIds((previous) => {
+      const selected = new Set(previous);
+      const shouldSelect = !filteredIds.every((id) => selected.has(id));
+      filteredIds.forEach((id) => shouldSelect ? selected.add(id) : selected.delete(id));
+      return [...selected];
+    });
+  };
+
   const myShiftTotalRevenue = myShiftBills.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
   const myShiftCashTotal = myShiftBills.reduce((sum, b) => {
     const pm = (b.paymentMethod || '').toLowerCase();
@@ -642,19 +676,28 @@ export default function BillingCounter() {
     isMobileMenuOpen
   );
 
-  // Keyboard shortcuts (F2: search, Enter/F9: finalize bill, Escape: close modals)
+  // Keyboard shortcuts (F2: search/next sale, Enter/F9: finalize bill, Escape: close panels)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'F2') {
         e.preventDefault();
+        setLastCompletedBill(null);
         searchInputRef.current?.focus();
+        return;
       }
       if (e.key === 'Escape') {
         setIsAddStockOpen(false);
         setIsRefillOpen(false);
         setIsMobileMenuOpen(false);
+        setLastCompletedBill(null);
       }
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+      if (lastCompletedBill && billItems.length === 0 && e.key === 'Enter' && !isInput) {
+        e.preventDefault();
+        setLastCompletedBill(null);
+        searchInputRef.current?.focus();
+        return;
+      }
       if ((e.key === 'F9' || e.key === 'F8' || (e.key === 'Enter' && (!isInput || e.ctrlKey))) && billItems.length > 0 && !isAddStockOpen && !isRefillOpen) {
         e.preventDefault();
         handleCompleteSale({ autoPrint: true });
@@ -662,7 +705,7 @@ export default function BillingCounter() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [billItems, customerInfo, paymentMode, isAddStockOpen, isRefillOpen]);
+  }, [billItems, customerInfo, paymentMode, isAddStockOpen, isRefillOpen, lastCompletedBill]);
 
   // Incoming online orders
   const pendingOnlineOrders = (orders || []).filter(
@@ -705,6 +748,13 @@ export default function BillingCounter() {
     setIsRefillOpen(true);
   };
 
+  // Index inventory once. The old render searched the full array for every
+  // visible product, then repeated that work in the table cells.
+  const inventoryById = useMemo(
+    () => new Map((inventory || []).map((item) => [item.id, item])),
+    [inventory]
+  );
+
   // Filtered inventory products matching all catalog items
   const filteredInventory = useMemo(() => {
     return (allBillingProducts || []).filter((item) => {
@@ -727,7 +777,7 @@ export default function BillingCounter() {
 
       const isInactive = productAvailabilityMap[item.id] !== undefined
         ? Boolean(productAvailabilityMap[item.id])
-        : Boolean(item.isInactive || inventory?.find((i) => i.id === item.id)?.isInactive);
+        : Boolean(item.isInactive || inventoryById.get(item.id)?.isInactive);
 
       if (invStatusFilter === 'active' && isInactive) return false;
       if (invStatusFilter === 'inactive' && !isInactive) return false;
@@ -740,23 +790,28 @@ export default function BillingCounter() {
           (item.tamilName || '').includes(inventorySearch.trim()) ||
           (item.id || '').toLowerCase().includes(q) ||
           subcat.includes(q) ||
-          String(item.itemNumber || '').includes(q);
+          String(item.itemNumber || '').includes(q) ||
+          (item.skuCode && item.skuCode.toLowerCase().includes(q));
         if (!matches) return false;
       }
       return true;
     });
-  }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventory]);
+  }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventoryById]);
 
-  // Dynamic POS Tax Calculations from Admin Settings
-  const totalTaxPct = typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : 5;
-  const cgstPct = typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5;
-  const sgstPct = typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5;
-  const isTaxEnabled = taxSettings?.taxEnabled !== false && totalTaxPct > 0;
+  const INVENTORY_PAGE_SIZE = 25;
+  const inventoryPageCount = Math.max(1, Math.ceil(filteredInventory.length / INVENTORY_PAGE_SIZE));
+  const safeInventoryPage = Math.min(inventoryPage, inventoryPageCount);
+  const inventoryPageStart = (safeInventoryPage - 1) * INVENTORY_PAGE_SIZE;
+  const visibleInventory = useMemo(
+    () => filteredInventory.slice(inventoryPageStart, inventoryPageStart + INVENTORY_PAGE_SIZE),
+    [filteredInventory, inventoryPageStart]
+  );
+
+  useEffect(() => {
+    setInventoryPage(1);
+  }, [invCategoryFilter, invStatusFilter, inventorySearch]);
 
   const billSubtotal = billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
-  const billCgst = 0;
-  const billSgst = 0;
-  const billGst = 0;
   const billGrandTotal = Math.round(billSubtotal);
 
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
@@ -815,6 +870,9 @@ export default function BillingCounter() {
         }
       }
     }
+    if (perUnit > 0) {
+      return perUnit;
+    }
     if (sweet.prices) {
       return Number(sweet.prices[weight] || sweet.prices['1 Cup'] || sweet.price);
     }
@@ -823,6 +881,7 @@ export default function BillingCounter() {
 
   // Add product to bill with chosen cup/pc/weight/volume quantity
   const handleAddSweetToBill = (sweet, weight, addQty = 1, overridePrice = null) => {
+    if (lastCompletedBill) setLastCompletedBill(null);
     const qty = parseInt(addQty, 10) || 1;
     const isKg = isKgItem(sweet);
     const isLitre = isLitreItem(sweet);
@@ -843,6 +902,7 @@ export default function BillingCounter() {
             id: sweet.id,
             name: sweet.name,
             itemNumber: sweet.itemNumber,
+            skuCode: sweet.skuCode || (sweet.itemNumber ? String(sweet.itemNumber) : ''),
             weight: itemWeight,
             price,
             quantity: qty,
@@ -996,14 +1056,18 @@ export default function BillingCounter() {
   };
 
   // Staff & Admin Price Override handler
-  const handleConfirmPriceOverride = () => {
+  const handleConfirmPriceOverride = async () => {
     if (!editingPriceItem) return;
     const priceNum = parseFloat(editingPriceItem.newPrice);
     if (isNaN(priceNum) || priceNum < 0) return;
 
+    const targetItem = editingPriceItem.item;
+    const shouldUpdateMaster = editingPriceItem.updateMasterCatalogPrice !== false;
+
+    // 1. Update active bill line item
     setBillItems((prev) =>
       prev.map((it) => {
-        if (it.id === editingPriceItem.item.id && it.weight === editingPriceItem.item.weight) {
+        if (it.id === targetItem.id && it.weight === targetItem.weight) {
           const orig = it.originalPrice !== undefined ? it.originalPrice : it.price;
           return {
             ...it,
@@ -1016,14 +1080,47 @@ export default function BillingCounter() {
         return it;
       })
     );
+
+    // 2. If shouldUpdateMaster, compute per-unit or per-kg master rate and save permanently across reloads
+    if (shouldUpdateMaster && priceNum > 0) {
+      let masterUnitRate = priceNum;
+      const w = String(targetItem.weight || targetItem.unit || '').toLowerCase().trim();
+
+      if (w.endsWith('kg')) {
+        const kgVal = parseFloat(w.replace('kg', '')) || 1;
+        masterUnitRate = Math.round(priceNum / kgVal);
+      } else if (w.endsWith('g') && !w.endsWith('kg')) {
+        const gVal = parseFloat(w.replace('g', '')) || 250;
+        masterUnitRate = Math.round((priceNum / gVal) * 1000);
+      } else if (w.endsWith('ml')) {
+        const mlVal = parseFloat(w.replace('ml', '')) || 500;
+        masterUnitRate = Math.round((priceNum / mlVal) * 1000);
+      } else if (w.endsWith('l') || w.includes('litre')) {
+        const lVal = parseFloat(w.replace(/[^0-9.]/g, '')) || 1;
+        masterUnitRate = Math.round(priceNum / lVal);
+      }
+
+      await updateProductMasterPrice(targetItem.id, masterUnitRate, user);
+    }
+
     setEditingPriceItem(null);
   };
 
   const handleConfirmMasterPriceUpdate = async () => {
     if (!editingMasterPriceItem) return;
     const num = parseFloat(editingMasterPriceItem.price);
-    if (!isNaN(num) && num >= 0) {
-      await updateProductMasterPrice(editingMasterPriceItem.id, num, user);
+    const englishName = String(editingMasterPriceItem.englishName || editingMasterPriceItem.name || '').trim();
+    const tamilName = String(editingMasterPriceItem.tamilName || '').trim();
+
+    if (!isNaN(num) && num > 0 && englishName) {
+      await updateProductDetails(editingMasterPriceItem.id, {
+        name: tamilName ? `${englishName} — ${tamilName}` : englishName,
+        englishName,
+        tamilName,
+        category: editingMasterPriceItem.category || 'sweets',
+        unit: editingMasterPriceItem.unit || 'kg',
+        price: num,
+      }, user);
     }
     setEditingMasterPriceItem(null);
   };
@@ -1149,15 +1246,15 @@ export default function BillingCounter() {
       items: [...billItems],
       subtotal: billSubtotal,
       taxBreakdown: {
-        rate: isTaxEnabled ? totalTaxPct : 0,
-        cgstRate: isTaxEnabled ? cgstPct : 0,
-        sgstRate: isTaxEnabled ? sgstPct : 0,
-        gstin: taxSettings?.gstin || '33AABCT9988Q1Z5',
+        rate: 0,
+        cgstRate: 0,
+        sgstRate: 0,
+        gstin: '',
         isInterState: false,
-        cgst: billCgst,
-        sgst: billSgst,
+        cgst: 0,
+        sgst: 0,
         igst: 0,
-        totalTax: billGst,
+        totalTax: 0,
       },
       deliveryFee: 0,
       grandTotal: billGrandTotal,
@@ -1183,13 +1280,15 @@ export default function BillingCounter() {
     };
 
     const savedOrder = await addCounterSale(saleData);
+    const completedBill = savedOrder || saleData;
     handleClearBill();
-    openInvoice(savedOrder || saleData);
+    // High-speed POS flow: display in-screen completion card (No blocking modal popups)
+    setLastCompletedBill(completedBill);
 
     if (shouldPrint) {
       setTimeout(() => {
         window.print();
-      }, 400);
+      }, 300);
     }
   };
 
@@ -1233,8 +1332,10 @@ export default function BillingCounter() {
       return true;
     }
 
-    // Number-based search (e.g. "1", "2", "#3", "13", or price "20", "25")
+    // Number/SKU-based search (e.g. "1", "42", "#3", or a custom SKU code)
     const cleanNumStr = qRaw.replace(/^#/, '').replace(/\.$/, '').trim();
+    // First check exact SKU code match (highest priority for fast lookup by code)
+    if (sw.skuCode && sw.skuCode.toLowerCase() === cleanNumStr.toLowerCase()) return true;
     const isPureNumber = /^\d+$/.test(cleanNumStr);
     if (isPureNumber) {
       const searchNum = parseInt(cleanNumStr, 10);
@@ -1243,24 +1344,29 @@ export default function BillingCounter() {
       if (sw.price === searchNum) return true;
     }
 
-    // Text search (English, Tamil, ID, Tagline)
+    // Text search (English, Tamil, ID, SKU Code, Tagline)
     const matchesText =
       sw.name.toLowerCase().includes(q) ||
       (sw.tamilName && sw.tamilName.includes(qRaw)) ||
       (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
       (sw.tagline && sw.tagline.toLowerCase().includes(q)) ||
-      sw.id.toLowerCase().includes(q);
+      sw.id.toLowerCase().includes(q) ||
+      (sw.skuCode && sw.skuCode.toLowerCase().includes(q));
 
     return matchesText;
   });
 
   // Always keep strictly orderwise (sorted by itemNumber 1..13)
-  // If user searches a number, exact itemNumber match is prioritized at top
+  // If user searches a number/SKU, exact SKU match is prioritized at top
   const filteredSweets = [...rawFiltered].sort((a, b) => {
     const numA = a.itemNumber || 999;
     const numB = b.itemNumber || 999;
 
     const cleanNum = searchQuery.trim().replace(/^#/, '').replace(/\.$/, '');
+    const cleanNumLower = cleanNum.toLowerCase();
+    // Exact SKU match always sorts to top
+    if (cleanNum && (a.skuCode || '').toLowerCase() === cleanNumLower && (b.skuCode || '').toLowerCase() !== cleanNumLower) return -1;
+    if (cleanNum && (b.skuCode || '').toLowerCase() === cleanNumLower && (a.skuCode || '').toLowerCase() !== cleanNumLower) return 1;
     if (/^\d+$/.test(cleanNum)) {
       const targetNum = parseInt(cleanNum, 10);
       if (numA === targetNum) return -1;
@@ -1286,30 +1392,61 @@ export default function BillingCounter() {
       {/* 1. LEFT SIDE NAVIGATION BAR (No Cluttered Top Navbar) */}
       <SideNavbar
         currentSection={
-          posTab === 'register'
-            ? 'pos-register'
-            : posTab === 'my-bills' || posTab === 'daily-sales'
-            ? 'pos-daily-sales'
-            : posTab === 'online-orders'
-            ? 'pos-online'
-            : 'pos-inventory'
+          (user?.role === 'admin' && !window.location.hash.toLowerCase().startsWith('#billing'))
+            ? 'admin-billing'
+            : (posTab === 'register'
+                ? 'pos-register'
+                : posTab === 'my-bills' || posTab === 'daily-sales'
+                ? 'pos-daily-sales'
+                : posTab === 'online-orders'
+                ? 'pos-online'
+                : 'pos-inventory')
         }
         onSelectSection={(sec) => {
-          if (sec === 'pos-register') handleSwitchTab('register');
-          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') handleSwitchTab('daily-sales');
-          else if (sec === 'pos-online') handleSwitchTab('online-orders');
-          else if (sec === 'pos-inventory') handleSwitchTab('inventory');
-          else if (sec === 'admin-orders') navigateTo('admin', 'orders');
-          else if (sec === 'admin-sales') navigateTo('admin', 'sales');
-          else if (sec === 'admin-daily-revenue') navigateTo('admin', 'daily-revenue');
-          else if (sec === 'storefront') navigateTo('storefront');
+          if (sec === 'admin-billing' || sec === 'pos-register') {
+            if (user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin')) {
+              syncBillingHash('#admin/billing');
+              handleSwitchTab('register');
+            } else {
+              handleSwitchTab('register');
+            }
+          }
+          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue') {
+            navigateTo('admin', 'shift-bills');
+          }
+          else if (sec === 'admin-dispatch' || sec === 'admin-orders') {
+            navigateTo('admin', 'dispatch');
+          }
+          else if (sec === 'admin-inventory') {
+            navigateTo('admin', 'inventory');
+          }
+          else if (sec === 'admin-sales') {
+            navigateTo('admin', 'sales');
+          }
+          else if (sec === 'admin-activity-logs' || sec === 'admin-price-logs') {
+            navigateTo('admin', 'activity-logs');
+          }
+          else if (sec === 'admin-recycle-bin') {
+            navigateTo('admin', 'recycle-bin');
+          }
+          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') {
+            handleSwitchTab('daily-sales');
+          }
+          else if (sec === 'pos-online') {
+            handleSwitchTab('online-orders');
+          }
+          else if (sec === 'pos-inventory') {
+            handleSwitchTab('inventory');
+          }
+          else if (sec === 'storefront') {
+            navigateTo('storefront');
+          }
         }}
         onOpenRefill={() => {
           setRefillTargetSweetId(null);
           setIsRefillOpen(true);
         }}
         onOpenAddStock={() => setIsAddStockOpen(true)}
-        onOpenGstSettings={user?.role === 'admin' ? () => setIsGstModalOpen(true) : undefined}
         pendingOnlineCount={pendingOnlineOrders.length}
         shiftBillsCount={myShiftBills.length}
         isMobileOpen={isMobileMenuOpen}
@@ -1387,21 +1524,6 @@ export default function BillingCounter() {
             </button>
           )}
 
-          {/* Connection Status + Excel Backup */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginRight: '8px' }}>
-            {/* Connection Status Pill */}
-            <span style={{
-              display: 'flex', alignItems: 'center', gap: '5px', padding: '3px 8px',
-              borderRadius: '20px', fontSize: '11px', fontWeight: 600,
-              background: isOnline ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-              color: isOnline ? '#16a34a' : '#dc2626',
-              border: `1px solid ${isOnline ? '#86efac' : '#fca5a5'}`,
-            }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: isOnline ? '#22c55e' : '#ef4444', display: 'inline-block' }} />
-              {isOnline ? (hasOfflinePending ? `Online · ${offlinePendingCount} pending` : 'Server Online') : 'Offline Mode'}
-            </span>
-          </div>
-
           <button
             type="button"
             className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''} ${posTab === 'online-orders' ? 'active' : ''}`}
@@ -1441,7 +1563,10 @@ export default function BillingCounter() {
                     type="text"
                     placeholder="Search by number or name (1, 2, டீ, Coffee)... (Press F2)"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      if (lastCompletedBill) setLastCompletedBill(null);
+                    }}
                     onKeyDown={handleSearchKeyDown}
                   />
                   {searchQuery && (
@@ -1753,7 +1878,7 @@ export default function BillingCounter() {
                         >
                           <div className="pos-list-info">
                             <div className="pos-list-title-wrap">
-                              <span className="pos-item-num-badge">#{itemNum}</span>
+                              <span className="pos-item-num-badge" title="SKU Code">{sweet.skuCode || itemNum}</span>
                               <h4 className="pos-list-title" style={{ textDecoration: 'line-through', opacity: 0.65 }}>
                                 {sweet.name}
                               </h4>
@@ -1806,7 +1931,7 @@ export default function BillingCounter() {
                         {/* ── Main row info ── */}
                         <div className="pos-list-info">
                           <div className="pos-list-title-wrap">
-                            <span className="pos-item-num-badge">#{itemNum}</span>
+                            <span className="pos-item-num-badge" title="SKU Code">{sweet.skuCode || itemNum}</span>
                             <h4 className="pos-list-title">{sweet.name}</h4>
                             <button
                               type="button"
@@ -2216,17 +2341,34 @@ export default function BillingCounter() {
               {/* Active Bill Items List (Independently Scrollable with data-lenis-prevent) */}
               <div className="pos-bill-items" data-lenis-prevent>
                 {billItems.length === 0 ? (
-                  <div className="pos-empty-bill">
-                    <div className="pos-empty-icon">
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                        <line x1="6" y1="1" x2="6" y2="4" />
-                        <line x1="10" y1="1" x2="10" y2="4" />
-                        <line x1="14" y1="1" x2="14" y2="4" />
-                      </svg>
+                  lastCompletedBill ? (
+                    <PosBillCompletedCard
+                      bill={lastCompletedBill}
+                      onStartNextSale={() => {
+                        setLastCompletedBill(null);
+                        setTimeout(() => searchInputRef.current?.focus(), 50);
+                      }}
+                      onReprint={() => {
+                        window.print();
+                      }}
+                      onViewA4={() => {
+                        openInvoice(lastCompletedBill);
+                      }}
+                      onDismiss={() => setLastCompletedBill(null)}
+                    />
+                  ) : (
+                    <div className="pos-empty-bill">
+                      <div className="pos-empty-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                          <line x1="6" y1="1" x2="6" y2="4" />
+                          <line x1="10" y1="1" x2="10" y2="4" />
+                          <line x1="14" y1="1" x2="14" y2="4" />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
+                  )
                 ) : (
                   <div className="pos-items-table">
                     {billItems.map((item) => {
@@ -2649,7 +2791,7 @@ export default function BillingCounter() {
 
 
         {/* PAGE 2: SHIFT INVOICES LEDGER */}
-        {posTab === 'my-bills' && (
+        {(posTab === 'my-bills' || posTab === 'daily-sales') && (
           <main className="pos-shift-ledger" data-lenis-prevent="true">
             <div className="shift-ledger-header">
               <div className="shift-header-left">
@@ -2684,134 +2826,6 @@ export default function BillingCounter() {
               </div>
 
               <div className="shift-header-right">
-                {/* Excel Backup Menu */}
-                <div style={{ position: 'relative' }} ref={excelMenuRef}>
-                  <button
-                    type="button"
-                    className="btn-shift-refresh"
-                    onClick={() => setIsExcelMenuOpen((o) => !o)}
-                    style={{ background: '#1D6F42', color: '#fff', borderColor: '#1D6F42', display: 'flex', alignItems: 'center', gap: '6px' }}
-                    title="Excel Backup & Export"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                      <polyline points="14 2 14 8 20 8"/>
-                      <line x1="12" y1="18" x2="12" y2="12"/>
-                      <line x1="9" y1="15" x2="15" y2="15"/>
-                    </svg>
-                    <span>Excel Backup</span>
-                    {hasOfflinePending && (
-                      <span style={{ background: '#ef4444', color: '#fff', borderRadius: '10px', padding: '1px 6px', fontSize: '10px', fontWeight: 700 }}>
-                        {offlinePendingCount}
-                      </span>
-                    )}
-                  </button>
-
-                  {isExcelMenuOpen && (
-                    <div style={{
-                      position: 'absolute', right: 0, top: 'calc(100% + 6px)', zIndex: 9999,
-                      background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px',
-                      boxShadow: '0 8px 32px rgba(0,0,0,0.14)', minWidth: '240px', overflow: 'hidden',
-                    }}>
-                      {/* Hidden file input for import */}
-                      <input
-                        ref={excelImportRef}
-                        type="file"
-                        accept=".xlsx,.xls"
-                        style={{ display: 'none' }}
-                        onChange={handleImportExcelFile}
-                      />
-                      {[
-                        {
-                          icon: (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="7 10 12 15 17 10" />
-                              <line x1="12" y1="15" x2="12" y2="3" />
-                            </svg>
-                          ),
-                          label: "Export Today's Shift (.xlsx)",
-                          onClick: handleExportShiftExcel
-                        },
-                        ...(user?.role === 'admin' ? [{
-                          icon: (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                            </svg>
-                          ),
-                          label: 'Export All Bills (.xlsx)',
-                          onClick: handleExportAllBillsExcel
-                        }] : []),
-                        {
-                          icon: (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                              <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                            </svg>
-                          ),
-                          label: 'Download Offline Billing Template',
-                          onClick: handleDownloadOfflineTemplate
-                        },
-                        {
-                          icon: (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                              <polyline points="17 8 12 3 7 8" />
-                              <line x1="12" y1="3" x2="12" y2="15" />
-                            </svg>
-                          ),
-                          label: `Import Excel Bills${isImporting ? ' (Importing...)' : ''}`,
-                          onClick: () => excelImportRef.current?.click()
-                        },
-                        {
-                          icon: (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polyline points="23 4 23 10 17 10" />
-                              <polyline points="1 20 1 14 7 14" />
-                              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-                            </svg>
-                          ),
-                          label: `Sync Offline Bills${offlinePendingCount > 0 ? ` (${offlinePendingCount} pending)` : ''}${isSyncing ? ' — Syncing...' : ''}`,
-                          onClick: handleSyncOfflineBills,
-                          disabled: isSyncing || !hasOfflinePending
-                        },
-                      ].map((item, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          disabled={item.disabled}
-                          onClick={item.onClick}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '10px', width: '100%',
-                            padding: '10px 16px', background: 'none', border: 'none',
-                            textAlign: 'left', cursor: item.disabled ? 'not-allowed' : 'pointer',
-                            color: item.disabled ? '#9ca3af' : '#1e293b', fontSize: '13px',
-                            borderBottom: idx < 4 ? '1px solid #f1f5f9' : 'none',
-                            transition: 'background 0.15s',
-                          }}
-                          onMouseEnter={(e) => { if (!item.disabled) e.currentTarget.style.background = '#f8fafc'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'none'; }}
-                        >
-                          <span style={{ display: 'inline-flex', alignItems: 'center', color: '#1D6F42' }}>{item.icon}</span>
-                          <span>{item.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {syncResult && (
-                  <span style={{
-                    background: '#dcfce7', color: '#15803d', borderRadius: '8px', padding: '4px 10px',
-                    fontSize: '12px', fontWeight: 600, border: '1px solid #86efac', display: 'inline-flex', alignItems: 'center', gap: '4px'
-                  }}>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    {syncResult.synced} synced{syncResult.failed > 0 ? `, ${syncResult.failed} failed` : ''}
-                  </span>
-                )}
-
                 <button
                   type="button"
                   className="btn-shift-refresh"
@@ -2916,6 +2930,35 @@ export default function BillingCounter() {
               </div>
             </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', margin: '0 0 14px', padding: '10px 12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#9a3412' }}>
+                {selectedShiftBills.length ? `${selectedShiftBills.length} bill${selectedShiftBills.length === 1 ? '' : 's'} selected` : 'Select bills to delete them together'}
+              </span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button type="button" className="btn-shift-refresh" onClick={toggleAllFilteredShiftBills} disabled={!filteredShiftBills.length}>
+                  {allFilteredShiftBillsSelected ? 'Clear Selection' : 'Select Filtered'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-shift-del-inv"
+                  onClick={() => setBulkDeleteBills(selectedShiftBills)}
+                  disabled={!selectedShiftBills.length}
+                  style={{ opacity: selectedShiftBills.length ? 1 : 0.55 }}
+                >
+                  Delete Selected ({selectedShiftBills.length})
+                </button>
+                <button
+                  type="button"
+                  className="btn-shift-del-inv"
+                  onClick={() => setBulkDeleteBills(myShiftBills)}
+                  disabled={!myShiftBills.length}
+                  style={{ background: '#991b1b', color: '#fff', borderColor: '#991b1b', opacity: myShiftBills.length ? 1 : 0.55 }}
+                >
+                  Delete All Today ({myShiftBills.length})
+                </button>
+              </div>
+            </div>
+
             {/* Invoices List */}
             <div className="shift-table-wrap">
               {filteredShiftBills.length === 0 ? (
@@ -2927,6 +2970,14 @@ export default function BillingCounter() {
                   <table className="shift-invoices-table">
                     <thead>
                       <tr>
+                        <th>
+                          <input
+                            type="checkbox"
+                            checked={allFilteredShiftBillsSelected}
+                            onChange={toggleAllFilteredShiftBills}
+                            aria-label="Select all visible bills"
+                          />
+                        </th>
                         <th>Invoice No</th>
                         <th>Time</th>
                         <th>Customer</th>
@@ -2940,6 +2991,14 @@ export default function BillingCounter() {
                     <tbody>
                       {filteredShiftBills.map((bill) => (
                         <tr key={bill.id || bill.invoiceNumber}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedShiftBillIds.includes(bill.id || bill.invoiceNumber)}
+                              onChange={() => toggleShiftBillSelection(bill)}
+                              aria-label={`Select invoice ${bill.invoiceNumber || bill.id}`}
+                            />
+                          </td>
                           <td>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                               <span className="shift-inv-badge">{bill.invoiceNumber || bill.id}</span>
@@ -3393,12 +3452,12 @@ export default function BillingCounter() {
                 <button
                   type="button"
                   className="btn-inventory-add-product"
-                  onClick={() => setIsAddNewProductOpen(true)}
+                  onClick={() => setIsAddNewProductOpen((prev) => !prev)}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    background: 'linear-gradient(135deg, #10b981, #059669)',
+                    background: isAddNewProductOpen ? '#475569' : 'linear-gradient(135deg, #10b981, #059669)',
                     color: '#fff',
                     border: 'none',
                     padding: '9px 16px',
@@ -3406,14 +3465,26 @@ export default function BillingCounter() {
                     fontWeight: 600,
                     fontSize: '13px',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
+                    boxShadow: isAddNewProductOpen ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.3)'
                   }}
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Add New Product
+                  {isAddNewProductOpen ? (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                      <span>Close Add Form</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      <span>Add New Product</span>
+                    </>
+                  )}
                 </button>
                 <button
                   type="button"
@@ -3438,10 +3509,17 @@ export default function BillingCounter() {
                     <line x1="3" y1="6" x2="21" y2="6" />
                     <path d="M16 10a4 4 0 0 1-8 0" />
                   </svg>
-                  Return to POS
+                  <span>Return to POS</span>
                 </button>
               </div>
             </div>
+
+            {/* In-Screen Collapsible Add New Product Master Panel */}
+            <AddProductInlinePanel
+              isOpen={isAddNewProductOpen}
+              onClose={() => setIsAddNewProductOpen(false)}
+              onAddProduct={(p) => addNewProduct(p, user)}
+            />
 
             {/* Filter & Search Bar */}
             <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
@@ -3457,6 +3535,7 @@ export default function BillingCounter() {
                   <option value="sweets">Traditional Sweets</option>
                   <option value="spices">Spices &amp; Kara Vagai</option>
                   <option value="savouries">Savouries &amp; Mixtures</option>
+                  <option value="other">Other</option>
                 </select>
 
                 <select
@@ -3509,7 +3588,7 @@ export default function BillingCounter() {
                 <table className="inventory-table">
                   <thead>
                     <tr>
-                      <th>#</th>
+                      <th>SKU Code</th>
                       <th>PRODUCT DETAILS</th>
                       <th>CATEGORY</th>
                       <th>UNIT</th>
@@ -3519,14 +3598,48 @@ export default function BillingCounter() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredInventory.map((prod, idx) => {
+                    {visibleInventory.map((prod, idx) => {
                       const isInactive = productAvailabilityMap[prod.id] !== undefined
                         ? Boolean(productAvailabilityMap[prod.id])
-                        : Boolean(prod.isInactive || inventory?.find((i) => i.id === prod.id)?.isInactive);
+                        : Boolean(prod.isInactive || inventoryById.get(prod.id)?.isInactive);
                       return (
                         <tr key={prod.id || idx} style={{ opacity: isInactive ? 0.75 : 1 }}>
                           <td>
-                            <span className="item-num-badge">#{prod.itemNumber || idx + 1}</span>
+                            {editingSkuProduct?.id === prod.id ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px' }}>
+                                <input
+                                  type="text"
+                                  value={newSkuInput}
+                                  onChange={(e) => { setNewSkuInput(e.target.value); setSkuError(''); }}
+                                  onKeyDown={async (e) => {
+                                    if (e.key === 'Enter') {
+                                      const res = await updateProductSkuCode(prod.id, newSkuInput);
+                                      if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); }
+                                    } else if (e.key === 'Escape') { setEditingSkuProduct(null); setSkuError(''); }
+                                  }}
+                                  autoFocus
+                                  style={{ width: '72px', fontSize: '12px', padding: '3px 6px', border: skuError ? '1px solid #ef4444' : '1px solid #6366f1', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, outline: 'none' }}
+                                  placeholder="e.g. 1"
+                                />
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    onClick={async () => { const res = await updateProductSkuCode(prod.id, newSkuInput); if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); } }}
+                                  >Save</button>
+                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    onClick={() => { setEditingSkuProduct(null); setSkuError(''); }}
+                                  >✕</button>
+                                </div>
+                                {skuError && <span style={{ fontSize: '10px', color: '#ef4444' }}>{skuError}</span>}
+                              </div>
+                            ) : (
+                              <button type="button" className="item-num-badge"
+                                onClick={() => { setEditingSkuProduct(prod); setNewSkuInput(prod.skuCode || String(prod.itemNumber || '')); setSkuError(''); }}
+                                title="Click to edit SKU/HSN code"
+                                style={{ cursor: 'pointer', background: '#ede9fe', color: '#5b21b6', border: '1px dashed #7c3aed', fontFamily: 'monospace', fontWeight: 700 }}
+                              >
+                                {prod.skuCode || prod.itemNumber || '—'}
+                              </button>
+                            )}
                           </td>
                           <td>
                             <div>
@@ -3564,14 +3677,22 @@ export default function BillingCounter() {
                                 type="button"
                                 className="btn-inline-price"
                                 onClick={() => {
-                                  setEditingMasterPriceItem({ id: prod.id, name: prod.name, price: String(prod.price || prod.unitPrice || '') });
+                                  setEditingMasterPriceItem({
+                                    id: prod.id,
+                                    name: prod.name,
+                                    englishName: prod.englishName || (prod.name || '').split('—')[0].trim(),
+                                    tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
+                                    category: prod.category || 'sweets',
+                                    unit: prod.unit || 'kg',
+                                    price: String(prod.price || prod.unitPrice || '')
+                                  });
                                 }}
-                                title="Change Master Selling Price"
+                                title="Edit product details"
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                                 </svg>
-                                Edit Price
+                                Edit Product
                               </button>
                             </div>
                           </td>
@@ -3613,6 +3734,34 @@ export default function BillingCounter() {
                 </table>
               )}
             </div>
+            {filteredInventory.length > INVENTORY_PAGE_SIZE && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginTop: '14px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '13px', color: '#64748b' }}>
+                  Showing {inventoryPageStart + 1}–{Math.min(inventoryPageStart + INVENTORY_PAGE_SIZE, filteredInventory.length)} of {filteredInventory.length} products
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn-inline-price"
+                    disabled={safeInventoryPage === 1}
+                    onClick={() => setInventoryPage((page) => Math.max(1, page - 1))}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ alignSelf: 'center', fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                    Page {safeInventoryPage} of {inventoryPageCount}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-inline-price"
+                    disabled={safeInventoryPage === inventoryPageCount}
+                    onClick={() => setInventoryPage((page) => Math.min(inventoryPageCount, page + 1))}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </main>
         )}
 
@@ -3646,16 +3795,17 @@ export default function BillingCounter() {
         initialSweetId={refillTargetSweetId}
       />
 
-      <AddNewProductModal
-        isOpen={isAddNewProductOpen}
-        onClose={() => setIsAddNewProductOpen(false)}
-        onAddProduct={(p) => addNewProduct(p, user)}
-      />
-
-      <GstSettingsModal
-        isOpen={isGstModalOpen}
-        onClose={() => setIsGstModalOpen(false)}
-      />
+      {/* Silent Background Thermal Receipt Printable Container for instant POS print */}
+      {lastCompletedBill && (
+        <div className="pos-silent-print-container" aria-hidden="true">
+          <div className="invoice-portal format-thermal">
+            <div className="thermal-receipt-wrapper has-multiple">
+              <PosThermalReceipt invoice={lastCompletedBill} copyType="customer" index={0} />
+              <PosThermalReceipt invoice={lastCompletedBill} copyType="shop" index={1} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Staff / Admin Price Override Modal */}
       {editingPriceItem && (
@@ -3750,6 +3900,23 @@ export default function BillingCounter() {
                   onChange={(e) => setEditingPriceItem({ ...editingPriceItem, reason: e.target.value })}
                 />
               </div>
+
+              {/* Keep Price for Future Bills & Reloads */}
+              <div style={{ marginTop: '14px', padding: '12px 14px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <input
+                  type="checkbox"
+                  id="update-catalog-checkbox"
+                  checked={editingPriceItem.updateMasterCatalogPrice !== false}
+                  onChange={(e) => setEditingPriceItem({ ...editingPriceItem, updateMasterCatalogPrice: e.target.checked })}
+                  style={{ marginTop: '3px', width: '18px', height: '18px', accentColor: '#d97706', cursor: 'pointer' }}
+                />
+                <label htmlFor="update-catalog-checkbox" style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', cursor: 'pointer', lineHeight: '1.4' }}>
+                  Save this price permanently for all future bills &amp; reloads
+                  <span style={{ display: 'block', fontSize: '11px', fontWeight: 500, color: '#64748b', marginTop: '2px' }}>
+                    அனைத்து ரசீதுகளுக்கும் நிலையான விலையாக மாற்றவும் (ரிலோட் செய்தாலும் விலை மாறாது)
+                  </span>
+                </label>
+              </div>
             </div>
 
             <div className="pos-price-modal-footer">
@@ -3772,14 +3939,14 @@ export default function BillingCounter() {
         </div>
       )}
 
-      {/* Master Price Edit Modal */}
+      {/* Product Edit Modal */}
       {editingMasterPriceItem && (
         <div className="pos-price-modal-backdrop" onClick={() => setEditingMasterPriceItem(null)}>
-          <div className="pos-price-modal-box master-price-box" onClick={(e) => e.stopPropagation()}>
+          <div className="pos-price-modal-box master-price-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
             <div className="pos-price-modal-header">
               <div>
-                <span className="modal-eyebrow">UPDATE MASTER CATALOG PRICE</span>
-                <h3 className="modal-title">{editingMasterPriceItem.name}</h3>
+                <span className="modal-eyebrow">EDIT PRODUCT</span>
+                <h3 className="modal-title">{editingMasterPriceItem.englishName || editingMasterPriceItem.name}</h3>
               </div>
               <button
                 type="button"
@@ -3789,12 +3956,60 @@ export default function BillingCounter() {
                 ✕
               </button>
             </div>
-            <div className="pos-price-modal-body">
-              <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
-                Update the standard selling price for this product across POS billing and inventory.
-              </p>
-              <div className="override-reason-field">
-                <label className="override-reason-label">New Selling Price (₹)</label>
+            <div className="pos-price-modal-body" style={{ display: 'grid', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Product Name (English)</label>
+                <input
+                  type="text"
+                  value={editingMasterPriceItem.englishName || ''}
+                  onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, englishName: e.target.value })}
+                  className="qty-input"
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Product Name (Tamil)</label>
+                <input
+                  type="text"
+                  value={editingMasterPriceItem.tamilName || ''}
+                  onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, tamilName: e.target.value })}
+                  className="qty-input"
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Category</label>
+                  <select
+                    value={editingMasterPriceItem.category || 'sweets'}
+                    onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, category: e.target.value })}
+                    className="qty-input"
+                    style={{ background: '#fff' }}
+                  >
+                    <option value="sweets">Sweets</option>
+                    <option value="beverages">Beverages</option>
+                    <option value="spices">Spices</option>
+                    <option value="halwa">Halwa</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Unit</label>
+                  <select
+                    value={editingMasterPriceItem.unit || 'kg'}
+                    onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, unit: e.target.value })}
+                    className="qty-input"
+                    style={{ background: '#fff' }}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="Litre">Litre</option>
+                    <option value="1 Cup">1 Cup</option>
+                    <option value="1 Pc">1 Pc</option>
+                    <option value="1 Pkt">1 Pkt</option>
+                    <option value="Bottle">Bottle</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Selling Price (₹)</label>
                 <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
                   <span className="currency-prefix">₹</span>
                   <input
@@ -3823,7 +4038,7 @@ export default function BillingCounter() {
                 className="btn-modal-save"
                 onClick={handleConfirmMasterPriceUpdate}
               >
-                Update Catalog Price
+                Save Product
               </button>
             </div>
           </div>
@@ -3883,16 +4098,29 @@ export default function BillingCounter() {
 
       {/* Delete Bill Modal (30-day Recycle Bin with Mandatory Reason) */}
       <DeleteBillModal
-        isOpen={Boolean(deleteBillModalItem)}
-        bill={deleteBillModalItem}
-        onClose={() => setDeleteBillModalItem(null)}
-        onConfirmDelete={async (bill, reason) => {
-          await deleteBill(bill.id, reason, {
+        isOpen={Boolean(deleteBillModalItem) || Boolean(bulkDeleteBills)}
+        bill={bulkDeleteBills || deleteBillModalItem}
+        onClose={() => {
+          setDeleteBillModalItem(null);
+          setBulkDeleteBills(null);
+        }}
+        onConfirmDelete={async (billOrBills, reason) => {
+          const deleteActor = {
             id: user?.id || user?._id || 'staff',
             name: user?.name || 'Counter Staff',
             role: user?.role || 'cashier',
-          });
+          };
+
+          if (Array.isArray(billOrBills)) {
+            const identifiers = billOrBills.map((bill) => bill.id || bill.invoiceNumber).filter(Boolean);
+            await deleteBills(identifiers, reason, deleteActor);
+            setSelectedShiftBillIds((previous) => previous.filter((id) => !identifiers.includes(id)));
+          } else {
+            await deleteBill(billOrBills.id, reason, deleteActor);
+          }
+
           setDeleteBillModalItem(null);
+          setBulkDeleteBills(null);
         }}
         user={user}
       />

@@ -5,7 +5,20 @@ function isWorkspaceRoute() {
   if (typeof window === 'undefined') return false;
   const hash = (window.location.hash || '').toLowerCase();
   const path = (window.location.pathname || '').toLowerCase();
-  return hash.startsWith('#billing') || hash.startsWith('#admin') || path.includes('/billing') || path.includes('/admin');
+  return (
+    hash.startsWith('#billing') ||
+    hash.startsWith('#admin') ||
+    hash.startsWith('#inventory') ||
+    hash.startsWith('#sales') ||
+    hash.startsWith('#daily-revenue') ||
+    hash.startsWith('#activity-logs') ||
+    hash.startsWith('#recycle-bin') ||
+    hash.startsWith('#orders') ||
+    hash.startsWith('#dispatch') ||
+    hash.startsWith('#shift-bills') ||
+    path.includes('/billing') ||
+    path.includes('/admin')
+  );
 }
 
 function isInsideScrollable(target) {

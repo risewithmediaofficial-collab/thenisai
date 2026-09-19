@@ -2,8 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
-import './EditBillModal.css';
-
 export default function EditBillModal({
   isOpen,
   bill,

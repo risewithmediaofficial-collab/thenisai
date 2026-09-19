@@ -3,15 +3,11 @@ import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { exportBillsToExcel, exportDailyRevenueToExcel } from '../../utils/excelBackup';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from './DailyRevenueReport';
-import GstSettingsModal from './GstSettingsModal';
-import AddNewProductModal from './AddNewProductModal';
+import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from '../Billing/DeleteBillModal';
 import EditBillModal from '../Billing/EditBillModal';
-import './AdminDashboard.css';
-
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -34,6 +30,8 @@ export default function AdminDashboard() {
     addNewProduct,
     deleteProduct,
     updateProductMasterPrice,
+    updateProductDetails,
+    updateProductSkuCode,
     // Bill Deletion & 30-Day Recycle Bin
     recycleBinBills,
     deleteBill,
@@ -45,17 +43,18 @@ export default function AdminDashboard() {
     fetchActivityLogs,
   } = useCart();
 
-  const [isGstModalOpen, setIsGstModalOpen] = useState(false);
-
   const resolveAdminTabFromHash = () => {
     const h = window.location.hash.toLowerCase();
-    if (h.includes('daily') || h.includes('revenue')) return 'daily-revenue';
-    if (h.includes('recycle') || h.includes('trash') || h.includes('bin')) return 'recycle-bin';
-    if (h.includes('inventory') || h.includes('product') || h.includes('stock')) return 'inventory';
-    if (h.includes('activity') || h.includes('audit')) return 'activity-logs';
-    if (h.includes('price') || h.includes('override')) return 'activity-logs';
-    if (h.includes('sales') || h.includes('ledger')) return 'sales';
-    return 'orders';
+    const normalized = h.replace(/^#admin\//, '').replace(/^#/, '');
+
+    if (normalized.includes('daily') || normalized.includes('revenue') || normalized.includes('shift')) return 'daily-revenue';
+    if (normalized.includes('recycle') || normalized.includes('trash') || normalized.includes('bin')) return 'recycle-bin';
+    if (normalized.includes('inventory') || normalized.includes('product') || normalized.includes('stock')) return 'inventory';
+    if (normalized.includes('activity') || normalized.includes('audit')) return 'activity-logs';
+    if (normalized.includes('price') || normalized.includes('override')) return 'activity-logs';
+    if (normalized.includes('sales') || normalized.includes('ledger')) return 'sales';
+    if (normalized.includes('dispatch') || normalized.includes('order')) return 'orders';
+    return 'inventory';
   };
 
   const [activeTab, setActiveTab] = useState(resolveAdminTabFromHash);
@@ -66,6 +65,16 @@ export default function AdminDashboard() {
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
   const [editingPriceProduct, setEditingPriceProduct] = useState(null);
   const [newPriceInput, setNewPriceInput] = useState('');
+  const [productEditForm, setProductEditForm] = useState({
+    nameEn: '',
+    nameTa: '',
+    category: 'sweets',
+    unit: 'kg',
+    price: '',
+  });
+  const [editingSkuProduct, setEditingSkuProduct] = useState(null); // { id, name, skuCode }
+  const [newSkuInput, setNewSkuInput] = useState('');
+  const [skuError, setSkuError] = useState('');
   const [deletingProduct, setDeletingProduct] = useState(null);
   const [billToDelete, setBillToDelete] = useState(null);
   const [billToRestore, setBillToRestore] = useState(null);
@@ -96,31 +105,69 @@ export default function AdminDashboard() {
   useEffect(() => {
     const handleAdminHashSync = () => {
       const h = window.location.hash.toLowerCase();
-      if (!h.startsWith('#admin')) return;
-      setActiveTab(resolveAdminTabFromHash());
+      if (h.startsWith('#billing')) return;
+      if (h === '#admin/billing' || h.startsWith('#admin/billing') || h === '#admin/pos' || h.startsWith('#admin/pos')) {
+        return;
+      }
+      if (!h.startsWith('#admin') && !['#orders', '#dispatch', '#inventory', '#sales', '#daily-revenue', '#shift-bills', '#activity-logs', '#recycle-bin'].includes(h)) return;
+      const tab = resolveAdminTabFromHash();
+      setActiveTab(tab);
+      const adminRouteMap = {
+        orders: '#admin/dispatch',
+        dispatch: '#admin/dispatch',
+        inventory: '#admin/inventory',
+        sales: '#admin/sales',
+        'daily-revenue': '#admin/shift-bills',
+        'shift-bills': '#admin/shift-bills',
+        'activity-logs': '#admin/activity-logs',
+        'recycle-bin': '#admin/recycle-bin',
+      };
+      const target = adminRouteMap[tab] || '#admin/inventory';
+      if (window.location.hash !== target && window.location.hash !== '#admin/orders' && window.location.hash !== '#admin/daily-revenue') {
+        window.location.hash = target;
+      }
     };
+    handleAdminHashSync();
     window.addEventListener('hashchange', handleAdminHashSync);
-    return () => window.removeEventListener('hashchange', handleAdminHashSync);
+    window.addEventListener('popstate', handleAdminHashSync);
+    return () => {
+      window.removeEventListener('hashchange', handleAdminHashSync);
+      window.removeEventListener('popstate', handleAdminHashSync);
+    };
   }, []);
+
+  const syncAdminHash = (hash) => {
+    if (window.location.hash !== hash) {
+      window.location.hash = hash;
+      return;
+    }
+
+    try {
+      const event = new HashChangeEvent('hashchange');
+      window.dispatchEvent(event);
+    } catch {
+      window.dispatchEvent(new Event('hashchange'));
+    }
+  };
 
   const handleSwitchAdminTab = (tab) => {
     setActiveTab(tab);
-    if (tab === 'orders') {
-      window.location.hash = '#admin/orders';
+    if (tab === 'orders' || tab === 'dispatch') {
+      syncAdminHash('#admin/dispatch');
     } else if (tab === 'inventory') {
-      window.location.hash = '#admin/inventory';
+      syncAdminHash('#admin/inventory');
     } else if (tab === 'sales') {
-      window.location.hash = '#admin/sales';
+      syncAdminHash('#admin/sales');
       handleSyncAllSales();
-    } else if (tab === 'daily-revenue') {
-      window.location.hash = '#admin/daily-revenue';
+    } else if (tab === 'daily-revenue' || tab === 'shift-bills') {
+      syncAdminHash('#admin/shift-bills');
       handleSyncAllSales();
     } else if (tab === 'activity-logs' || tab === 'price-logs') {
-      window.location.hash = '#admin/activity-logs';
+      syncAdminHash('#admin/activity-logs');
       if (fetchActivityLogs) fetchActivityLogs();
       if (fetchPriceOverrideLogs) fetchPriceOverrideLogs();
     } else if (tab === 'recycle-bin') {
-      window.location.hash = '#admin/recycle-bin';
+      syncAdminHash('#admin/recycle-bin');
       if (fetchRecycleBinBills) fetchRecycleBinBills();
     }
   };
@@ -313,7 +360,22 @@ export default function AdminDashboard() {
   // Filtered Products for Products & Inventory Tab
   const filteredInventoryProducts = useMemo(() => {
     return (allBillingProducts || []).filter((p) => {
-      if (inventoryCategoryFilter !== 'all' && p.category !== inventoryCategoryFilter) return false;
+      const cat = (p.category || '').toLowerCase();
+      const subcat = (p.subcategory || '').toLowerCase();
+
+      if (inventoryCategoryFilter !== 'all') {
+        if (inventoryCategoryFilter === 'spices' || inventoryCategoryFilter === 'spices-masalas') {
+          if (cat !== 'spices' && cat !== 'spices-masalas' && !subcat.includes('kara') && !subcat.includes('spice')) return false;
+        } else if (inventoryCategoryFilter === 'beverages') {
+          if (cat !== 'beverages' && !subcat.includes('tea') && !subcat.includes('coffee') && !subcat.includes('malt') && !subcat.includes('snack') && cat !== 'snacks') return false;
+        } else if (inventoryCategoryFilter === 'sweets') {
+          if (cat !== 'sweets' && !subcat.includes('sweet') && !subcat.includes('halwa') && !subcat.includes('pak') && !subcat.includes('roll') && !subcat.includes('bengali') && !subcat.includes('palkova')) return false;
+        } else if (inventoryCategoryFilter === 'savouries') {
+          if (cat !== 'savouries' && !subcat.includes('mixture') && !subcat.includes('sev') && !subcat.includes('murukku')) return false;
+        } else if (cat !== inventoryCategoryFilter) {
+          return false;
+        }
+      }
       const isInactive = productAvailabilityMap[p.id] !== undefined
         ? Boolean(productAvailabilityMap[p.id])
         : Boolean(p.isInactive || inventory?.find((i) => i.id === p.id)?.isInactive);
@@ -326,8 +388,9 @@ export default function AdminDashboard() {
         const matchTamil = (p.tamilName || '').toLowerCase().includes(q);
         const matchId = (p.id || '').toLowerCase().includes(q);
         const matchNum = String(p.itemNumber || '').includes(q);
+        const matchSku = (p.skuCode || '').toLowerCase().includes(q);
         const matchSub = (p.subcategory || '').toLowerCase().includes(q);
-        if (!matchName && !matchTamil && !matchId && !matchNum && !matchSub) return false;
+        if (!matchName && !matchTamil && !matchId && !matchNum && !matchSku && !matchSub) return false;
       }
       return true;
     });
@@ -373,20 +436,23 @@ export default function AdminDashboard() {
     <div className="admin-root side-layout" data-lenis-prevent="true">
       {/* 1. Sleek Left Side Navbar */}
       <SideNavbar
-        currentSection={`admin-${activeTab}`}
+        currentSection={
+          activeTab === 'daily-revenue'
+            ? 'admin-shift-bills'
+            : activeTab === 'orders'
+            ? 'admin-dispatch'
+            : `admin-${activeTab}`
+        }
         onSelectSection={(sec) => {
-          if (sec === 'admin-orders') handleSwitchAdminTab('orders');
-          else if (sec === 'admin-inventory') handleSwitchAdminTab('inventory');
+          if (sec === 'admin-billing' || sec === 'pos-register') navigateTo('admin', 'billing');
+          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue' || sec === 'pos-bills' || sec === 'pos-daily-sales') handleSwitchAdminTab('daily-revenue');
+          else if (sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') handleSwitchAdminTab('orders');
+          else if (sec === 'admin-inventory' || sec === 'pos-inventory') handleSwitchAdminTab('inventory');
           else if (sec === 'admin-sales') handleSwitchAdminTab('sales');
-          else if (sec === 'admin-daily-revenue') handleSwitchAdminTab('daily-revenue');
           else if (sec === 'admin-activity-logs' || sec === 'admin-price-logs') handleSwitchAdminTab('activity-logs');
           else if (sec === 'admin-recycle-bin') handleSwitchAdminTab('recycle-bin');
-          else if (sec === 'pos-register') navigateTo('billing', 'register');
-          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') navigateTo('billing', 'daily-sales');
-          else if (sec === 'pos-online') navigateTo('billing', 'orders');
           else if (sec === 'storefront') navigateTo('storefront');
         }}
-        onOpenGstSettings={() => setIsGstModalOpen(true)}
         pendingOnlineCount={pendingOrders.length}
         shiftBillsCount={counterSales.length}
         recycleBinBills={recycleBinBills}
@@ -422,70 +488,56 @@ export default function AdminDashboard() {
         </header>
 
       <main className="admin-container" data-lenis-prevent="true">
-        {/* Admin Top Operations & GST Settings Bar */}
-        <div className="admin-operations-bar">
-          <div className="admin-ops-title-group">
-            <h1 className="admin-portal-title">ADMIN MANAGEMENT PORTAL</h1>
-            <p className="admin-portal-sub">
-              Logged in as <strong>{user?.name || 'Administrator'}</strong> · Krishnagiri Store Operations
-            </p>
-          </div>
-
-          <div className="admin-ops-actions">
-            <button
-              type="button"
-              className="admin-gst-config-btn"
-              onClick={() => setIsGstModalOpen(true)}
-              title="Configure GST %, CGST %, SGST %, and Shop GSTIN"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="gst-config-icon">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-              <span className="gst-config-label">GST Rates:</span>
-              <span className="gst-config-badge">
-                {taxSettings?.totalGstRate ?? 5}% GST (CGST {taxSettings?.cgstRate ?? 2.5}% + SGST {taxSettings?.sgstRate ?? 2.5}%)
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* KPI Cards Grid */}
-        <section className="admin-kpi-grid">
-          <div
-            className="kpi-card revenue"
-            onClick={() => handleSwitchAdminTab('daily-revenue')}
-            title="Click to view Daily Sales & Revenue Breakdown"
-            style={{ cursor: 'pointer' }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="kpi-label">Total Revenue</span>
-              <span style={{ fontSize: '10px', color: '#d4a843', fontWeight: 700, letterSpacing: '0.08em' }}>VIEW DAILY ↗</span>
+        {/* Admin Top Operations Bar & Overview KPIs (displayed on Orders overview) */}
+        {activeTab === 'orders' && (
+          <>
+            <div className="admin-operations-bar">
+              <div className="admin-ops-title-group">
+                <h1 className="admin-portal-title">ADMIN MANAGEMENT PORTAL</h1>
+                <p className="admin-portal-sub">
+                  Logged in as <strong>{user?.name || 'Administrator'}</strong> · Krishnagiri Store Operations
+                </p>
+              </div>
             </div>
-            <div className="kpi-value">₹{totalRevenue.toLocaleString('en-IN')}</div>
-            <span className="kpi-sub">Online + Store Counter</span>
-          </div>
 
-          <div className={`kpi-card pending ${pendingOrders.length > 0 ? 'pulse' : ''}`}>
-            <span className="kpi-label">Pending Online Orders</span>
-            <div className="kpi-value">{pendingOrders.length}</div>
-            <span className="kpi-sub">
-              {pendingOrders.length > 0 ? 'Requires immediate packing' : 'All clear'}
-            </span>
-          </div>
+            {/* KPI Cards Grid */}
+            <section className="admin-kpi-grid">
+              <div
+                className="kpi-card revenue"
+                onClick={() => handleSwitchAdminTab('daily-revenue')}
+                title="Click to view Daily Sales & Revenue Breakdown"
+                style={{ cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="kpi-label">Total Revenue</span>
+                  <span style={{ fontSize: '10px', color: '#d4a843', fontWeight: 700, letterSpacing: '0.08em' }}>VIEW DAILY ↗</span>
+                </div>
+                <div className="kpi-value">₹{totalRevenue.toLocaleString('en-IN')}</div>
+                <span className="kpi-sub">Online + Store Counter</span>
+              </div>
 
-          <div className="kpi-card online">
-            <span className="kpi-label">Total Online Orders</span>
-            <div className="kpi-value">{onlineOrders.length}</div>
-            <span className="kpi-sub">Deliveries across TN</span>
-          </div>
+              <div className={`kpi-card pending ${pendingOrders.length > 0 ? 'pulse' : ''}`}>
+                <span className="kpi-label">Pending Online Orders</span>
+                <div className="kpi-value">{pendingOrders.length}</div>
+                <span className="kpi-sub">
+                  {pendingOrders.length > 0 ? 'Requires immediate packing' : 'All clear'}
+                </span>
+              </div>
 
-          <div className="kpi-card sales">
-            <span className="kpi-label">Counter Invoices</span>
-            <div className="kpi-value">{counterSales.length}</div>
-            <span className="kpi-sub">In-Store Register Bills</span>
-          </div>
-        </section>
+              <div className="kpi-card online">
+                <span className="kpi-label">Total Online Orders</span>
+                <div className="kpi-value">{onlineOrders.length}</div>
+                <span className="kpi-sub">Deliveries across TN</span>
+              </div>
+
+              <div className="kpi-card sales">
+                <span className="kpi-label">Counter Invoices</span>
+                <div className="kpi-value">{counterSales.length}</div>
+                <span className="kpi-sub">In-Store Register Bills</span>
+              </div>
+            </section>
+          </>
+        )}
 
         {/* =========================================
             TAB 1: ONLINE ORDERS PROCESSING
@@ -721,7 +773,7 @@ export default function AdminDashboard() {
            ========================================= */}
         {activeTab === 'inventory' && (
           <section className="tab-content admin-inventory-tab">
-            <div className="inventory-header-strip">
+            <div className="inventory-header-strip" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
               <div>
                 <span className="inventory-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#d4a843', letterSpacing: '0.08em' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -733,81 +785,105 @@ export default function AdminDashboard() {
                   Products &amp; Inventory Management
                 </h2>
                 <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
-                  Master control for adding new products, adjusting selling prices, masking out-of-stock items, and deleting catalog entries.
+                  Master control for adjusting selling prices, masking out-of-stock items, and managing products.
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="btn-add-product"
-                onClick={() => setIsAddProductModalOpen(true)}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                <span>Add New Product</span>
-              </button>
+              <div className="inventory-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn-add-product"
+                  onClick={() => setIsAddProductModalOpen((prev) => !prev)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: isAddProductModalOpen ? '#475569' : 'linear-gradient(135deg, #10b981, #059669)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '9px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                    boxShadow: isAddProductModalOpen ? 'none' : '0 2px 8px rgba(16, 185, 129, 0.3)'
+                  }}
+                >
+                  {isAddProductModalOpen ? (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                      <span>Close Add Form</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      <span>Add New Product</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  className="btn-return-pos"
+                  onClick={() => navigateTo('billing', 'register')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#f1f5f9',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                    padding: '9px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  <span>Return to POS</span>
+                </button>
+              </div>
             </div>
 
-            {/* Catalog KPIs */}
-            <div className="admin-kpi-grid inventory-kpis-grid" style={{ marginBottom: '20px' }}>
-              <div className="kpi-card inv-kpi-card total">
-                <span className="kpi-label">Total Catalog Items</span>
-                <div className="kpi-value kpi-val">{allBillingProducts.length}</div>
-                <span className="kpi-sub">Products available</span>
-              </div>
-              <div className="kpi-card inv-kpi-card ready">
-                <span className="kpi-label">Active on Counter</span>
-                <div className="kpi-value kpi-val">
-                  {allBillingProducts.filter((p) => {
-                    const isOff = productAvailabilityMap[p.id] !== undefined
-                      ? Boolean(productAvailabilityMap[p.id])
-                      : Boolean(p.isInactive || inventory?.find((i) => i.id === p.id)?.isInactive);
-                    return !isOff;
-                  }).length}
-                </div>
-                <span className="kpi-sub">Ready for POS billing</span>
-              </div>
-              <div className="kpi-card inv-kpi-card warning">
-                <span className="kpi-label">Out of Stock / Masked</span>
-                <div className="kpi-value kpi-val">
-                  {allBillingProducts.filter((p) => {
-                    const isOff = productAvailabilityMap[p.id] !== undefined
-                      ? Boolean(productAvailabilityMap[p.id])
-                      : Boolean(p.isInactive || inventory?.find((i) => i.id === p.id)?.isInactive);
-                    return isOff;
-                  }).length}
-                </div>
-                <span className="kpi-sub">Hidden from active billing</span>
-              </div>
-              <div className="kpi-card inv-kpi-card total">
-                <span className="kpi-label">Custom Added Products</span>
-                <div className="kpi-value kpi-val">{customProducts.length}</div>
-                <span className="kpi-sub">Admin / staff additions</span>
-              </div>
-            </div>
+            {/* In-Screen Collapsible Add New Product Master Panel */}
+            <AddProductInlinePanel
+              isOpen={isAddProductModalOpen}
+              onClose={() => setIsAddProductModalOpen(false)}
+              onAddProduct={(p) => addNewProduct(p, user)}
+            />
 
             {/* Filter & Search Bar */}
-            <div className="inventory-filter-bar">
-              <div className="inventory-filter-group">
+            <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+              <div className="inventory-filter-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <select
                   value={inventoryCategoryFilter}
                   onChange={(e) => setInventoryCategoryFilter(e.target.value)}
                   className="admin-select-filter"
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', color: '#334155', fontWeight: 600 }}
                 >
                   <option value="all">All Categories ({allBillingProducts.length})</option>
-                  <option value="sweets">Sweets</option>
+                  <option value="beverages">Beverages &amp; Fast Sellers</option>
+                  <option value="sweets">Traditional Sweets</option>
+                  <option value="spices">Spices &amp; Kara Vagai</option>
                   <option value="savouries">Savouries &amp; Mixtures</option>
-                  <option value="ghee-bakery">Pure Ghee &amp; Bakery</option>
-                  <option value="traditional-rice-dal">Traditional Rice &amp; Dals</option>
-                  <option value="spices-masalas">Spices &amp; Podi Varieties</option>
+                  <option value="other">Other</option>
                 </select>
 
                 <select
                   value={inventoryStatusFilter}
                   onChange={(e) => setInventoryStatusFilter(e.target.value)}
                   className="admin-select-filter"
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', color: '#334155', fontWeight: 600 }}
                 >
                   <option value="all">All Stock Status</option>
                   <option value="active">Active (In Stock Only)</option>
@@ -815,8 +891,8 @@ export default function AdminDashboard() {
                 </select>
               </div>
 
-              <div className="inventory-search-wrap">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div className="inventory-search-wrap" style={{ flex: 1, position: 'relative', minWidth: '220px' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }}>
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
@@ -825,12 +901,13 @@ export default function AdminDashboard() {
                   placeholder="Search product by English or Tamil name..."
                   value={inventorySearchTerm}
                   onChange={(e) => setInventorySearchTerm(e.target.value)}
+                  style={{ width: '100%', padding: '8px 36px 8px 36px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
                 />
                 {inventorySearchTerm && (
                   <button
                     type="button"
                     onClick={() => setInventorySearchTerm('')}
-                    style={{ position: 'absolute', right: '10px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '13px' }}
                   >
                     ✕
                   </button>
@@ -852,13 +929,13 @@ export default function AdminDashboard() {
                 <table className="inventory-table">
                   <thead>
                     <tr>
-                      <th>#</th>
-                      <th>Product Details</th>
-                      <th>Category</th>
-                      <th>Unit</th>
-                      <th>Selling Price</th>
-                      <th>Counter Availability</th>
-                      <th>Actions</th>
+                      <th>SKU CODE</th>
+                      <th>PRODUCT DETAILS</th>
+                      <th>CATEGORY</th>
+                      <th>UNIT</th>
+                      <th>SELLING PRICE</th>
+                      <th>COUNTER AVAILABILITY</th>
+                      <th>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -869,7 +946,41 @@ export default function AdminDashboard() {
                       return (
                         <tr key={prod.id || idx} style={{ opacity: isInactive ? 0.75 : 1 }}>
                           <td>
-                            <span className="item-num-badge">#{prod.itemNumber || idx + 1}</span>
+                            {editingSkuProduct?.id === prod.id ? (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '80px' }}>
+                                <input
+                                  type="text"
+                                  value={newSkuInput}
+                                  onChange={(e) => { setNewSkuInput(e.target.value); setSkuError(''); }}
+                                  onKeyDown={async (e) => {
+                                    if (e.key === 'Enter') {
+                                      const res = await updateProductSkuCode(prod.id, newSkuInput);
+                                      if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); }
+                                    } else if (e.key === 'Escape') { setEditingSkuProduct(null); setSkuError(''); }
+                                  }}
+                                  autoFocus
+                                  style={{ width: '72px', fontSize: '12px', padding: '3px 6px', border: skuError ? '1px solid #ef4444' : '1px solid #6366f1', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, outline: 'none' }}
+                                  placeholder="e.g. 42"
+                                />
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    onClick={async () => { const res = await updateProductSkuCode(prod.id, newSkuInput); if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); } }}
+                                  >Save</button>
+                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                    onClick={() => { setEditingSkuProduct(null); setSkuError(''); }}
+                                  >✕</button>
+                                </div>
+                                {skuError && <span style={{ fontSize: '10px', color: '#ef4444' }}>{skuError}</span>}
+                              </div>
+                            ) : (
+                              <button type="button" className="item-num-badge"
+                                onClick={() => { setEditingSkuProduct(prod); setNewSkuInput(prod.skuCode || String(prod.itemNumber || '')); setSkuError(''); }}
+                                title="Click to edit SKU/HSN code"
+                                style={{ cursor: 'pointer', background: '#ede9fe', color: '#5b21b6', border: '1px dashed #7c3aed', fontFamily: 'monospace', fontWeight: 700 }}
+                              >
+                                {prod.skuCode || prod.itemNumber || '—'}
+                              </button>
+                            )}
                           </td>
                           <td>
                             <div>
@@ -907,15 +1018,24 @@ export default function AdminDashboard() {
                                 type="button"
                                 className="btn-inline-price"
                                 onClick={() => {
+                                  const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
+                                  const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
                                   setEditingPriceProduct(prod);
                                   setNewPriceInput(String(prod.price || prod.unitPrice || ''));
+                                  setProductEditForm({
+                                    nameEn: englishName,
+                                    nameTa: tamilName,
+                                    category: prod.category || 'sweets',
+                                    unit: prod.unit || 'kg',
+                                    price: String(prod.price || prod.unitPrice || ''),
+                                  });
                                 }}
-                                title="Change Master Selling Price"
+                                title="Edit product details"
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                                 </svg>
-                                Edit Price
+                                Edit Product
                               </button>
                             </div>
                           </td>
@@ -993,26 +1113,7 @@ export default function AdminDashboard() {
                 <span>{isSyncingSales ? 'Syncing...' : 'Sync Database Bills'}</span>
               </button>
 
-              {/* Excel Export Button */}
-              <button
-                type="button"
-                onClick={() => exportBillsToExcel(allSales, undefined, 'Thenisai — All Sales Ledger')}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 14px', borderRadius: '8px', border: '1px solid #1D6F42',
-                  background: '#1D6F42', color: '#fff', cursor: 'pointer',
-                  fontSize: '13px', fontWeight: 600,
-                }}
-                title="Export all sales to Excel"
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="12" y1="18" x2="12" y2="12"/>
-                  <line x1="9" y1="15" x2="15" y2="15"/>
-                </svg>
-                <span>Export to Excel</span>
-              </button>
+
             </div>
 
             {/* Sales Summary Metrics Strip */}
@@ -2028,18 +2129,8 @@ export default function AdminDashboard() {
           </section>
         )}
 
-        {/* GST & Tax Configuration Modal */}
-        <GstSettingsModal
-          isOpen={isGstModalOpen}
-          onClose={() => setIsGstModalOpen(false)}
-        />
 
-        {/* Add New Product Modal */}
-        <AddNewProductModal
-          isOpen={isAddProductModalOpen}
-          onClose={() => setIsAddProductModalOpen(false)}
-          onAddProduct={(p) => addNewProduct(p, user)}
-        />
+
 
         {/* Delete Bill Modal (Triggered from Sales Table) */}
         <DeleteBillModal
@@ -2057,20 +2148,20 @@ export default function AdminDashboard() {
           user={user}
         />
 
-        {/* Inline Price Edit Modal */}
+        {/* Inline Product Edit Modal */}
         {editingPriceProduct && (
           <div className="admin-modal-overlay" onClick={() => setEditingPriceProduct(null)}>
-            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
               <div className="admin-modal-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eff6ff', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#eef2ff', color: '#4338ca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>Edit Master Selling Price</h4>
-                    <span style={{ fontSize: '11px', color: '#64748b' }}>Updates standard catalog rate across POS Counter</span>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>Edit Product</h4>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Update product name, category, unit, and price</span>
                   </div>
                 </div>
                 <button type="button" className="admin-modal-close" onClick={() => setEditingPriceProduct(null)}>
@@ -2080,48 +2171,103 @@ export default function AdminDashboard() {
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
-                  await updateProductMasterPrice(editingPriceProduct.id, newPriceInput, user);
+                  const cleanedName = productEditForm.nameEn.trim();
+                  const nameTa = productEditForm.nameTa.trim();
+                  const finalName = nameTa ? `${cleanedName} — ${nameTa}` : cleanedName;
+
+                  if (!cleanedName) return;
+
+                  await updateProductDetails(editingPriceProduct.id, {
+                    name: finalName,
+                    englishName: cleanedName,
+                    tamilName: nameTa,
+                    category: productEditForm.category,
+                    unit: productEditForm.unit,
+                    price: productEditForm.price,
+                  }, user);
                   setEditingPriceProduct(null);
                 }}
                 style={{ padding: '20px 24px' }}
               >
-                <div style={{ marginBottom: '14px' }}>
-                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 700, letterSpacing: '0.05em' }}>
-                    Product Name
-                  </span>
-                  <strong style={{ display: 'block', fontSize: '15px', color: '#0f172a', marginTop: '2px' }}>
-                    {editingPriceProduct.name}
-                  </strong>
-                  <span style={{ fontSize: '12px', color: '#b45309' }}>
-                    Current Price: ₹{editingPriceProduct.price || editingPriceProduct.unitPrice} per {editingPriceProduct.unit || 'kg'}
-                  </span>
+                <div style={{ display: 'grid', gap: '14px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                      Product Name (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={productEditForm.nameEn}
+                      onChange={(e) => setProductEditForm((prev) => ({ ...prev, nameEn: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                      Product Name (Tamil)
+                    </label>
+                    <input
+                      type="text"
+                      value={productEditForm.nameTa}
+                      onChange={(e) => setProductEditForm((prev) => ({ ...prev, nameTa: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        Category
+                      </label>
+                      <select
+                        value={productEditForm.category}
+                        onChange={(e) => setProductEditForm((prev) => ({ ...prev, category: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#fff' }}
+                      >
+                        <option value="sweets">Sweets</option>
+                        <option value="beverages">Beverages</option>
+                        <option value="spices">Spices</option>
+                        <option value="halwa">Halwa</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        Unit
+                      </label>
+                      <select
+                        value={productEditForm.unit}
+                        onChange={(e) => setProductEditForm((prev) => ({ ...prev, unit: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', background: '#fff' }}
+                      >
+                        <option value="kg">kg</option>
+                        <option value="Litre">Litre</option>
+                        <option value="1 Cup">1 Cup</option>
+                        <option value="1 Pc">1 Pc</option>
+                        <option value="1 Pkt">1 Pkt</option>
+                        <option value="Bottle">Bottle</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                      Selling Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="1"
+                      required
+                      value={productEditForm.price}
+                      onChange={(e) => setProductEditForm((prev) => ({ ...prev, price: e.target.value }))}
+                      style={{ width: '100%', padding: '10px 12px', fontSize: '16px', fontWeight: 800, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                    />
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                    New Master Selling Price (₹) *
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    min="1"
-                    required
-                    autoFocus
-                    value={newPriceInput}
-                    onChange={(e) => setNewPriceInput(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      fontSize: '16px',
-                      fontWeight: 800,
-                      color: '#0f172a',
-                      border: '2px solid #cbd5e1',
-                      borderRadius: '8px',
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                   <button
                     type="button"
                     onClick={() => setEditingPriceProduct(null)}
@@ -2133,7 +2279,7 @@ export default function AdminDashboard() {
                     type="submit"
                     style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#0f172a', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
                   >
-                    Save &amp; Update Price
+                    Save Product
                   </button>
                 </div>
               </form>

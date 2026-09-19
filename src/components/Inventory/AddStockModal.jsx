@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG } from '../../data/sweetsData';
-import './StockModals.css';
-
 export default function AddStockModal({ isOpen, onClose }) {
   const { inventory, addInventoryStock, addNewProductStock } = useCart();
   const [activeTab, setActiveTab] = useState('existing'); // 'existing' | 'new'

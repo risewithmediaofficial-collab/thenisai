@@ -3,8 +3,6 @@ import { motion } from 'framer-motion';
 import { SWEETS_CATALOG, SWEET_WEIGHT_OPTIONS } from '../../data/sweetsData';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import './SweetsCollection.css';
-
 function SweetCard({ sweet, index }) {
   const { addToCart, setIsCartOpen } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();

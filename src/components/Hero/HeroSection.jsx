@@ -1,10 +1,8 @@
-import { useEffect, useRef, Suspense } from 'react';
+import { lazy, useEffect, useRef, Suspense, useState } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
 import ScrollTrigger from 'gsap/ScrollTrigger';
-import PalkovaScene from './PalkovaScene';
-import './HeroSection.css';
-
+const PalkovaScene = lazy(() => import('./PalkovaScene'));
 gsap.registerPlugin(ScrollTrigger);
 
 const textVariants = {
@@ -23,6 +21,7 @@ const textVariants = {
 export default function HeroSection() {
   const heroRef = useRef();
   const mousePos = useRef({ x: 0, y: 0 });
+  const [shouldLoadScene, setShouldLoadScene] = useState(false);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -38,6 +37,22 @@ export default function HeroSection() {
 
     hero.addEventListener('mousemove', handleMouseMove, { passive: true });
     return () => hero.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    // Three.js is costly on first paint. Keep the poster on small screens and
+    // start the interactive scene only after the browser is idle on desktop.
+    if (window.matchMedia('(max-width: 767px), (prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const loadScene = () => setShouldLoadScene(true);
+    const idleId = window.requestIdleCallback
+      ? window.requestIdleCallback(loadScene, { timeout: 3000 })
+      : window.setTimeout(loadScene, 1800);
+
+    return () => {
+      if (window.cancelIdleCallback && typeof idleId === 'number') window.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
+    };
   }, []);
 
   return (
@@ -161,9 +176,21 @@ export default function HeroSection() {
           <div className="hero__visual">
             <div className="hero__visual-glow" />
             <div className="hero__canvas-wrap">
-              <Suspense fallback={<div className="hero__canvas-placeholder" />}>
-                <PalkovaScene mousePos={mousePos} />
-              </Suspense>
+              {shouldLoadScene ? (
+                <Suspense fallback={<div className="hero__canvas-placeholder" />}>
+                  <PalkovaScene mousePos={mousePos} />
+                </Suspense>
+              ) : (
+                <img
+                  className="hero__canvas-placeholder"
+                  src="/images/products/palkova_hero.jpg"
+                  alt="Traditional Thenisai palkova"
+                  width="900"
+                  height="900"
+                  loading="eager"
+                  decoding="async"
+                />
+              )}
             </div>
           </div>
         </div>

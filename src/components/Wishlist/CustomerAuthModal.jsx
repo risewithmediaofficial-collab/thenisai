@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWishlist } from '../../context/WishlistContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG, ALL_BILLING_ITEMS, SPECIAL_BOX } from '../../data/sweetsData';
-import './CustomerAuthModal.css';
-
 export default function CustomerAuthModal() {
   const {
     isAuthModalOpen,

@@ -1,7 +1,4 @@
-import { useState, useEffect, Suspense, lazy } from 'react';
-import './index.css';
-import './App.css';
-
+import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import LoadingScreen from './components/Loader/LoadingScreen';
 import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
@@ -16,6 +13,38 @@ import { useScrollReveal } from './hooks/useAnimations';
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const BillingCounter = lazy(() => import('./components/Billing/BillingCounter'));
 const StaffLoginModal = lazy(() => import('./components/Auth/StaffLoginModal'));
+
+// Read-only banner shown to demo/viewer accounts
+function ViewerBanner({ onLogout }) {
+  return (
+    <div style={{
+      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+      background: 'linear-gradient(90deg, #7c3aed, #4f46e5)',
+      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '8px 20px', fontSize: '12px', fontWeight: 600,
+      letterSpacing: '0.04em', fontFamily: 'Inter, system-ui, sans-serif',
+      boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+    }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+          <circle cx="12" cy="12" r="3" />
+        </svg>
+        READ-ONLY DEMO MODE — All write actions are disabled. No data will be created or modified.
+      </span>
+      <button
+        onClick={onLogout}
+        style={{
+          background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.35)',
+          color: '#fff', borderRadius: '6px', padding: '3px 12px', cursor: 'pointer',
+          fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em',
+        }}
+      >
+        EXIT DEMO
+      </button>
+    </div>
+  );
+}
 const CheckoutModal = lazy(() => import('./components/Billing/CheckoutModal'));
 const InvoiceModal = lazy(() => import('./components/Billing/InvoiceModal'));
 const WishlistDrawer = lazy(() => import('./components/Wishlist/WishlistDrawer'));
@@ -60,30 +89,93 @@ function ModuleLoader({ label = 'Loading Thenisai...' }) {
   );
 }
 
+function DeferredSection({ children, minHeight = 320 }) {
+  const ref = useRef(null);
+  const [isNearViewport, setIsNearViewport] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsNearViewport(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '400px 0px' });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} style={{ minHeight: isNearViewport ? undefined : minHeight }}>
+      {isNearViewport && <Suspense fallback={<div className="section-placeholder" />}>{children}</Suspense>}
+    </div>
+  );
+}
+
 function AppContent({ isLoaded, handleLoadComplete }) {
   const { currentView, navigateTo } = useCart();
-  const { isAdmin, isCashier } = useAuth();
+  const { isAdmin, isCashier, isViewer, logout } = useAuth();
+  const [currentHash, setCurrentHash] = useState(() => (typeof window !== 'undefined' ? window.location.hash.toLowerCase() : ''));
+
+  useEffect(() => {
+    const handleHash = () => {
+      setCurrentHash(window.location.hash.toLowerCase());
+    };
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+    return () => {
+      window.removeEventListener('hashchange', handleHash);
+      window.removeEventListener('popstate', handleHash);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) void import('./components/Billing/BillingCounter');
+  }, [isAdmin]);
 
   // Route to Admin Dashboard UI (Protected)
   if (currentView === 'admin') {
-    if (!isAdmin) {
+    if (!isAdmin && !isViewer) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
           <StaffLoginModal initialRole="admin" onCancel={() => navigateTo('storefront')} />
         </Suspense>
       );
     }
+
+    const isAdminBilling =
+      currentHash === '#admin/billing' ||
+      currentHash.startsWith('#admin/billing') ||
+      currentHash === '#admin/pos' ||
+      currentHash.startsWith('#admin/pos');
+
+    if (isAdminBilling) {
+      return (
+        <Suspense fallback={<ModuleLoader label="Loading POS Billing Counter..." />}>
+          {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+          <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+            <BillingCounter />
+            <InvoiceModal />
+          </div>
+        </Suspense>
+      );
+    }
+
     return (
       <Suspense fallback={<ModuleLoader label="Loading Admin Portal..." />}>
-        <AdminDashboard />
-        <InvoiceModal />
+        {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+        <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+          <AdminDashboard />
+          <InvoiceModal />
+        </div>
       </Suspense>
     );
   }
 
-  // Route to In-Store Billing POS Counter UI (Protected)
+  // Route to In-Store Billing POS Counter UI (Protected - Requires Cashier Login)
   if (currentView === 'billing') {
-    if (!isCashier) {
+    if (!isCashier && !isViewer) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
           <StaffLoginModal initialRole="cashier" onCancel={() => navigateTo('storefront')} />
@@ -92,8 +184,11 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     }
     return (
       <Suspense fallback={<ModuleLoader label="Loading POS Billing Counter..." />}>
-        <BillingCounter />
-        <InvoiceModal />
+        {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+        <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+          <BillingCounter />
+          <InvoiceModal />
+        </div>
       </Suspense>
     );
   }
@@ -112,41 +207,15 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <main>
             <HeroSection />
 
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <BrandStory />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <SignaturePalkova />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <SweetsCollection />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <InteractiveSweet />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <IngredientsSection />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <TraditionSection />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <ProductShowcase />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <CustomerReviews />
-            </Suspense>
-
-            <Suspense fallback={<div className="section-placeholder" />}>
-              <ContactSection />
-            </Suspense>
+            <DeferredSection><BrandStory /></DeferredSection>
+            <DeferredSection><SignaturePalkova /></DeferredSection>
+            <DeferredSection minHeight={680}><SweetsCollection /></DeferredSection>
+            <DeferredSection><InteractiveSweet /></DeferredSection>
+            <DeferredSection><IngredientsSection /></DeferredSection>
+            <DeferredSection><TraditionSection /></DeferredSection>
+            <DeferredSection><ProductShowcase /></DeferredSection>
+            <DeferredSection><CustomerReviews /></DeferredSection>
+            <DeferredSection><ContactSection /></DeferredSection>
           </main>
 
           <Suspense fallback={null}>
@@ -186,7 +255,20 @@ function App() {
     const isNonStorefront = () => {
       const hash = (window.location.hash || '').toLowerCase();
       const path = (window.location.pathname || '').toLowerCase();
-      return hash.startsWith('#admin') || hash.startsWith('#billing') || path.endsWith('/admin') || path.endsWith('/billing');
+      return (
+        hash.startsWith('#admin') ||
+        hash.startsWith('#billing') ||
+        hash.startsWith('#inventory') ||
+        hash.startsWith('#sales') ||
+        hash.startsWith('#daily-revenue') ||
+        hash.startsWith('#activity-logs') ||
+        hash.startsWith('#recycle-bin') ||
+        hash.startsWith('#orders') ||
+        hash.startsWith('#dispatch') ||
+        hash.startsWith('#shift-bills') ||
+        path.endsWith('/admin') ||
+        path.endsWith('/billing')
+      );
     };
 
     if (isNonStorefront()) {

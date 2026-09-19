@@ -1,6 +1,33 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const CATALOG_FILE_PATH = path.join(__dirname, 'data', 'catalog.json');
+
+function updateCatalogFile(productId, updateFn) {
+  try {
+    if (fs.existsSync(CATALOG_FILE_PATH)) {
+      const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+      const list = JSON.parse(raw);
+      if (Array.isArray(list)) {
+        const idx = list.findIndex((p) => p.id === productId);
+        if (idx !== -1) {
+          list[idx] = updateFn(list[idx]);
+        } else {
+          list.push(updateFn({ id: productId }));
+        }
+        fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(list, null, 2), 'utf8');
+      }
+    }
+  } catch (err) {
+    console.warn('[Catalog File Sync] Warning:', err.message);
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 5003;
@@ -34,6 +61,8 @@ const staffSchema = new mongoose.Schema({
 const inventorySchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   name: { type: String, required: true },
+  englishName: String,
+  tamilName: String,
   nameTa: String,
   tagline: String,
   description: String,
@@ -42,6 +71,7 @@ const inventorySchema = new mongoose.Schema({
   unitPrice: { type: Number },
   unit: { type: String, default: 'kg' },
   itemNumber: Number,
+  skuCode: { type: String, default: '' },
   stockKg: { type: Number, default: 0 },
   minThreshold: { type: Number, default: 8 },
   isInactive: { type: Boolean, default: false },
@@ -229,15 +259,51 @@ async function seedIfEmpty() {
   for (const it of defaultItems) {
     await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
   }
-  // Repair any legacy records with 0 price in MongoDB
-  const zeroPriceItems = await Inventory.find({ $or: [{ price: 0 }, { unitPrice: 0 }] });
-  for (const zItem of zeroPriceItems) {
-    const validP = zItem.pricePerKg > 0 ? zItem.pricePerKg : 20;
-    zItem.price = validP;
-    zItem.unitPrice = validP;
-    zItem.pricePerKg = validP;
-    await zItem.save();
+
+  // Load from catalog.json if available to keep MongoDB up to date
+  try {
+    if (fs.existsSync(CATALOG_FILE_PATH)) {
+      const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+      const catalogItems = JSON.parse(raw);
+      if (Array.isArray(catalogItems)) {
+        for (const cItem of catalogItems) {
+          if (!cItem.id) continue;
+          const setFields = {
+            skuCode: cItem.skuCode || (cItem.itemNumber ? String(cItem.itemNumber) : ''),
+            price: cItem.price,
+            unitPrice: cItem.unitPrice || cItem.price,
+            pricePerKg: cItem.pricePerKg || cItem.price,
+            unit: cItem.unit || 'kg',
+            ...(cItem.isInactive !== undefined ? { isInactive: cItem.isInactive } : {}),
+            ...(cItem.name ? { name: cItem.name } : {}),
+            ...(cItem.englishName ? { englishName: cItem.englishName } : {}),
+            ...(cItem.tamilName ? { tamilName: cItem.tamilName } : {}),
+          };
+          const insertFields = { ...cItem };
+          for (const k of Object.keys(setFields)) {
+            delete insertFields[k];
+          }
+          await Inventory.updateOne(
+            { id: cItem.id },
+            {
+              $set: setFields,
+              $setOnInsert: insertFields,
+            },
+            { upsert: true }
+          );
+        }
+        console.log(`[Seed] Synced ${catalogItems.length} items from catalog.json`);
+      }
+    }
+  } catch (err) {
+    console.warn('[Seed] Catalog file sync error:', err.message);
   }
+
+  // Back-fill skuCode for any remaining records that have no SKU code
+  await Inventory.updateMany(
+    { $or: [{ skuCode: { $exists: false } }, { skuCode: '' }, { skuCode: null }] },
+    [{ $set: { skuCode: { $toString: { $ifNull: ['$itemNumber', ''] } } } }]
+  );
   console.log('[Seed] Inventory verified/seeded for standard items');
 }
 
@@ -542,7 +608,20 @@ app.post('/api/inventory/products', async (req, res) => {
       image,
       category,
       hsn,
+      skuCode,
     } = req.body;
+
+    const inventoryList = await Inventory.find({});
+    const getNextInventoryCode = () => {
+      const used = new Set();
+      inventoryList.forEach((item) => {
+        const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+        if (/^\d+$/.test(raw)) used.add(Number(raw));
+      });
+      let nextCode = Math.max(0, ...inventoryList.map((item) => Number(item?.skuCode ?? item?.itemNumber ?? 0))) + 1;
+      while (used.has(nextCode)) nextCode += 1;
+      return String(nextCode);
+    };
 
     const id = customId || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
@@ -550,6 +629,14 @@ app.post('/api/inventory/products', async (req, res) => {
     if (existing) return res.status(400).json({ success: false, message: 'A product with this identifier or name already exists.' });
 
     const finalPrice = parseFloat(price || unitPrice || pricePerKg) || 500;
+    const requestedSku = String(skuCode ?? '').trim();
+    const requestedNumeric = /^\d+$/.test(requestedSku) ? Number(requestedSku) : null;
+    const finalSku = requestedNumeric && !inventoryList.some((item) => {
+      const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+      return /^\d+$/.test(raw) && Number(raw) === requestedNumeric;
+    }) ? requestedSku : getNextInventoryCode();
+    const finalHsn = String(hsn ?? '').trim() || finalSku;
+
     const newProduct = await Inventory.create({
       id,
       name,
@@ -561,17 +648,32 @@ app.post('/api/inventory/products', async (req, res) => {
       unit: unit || 'kg',
       stockKg: parseFloat(stockKg || initialStockKg) || 10,
       minThreshold: parseFloat(minThreshold) || 8,
+      skuCode: finalSku,
       isInactive: false,
       isCustom: true,
       batchDate: 'Today',
       batchNote: 'New item addition',
       image: image || '/images/products/palkova_card.jpg',
       category: category || 'Ghee Sweets',
-      hsn: hsn || '2106',
+      hsn: finalHsn,
     });
 
+    updateCatalogFile(id, (p) => ({
+      ...p,
+      id,
+      name,
+      nameTa: nameTa || '',
+      skuCode: finalSku,
+      hsn: finalHsn,
+      price: finalPrice,
+      unitPrice: finalPrice,
+      pricePerKg: finalPrice,
+      unit: unit || 'kg',
+      category: category || 'sweets',
+    }));
+
     const inventory = await Inventory.find({});
-    console.log(`[Inventory] Added product '${name}' (${id}) to catalog.`);
+    console.log(`[Inventory] Added product '${name}' (${id}) with SKU "${finalSku}" and HSN "${finalHsn}" to catalog.`);
     res.json({ success: true, message: `Added '${name}' to catalog.`, product: newProduct, inventory });
   } catch (err) {
     console.error('[Inventory] Error adding product:', err);
@@ -606,6 +708,69 @@ app.patch('/api/inventory/:id/availability', async (req, res) => {
   }
 });
 
+// Update product master details (name, englishName, tamilName, category, unit, price)
+app.patch('/api/inventory/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, englishName, tamilName, category, unit, price } = req.body;
+    const numPrice = price !== undefined ? parseFloat(price) : undefined;
+
+    const normalizedEnglish = typeof englishName === 'string' ? englishName.trim() : (typeof name === 'string' && name.includes('—') ? name.split('—')[0].trim() : undefined);
+    const normalizedTamil = typeof tamilName === 'string' ? tamilName.trim() : (typeof name === 'string' && name.includes('—') ? name.split('—')[1].trim() : undefined);
+    const normalizedName = typeof name === 'string' && name.trim()
+      ? name.trim()
+      : (normalizedEnglish ? (normalizedTamil ? `${normalizedEnglish} — ${normalizedTamil}` : normalizedEnglish) : id);
+
+    let item = await Inventory.findOne({ id });
+    if (!item) {
+      item = await Inventory.create({
+        id,
+        name: normalizedName,
+        englishName: normalizedEnglish,
+        tamilName: normalizedTamil,
+        category,
+        unit,
+        price: !isNaN(numPrice) ? numPrice : 0,
+        pricePerKg: !isNaN(numPrice) ? numPrice : 0,
+        unitPrice: !isNaN(numPrice) ? numPrice : 0,
+      });
+    } else {
+      if (normalizedName !== undefined) item.name = normalizedName;
+      if (normalizedEnglish !== undefined) item.englishName = normalizedEnglish;
+      if (normalizedTamil !== undefined) item.tamilName = normalizedTamil;
+      if (category !== undefined) item.category = category;
+      if (unit !== undefined) item.unit = unit;
+      if (!isNaN(numPrice)) {
+        item.price = numPrice;
+        item.pricePerKg = numPrice;
+        item.unitPrice = numPrice;
+      }
+      await item.save();
+    }
+
+    updateCatalogFile(id, (p) => {
+      const updated = { ...p };
+      if (normalizedName !== undefined) updated.name = normalizedName;
+      if (normalizedEnglish !== undefined) updated.englishName = normalizedEnglish;
+      if (normalizedTamil !== undefined) updated.tamilName = normalizedTamil;
+      if (category !== undefined) updated.category = category;
+      if (unit !== undefined) updated.unit = unit;
+      if (!isNaN(numPrice)) {
+        updated.price = numPrice;
+        updated.unitPrice = numPrice;
+        updated.pricePerKg = numPrice;
+      }
+      return updated;
+    });
+
+    console.log(`[Inventory] Product ${item.name || id} details updated`);
+    res.json({ success: true, message: `Product ${item.name} updated successfully`, item });
+  } catch (err) {
+    console.error('[Inventory] Error updating product details:', err);
+    res.status(500).json({ success: false, message: 'Failed to update product details: ' + err.message });
+  }
+});
+
 // Update master catalog unit price
 app.patch('/api/inventory/:id/price', async (req, res) => {
   try {
@@ -632,6 +797,8 @@ app.patch('/api/inventory/:id/price', async (req, res) => {
       await item.save();
     }
 
+    updateCatalogFile(id, (p) => ({ ...p, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice }));
+
     console.log(`[Inventory] Product ${item.name || id} master price updated to: ₹${numPrice}`);
     res.json({ success: true, message: `Price updated to ₹${numPrice}`, price: numPrice, item });
   } catch (err) {
@@ -640,11 +807,58 @@ app.patch('/api/inventory/:id/price', async (req, res) => {
   }
 });
 
+// Update SKU/HSN Code for a product
+app.patch('/api/inventory/:id/sku', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { skuCode } = req.body;
+    if (skuCode === undefined || skuCode === null) {
+      return res.status(400).json({ success: false, message: 'skuCode is required.' });
+    }
+
+    const skuStr = String(skuCode).trim();
+
+    // Ensure SKU code is unique (if not empty)
+    if (skuStr !== '') {
+      const existing = await Inventory.findOne({ skuCode: skuStr, id: { $ne: id } });
+      if (existing) {
+        return res.status(400).json({ success: false, message: `SKU code "${skuStr}" is already in use by "${existing.name}". Please choose a different code.` });
+      }
+    }
+
+    let item = await Inventory.findOne({ id });
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Product not found in inventory.' });
+    }
+
+    item.skuCode = skuStr;
+    await item.save();
+
+    updateCatalogFile(id, (p) => ({ ...p, skuCode: skuStr }));
+
+    console.log(`[Inventory] Product ${item.name} SKU code updated to: "${skuStr}"`);
+    res.json({ success: true, message: `SKU code updated to "${skuStr}"`, skuCode: skuStr, item });
+  } catch (err) {
+    console.error('[Inventory] Error updating SKU code:', err);
+    res.status(500).json({ success: false, message: 'Failed to update SKU code: ' + err.message });
+  }
+});
+
 // Delete product from catalog
 app.delete('/api/inventory/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Inventory.findOneAndDelete({ id });
+    try {
+      if (fs.existsSync(CATALOG_FILE_PATH)) {
+        const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const filtered = list.filter((p) => p.id !== id);
+          fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf8');
+        }
+      }
+    } catch {}
     console.log(`[Inventory] Deleted product ${id}`);
     res.json({ success: true, message: `Product ${id} removed from catalog.`, deleted });
   } catch (err) {

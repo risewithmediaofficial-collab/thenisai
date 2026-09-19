@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './CustomerReviews.css';
-
 const reviews = [
   {
     id: 1,

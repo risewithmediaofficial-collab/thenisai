@@ -1,6 +1,4 @@
 import { motion } from 'framer-motion';
-import './ContactSection.css';
-
 const contactInfo = [
   {
     icon: (

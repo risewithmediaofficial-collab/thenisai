@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useCart, DEFAULT_TAX_SETTINGS } from '../../context/CartContext';
-import './GstSettingsModal.css';
-
 export default function GstSettingsModal({ isOpen, onClose }) {
   const { taxSettings, updateTaxSettings } = useCart();
 

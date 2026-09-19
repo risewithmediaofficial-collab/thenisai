@@ -7,6 +7,7 @@ const AUTH_TOKEN_KEY = 'thenisai_auth_token';
 const AUTH_USER_KEY = 'thenisai_auth_user';
 const ADMIN_SESSION_KEY = 'thenisai_admin_session_unlocked';
 const BILLING_SESSION_KEY = 'thenisai_billing_session_unlocked';
+const VIEWER_SESSION_KEY = 'thenisai_viewer_session_unlocked';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -26,6 +27,9 @@ export function AuthProvider({ children }) {
       if (parsed.role === 'cashier') {
         return sessionStorage.getItem(BILLING_SESSION_KEY) === 'true' ? parsed : null;
       }
+      if (parsed.role === 'viewer') {
+        return sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true' ? parsed : null;
+      }
       return null;
     } catch {
       return null;
@@ -39,6 +43,7 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(savedUser);
         if (parsed?.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) !== 'true') return null;
         if (parsed?.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) !== 'true') return null;
+        if (parsed?.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') return null;
       }
       return sessionStorage.getItem(AUTH_TOKEN_KEY) || null;
     } catch {
@@ -80,6 +85,13 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      if (parsedUser.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        return;
+      }
+
       const savedToken = sessionStorage.getItem(AUTH_TOKEN_KEY);
       if (!savedToken) {
         setLoading(false);
@@ -95,6 +107,8 @@ export function AuthProvider({ children }) {
             sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
           } else if (res.user.role === 'cashier') {
             sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
+          } else if (res.user.role === 'viewer') {
+            sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
           }
         } else {
           setToken(null);
@@ -137,9 +151,15 @@ export function AuthProvider({ children }) {
         if (res.user?.role === 'admin') {
           sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
           sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(VIEWER_SESSION_KEY);
         } else if (res.user?.role === 'cashier') {
           sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          sessionStorage.removeItem(VIEWER_SESSION_KEY);
+        } else if (res.user?.role === 'viewer') {
+          sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          sessionStorage.removeItem(BILLING_SESSION_KEY);
         }
 
         // Clean out legacy persistent storage
@@ -199,6 +219,7 @@ export function AuthProvider({ children }) {
         setUser(fallbackCashier);
         sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        sessionStorage.removeItem(VIEWER_SESSION_KEY);
         sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
         sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackCashier));
         localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -206,9 +227,32 @@ export function AuthProvider({ children }) {
         return { success: true, user: fallbackCashier };
       }
 
-      const msg = err.message || 'Authentication failed. Check credentials.';
-      setError(msg);
-      return { success: false, error: msg };
+      // ── Viewer / Demo read-only login ──────────────────────────────────────
+      if ((u === 'demo' || u === 'viewer' || u === 'test') && p === 'demo123') {
+        const viewerUser = {
+          id: 'viewer-1',
+          username: 'demo',
+          name: 'Demo Viewer',
+          title: 'Read-Only Preview',
+          role: 'viewer',
+          counter: 'View Only',
+        };
+        const tokenVal = `thenisai_session_viewer_${Date.now()}`;
+        setToken(tokenVal);
+        setUser(viewerUser);
+        sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(viewerUser));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+        return { success: true, user: viewerUser };
+      }
+
+      const finalMsg = err?.message || 'Authentication failed. Check credentials.';
+      setError(finalMsg);
+      return { success: false, error: finalMsg };
     }
   };
 
@@ -223,6 +267,7 @@ export function AuthProvider({ children }) {
       setError(null);
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
       sessionStorage.removeItem(BILLING_SESSION_KEY);
+      sessionStorage.removeItem(VIEWER_SESSION_KEY);
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -240,6 +285,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user && token),
     isAdmin: Boolean(user && user.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'),
     isCashier: Boolean(user && user.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) === 'true'),
+    isViewer: Boolean(user && user.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true'),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './LoadingScreen.css';
-
 export default function LoadingScreen({ onComplete }) {
   const [progress, setProgress] = useState(0);
   const [isDone, setIsDone] = useState(false);

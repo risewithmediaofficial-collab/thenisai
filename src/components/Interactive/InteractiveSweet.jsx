@@ -3,8 +3,6 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { Sparkles, Float } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as THREE from 'three';
-import './InteractiveSweet.css';
-
 const SWEET_ITEMS = [
   {
     id: 'palkova',
@@ -45,7 +43,7 @@ function PhotorealisticPlatter({ currentSweet, mouseRef }) {
   const meshRef = useRef();
   const lightRef = useRef();
 
-  // Load texture dynamically for selected sweet
+  // Load texture dynamically for selected sweet — dispose previous to avoid GPU leak
   const texture = useMemo(() => {
     const loader = new THREE.TextureLoader();
     const tex = loader.load(currentSweet.image);
@@ -53,7 +51,12 @@ function PhotorealisticPlatter({ currentSweet, mouseRef }) {
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
     return tex;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSweet.image]);
+
+  useEffect(() => {
+    return () => { texture.dispose(); };
+  }, [texture]);
 
   // Contoured 3D Circular Platter geometry (no square corners)
   const geometry = useMemo(() => {
@@ -155,6 +158,20 @@ export default function InteractiveSweet() {
   const [activeIdx, setActiveIdx] = useState(0);
   const containerRef = useRef();
   const localMouse = useRef({ normX: 0, normY: 0 });
+  // Don't load Three.js on mobile/reduced-motion — it's a mouse-driven experience
+  const [shouldRender3D, setShouldRender3D] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia('(max-width: 767px), (prefers-reduced-motion: reduce)').matches) return;
+    const load = () => setShouldRender3D(true);
+    const id = window.requestIdleCallback
+      ? window.requestIdleCallback(load, { timeout: 3000 })
+      : window.setTimeout(load, 1800);
+    return () => {
+      if (window.cancelIdleCallback) window.cancelIdleCallback(id);
+      else window.clearTimeout(id);
+    };
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -205,6 +222,7 @@ export default function InteractiveSweet() {
             whileInView={{ opacity: 0.75 }}
             transition={{ delay: 0.2, duration: 0.8 }}
             viewport={{ once: true }}
+            style={{ display: shouldRender3D ? undefined : 'none' }}
           >
             Move your cursor to illuminate and tilt the authentic sweets
           </motion.p>
@@ -224,30 +242,42 @@ export default function InteractiveSweet() {
         </div>
       </div>
 
-      {/* 3D Canvas Showcase */}
+      {/* 3D Canvas Showcase — desktop only, loaded after idle */}
       <div className="interactive-sweet__canvas" ref={containerRef}>
-        <Suspense fallback={<div className="interactive-sweet__placeholder" />}>
-          <Canvas
-            camera={{ position: [0, 0, 4.4], fov: 44 }}
-            gl={{ antialias: false, alpha: true, powerPreference: 'default', preserveDrawingBuffer: false }}
-            dpr={[1, 1.5]}
-            onCreated={({ gl }) => {
-              gl.domElement.addEventListener('webglcontextlost', (e) => {
-                e.preventDefault();
-              }, false);
-            }}
-          >
-            <ambientLight intensity={0.7} color="#FFF8EE" />
-            <directionalLight position={[4, 4, 3]} intensity={2.2} color="#FFE4A0" />
-            <directionalLight position={[-3, 2, 2]} intensity={1.0} color="#E8BA60" />
+        {shouldRender3D ? (
+          <Suspense fallback={<div className="interactive-sweet__placeholder" />}>
+            <Canvas
+              camera={{ position: [0, 0, 4.4], fov: 44 }}
+              gl={{ antialias: false, alpha: true, powerPreference: 'default', preserveDrawingBuffer: false }}
+              dpr={[1, 1.5]}
+              onCreated={({ gl }) => {
+                gl.domElement.addEventListener('webglcontextlost', (e) => {
+                  e.preventDefault();
+                }, false);
+              }}
+            >
+              <ambientLight intensity={0.7} color="#FFF8EE" />
+              <directionalLight position={[4, 4, 3]} intensity={2.2} color="#FFE4A0" />
+              <directionalLight position={[-3, 2, 2]} intensity={1.0} color="#E8BA60" />
 
-            <Sparkles count={50} scale={6} size={1.4} speed={0.3} color="#D4A843" opacity={0.5} />
+              <Sparkles count={50} scale={6} size={1.4} speed={0.3} color="#D4A843" opacity={0.5} />
 
-            <Float speed={1.0} rotationIntensity={0.02} floatIntensity={0.12}>
-              <PhotorealisticPlatter currentSweet={currentSweet} mouseRef={localMouse} />
-            </Float>
-          </Canvas>
-        </Suspense>
+              <Float speed={1.0} rotationIntensity={0.02} floatIntensity={0.12}>
+                <PhotorealisticPlatter currentSweet={currentSweet} mouseRef={localMouse} />
+              </Float>
+            </Canvas>
+          </Suspense>
+        ) : (
+          /* Static image fallback shown on mobile / before idle callback fires */
+          <div className="interactive-sweet__placeholder">
+            <img
+              src={currentSweet.image}
+              alt={currentSweet.name}
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Selected Sweet Info Badge */}

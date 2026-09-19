@@ -1,22 +1,28 @@
-import { useState } from 'react';
-import './AdminDashboard.css';
-
+import { useState, useEffect } from 'react';
+import { useCart } from '../../context/CartContext';
 export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
+  const { getNextAvailableSkuCode } = useCart();
   const [formData, setFormData] = useState({
     name: '',
     tamilName: '',
     category: 'sweets',
-    subcategory: 'Special Sweets',
+    subcategory: '',
     unit: 'kg',
     price: '',
-    stockKg: '25',
-    minThreshold: '5',
-    hsn: '2106',
-    description: '',
+    hsn: '',
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const nextCode = getNextAvailableSkuCode();
+    setFormData((prev) => ({
+      ...prev,
+      hsn: prev.hsn || nextCode,
+    }));
+  }, [isOpen, getNextAvailableSkuCode]);
 
   if (!isOpen) return null;
 
@@ -51,8 +57,6 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
         tamilName: formData.tamilName.trim(),
         price: priceNum,
         unitPrice: priceNum,
-        stockKg: parseFloat(formData.stockKg) || 15,
-        minThreshold: parseFloat(formData.minThreshold) || 5,
       });
 
       onClose();
@@ -61,13 +65,10 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
         name: '',
         tamilName: '',
         category: 'sweets',
-        subcategory: 'Special Sweets',
+        subcategory: '',
         unit: 'kg',
         price: '',
-        stockKg: '25',
-        minThreshold: '5',
-        hsn: '2106',
-        description: '',
+        hsn: '',
       });
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save product. Please retry.');
@@ -210,36 +211,7 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '14px', marginBottom: '14px' }}>
-            <div className="admin-form-group">
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Initial Stock ({formData.unit})
-              </label>
-              <input
-                type="number"
-                name="stockKg"
-                min="0"
-                step="any"
-                value={formData.stockKg}
-                onChange={handleChange}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px' }}
-              />
-            </div>
-
-            <div className="admin-form-group">
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Low Stock Alert Threshold
-              </label>
-              <input
-                type="number"
-                name="minThreshold"
-                min="1"
-                value={formData.minThreshold}
-                onChange={handleChange}
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px' }}
-              />
-            </div>
-
+          <div style={{ marginBottom: '14px' }}>
             <div className="admin-form-group">
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                 HSN Code
@@ -248,25 +220,12 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
                 type="text"
                 name="hsn"
                 value={formData.hsn}
+                readOnly
                 onChange={handleChange}
-                placeholder="2106"
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px' }}
+                placeholder="Auto-generated HSN"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#f8fafc' }}
               />
             </div>
-          </div>
-
-          <div className="admin-form-group" style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-              Description / Ingredients
-            </label>
-            <textarea
-              name="description"
-              rows="2"
-              placeholder="Fresh farm-sourced traditional preparation..."
-              value={formData.description}
-              onChange={handleChange}
-              style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', resize: 'vertical' }}
-            />
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '14px', borderTop: '1px solid #e2e8f0' }}>

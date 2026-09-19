@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import './StaffLoginModal.css';
-
 export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCancel }) {
   const { login, error: authError } = useAuth();
   const { navigateTo } = useCart();
@@ -30,6 +28,9 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setLocalError('');
     if (role === 'admin') {
       setUsername('admin');
+      setPassword('');
+    } else if (role === 'viewer') {
+      setUsername('demo');
       setPassword('');
     } else {
       setUsername('cashier');
@@ -60,9 +61,23 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
         onSuccess(res.user);
       } else {
         if (res.user?.role === 'admin') {
-          navigateTo('admin');
+          const h = window.location.hash.toLowerCase();
+          if (h.startsWith('#admin/')) {
+            const sub = h.replace('#admin/', '').split('?')[0];
+            navigateTo('admin', sub);
+          } else {
+            navigateTo('admin');
+          }
         } else if (res.user?.role === 'cashier') {
-          navigateTo('billing');
+          const h = window.location.hash.toLowerCase();
+          if (h.startsWith('#billing/')) {
+            const sub = h.replace('#billing/', '').split('?')[0];
+            navigateTo('billing', sub);
+          } else {
+            navigateTo('billing', 'register');
+          }
+        } else if (res.user?.role === 'viewer') {
+          navigateTo('admin');
         }
       }
     } else {

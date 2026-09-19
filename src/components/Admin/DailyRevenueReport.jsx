@@ -4,8 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { STORE_DETAILS } from '../../data/sweetsData';
 import EditBillModal from '../Billing/EditBillModal';
-import './DailyRevenueReport.css';
-
 /**
  * Format timestamp or date string into YYYY-MM-DD
  */
@@ -50,9 +48,7 @@ export default function DailyRevenueReport({
   const isBillingScreen = typeof window !== 'undefined' && window.location.hash.toLowerCase().startsWith('#billing');
   const isCashier = Boolean(
     isCashierOnly ||
-    isBillingScreen ||
-    activeUser?.role === 'cashier' ||
-    (activeUser && activeUser.role !== 'admin')
+    (activeUser?.role !== 'admin' && (isBillingScreen || activeUser?.role === 'cashier'))
   );
 
   const { taxSettings, deleteBill } = useCart();
@@ -186,20 +182,6 @@ export default function DailyRevenueReport({
   }, [daySales]);
 
   const netSales = grossRevenue - totalTax;
-  const cgstAmount = useMemo(() => {
-    return daySales.reduce((acc, s) => {
-      const c = typeof s.taxBreakdown?.cgst === 'number' ? s.taxBreakdown.cgst : (s.taxBreakdown?.totalTax ? s.taxBreakdown.totalTax / 2 : 0);
-      return acc + c;
-    }, 0);
-  }, [daySales]);
-
-  const sgstAmount = useMemo(() => {
-    return daySales.reduce((acc, s) => {
-      const sg = typeof s.taxBreakdown?.sgst === 'number' ? s.taxBreakdown.sgst : (s.taxBreakdown?.totalTax ? s.taxBreakdown.totalTax / 2 : 0);
-      return acc + sg;
-    }, 0);
-  }, [daySales]);
-
   const totalBills = daySales.length;
   const avgOrderValue = totalBills > 0 ? Math.round(grossRevenue / totalBills) : 0;
 
@@ -337,7 +319,7 @@ export default function DailyRevenueReport({
       return;
     }
 
-    const headers = ['Invoice #', 'Date & Time', 'Customer', 'Phone', 'Payment Method', 'Cashier', 'Subtotal', 'Tax', 'Grand Total (INR)'];
+    const headers = ['Invoice #', 'Date & Time', 'Customer', 'Phone', 'Payment Method', 'Cashier', 'Subtotal', 'Grand Total (INR)'];
     const rows = daySales.map((s) => [
       `"${s.invoiceNumber || s.id}"`,
       `"${s.orderDate || ''} ${s.orderTime || ''}"`,
@@ -346,7 +328,6 @@ export default function DailyRevenueReport({
       `"${s.paymentMethod || 'Cash'}"`,
       `"${s.cashier?.name || 'Counter Staff'}"`,
       s.subtotal || 0,
-      s.taxBreakdown?.totalTax || 0,
       s.grandTotal || 0,
     ]);
 
@@ -534,7 +515,7 @@ export default function DailyRevenueReport({
         </div>
       )}
 
-      {/* Primary KPI Metrics Grid — Clean Revenue & Operations (No GST) */}
+      {/* Primary KPI Metrics Grid — Revenue & Operations */}
       <section className="revenue-kpi-grid">
         <div className="rev-card gross">
           <span className="rev-label">TOTAL SALES REVENUE</span>
@@ -556,7 +537,7 @@ export default function DailyRevenueReport({
           <span className="rev-foot">Cups, Sweets &amp; Savories</span>
         </div>
 
-        <div className="rev-card gst">
+        <div className="rev-card settled">
           <span className="rev-label">SETTLED TRANSACTIONS</span>
           <div className="rev-value">{totalBills}</div>
           <span className="rev-foot">Cash: ₹{tenderSummary.cash.amount.toLocaleString('en-IN')} · UPI: ₹{tenderSummary.upi.amount.toLocaleString('en-IN')}</span>
@@ -909,7 +890,6 @@ export default function DailyRevenueReport({
                   <h3 className="z-brand-title">{STORE_DETAILS.name}</h3>
                   <p className="z-brand-sub">{STORE_DETAILS.tagline}</p>
                   <p className="z-brand-loc">{STORE_DETAILS.address.line1}, {STORE_DETAILS.address.city}</p>
-                  <p className="z-brand-gst">GSTIN: {taxSettings?.gstin || STORE_DETAILS.gstin}</p>
                   <p className="z-brand-fssai">FSSAI: {STORE_DETAILS.fssai}</p>
                 </div>
 
@@ -947,10 +927,6 @@ export default function DailyRevenueReport({
                   <div className="slip-row">
                     <span>Net Sales:</span>
                     <span>₹{netSales.toLocaleString('en-IN')}</span>
-                  </div>
-                  <div className="slip-row">
-                    <span>Total GST:</span>
-                    <span>₹{totalTax.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="slip-row total">
                     <strong>GROSS DAY REVENUE:</strong>

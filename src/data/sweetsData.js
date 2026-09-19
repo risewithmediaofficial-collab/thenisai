@@ -120,6 +120,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'tea',
     itemNumber: 1,
+    skuCode: '1',
     name: 'Tea — டீ',
     englishName: 'Tea',
     tamilName: 'டீ',
@@ -134,6 +135,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'coffee',
     itemNumber: 2,
+    skuCode: '2',
     name: 'Coffee — காபி',
     englishName: 'Coffee',
     tamilName: 'காபி',
@@ -148,6 +150,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'milk',
     itemNumber: 3,
+    skuCode: '3',
     name: 'Milk — பால்',
     englishName: 'Milk',
     tamilName: 'பால்',
@@ -162,6 +165,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'horlicks',
     itemNumber: 4,
+    skuCode: '4',
     name: 'Horlicks — ஹார்லிக்ஸ்',
     englishName: 'Horlicks',
     tamilName: 'ஹார்லிக்ஸ்',
@@ -176,6 +180,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'boost',
     itemNumber: 5,
+    skuCode: '5',
     name: 'Boost — பூஸ்ட்',
     englishName: 'Boost',
     tamilName: 'பூஸ்ட்',
@@ -190,6 +195,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'badam-milk',
     itemNumber: 6,
+    skuCode: '6',
     name: 'Badam Milk — பாதாம் பால்',
     englishName: 'Badam Milk',
     tamilName: 'பாதாம் பால்',
@@ -204,6 +210,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'ragi-malt',
     itemNumber: 7,
+    skuCode: '7',
     name: 'Ragi Malt — கேழ்வரகு கூழ்',
     englishName: 'Ragi Malt',
     tamilName: 'கேழ்வரகு கூழ்',
@@ -218,6 +225,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'lemon-tea',
     itemNumber: 8,
+    skuCode: '8',
     name: 'Lemon Tea — எலுமிச்சை டீ',
     englishName: 'Lemon Tea',
     tamilName: 'எலுமிச்சை டீ',
@@ -232,6 +240,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'sugu-tea',
     itemNumber: 9,
+    skuCode: '9',
     name: 'Sugu Tea — சுக்கு டீ',
     englishName: 'Sugu Tea',
     tamilName: 'சுக்கு டீ',
@@ -246,6 +255,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'magu-tea',
     itemNumber: 10,
+    skuCode: '10',
     name: 'Magu Tea — மிளகு டீ',
     englishName: 'Magu Tea',
     tamilName: 'மிளகு டீ',
@@ -260,6 +270,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'ginger-lemon',
     itemNumber: 11,
+    skuCode: '11',
     name: 'Ginger Lemon — இஞ்சி எலுமிச்சை',
     englishName: 'Ginger Lemon',
     tamilName: 'இஞ்சி எலுமிச்சை',
@@ -274,11 +285,13 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'vada',
     itemNumber: 12,
+    skuCode: '12',
     name: 'Vada — வடை',
     englishName: 'Vada',
     tamilName: 'வடை',
     tagline: 'Crispy Golden Medu Vada · மெதுவடை',
     image: '/images/products/vada.svg',
+    isInactive: true,
     category: 'snacks',
     price: 20,
     unit: '1 Pc',
@@ -288,6 +301,7 @@ export const BEVERAGES_AND_SNACKS = [
   {
     id: 'filter-coffee',
     itemNumber: 13,
+    skuCode: '13',
     name: 'Filter Coffee — ஃபில்டர் காபி',
     englishName: 'Filter Coffee',
     tamilName: 'ஃபில்டர் காபி',
@@ -303,8 +317,56 @@ export const BEVERAGES_AND_SNACKS = [
 
 export const SPICES_KARA_VAGAI = [
   {
+    id: 'corn-mixture',
+    itemNumber: 126,
+    skuCode: '126',
+    name: 'Corn Mixture — சோள மிக்சர்',
+    englishName: 'Corn Mixture',
+    tamilName: 'சோள மிக்சர்',
+    tagline: 'Crispy Golden Corn Flake Mix · சோள மிக்சர்',
+    category: 'spices',
+    subcategory: 'Spices (Kara Vagai)',
+    price: 380,
+    unit: 'kg',
+    hsn: '2106',
+    description: 'Crispy sweet and spicy roasted corn flakes tossed with groundnuts, curry leaves, and spices.',
+  },
+  {
+    id: 'cashew-mixture',
+    itemNumber: 127,
+    skuCode: '127',
+    name: 'Mundhiri Mixture — முந்திரி மிக்சர்',
+    englishName: 'Mundhiri Mixture (Cashew Mixture)',
+    tamilName: 'முந்திரி மிக்சர்',
+    tagline: 'Rich Whole Roasted Cashew Mix · முந்திரி மிக்சர்',
+    category: 'spices',
+    subcategory: 'Spices (Kara Vagai)',
+    price: 800,
+    unit: 'kg',
+    hsn: '2106',
+    description: 'Rich royal savory mixture generous with golden ghee-roasted whole cashews, boondi, and curry leaves.',
+  },
+  {
+    id: 'anjeer-roll',
+    itemNumber: 128,
+    skuCode: '128',
+    name: 'Anjeer Roll (Athipalam Roll) — அத்திப்பழம் ரோல்',
+    englishName: 'Anjeer Roll (Athipalam Roll)',
+    tamilName: 'அத்திப்பழம் ரோல்',
+    tagline: 'Dried Fig & Dry Fruit Cylinders · அத்திப்பழம் ரோல்',
+    category: 'sweets',
+    subcategory: 'Cashew & Rolls',
+    price: 0,
+    unit: 'kg',
+    hsn: '2106',
+    isInactive: true,
+    description: 'Rich confectionery crafted with natural dried figs and finely minced dry fruits. Currently unavailable.',
+  },
+
+  {
     id: 'round-murukku',
     itemNumber: 76,
+    skuCode: '76',
     name: 'Round Murukku — ரவுண்டு முறுக்கு',
     englishName: 'Round Murukku',
     tamilName: 'ரவுண்டு முறுக்கு',
@@ -319,13 +381,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'peanuts-groundnut',
     itemNumber: 77,
+    skuCode: '77',
     name: 'Peanuts — கடலை கொட்டை',
     englishName: 'Peanuts (Groundnut)',
     tamilName: 'கடலை கொட்டை',
     tagline: 'Crunchy Roasted Peanuts · வறுத்த கடலை',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 380,
+    price: 400,
     unit: 'kg',
     hsn: '2008',
     description: 'Crunchy salted and roasted native country peanuts.',
@@ -333,6 +396,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'sp-mixture',
     itemNumber: 78,
+    skuCode: '78',
     name: 'S.P. Mixture — S.P. மிக்சர்',
     englishName: 'S.P. Mixture',
     tamilName: 'S.P. மிக்சர்',
@@ -347,13 +411,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pepper-chips',
     itemNumber: 79,
+    skuCode: '79',
     name: 'Pepper Chips — மிளகு சிப்ஸ்',
     englishName: 'Pepper Chips',
     tamilName: 'மிளகு சிப்ஸ்',
     tagline: 'Black Pepper Spiced · மிளகு சிப்ஸ்',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 450,
+    price: 500,
     unit: 'kg',
     hsn: '2008',
     description: 'Crispy wafer thin chips tossed in aromatic black pepper and sea salt.',
@@ -361,13 +426,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'finger-chips',
     itemNumber: 80,
+    skuCode: '80',
     name: 'Finger Chips — பிங்கர் சிப்ஸ்',
     englishName: 'Finger Chips',
     tamilName: 'பிங்கர் சிப்ஸ்',
     tagline: 'Golden Finger Sticks · பிங்கர் சிப்ஸ்',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 380,
+    price: 450,
     unit: 'kg',
     hsn: '2008',
     description: 'Crispy spiced golden finger chips fried to a light crunch.',
@@ -375,13 +441,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pavakkai-chips',
     itemNumber: 81,
+    skuCode: '81',
     name: 'Bitter Gourd Chips — பாவற்காய் சிப்ஸ்',
     englishName: 'Bitter Gourd (Pavakkai) Chips',
     tamilName: 'பாவற்காய் சிப்ஸ்',
     tagline: 'Crispy Spiced Pavakkai · பாவற்காய் சிப்ஸ்',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 380,
+    price: 400,
     unit: 'kg',
     hsn: '2008',
     description: 'Thinly sliced bitter gourd marinated in traditional spices and crisp fried.',
@@ -389,6 +456,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'raw-banana-chips',
     itemNumber: 82,
+    skuCode: '82',
     name: 'Raw Banana Chips — வாழைக்காய் சிப்ஸ்',
     englishName: 'Raw Banana Chips',
     tamilName: 'வாழைக்காய் சிப்ஸ்',
@@ -403,6 +471,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'nendran-chips',
     itemNumber: 83,
+    skuCode: '83',
     name: 'Nendran Chips — நேந்திரம் சிப்ஸ்',
     englishName: 'Nendran Chips',
     tamilName: 'நேந்திரம் சிப்ஸ்',
@@ -417,6 +486,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pepper-sevu',
     itemNumber: 84,
+    skuCode: '84',
     name: 'Pepper Sevu — மிளகு சேவு',
     englishName: 'Pepper Sevu',
     tamilName: 'மிளகு சேவு',
@@ -431,6 +501,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'spicy-peanuts',
     itemNumber: 85,
+    skuCode: '85',
     name: 'Spicy Peanuts — கார கடலை',
     englishName: 'Spicy Peanuts (Kara Kadalai)',
     tamilName: 'கார கடலை',
@@ -445,6 +516,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'kara-boondi',
     itemNumber: 86,
+    skuCode: '86',
     name: 'Kara Boondi — காராபூந்தி',
     englishName: 'Kara Boondi',
     tamilName: 'காராபூந்தி',
@@ -459,6 +531,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'kara-sevu',
     itemNumber: 87,
+    skuCode: '87',
     name: 'Kara Sevu — காராசேவு',
     englishName: 'Kara Sevu',
     tamilName: 'காராசேவு',
@@ -473,13 +546,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'navadhanyam',
     itemNumber: 88,
+    skuCode: '88',
     name: 'Navadhanyam — நவதானியம்',
     englishName: 'Navadhanyam (Mixed Grains)',
     tamilName: 'நவதானியம்',
     tagline: '9 Roasted Healthy Grains · நவதானியம்',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 400,
+    price: 500,
     unit: 'kg',
     hsn: '2106',
     description: 'Nutritious crisp roasted blend of nine traditional heritage pulses and grains.',
@@ -487,6 +561,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'green-gram',
     itemNumber: 89,
+    skuCode: '89',
     name: 'Green Gram — பச்சைப்பயிறு',
     englishName: 'Green Gram (Pachai Payaru)',
     tamilName: 'பச்சைப்பயிறு',
@@ -501,13 +576,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'masala-cashew',
     itemNumber: 90,
+    skuCode: '90',
     name: 'Masala Cashew — மசால் முந்திரி',
     englishName: 'Masala Cashew',
     tamilName: 'மசால் முந்திரி',
     tagline: 'Spicy Roasted Whole Cashew · மசால் முந்திரி',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 1000,
+    price: 1200,
     unit: 'kg',
     hsn: '2008',
     description: 'Premium jumbo whole cashews coated in rich aromatic masalas.',
@@ -515,6 +591,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'sesame-murukku',
     itemNumber: 91,
+    skuCode: '91',
     name: 'Sesame Murukku — எள்ளு முறுக்கு',
     englishName: 'Sesame (Ellu) Murukku',
     tamilName: 'எள்ளு முறுக்கு',
@@ -529,6 +606,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'soft-kara-sevu',
     itemNumber: 92,
+    skuCode: '92',
     name: 'Soft Kara Sevu — மெதுவ காராசேவு',
     englishName: 'Soft Kara Sevu',
     tamilName: 'மெதுவ காராசேவு',
@@ -543,6 +621,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pepper-cashew',
     itemNumber: 93,
+    skuCode: '93',
     name: 'Pepper Cashew — பெப்பர் முந்திரி',
     englishName: 'Pepper Cashew',
     tamilName: 'பெப்பர் முந்திரி',
@@ -557,6 +636,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'moong-dal',
     itemNumber: 94,
+    skuCode: '94',
     name: 'Moong Dal — பாசிப்பருப்பு',
     englishName: 'Moong Dal (Paasi Paruppu)',
     tamilName: 'பாசிப்பருப்பு',
@@ -571,6 +651,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'omapodi',
     itemNumber: 95,
+    skuCode: '95',
     name: 'Omapodi — ஓம்பொடி',
     englishName: 'Omapodi',
     tamilName: 'ஓம்பொடி',
@@ -585,6 +666,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'nippat',
     itemNumber: 96,
+    skuCode: '96',
     name: 'Nippat — நிப்பட்',
     englishName: 'Nippat',
     tamilName: 'நிப்பட்',
@@ -599,6 +681,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pepper-nippat',
     itemNumber: 97,
+    skuCode: '97',
     name: 'Pepper Nippat — மிளகு நிப்பட்',
     englishName: 'Pepper Nippat',
     tamilName: 'மிளகு நிப்பட்',
@@ -613,6 +696,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'spicy-murukku',
     itemNumber: 98,
+    skuCode: '98',
     name: 'Spicy Murukku — கார முறுக்கு',
     englishName: 'Spicy Murukku',
     tamilName: 'கார முறுக்கு',
@@ -627,6 +711,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'ghee-murukku',
     itemNumber: 99,
+    skuCode: '99',
     name: 'Ghee Murukku — நெய் முறுக்கு',
     englishName: 'Ghee Murukku',
     tamilName: 'நெய் முறுக்கு',
@@ -641,6 +726,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'garlic-murukku',
     itemNumber: 100,
+    skuCode: '100',
     name: 'Garlic Murukku — பூண்டு முறுக்கு',
     englishName: 'Garlic Murukku',
     tamilName: 'பூண்டு முறுக்கு',
@@ -655,13 +741,14 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'nuts-mixture',
     itemNumber: 101,
+    skuCode: '101',
     name: 'Nuts Mixture — நட்ஸ் மிக்சர்',
     englishName: 'Nuts Mixture',
     tamilName: 'நட்ஸ் மிக்சர்',
     tagline: 'Royal Dry Fruit Savory Mix · நட்ஸ் மிக்சர்',
     category: 'spices',
     subcategory: 'Spices (Kara Vagai)',
-    price: 900,
+    price: 1000,
     unit: 'kg',
     hsn: '2106',
     description: 'Luxurious mixture enriched with fried cashews, almonds, raisins, and pistachios.',
@@ -669,6 +756,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'mint-mixture',
     itemNumber: 102,
+    skuCode: '102',
     name: 'Mint Mixture — புதினா மிக்சர்',
     englishName: 'Mint (Pudina) Mixture',
     tamilName: 'புதினா மிக்சர்',
@@ -683,6 +771,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'ragi-mixture',
     itemNumber: 103,
+    skuCode: '103',
     name: 'Ragi Mixture — ராகி மிக்சர்',
     englishName: 'Ragi Mixture',
     tamilName: 'ராகி மிக்சர்',
@@ -697,6 +786,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'aval-mixture',
     itemNumber: 104,
+    skuCode: '104',
     name: 'Aval Mixture — அவல் மிக்சர்',
     englishName: 'Aval (Poha) Mixture',
     tamilName: 'அவல் மிக்சர்',
@@ -711,6 +801,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'kara-pori-packet',
     itemNumber: 105,
+    skuCode: '105',
     name: 'Kara Pori Packet — காரப்பொரி பாக்கெட்',
     englishName: 'Kara Pori Packet',
     tamilName: 'காரப்பொரி பாக்கெட்',
@@ -725,6 +816,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'curd-packet',
     itemNumber: 106,
+    skuCode: '106',
     name: 'Curd Packet — தயிர் பாக்கெட்',
     englishName: 'Curd Packet',
     tamilName: 'தயிர் பாக்கெட்',
@@ -739,6 +831,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'buttermilk',
     itemNumber: 107,
+    skuCode: '107',
     name: 'Buttermilk — மோர்',
     englishName: 'Buttermilk',
     tamilName: 'மோர்',
@@ -753,6 +846,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'badam-cold-milk',
     itemNumber: 108,
+    skuCode: '108',
     name: 'Badam Milk — பாதாம் பால்',
     englishName: 'Badam [Milk]',
     tamilName: 'பாதாம்',
@@ -767,6 +861,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'rose-milk',
     itemNumber: 109,
+    skuCode: '109',
     name: 'Rose Milk — ரோஸ் மில்க்',
     englishName: 'Rose Milk',
     tamilName: 'ரோஸ் மில்க்',
@@ -781,6 +876,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'water-500ml',
     itemNumber: 110,
+    skuCode: '110',
     name: '½ Litre Water — ½ லிட்டர் தண்ணீர்',
     englishName: '½ Litre Water',
     tamilName: '½ லிட்டர் தண்ணீர்',
@@ -795,6 +891,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'water-1000ml',
     itemNumber: 111,
+    skuCode: '111',
     name: '1 Litre Water — 1 லிட்டர் தண்ணீர்',
     englishName: '1 Litre Water',
     tamilName: '1 லிட்டர் தண்ணீர்',
@@ -809,6 +906,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'water-2000ml',
     itemNumber: 112,
+    skuCode: '112',
     name: '2 Litre Water — 2 லிட்டர் தண்ணீர்',
     englishName: '2 Litre Water',
     tamilName: '2 லிட்டர் தண்ணீர்',
@@ -823,6 +921,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'bovonto',
     itemNumber: 113,
+    skuCode: '113',
     name: 'Bovonto — போவண்டோ',
     englishName: 'Bovonto',
     tamilName: 'போவண்டோ',
@@ -837,6 +936,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'mini-thattai',
     itemNumber: 114,
+    skuCode: '114',
     name: 'Mini Thattai — மினி தட்டை',
     englishName: 'Mini Thattai',
     tamilName: 'மினி தட்டை',
@@ -851,6 +951,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'seedai',
     itemNumber: 115,
+    skuCode: '115',
     name: 'Seedai — சீடை',
     englishName: 'Seedai',
     tamilName: 'சீடை',
@@ -865,6 +966,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'jeera-murukku',
     itemNumber: 116,
+    skuCode: '116',
     name: 'Cumin Murukku — சீரக முறுக்கு',
     englishName: 'Cumin (Jeera) Murukku',
     tamilName: 'சீரக முறுக்கு',
@@ -879,6 +981,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'pepper-chips-spl',
     itemNumber: 117,
+    skuCode: '117',
     name: 'Pepper Chips (Special) — பெப்பர் சிப்ஸ்',
     englishName: 'Pepper Chips',
     tamilName: 'பெப்பர் சிப்ஸ்',
@@ -893,6 +996,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'sattur-kara-sevu',
     itemNumber: 118,
+    skuCode: '118',
     name: 'Sattur Kara Sevu — சாத்தூர் காராசேவு',
     englishName: 'Sattur Kara Sevu',
     tamilName: 'சாத்தூர் காராசேவு',
@@ -907,6 +1011,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'drumstick-nippat',
     itemNumber: 119,
+    skuCode: '119',
     name: 'Drumstick Leaves Nippat — முருங்கைக்கீரை நெப்பட்',
     englishName: 'Drumstick Leaves Nippat (Murungai Keerai)',
     tamilName: 'முருங்கைக்கீரை நெப்பட்',
@@ -921,6 +1026,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'cashew-pakoda',
     itemNumber: 120,
+    skuCode: '120',
     name: 'Cashew Pakoda — முந்திரி பக்கோடா',
     englishName: 'Cashew Pakoda',
     tamilName: 'முந்திரி பக்கோடா',
@@ -935,6 +1041,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'ribbon-pakoda',
     itemNumber: 121,
+    skuCode: '121',
     name: 'Ribbon Pakoda — ஓலை பக்கோடா',
     englishName: 'Ribbon (Olai) Pakoda',
     tamilName: 'ஓலை பக்கோடா',
@@ -949,6 +1056,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'arcot-mixture',
     itemNumber: 122,
+    skuCode: '122',
     name: 'Arcot Mixture — ஆற்காடு மிக்சர்',
     englishName: 'Arcot Mixture',
     tamilName: 'ஆற்காடு மிக்சர்',
@@ -963,6 +1071,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'kovilpatti-kara-sevu',
     itemNumber: 123,
+    skuCode: '123',
     name: 'Kovilpatti Kara Sevu — கோவில்பட்டி காராசேவு',
     englishName: 'Kovilpatti Kara Sevu',
     tamilName: 'கோவில்பட்டி காராசேவு',
@@ -977,6 +1086,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'thenisai-milk-murukku',
     itemNumber: 124,
+    skuCode: '124',
     name: 'Thenisai Milk Murukku — தேன்னிசை பால்முறுக்கு',
     englishName: 'Thenisai Milk Murukku',
     tamilName: 'தேன்னிசை பால்முறுக்கு',
@@ -991,6 +1101,7 @@ export const SPICES_KARA_VAGAI = [
   {
     id: 'thenisai-thenkuzhal',
     itemNumber: 125,
+    skuCode: '125',
     name: 'Thenisai Thenkuzhal — தேன்னிசை தேன்குழல்',
     englishName: 'Thenisai Thenkuzhal',
     tamilName: 'தேன்னிசை தேன்குழல்',
@@ -1013,7 +1124,6 @@ export const ALL_BILLING_ITEMS = [
   ...THENISAI_SWEETS_62,
   ...SPICES_KARA_VAGAI,
 ];
-
 export const STORE_DETAILS = {
   brandName: 'Thenisai Palkova & Sweets',
   tagline: 'The Taste of Tradition · Since 2006 · Krishnagiri',
@@ -1026,7 +1136,7 @@ export const STORE_DETAILS = {
   whatsappNumber: '919344893547',
   email: 'orders@thenisaisweets.com',
   secondaryContact: '+91 86818 58723',
-  gstin: '33AABCT9988C1Z4',
+  gstin: '',
   fssai: '12423011000452',
   upiId: 'thenisai.sweets@okhdfcbank',
   googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=Thenisai+Palkova+and+Sweets+Nattamai+Kottai+Krishnagiri',
@@ -1034,4 +1144,4 @@ export const STORE_DETAILS = {
 
 export const FREE_DELIVERY_THRESHOLD = 799;
 export const STANDARD_DELIVERY_FEE = 50;
-export const GST_RATE = 0.05; // 5% GST for Indian confectionery/milk sweets
+export const GST_RATE = 0;

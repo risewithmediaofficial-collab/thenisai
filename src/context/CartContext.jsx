@@ -22,12 +22,12 @@ const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
 
 
 export const DEFAULT_TAX_SETTINGS = {
-  totalGstRate: 0,   // 0% Total GST
-  cgstRate: 0,       // 0% Central GST
-  sgstRate: 0,       // 0% State GST
-  gstin: '33AABCT9988Q1Z5',
+  totalGstRate: 0,
+  cgstRate: 0,
+  sgstRate: 0,
+  gstin: '',
   taxEnabled: false,
-  lastUpdated: '17 Sep 2026',
+  lastUpdated: '',
 };
 
 const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
@@ -39,6 +39,8 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
   return {
     id: item.id,
     itemNumber: item.itemNumber,
+    skuCode: item.skuCode ? String(item.skuCode) : (item.itemNumber ? String(item.itemNumber) : ''),
+    isInactive: Boolean(item.isInactive),
     name: item.name,
     englishName: item.englishName,
     tamilName: item.tamilName,
@@ -95,23 +97,44 @@ export const resolveActiveUser = (explicitUser = null) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && (parsed.name || parsed.username || parsed.id)) {
-          const isAdminUser = parsed.role === 'admin' || parsed.id === 'staff-1' || parsed.username === 'admin' || parsed.name?.includes('Ramanathan');
-          const role = isAdminUser ? 'admin' : (parsed.role || (window.location.hash.toLowerCase().includes('admin') ? 'admin' : 'cashier'));
-          const isAdmin = role === 'admin';
-          return {
-            id: parsed.id || (isAdmin ? 'staff-1' : 'staff-2'),
-            username: parsed.username || (isAdmin ? 'admin' : 'cashier'),
-            name: (parsed.name && parsed.name !== 'Staff') ? parsed.name : (isAdmin ? 'S. Ramanathan' : 'M. Kannan'),
-            role,
-            title: parsed.title || (isAdmin ? 'Kitchen Operations Head' : 'Counter Cashier'),
-          };
+          const isAdminUnlocked = sessionStorage.getItem('thenisai_admin_session_unlocked') === 'true';
+          const isBillingUnlocked = sessionStorage.getItem('thenisai_billing_session_unlocked') === 'true';
+
+          if (parsed.role === 'admin' && isAdminUnlocked) {
+            return {
+              id: parsed.id || 'staff-1',
+              username: parsed.username || 'admin',
+              name: parsed.name || 'S. Ramanathan',
+              role: 'admin',
+              title: parsed.title || 'Kitchen Operations Head',
+            };
+          }
+          if (parsed.role === 'cashier' && isBillingUnlocked) {
+            return {
+              id: parsed.id || 'staff-2',
+              username: parsed.username || 'cashier',
+              name: parsed.name || 'M. Kannan',
+              role: 'cashier',
+              title: parsed.title || 'Counter Cashier',
+            };
+          }
         }
       }
     }
   } catch {}
 
-  const isAdminRoute = typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('admin');
-  if (isAdminRoute) {
+  const hash = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+  if (hash.startsWith('#billing')) {
+    return {
+      id: 'staff-2',
+      username: 'cashier',
+      name: 'M. Kannan',
+      role: 'cashier',
+      title: 'Counter Cashier',
+    };
+  }
+
+  if (hash.startsWith('#admin')) {
     return {
       id: 'staff-1',
       username: 'admin',
@@ -168,8 +191,33 @@ export function CartProvider({ children }) {
     if (viewParam === 'storefront' || viewParam === 'store') return 'storefront';
 
     // 2. Hash routing has HIGHEST priority in SPA
-    if (hash.startsWith('#billing')) return 'billing';
+    if (hash.startsWith('#billing')) {
+      return 'billing';
+    }
+
+    if (hash === '#inventory' || hash.startsWith('#inventory')) {
+      window.location.hash = '#admin/inventory';
+      return 'admin';
+    }
+
+    const adminShortcuts = {
+      '#orders': '#admin/dispatch',
+      '#dispatch': '#admin/dispatch',
+      '#inventory': '#admin/inventory',
+      '#sales': '#admin/sales',
+      '#daily-revenue': '#admin/shift-bills',
+      '#shift-bills': '#admin/shift-bills',
+      '#activity-logs': '#admin/activity-logs',
+      '#recycle-bin': '#admin/recycle-bin',
+    };
+    if (adminShortcuts[hash]) {
+      window.location.hash = adminShortcuts[hash];
+      return 'admin';
+    }
     if (hash.startsWith('#admin')) return 'admin';
+    if (hash.startsWith('#sales') || hash.startsWith('#daily-revenue') || hash.startsWith('#activity-logs') || hash.startsWith('#recycle-bin') || hash.startsWith('#orders') || hash.startsWith('#dispatch') || hash.startsWith('#shift-bills')) {
+      return 'admin';
+    }
     if (hash === '#storefront' || hash === '#store' || hash === '#home') return 'storefront';
 
     // 3. Fallback to pathname (only when no hash specified)
@@ -362,7 +410,7 @@ export function CartProvider({ children }) {
     // A price must always be > 0. Never allow 0 or null to overwrite valid catalog price.
     return combined.map((item) => {
       const explicitPrice = masterPrices[item.id];
-      const invRecord = inventory.find((i) => i.id === item.id);
+      const invRecord = inventory.find((i) => i.id === item.id) || customProducts.find((cp) => cp.id === item.id);
       const invPrice = invRecord
         ? [invRecord.price, invRecord.unitPrice, invRecord.pricePerKg].find(
             (p) => typeof p === 'number' && !isNaN(p) && p > 0
@@ -376,18 +424,32 @@ export function CartProvider({ children }) {
             ? invPrice
             : item.price;
 
+      const backendEnglish = invRecord?.englishName || (typeof invRecord?.name === 'string' && invRecord.name.includes('—') ? invRecord.name.split('—')[0].trim() : '') || item.englishName || item.name;
+      const backendTamil = invRecord?.tamilName || (typeof invRecord?.name === 'string' && invRecord.name.includes('—') ? invRecord.name.split('—')[1].trim() : '') || item.tamilName || '';
+      const mergedName = backendEnglish || item.englishName || item.name;
+      const mergedTamilName = backendTamil || '';
+      const mergedDisplayName = mergedTamilName ? `${mergedName} — ${mergedTamilName}` : mergedName;
+      const mergedCategory = invRecord?.category || item.category || 'sweets';
+      const mergedUnit = invRecord?.unit || item.unit || 'kg';
+
       return {
         ...item,
+        name: mergedDisplayName,
+        englishName: mergedName,
+        tamilName: mergedTamilName,
+        category: mergedCategory,
+        unit: mergedUnit,
         price: livePrice,
         unitPrice: livePrice,
-        pricePerKg: item.unit === 'kg' ? livePrice : item.pricePerKg || livePrice,
-        prices: item.unit === 'kg' ? {
+        pricePerKg: mergedUnit === 'kg' ? livePrice : item.pricePerKg || livePrice,
+        skuCode: invRecord?.skuCode ?? item.skuCode ?? (item.itemNumber ? String(item.itemNumber) : ''),
+        prices: mergedUnit === 'kg' ? {
           '100g': Math.round(livePrice * 0.1),
           '250g': Math.round(livePrice * 0.25),
           '500g': Math.round(livePrice * 0.5),
           '1kg': livePrice,
           '2kg': livePrice * 2,
-        } : (item.prices ? { ...item.prices, [item.unit || '1 Cup']: livePrice } : undefined),
+        } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : undefined),
       };
     });
   }, [customProducts, inventory, masterPrices]);
@@ -420,7 +482,7 @@ export function CartProvider({ children }) {
   // ==========================================
   // SCREEN SCROLL LOCK WHEN MODALS/DRAWER OPEN
   // ==========================================
-  useScrollLock(isCartOpen || isCheckoutOpen || Boolean(activeInvoice));
+  useScrollLock(isCartOpen || isCheckoutOpen);
 
   // Sync URL changes (hash, popstate, direct links)
   useEffect(() => {
@@ -489,11 +551,49 @@ export function CartProvider({ children }) {
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
     if (view === 'admin') {
-      const targetHash = subTab && subTab !== 'orders' ? `#admin/${subTab}` : '#admin';
-      window.location.hash = targetHash;
+      const adminRouteMap = {
+        orders: '#admin/dispatch',
+        dispatch: '#admin/dispatch',
+        inventory: '#admin/inventory',
+        sales: '#admin/sales',
+        'daily-revenue': '#admin/shift-bills',
+        'shift-bills': '#admin/shift-bills',
+        'activity-logs': '#admin/activity-logs',
+        'recycle-bin': '#admin/recycle-bin',
+        billing: '#admin/billing',
+        pos: '#admin/billing',
+        register: '#admin/billing',
+      };
+      const targetHash = subTab ? (adminRouteMap[subTab] || `#admin/${subTab}`) : '#admin/inventory';
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        try {
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } catch {
+          window.dispatchEvent(new Event('hashchange'));
+        }
+      }
     } else if (view === 'billing') {
-      const targetHash = subTab && subTab !== 'register' ? `#billing/${subTab}` : '#billing';
-      window.location.hash = targetHash;
+      const billingRouteMap = {
+        register: '#billing',
+        inventory: '#billing/inventory',
+        'daily-sales': '#billing/daily-sales',
+        bills: '#billing/daily-sales',
+        orders: '#billing/orders',
+        online: '#billing/orders',
+        dispatch: '#billing/orders',
+      };
+      const targetHash = subTab ? (billingRouteMap[subTab] || `#billing/${subTab}`) : '#billing';
+      if (window.location.hash !== targetHash) {
+        window.location.hash = targetHash;
+      } else {
+        try {
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } catch {
+          window.dispatchEvent(new Event('hashchange'));
+        }
+      }
     } else {
       // Storefront: Clear any path /admin or /billing back to /
       if (window.location.pathname !== '/') {
@@ -503,7 +603,15 @@ export function CartProvider({ children }) {
           window.location.href = '/';
         }
       }
-      window.location.hash = '';
+      if (window.location.hash !== '') {
+        window.location.hash = '';
+      } else {
+        try {
+          window.dispatchEvent(new HashChangeEvent('hashchange'));
+        } catch {
+          window.dispatchEvent(new Event('hashchange'));
+        }
+      }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -591,18 +699,37 @@ export function CartProvider({ children }) {
         setInventory((prev) => {
           const backendMap = new Map(invRes.inventory.map((item) => [item.id, item]));
           const baseList = prev && prev.length > 0 ? prev : DEFAULT_INVENTORY;
+
+          let savedMaster = {};
+          try {
+            savedMaster = JSON.parse(localStorage.getItem(MASTER_PRICES_KEY) || '{}');
+          } catch {}
+
           const merged = baseList.map((item) => {
             const bItem = backendMap.get(item.id);
             if (!bItem) return item;
-            const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+
+            const backendEnglish = bItem.englishName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[0].trim() : '') || item.englishName || item.name;
+            const backendTamil = bItem.tamilName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[1].trim() : '') || item.tamilName || '';
+            const normalizedName = backendTamil ? `${backendEnglish} — ${backendTamil}` : backendEnglish;
+            const bPrice = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
               (p) => typeof p === 'number' && !isNaN(p) && p > 0
             );
+
+            // User-set price in masterPrices has highest precedence
+            const userPrice = savedMaster[item.id];
+            const finalPrice = (userPrice && userPrice > 0) ? userPrice : (bPrice || item.price);
+
             return {
               ...item,
               ...bItem,
-              price: validP || item.price,
-              unitPrice: validP || item.unitPrice || item.price,
-              pricePerKg: validP || item.pricePerKg || item.price,
+              name: normalizedName,
+              englishName: backendEnglish,
+              tamilName: backendTamil,
+              price: finalPrice,
+              unitPrice: finalPrice,
+              pricePerKg: item.unit === 'kg' ? finalPrice : item.pricePerKg || finalPrice,
+              skuCode: bItem.skuCode || item.skuCode || (item.itemNumber ? String(item.itemNumber) : ''),
               stockKg: bItem.stockKg !== undefined ? bItem.stockKg : item.stockKg,
               isInactive: bItem.isInactive !== undefined ? bItem.isInactive : item.isInactive,
             };
@@ -611,14 +738,24 @@ export function CartProvider({ children }) {
           // Also include any new backend products not already in baseList
           invRes.inventory.forEach((bItem) => {
             if (!merged.some((m) => m.id === bItem.id)) {
-              const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+              const backendEnglish = bItem.englishName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[0].trim() : '') || bItem.name || 'Product';
+              const backendTamil = bItem.tamilName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[1].trim() : '') || '';
+              const normalizedName = backendTamil ? `${backendEnglish} — ${backendTamil}` : backendEnglish;
+              const bPrice = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
                 (p) => typeof p === 'number' && !isNaN(p) && p > 0
               );
+              const userPrice = savedMaster[bItem.id];
+              const finalPrice = (userPrice && userPrice > 0) ? userPrice : (bPrice || 20);
+
               merged.push({
                 ...bItem,
-                price: validP || bItem.price || 20,
-                unitPrice: validP || bItem.unitPrice || 20,
-                pricePerKg: validP || bItem.pricePerKg || 20,
+                name: normalizedName,
+                englishName: backendEnglish,
+                tamilName: backendTamil,
+                price: finalPrice,
+                unitPrice: finalPrice,
+                pricePerKg: bItem.unit === 'kg' ? finalPrice : bItem.pricePerKg || finalPrice,
+                skuCode: bItem.skuCode || (bItem.itemNumber ? String(bItem.itemNumber) : ''),
               });
             }
           });
@@ -634,11 +771,11 @@ export function CartProvider({ children }) {
         setMasterPrices((prev) => {
           const updated = { ...prev };
           invRes.inventory.forEach((bItem) => {
-            const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+            const bPrice = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
               (p) => typeof p === 'number' && !isNaN(p) && p > 0
             );
-            if (validP && (!updated[bItem.id] || updated[bItem.id] <= 0)) {
-              updated[bItem.id] = validP;
+            if (bPrice && (!updated[bItem.id] || updated[bItem.id] <= 0)) {
+              updated[bItem.id] = bPrice;
             }
           });
           try {
@@ -962,6 +1099,27 @@ export function CartProvider({ children }) {
     return true;
   };
 
+  // Delete a selected set of bills through the same audited, recoverable
+  // single-bill flow. Sequential processing avoids stock/audit race conditions.
+  const deleteBills = async (billIdsOrInvoices, reason, deletedBy = null) => {
+    if (!Array.isArray(billIdsOrInvoices) || billIdsOrInvoices.length === 0) {
+      throw new Error('Select at least one bill to delete.');
+    }
+    const identifiers = [...new Set(billIdsOrInvoices.filter(Boolean))];
+    const deleted = [];
+    const failed = [];
+    for (const identifier of identifiers) {
+      try {
+        const wasDeleted = await deleteBill(identifier, reason, deletedBy);
+        if (wasDeleted) deleted.push(identifier);
+        else failed.push(identifier);
+      } catch {
+        failed.push(identifier);
+      }
+    }
+    return { deleted, failed };
+  };
+
   const editBill = async (billIdOrInv, updatedFields, reason = '', editedBy = null) => {
     const activePerformer = resolveActiveUser(editedBy);
     const targetBill = bills.find((b) => b.id === billIdOrInv || b.invoiceNumber === billIdOrInv);
@@ -1185,14 +1343,51 @@ export function CartProvider({ children }) {
     }
   };
 
+  const getNextAvailableSkuCode = () => {
+    const usedNumbers = new Set();
+    const validNumbers = [];
+
+    [...ALL_BILLING_ITEMS, ...customProducts, ...inventory].forEach((item) => {
+      const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+      const parentNum = Number(raw);
+      if (raw && Number.isInteger(parentNum) && parentNum > 0) {
+        usedNumbers.add(parentNum);
+        validNumbers.push(parentNum);
+      }
+    });
+
+    const highestExisting = validNumbers.length ? Math.max(...validNumbers) : 0;
+    let nextSku = highestExisting + 1;
+
+    while (usedNumbers.has(nextSku)) {
+      nextSku += 1;
+    }
+
+    return String(nextSku);
+  };
+
+  const resolveUniqueSkuCode = (requestedCode) => {
+    const cleaned = String(requestedCode ?? '').trim();
+    if (!cleaned) return getNextAvailableSkuCode();
+    if (!/^\d+$/.test(cleaned)) return getNextAvailableSkuCode();
+
+    const numeric = Number(cleaned);
+    if (!Number.isInteger(numeric) || numeric <= 0) return getNextAvailableSkuCode();
+
+    const taken = [...ALL_BILLING_ITEMS, ...customProducts, ...inventory].some((item) => {
+      const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+      return raw && /^\d+$/.test(raw) && Number(raw) === numeric;
+    });
+
+    return taken ? getNextAvailableSkuCode() : cleaned;
+  };
+
   const addNewProduct = async (productData, performedBy = null) => {
     const activePerformer = resolveActiveUser(performedBy);
 
-    const nextItemNum = Math.max(
-      ...ALL_BILLING_ITEMS.map((it) => it.itemNumber || 0),
-      ...customProducts.map((it) => it.itemNumber || 0),
-      0
-    ) + 1;
+    const nextItemNum = Number(getNextAvailableSkuCode());
+    const generatedSku = resolveUniqueSkuCode(productData.skuCode);
+    const generatedHsn = String(productData.hsn ?? '').trim() || generatedSku;
 
     const newId = productData.id || `custom-${Date.now()}`;
     const unitPrice = parseFloat(productData.price || productData.unitPrice || 500);
@@ -1201,6 +1396,7 @@ export function CartProvider({ children }) {
     const newProd = {
       id: newId,
       itemNumber: nextItemNum,
+      skuCode: generatedSku,
       name: productData.name,
       englishName: productData.englishName || productData.name.split('—')[0].trim(),
       tamilName: productData.tamilName || (productData.name.includes('—') ? productData.name.split('—')[1].trim() : ''),
@@ -1212,7 +1408,7 @@ export function CartProvider({ children }) {
       subcategory: productData.subcategory || 'Special Sweets',
       stockKg: stockQty,
       minThreshold: parseFloat(productData.minThreshold || 8),
-      hsn: productData.hsn || '2106',
+      hsn: generatedHsn,
       image: productData.image || '/images/products/palkova_card.jpg',
       isCustom: true,
       description: productData.description || 'Special preparation',
@@ -1230,6 +1426,7 @@ export function CartProvider({ children }) {
       const updated = [...prev, {
         id: newProd.id,
         itemNumber: newProd.itemNumber,
+        skuCode: generatedSku,
         name: newProd.name,
         stockKg: stockQty,
         minThreshold: newProd.minThreshold,
@@ -1239,7 +1436,7 @@ export function CartProvider({ children }) {
         subcategory: newProd.subcategory,
         batchDate: 'Today Just now',
         batchNote: 'New item addition',
-        hsn: newProd.hsn,
+        hsn: generatedHsn,
         isCustom: true,
       }];
       try {
@@ -1370,6 +1567,151 @@ export function CartProvider({ children }) {
     }
   };
 
+  const updateProductDetails = async (productId, updates, performedBy = null) => {
+    const nameEn = String(updates.englishName ?? updates.name ?? '').trim();
+    const nameTa = String(updates.tamilName ?? '').trim();
+    const nextCategory = updates.category || 'sweets';
+    const nextUnit = updates.unit || 'kg';
+    const nextPrice = parseFloat(updates.price ?? updates.unitPrice ?? 0);
+
+    if (!nameEn || Number.isNaN(nextPrice) || nextPrice <= 0) {
+      return { success: false, message: 'Please enter a valid product name and price.' };
+    }
+
+    const activePerformer = resolveActiveUser(performedBy);
+    const displayName = nameTa ? `${nameEn} — ${nameTa}` : nameEn;
+    const item = (allBillingProducts || []).find((it) => it.id === productId);
+    const oldName = item ? item.name : nameEn;
+    const oldPrice = item ? item.price : 0;
+
+    setCustomProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? {
+        ...p,
+        name: displayName,
+        englishName: nameEn,
+        tamilName: nameTa,
+        category: nextCategory,
+        unit: nextUnit,
+        price: nextPrice,
+        unitPrice: nextPrice,
+        pricePerKg: nextPrice,
+        description: updates.description || p.description || 'Updated product details',
+      } : p));
+      try {
+        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const existing = prev.some((p) => p.id === productId);
+      const updated = existing
+        ? prev.map((p) => (p.id === productId ? {
+            ...p,
+            name: displayName,
+            englishName: nameEn,
+            tamilName: nameTa,
+            category: nextCategory,
+            unit: nextUnit,
+            price: nextPrice,
+            unitPrice: nextPrice,
+            pricePerKg: nextPrice,
+            description: updates.description || p.description || 'Updated product details',
+          } : p))
+        : [
+            ...prev,
+            {
+              id: productId,
+              name: displayName,
+              englishName: nameEn,
+              tamilName: nameTa,
+              category: nextCategory,
+              unit: nextUnit,
+              price: nextPrice,
+              unitPrice: nextPrice,
+              pricePerKg: nextPrice,
+              stockKg: 0,
+              minThreshold: 0,
+              description: updates.description || 'Updated product details',
+              isCustom: true,
+            },
+          ];
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setMasterPrices((prev) => {
+      const updated = { ...prev, [productId]: nextPrice };
+      try {
+        localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_UPDATED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: oldName,
+      details: {
+        oldName,
+        newName: displayName,
+        oldPrice,
+        newPrice: nextPrice,
+        category: nextCategory,
+        unit: nextUnit,
+      },
+      reason: 'Product details updated from admin inventory',
+    });
+
+    try {
+      await api.patch(`/api/inventory/${productId}`, {
+        name: displayName,
+        englishName: nameEn,
+        tamilName: nameTa,
+        category: nextCategory,
+        unit: nextUnit,
+        price: nextPrice,
+      });
+      return { success: true };
+    } catch (err) {
+      console.warn('Backend product update failed:', err);
+      return { success: true, warning: true };
+    }
+  };
+
+  const updateProductSkuCode = async (productId, newSkuCode) => {
+    const skuStr = String(newSkuCode ?? '').trim();
+    if (!skuStr) {
+      return { success: false, message: 'SKU code is required.' };
+    }
+
+    const duplicateExists = inventory.some((item) => item.id !== productId && String(item.skuCode ?? item.itemNumber ?? '').trim() === skuStr);
+    if (duplicateExists) {
+      const nextCode = getNextAvailableSkuCode();
+      return {
+        success: false,
+        message: `SKU already exists. Use the next available code: ${nextCode}`,
+      };
+    }
+
+    try {
+      const result = await api.patch(`/api/inventory/${productId}/sku`, { skuCode: skuStr });
+
+      if (result.success) {
+        setInventory((prev) =>
+          prev.map((p) => (p.id === productId ? { ...p, skuCode: skuStr } : p))
+        );
+        return { success: true };
+      }
+      return { success: false, message: result.message };
+    } catch (err) {
+      console.warn('[SKU] Failed to update SKU code:', err);
+      return { success: false, message: err.message || 'Network error' };
+    }
+  };
 
   const addCounterSale = async (saleData) => {
     const fullOrder = {
@@ -1631,6 +1973,62 @@ export function CartProvider({ children }) {
     }
   };
 
+  const resetLocalDataExceptInventory = useCallback(() => {
+    const preservedKeys = new Set([INVENTORY_STORAGE_KEY, PRODUCT_AVAILABILITY_KEY]);
+    const removedKeys = [];
+
+    if (typeof window !== 'undefined') {
+      Object.keys(localStorage).forEach((key) => {
+        if (!preservedKeys.has(key)) {
+          localStorage.removeItem(key);
+          removedKeys.push(key);
+        }
+      });
+    }
+
+    setCart([]);
+    setOrders([]);
+    setBills([]);
+    setRecycleBinBills([]);
+    setActivityLogs([]);
+    setPriceOverrideLogs([]);
+    setCustomProducts([]);
+    setTaxSettings(DEFAULT_TAX_SETTINGS);
+    setMasterPrices({});
+    setHasOfflinePending(false);
+    setOfflinePendingCount(0);
+
+    const inventorySnapshot = JSON.parse(localStorage.getItem(INVENTORY_STORAGE_KEY) || '[]');
+    const availabilityMap = Array.isArray(inventorySnapshot)
+      ? inventorySnapshot.reduce((acc, item) => {
+          if (item && item.id) acc[item.id] = Boolean(item.isInactive);
+          return acc;
+        }, {})
+      : {};
+    setProductAvailabilityMap(availabilityMap);
+    try {
+      localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(availabilityMap));
+    } catch {}
+
+    if (typeof window !== 'undefined') {
+      window.__thenisaiResetLocalDataExceptInventory = () => resetLocalDataExceptInventory();
+    }
+
+    return { removedKeys, preservedKeys: Array.from(preservedKeys) };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.__thenisaiResetLocalDataExceptInventory = () => resetLocalDataExceptInventory();
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete window.__thenisaiResetLocalDataExceptInventory;
+      }
+    };
+  }, [resetLocalDataExceptInventory]);
+
   const openCheckout = () => {
     setIsCartOpen(false);
     setIsCheckoutOpen(true);
@@ -1698,6 +2096,7 @@ export function CartProvider({ children }) {
         updateQuantity,
         removeFromCart,
         clearCart,
+        resetLocalDataExceptInventory,
         openCheckout,
         closeCheckout,
         openInvoice,
@@ -1709,8 +2108,14 @@ export function CartProvider({ children }) {
         toggleProductAvailability,
         refreshInventory: syncWithBackend,
         addNewProduct,
+        addNewProductDetails: addNewProduct,
+        getNextAvailableSkuCode,
+        resolveUniqueSkuCode,
+        updateProductDetails,
+        updateProduct: updateProductDetails,
         deleteProduct,
         updateProductMasterPrice,
+        updateProductSkuCode,
         masterPrices,
         // Price Override Auditing
         priceOverrideLogs,
@@ -1719,6 +2124,7 @@ export function CartProvider({ children }) {
         // Bill Deletion & 30-Day Recycle Bin
         recycleBinBills,
         deleteBill,
+        deleteBills,
         editBill,
         restoreBill,
         permanentDeleteBill,

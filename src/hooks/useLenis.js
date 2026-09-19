@@ -16,6 +16,14 @@ export function useLenis() {
       return (
         hash.startsWith('#admin') ||
         hash.startsWith('#billing') ||
+        hash.startsWith('#inventory') ||
+        hash.startsWith('#sales') ||
+        hash.startsWith('#daily-revenue') ||
+        hash.startsWith('#activity-logs') ||
+        hash.startsWith('#recycle-bin') ||
+        hash.startsWith('#orders') ||
+        hash.startsWith('#dispatch') ||
+        hash.startsWith('#shift-bills') ||
         path.endsWith('/admin') ||
         path.endsWith('/billing')
       );

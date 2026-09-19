@@ -4,8 +4,6 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG, SPECIAL_BOX } from '../../data/sweetsData';
-import './WishlistDrawer.css';
-
 export default function WishlistDrawer() {
   const {
     wishlist,

@@ -1,6 +1,4 @@
 import { motion } from 'framer-motion';
-import './Footer.css';
-
 const navLinks = [
   { label: 'Home', href: '#hero' },
   { label: 'Our Sweets', href: '#collection' },

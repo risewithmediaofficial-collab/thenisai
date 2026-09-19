@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
-import './StaffSwitcher.css';
-
 export default function StaffSwitcher() {
   const { currentView, navigateTo, pendingOrdersCount } = useCart();
   const [collapsed, setCollapsed] = useState(false);
