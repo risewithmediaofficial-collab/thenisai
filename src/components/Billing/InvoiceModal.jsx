@@ -16,14 +16,30 @@ export default function InvoiceModal() {
 
   // Default: always print 2 copies (Customer Copy + Shop Copy)
   const [printCopies, setPrintCopies] = useState('both');
+  // Tracks whether a sequential 2-job print is in progress
+  const [isPrinting, setIsPrinting] = useState(false);
+  const printStepRef = useRef(null); // 'customer' | 'shop' | null
 
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
     localStorage.setItem('thenisai_pos_roll_format', fmt);
   };
 
+  // Sequential print: fires 2 separate print jobs so the thermal
+  // hardware auto-cutter triggers after each copy.
   const handlePrint = () => {
-    window.print();
+    // A4 format or single copy — just print normally
+    if (billFormat !== 'thermal' || printCopies !== 'both') {
+      window.print();
+      return;
+    }
+
+    if (isPrinting) return; // guard against double-click
+    setIsPrinting(true);
+
+    // Step 1: Print Customer Copy
+    printStepRef.current = 'customer';
+    setPrintCopies('customer');
   };
 
   useEffect(() => {
@@ -37,6 +53,20 @@ export default function InvoiceModal() {
     }
   }, [activeInvoice]);
 
+  // Sequential print orchestration:
+  // When printCopies changes to 'customer' or 'shop' during a sequential print,
+  // trigger window.print() after React re-renders the correct single copy.
+  useEffect(() => {
+    if (!isPrinting) return;
+
+    // Small delay to let React flush the DOM with the new single-copy content
+    const printTimer = setTimeout(() => {
+      window.print();
+    }, 120);
+
+    return () => clearTimeout(printTimer);
+  }, [printCopies, isPrinting]);
+
   // Keep invoice mounted during printing so browser print spooler/preview renders all text and tables without blanking
   useEffect(() => {
     const handleBeforePrint = () => {
@@ -44,6 +74,17 @@ export default function InvoiceModal() {
     };
     const handleAfterPrint = () => {
       document.body.classList.remove('is-printing-invoice');
+
+      // Sequential print: after customer copy prints, trigger shop copy
+      if (printStepRef.current === 'customer') {
+        printStepRef.current = 'shop';
+        setPrintCopies('shop');
+      } else if (printStepRef.current === 'shop') {
+        // Both copies done — reset state
+        printStepRef.current = null;
+        setIsPrinting(false);
+        setPrintCopies('both');
+      }
     };
     window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
@@ -709,13 +750,19 @@ export default function InvoiceModal() {
                 type="button"
                 className="toolbar-btn print-btn"
                 onClick={handlePrint}
+                disabled={isPrinting}
+                title={isPrinting ? 'Printing copies…' : 'Print 2 copies (Customer + Shop)'}
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>Print Receipt</span>
+                <span>
+                  {isPrinting
+                    ? (printStepRef.current === 'customer' ? 'Printing Customer…' : 'Printing Shop…')
+                    : 'Print Receipt (2 Copies)'}
+                </span>
               </button>
 
               <a
