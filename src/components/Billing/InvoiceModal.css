@@ -77,6 +77,15 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.invoice-toolbar-top-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .invoice-toolbar-left {
@@ -245,6 +254,62 @@
   color: #DC2626;
   border-color: #FCA5A5;
   transform: translateY(-1px);
+}
+
+/* Cut Separator Indicator (On Screen) */
+.thermal-receipt-divider-cut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px auto;
+  padding: 8px 12px;
+  background: #FFFBEB;
+  border: 1.5px dashed #D97706;
+  border-radius: 6px;
+  color: #92400E;
+  font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 95%;
+  user-select: none;
+}
+
+.thermal-receipt-divider-cut .cut-icon {
+  font-size: 0.95rem;
+}
+
+.a4-sheet-divider-cut {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px auto;
+  padding: 7px 12px;
+  background: #FEF3C7;
+  border: 1.5px dashed #D97706;
+  border-radius: 6px;
+  color: #92400E;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  max-width: 92%;
+  user-select: none;
+}
+
+.thermal-receipt-divider-cut .cut-icon,
+.a4-sheet-divider-cut .cut-icon {
+  font-size: 0.95rem;
+}
+
+.pos-slip-cut-feed {
+  display: block;
+  height: 8px;
+  width: 100%;
 }
 
 /* Printable Container (On Screen) */
@@ -968,6 +1033,7 @@
   .invoice-backdrop,
   .invoice-toolbar,
   .invoice-success-banner,
+  .a4-sheet-divider-cut,
   .no-print {
     display: none !important;
   }
@@ -1063,7 +1129,7 @@
     width: 72mm !important;
     max-width: 72mm !important;
     margin: 0 auto !important;
-    padding: 2mm 1.5mm 12mm 1.5mm !important;
+    padding: 2mm 1.5mm 4mm 1.5mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
@@ -1109,11 +1175,47 @@
   }
 
   .invoice-portal.format-thermal .thermal-receipt-divider-cut {
-    display: none !important;
+    display: block !important;
+    width: 72mm !important;
+    max-width: 72mm !important;
+    margin: 6mm auto 8mm auto !important;
+    padding: 2.5mm 0 !important;
+    border-top: 1px dashed #000000 !important;
+    border-bottom: 1px dashed #000000 !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+    color: #000000 !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .invoice-portal.format-thermal .thermal-receipt-divider-cut * {
+    font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+    font-size: 9.5px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    letter-spacing: 0.3px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .invoice-portal.format-thermal .thermal-paper-tear-gap {
-    display: none !important;
+    display: block !important;
+    height: 6mm !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-cut-feed,
+  .invoice-portal.format-thermal-58 .pos-slip-cut-feed {
+    display: block !important;
+    height: 16mm !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Thermal roll receipt print configuration (58mm Compact 2-inch) */
@@ -1206,11 +1308,38 @@
   }
 
   .invoice-portal.format-thermal-58 .thermal-receipt-divider-cut {
-    display: none !important;
+    display: block !important;
+    width: 50mm !important;
+    max-width: 50mm !important;
+    margin: 4mm auto 6mm auto !important;
+    padding: 2mm 0 !important;
+    border-top: 1px dashed #000000 !important;
+    border-bottom: 1px dashed #000000 !important;
+    border-left: none !important;
+    border-right: none !important;
+    background: transparent !important;
+    color: #000000 !important;
+    text-align: center !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .invoice-portal.format-thermal-58 .thermal-receipt-divider-cut * {
+    font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    color: #000000 !important;
+    letter-spacing: 0.2px !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   .invoice-portal.format-thermal-58 .thermal-paper-tear-gap {
-    display: none !important;
+    display: block !important;
+    height: 5mm !important;
   }
 
   /* Standard A4 sheet print configuration */

@@ -14,19 +14,12 @@ export default function InvoiceModal() {
     return saved === 'a4' ? 'a4' : 'thermal';
   });
 
-  // Copies to print: 'both' (Default: 2 separate cut copies for customer and shop) | 'customer' (1 copy) | 'shop' (1 copy)
-  const [printCopies, setPrintCopies] = useState(() => {
-    return localStorage.getItem('thenisai_pos_print_copies') || 'both';
-  });
+  // Default: always print 2 copies (Customer Copy + Shop Copy)
+  const [printCopies, setPrintCopies] = useState('both');
 
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
     localStorage.setItem('thenisai_pos_roll_format', fmt);
-  };
-
-  const handleSelectCopies = (copies) => {
-    setPrintCopies(copies);
-    localStorage.setItem('thenisai_pos_print_copies', copies);
   };
 
   const handlePrint = () => {
@@ -40,7 +33,6 @@ export default function InvoiceModal() {
       } else {
         setBillFormat('thermal');
       }
-      // Guarantee default is ALWAYS 2 separate cut copies (Customer Copy + Shop Copy)
       setPrintCopies('both');
     }
   }, [activeInvoice]);
@@ -72,12 +64,15 @@ export default function InvoiceModal() {
     }
   };
 
-  // Keyboard shortcut: Press Escape to close invoice modal
+  // Keyboard shortcut: Press Escape to close invoice modal, Ctrl+P to print
   useEffect(() => {
     if (!activeInvoice) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         handleClose(e);
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        handlePrint();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -125,11 +120,13 @@ export default function InvoiceModal() {
   };
 
 
-  const copiesToRender = printCopies === 'both'
-    ? ['customer', 'shop']
-    : printCopies === 'shop'
+  // Determine copies to render:
+  // When printingTarget is active during print execution, ONLY render that single bill to printer!
+  const copiesToRender = printCopies === 'shop'
     ? ['shop']
-    : ['customer'];
+    : printCopies === 'customer'
+    ? ['customer']
+    : ['customer', 'shop'];
 
   // Determine if this is a Counter/POS bill or an Online Website order
   const isOnlineOrder = activeInvoice.source === 'online';
@@ -407,6 +404,9 @@ export default function InvoiceModal() {
           <div className="pos-slip-thank-you">
             !! THANK YOU..VISIT AGAIN !!
           </div>
+
+          {/* Clean paper feed gap before auto-cutter blade */}
+          <div className="pos-slip-cut-feed" aria-hidden="true" />
         </div>
       </div>
     );
@@ -421,6 +421,14 @@ export default function InvoiceModal() {
         key={copyType}
         className={`invoice-document copy-${copyType} ${index > 0 ? 'page-break-before' : ''}`}
       >
+        {index > 0 && (
+          <div className="a4-sheet-divider-cut">
+            <span className="cut-icon">✂</span>
+            <span className="cut-text">- - - - [ ✂️ SEPARATE SHEET: SHOP / STORE COPY ✂️ ] - - - -</span>
+            <span className="cut-icon">✂</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="inv-header">
           <div className="inv-brand-with-logo">
@@ -656,10 +664,8 @@ export default function InvoiceModal() {
           data-lenis-prevent
           initial={{ opacity: 0, scale: 0.94, y: 25 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 25 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* Action Toolbar with Format Switcher & Quick Actions matching Screenshot 2 */}
+          {/* Action Toolbar with Format Switcher & Quick Actions */}
           <div className="invoice-toolbar">
             <div className="invoice-toolbar-top-row">
               <span className="invoice-quick-inv-badge">{invoiceNumber}</span>
@@ -670,10 +676,10 @@ export default function InvoiceModal() {
                   type="button"
                   className={`format-btn ${billFormat === 'thermal' ? 'active' : ''}`}
                   onClick={() => handleSelectFormat('thermal')}
-                  title="POS thermal receipt printer layout"
+                  title="POS thermal receipt roll"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
-                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+                    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
                     <path d="M8 7h8" />
                     <path d="M8 11h8" />
                     <path d="M8 15h5" />
@@ -684,7 +690,7 @@ export default function InvoiceModal() {
                   type="button"
                   className={`format-btn ${billFormat === 'a4' ? 'active' : ''}`}
                   onClick={() => handleSelectFormat('a4')}
-                  title="Standard A4 tax invoice layout"
+                  title="Standard A4 sheet layout"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="format-icon-svg">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -699,7 +705,11 @@ export default function InvoiceModal() {
             </div>
 
             <div className="invoice-toolbar-actions">
-              <button className="toolbar-btn print-btn" onClick={handlePrint}>
+              <button
+                type="button"
+                className="toolbar-btn print-btn"
+                onClick={handlePrint}
+              >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="6 9 6 2 18 2 18 9" />
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
