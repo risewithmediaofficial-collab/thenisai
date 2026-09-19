@@ -17,14 +17,29 @@ export default function InvoiceModal() {
   // Default: always print 2 copies (Customer Copy + Shop Copy)
   const [printCopies, setPrintCopies] = useState('both');
 
+  // Refs track sequential print state — refs avoid stale-closure issues in event listeners
+  const seqPrintStep = useRef(null); // null | 'customer' | 'shop'
+
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
     localStorage.setItem('thenisai_pos_roll_format', fmt);
   };
 
   const handlePrint = () => {
-    window.print();
+    // A4 or already mid-sequence — just print normally
+    if (billFormat !== 'thermal' || seqPrintStep.current !== null) return;
+
+    // Step 1: set DOM to Customer Copy only, then print
+    seqPrintStep.current = 'customer';
+    setPrintCopies('customer');
   };
+
+  // After printCopies state changes, wait for React to flush DOM then fire window.print()
+  useEffect(() => {
+    if (printCopies === 'both') return; // idle state — skip
+    const t = setTimeout(() => window.print(), 300);
+    return () => clearTimeout(t);
+  }, [printCopies]);
 
   useEffect(() => {
     if (activeInvoice) {
@@ -33,17 +48,29 @@ export default function InvoiceModal() {
       } else {
         setBillFormat('thermal');
       }
+      // Reset to default on new invoice
+      seqPrintStep.current = null;
       setPrintCopies('both');
     }
   }, [activeInvoice]);
 
-  // Keep invoice mounted during printing so browser print spooler/preview renders all text and tables without blanking
+  // afterprint fires after each print job completes
   useEffect(() => {
     const handleBeforePrint = () => {
       document.body.classList.add('is-printing-invoice');
     };
     const handleAfterPrint = () => {
       document.body.classList.remove('is-printing-invoice');
+
+      if (seqPrintStep.current === 'customer') {
+        // Customer done — now print Shop copy
+        seqPrintStep.current = 'shop';
+        setPrintCopies('shop');
+      } else if (seqPrintStep.current === 'shop') {
+        // Shop done — reset everything
+        seqPrintStep.current = null;
+        setPrintCopies('both');
+      }
     };
     window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
