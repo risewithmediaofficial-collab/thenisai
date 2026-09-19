@@ -2295,6 +2295,7 @@ export default function AdminDashboard() {
         {/* Edit Bill Modal */}
         {editBillModalItem && (
           <EditBillModal
+            isOpen={!!editBillModalItem}
             bill={editBillModalItem}
             onClose={() => setEditBillModalItem(null)}
             onSuccess={() => {

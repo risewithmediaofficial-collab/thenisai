@@ -37,8 +37,9 @@ const inventorySchema = new mongoose.Schema({
   nameTa: String,
   tagline: String,
   description: String,
+  price: { type: Number },
   pricePerKg: { type: Number, default: 500 },
-  unitPrice: { type: Number, default: 0 },
+  unitPrice: { type: Number },
   unit: { type: String, default: 'kg' },
   itemNumber: Number,
   stockKg: { type: Number, default: 0 },
@@ -227,6 +228,15 @@ async function seedIfEmpty() {
 
   for (const it of defaultItems) {
     await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
+  }
+  // Repair any legacy records with 0 price in MongoDB
+  const zeroPriceItems = await Inventory.find({ $or: [{ price: 0 }, { unitPrice: 0 }] });
+  for (const zItem of zeroPriceItems) {
+    const validP = zItem.pricePerKg > 0 ? zItem.pricePerKg : 20;
+    zItem.price = validP;
+    zItem.unitPrice = validP;
+    zItem.pricePerKg = validP;
+    await zItem.save();
   }
   console.log('[Seed] Inventory verified/seeded for standard items');
 }
@@ -611,10 +621,12 @@ app.patch('/api/inventory/:id/price', async (req, res) => {
       item = await Inventory.create({
         id,
         name: id,
+        price: numPrice,
         pricePerKg: numPrice,
         unitPrice: numPrice,
       });
     } else {
+      item.price = numPrice;
       item.pricePerKg = numPrice;
       item.unitPrice = numPrice;
       await item.save();

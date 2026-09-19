@@ -15,10 +15,7 @@ export default function InvoiceModal() {
   });
 
   // Default: always print 2 copies (Customer Copy + Shop Copy)
-  const [printCopies, setPrintCopies] = useState('both');
-
-  // Refs track sequential print state — refs avoid stale-closure issues in event listeners
-  const seqPrintStep = useRef(null); // null | 'customer' | 'shop'
+  const [printCopies, setPrintCopies] = useState('both'); // 'both' | 'customer'
 
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
@@ -26,20 +23,8 @@ export default function InvoiceModal() {
   };
 
   const handlePrint = () => {
-    // A4 or already mid-sequence — just print normally
-    if (billFormat !== 'thermal' || seqPrintStep.current !== null) return;
-
-    // Step 1: set DOM to Customer Copy only, then print
-    seqPrintStep.current = 'customer';
-    setPrintCopies('customer');
+    window.print();
   };
-
-  // After printCopies state changes, wait for React to flush DOM then fire window.print()
-  useEffect(() => {
-    if (printCopies === 'both') return; // idle state — skip
-    const t = setTimeout(() => window.print(), 300);
-    return () => clearTimeout(t);
-  }, [printCopies]);
 
   useEffect(() => {
     if (activeInvoice) {
@@ -48,29 +33,16 @@ export default function InvoiceModal() {
       } else {
         setBillFormat('thermal');
       }
-      // Reset to default on new invoice
-      seqPrintStep.current = null;
-      setPrintCopies('both');
+      setPrintCopies('both'); // Default is always 2 copies (Customer + Shop)
     }
   }, [activeInvoice]);
 
-  // afterprint fires after each print job completes
   useEffect(() => {
     const handleBeforePrint = () => {
       document.body.classList.add('is-printing-invoice');
     };
     const handleAfterPrint = () => {
       document.body.classList.remove('is-printing-invoice');
-
-      if (seqPrintStep.current === 'customer') {
-        // Customer done — now print Shop copy
-        seqPrintStep.current = 'shop';
-        setPrintCopies('shop');
-      } else if (seqPrintStep.current === 'shop') {
-        // Shop done — reset everything
-        seqPrintStep.current = null;
-        setPrintCopies('both');
-      }
     };
     window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
@@ -317,7 +289,7 @@ export default function InvoiceModal() {
             <div className="pos-store-sub">NATTAMAI KOTTAI, NH 44, KRISHNAGIRI</div>
             <div className="pos-store-cell">CELL: {storeCell}</div>
             <div className="pos-slip-title">
-              {isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT'}
+              {isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT · CUSTOMER COPY'}
             </div>
           </div>
 
@@ -441,13 +413,6 @@ export default function InvoiceModal() {
         key={copyType}
         className={`invoice-document copy-${copyType} ${index > 0 ? 'page-break-before' : ''}`}
       >
-        {index > 0 && (
-          <div className="a4-sheet-divider-cut">
-            <span className="cut-icon">✂</span>
-            <span className="cut-text">- - - - [ ✂️ SEPARATE SHEET: SHOP / STORE COPY ✂️ ] - - - -</span>
-            <span className="cut-icon">✂</span>
-          </div>
-        )}
 
         {/* Header */}
         <div className="inv-header">
@@ -722,6 +687,26 @@ export default function InvoiceModal() {
                   <span>A4 Invoice</span>
                 </button>
               </div>
+
+              {/* Copies Switcher (Default: 2 Copies) */}
+              <div className="invoice-copies-switcher">
+                <button
+                  type="button"
+                  className={`copies-pill-btn ${printCopies === 'both' ? 'active' : ''}`}
+                  onClick={() => setPrintCopies('both')}
+                  title="Default: 2 copies (Customer Copy + Shop Copy)"
+                >
+                  <span>2 Copies (Customer + Shop)</span>
+                </button>
+                <button
+                  type="button"
+                  className={`copies-pill-btn ${printCopies === 'customer' ? 'active' : ''}`}
+                  onClick={() => setPrintCopies('customer')}
+                  title="Single copy: Customer Copy Only"
+                >
+                  <span>1 Copy (Customer)</span>
+                </button>
+              </div>
             </div>
 
             <div className="invoice-toolbar-actions">
@@ -735,7 +720,7 @@ export default function InvoiceModal() {
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>Print Receipt</span>
+                <span>{printCopies === 'both' ? 'Print 2 Copies' : 'Print Receipt'}</span>
               </button>
 
               <a

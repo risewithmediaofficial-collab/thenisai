@@ -18,6 +18,7 @@ const CUSTOM_PRODUCTS_KEY = 'thenisai_custom_products_v1';
 const PRICE_OVERRIDE_LOGS_KEY = 'thenisai_price_override_logs_v1';
 const RECYCLE_BIN_STORAGE_KEY = 'thenisai_recycle_bin_bills_v1';
 const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
+const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
 
 
 export const DEFAULT_TAX_SETTINGS = {
@@ -47,6 +48,8 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
     batchNote: item.description || 'Fresh counter stock',
     unit: item.unit || 'kg',
     price: item.price,
+    unitPrice: item.price,
+    pricePerKg: item.price,
     category: item.category || 'sweets',
     subcategory: item.subcategory || (item.category === 'spices' ? 'Spices (Kara Vagai)' : item.category === 'beverages' ? 'Beverages' : 'Traditional Sweets'),
     hsn: item.hsn || '2106',
@@ -304,19 +307,6 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Combined Billing Items (Standard 125 + Custom Items)
-  const allBillingProducts = useMemo(() => {
-    const combined = [...ALL_BILLING_ITEMS];
-    customProducts.forEach((cp, idx) => {
-      if (!combined.some((it) => it.id === cp.id)) {
-        combined.push({
-          ...cp,
-          itemNumber: cp.itemNumber || (ALL_BILLING_ITEMS.length + idx + 1),
-        });
-      }
-    });
-    return combined;
-  }, [customProducts]);
 
   // Inventory state
   const [inventory, setInventory] = useState(() => {
@@ -342,6 +332,65 @@ export function CartProvider({ children }) {
       return DEFAULT_INVENTORY;
     }
   });
+
+  // Persistent Master Selling Prices (product id -> unit selling price)
+  const [masterPrices, setMasterPrices] = useState(() => {
+    try {
+      const saved = localStorage.getItem(MASTER_PRICES_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Combined Billing Items (Standard catalog + Custom Items, with live prices from masterPrices and inventory state)
+  const allBillingProducts = useMemo(() => {
+    // Start from the static catalog
+    const combined = [...ALL_BILLING_ITEMS];
+
+    // Append any custom products not already in the static list
+    customProducts.forEach((cp, idx) => {
+      if (!combined.some((it) => it.id === cp.id)) {
+        combined.push({
+          ...cp,
+          itemNumber: cp.itemNumber || (ALL_BILLING_ITEMS.length + idx + 1),
+        });
+      }
+    });
+
+    // Overlay updated prices: check masterPrices first, then inventory record, then original item price
+    // A price must always be > 0. Never allow 0 or null to overwrite valid catalog price.
+    return combined.map((item) => {
+      const explicitPrice = masterPrices[item.id];
+      const invRecord = inventory.find((i) => i.id === item.id);
+      const invPrice = invRecord
+        ? [invRecord.price, invRecord.unitPrice, invRecord.pricePerKg].find(
+            (p) => typeof p === 'number' && !isNaN(p) && p > 0
+          )
+        : null;
+
+      const livePrice =
+        explicitPrice && explicitPrice > 0
+          ? explicitPrice
+          : invPrice && invPrice > 0
+            ? invPrice
+            : item.price;
+
+      return {
+        ...item,
+        price: livePrice,
+        unitPrice: livePrice,
+        pricePerKg: item.unit === 'kg' ? livePrice : item.pricePerKg || livePrice,
+        prices: item.unit === 'kg' ? {
+          '100g': Math.round(livePrice * 0.1),
+          '250g': Math.round(livePrice * 0.25),
+          '500g': Math.round(livePrice * 0.5),
+          '1kg': livePrice,
+          '2kg': livePrice * 2,
+        } : (item.prices ? { ...item.prices, [item.unit || '1 Cup']: livePrice } : undefined),
+      };
+    });
+  }, [customProducts, inventory, masterPrices]);
 
   // POS Counter Bills state
   const [bills, setBills] = useState(() => {
@@ -539,7 +588,64 @@ export function CartProvider({ children }) {
       ]);
 
       if (invRes && invRes.success && Array.isArray(invRes.inventory) && invRes.inventory.length > 0) {
-        setInventory(invRes.inventory);
+        setInventory((prev) => {
+          const backendMap = new Map(invRes.inventory.map((item) => [item.id, item]));
+          const baseList = prev && prev.length > 0 ? prev : DEFAULT_INVENTORY;
+          const merged = baseList.map((item) => {
+            const bItem = backendMap.get(item.id);
+            if (!bItem) return item;
+            const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+              (p) => typeof p === 'number' && !isNaN(p) && p > 0
+            );
+            return {
+              ...item,
+              ...bItem,
+              price: validP || item.price,
+              unitPrice: validP || item.unitPrice || item.price,
+              pricePerKg: validP || item.pricePerKg || item.price,
+              stockKg: bItem.stockKg !== undefined ? bItem.stockKg : item.stockKg,
+              isInactive: bItem.isInactive !== undefined ? bItem.isInactive : item.isInactive,
+            };
+          });
+
+          // Also include any new backend products not already in baseList
+          invRes.inventory.forEach((bItem) => {
+            if (!merged.some((m) => m.id === bItem.id)) {
+              const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+                (p) => typeof p === 'number' && !isNaN(p) && p > 0
+              );
+              merged.push({
+                ...bItem,
+                price: validP || bItem.price || 20,
+                unitPrice: validP || bItem.unitPrice || 20,
+                pricePerKg: validP || bItem.pricePerKg || 20,
+              });
+            }
+          });
+
+          try {
+            localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
+
+        // Also synchronize masterPrices with any valid positive prices from backend
+        // Do NOT overwrite an explicit local price set by staff/admin
+        setMasterPrices((prev) => {
+          const updated = { ...prev };
+          invRes.inventory.forEach((bItem) => {
+            const validP = [bItem.price, bItem.unitPrice, bItem.pricePerKg].find(
+              (p) => typeof p === 'number' && !isNaN(p) && p > 0
+            );
+            if (validP && (!updated[bItem.id] || updated[bItem.id] <= 0)) {
+              updated[bItem.id] = validP;
+            }
+          });
+          try {
+            localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+          } catch {}
+          return updated;
+        });
 
         // Synchronize productAvailabilityMap with backend truth!
         setProductAvailabilityMap((prev) => {
@@ -1207,23 +1313,41 @@ export function CartProvider({ children }) {
 
   const updateProductMasterPrice = async (productId, newPrice, performedBy = null) => {
     const numPrice = parseFloat(newPrice);
-    if (isNaN(numPrice) || numPrice < 0) return;
+    if (isNaN(numPrice) || numPrice <= 0) return;
 
     const activePerformer = resolveActiveUser(performedBy);
-    const item = allBillingProducts.find((it) => it.id === productId);
+    const item = (allBillingProducts || ALL_BILLING_ITEMS).find((it) => it.id === productId);
     const prodName = item ? item.name : productId;
     const oldPrice = item ? item.price : 0;
 
+    // 1. Immediately update persistent masterPrices map
+    setMasterPrices((prev) => {
+      const updated = { ...prev, [productId]: numPrice };
+      try {
+        localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Update customProducts state if applicable
     setCustomProducts((prev) => {
-      const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice } : p));
+      const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice } : p));
       try {
         localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
+    // 3. Upsert into inventory array
     setInventory((prev) => {
-      const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice } : p));
+      const exists = prev.some((p) => p.id === productId);
+      let updated;
+      if (exists) {
+        updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice } : p));
+      } else {
+        const base = ALL_BILLING_ITEMS.find((it) => it.id === productId) || {};
+        updated = [...prev, { ...base, id: productId, name: prodName, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice }];
+      }
       try {
         localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
       } catch {}
@@ -1587,6 +1711,7 @@ export function CartProvider({ children }) {
         addNewProduct,
         deleteProduct,
         updateProductMasterPrice,
+        masterPrices,
         // Price Override Auditing
         priceOverrideLogs,
         recordPriceOverrideLog,

@@ -762,10 +762,7 @@ export default function BillingCounter() {
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
   const computeItemPrice = (sweet, weight) => {
     if (!sweet) return 20;
-    if (sweet.prices && sweet.prices[weight]) {
-      return Number(sweet.prices[weight]);
-    }
-    const perUnit = Number(sweet.price) || 0;
+    const perUnit = Number(sweet.price) || Number(sweet.unitPrice) || 0;
 
     // Check volume (Litre / ml)
     const isLitre = isLitreItem(sweet) ||
@@ -874,7 +871,7 @@ export default function BillingCounter() {
   const handleSetBillItemQty = (sweetOrId, weight, qty) => {
     const val = parseInt(qty, 10);
     const id = typeof sweetOrId === 'object' ? sweetOrId.id : sweetOrId;
-    const sweetObj = typeof sweetOrId === 'object' ? sweetOrId : ALL_BILLING_ITEMS.find((s) => s.id === id);
+    const sweetObj = typeof sweetOrId === 'object' ? sweetOrId : (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === id);
     const isKg = isKgItem(sweetObj);
     const isLitre = isLitreItem(sweetObj);
     const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweetObj?.unit) || '1 Cup';
@@ -2241,7 +2238,7 @@ export default function BillingCounter() {
                               <span
                                 className="line-weight-tag clickable"
                                 onClick={() => {
-                                  const sweetObj = ALL_BILLING_ITEMS.find((s) => s.id === item.id);
+                                  const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
                                   if (sweetObj && (isMeasurableItem(sweetObj) || item.weight?.includes('g') || item.weight?.includes('kg') || item.weight?.includes('ml') || item.weight?.includes('L') || item.weight?.includes('l'))) {
                                     handleOpenWeightModal(sweetObj, item.weight);
                                   }
@@ -3903,6 +3900,7 @@ export default function BillingCounter() {
       {/* Edit Bill Modal (Inventory Adjustment & Audit History) */}
       {editBillModalItem && (
         <EditBillModal
+          isOpen={!!editBillModalItem}
           bill={editBillModalItem}
           onClose={() => setEditBillModalItem(null)}
           onSuccess={() => {

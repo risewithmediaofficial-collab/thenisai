@@ -8,7 +8,7 @@ export default function EditBillModal({
   isOpen,
   bill,
   onClose,
-  onSaveSuccess,
+  onSuccess,
   currentUser,
 }) {
   const { editBill, openInvoice } = useCart();
@@ -176,7 +176,7 @@ export default function EditBillModal({
 
       const res = await editBill(bill.id || bill.invoiceNumber, updatedData, editReason.trim(), currentUser);
       if (res && res.success) {
-        if (onSaveSuccess) onSaveSuccess(res.bill);
+        if (onSuccess) onSuccess(res.bill);
         onClose();
       } else {
         setErrorNotice(res?.message || 'Failed to update bill.');
