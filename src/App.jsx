@@ -15,34 +15,37 @@ const BillingCounter = lazy(() => import('./components/Billing/BillingCounter'))
 const StaffLoginModal = lazy(() => import('./components/Auth/StaffLoginModal'));
 
 // Read-only banner shown to demo/viewer accounts
-function ViewerBanner({ onLogout }) {
+function SandboxBanner({ onLogout }) {
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
-      background: 'linear-gradient(90deg, #7c3aed, #4f46e5)',
-      color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '8px 20px', fontSize: '12px', fontWeight: 600,
-      letterSpacing: '0.04em', fontFamily: 'Inter, system-ui, sans-serif',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
-    }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" />
-        </svg>
-        READ-ONLY DEMO MODE — All write actions are disabled. No data will be created or modified.
+    <aside
+      aria-label="Sandbox Mode Announcement"
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 99999,
+        background: 'linear-gradient(90deg, #4f46e5, #7c3aed, #db2777)',
+        color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '8px 20px', fontSize: '12px', fontWeight: 600,
+        letterSpacing: '0.03em', fontFamily: 'Inter, system-ui, sans-serif',
+        boxShadow: '0 2px 14px rgba(0,0,0,0.4)',
+      }}
+    >
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ fontSize: '15px' }}>🧪</span>
+        <strong>SANDBOX TEST MODE:</strong>
+        <span style={{ opacity: 0.95 }}>
+          You can test billing, inventory, stock &amp; orders freely. Actions are simulated in-memory and will <u>NOT</u> modify real cashier or admin data.
+        </span>
       </span>
       <button
         onClick={onLogout}
         style={{
-          background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.35)',
-          color: '#fff', borderRadius: '6px', padding: '3px 12px', cursor: 'pointer',
-          fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em',
+          background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.45)',
+          color: '#fff', borderRadius: '6px', padding: '4px 14px', cursor: 'pointer',
+          fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0,
         }}
       >
-        EXIT DEMO
+        EXIT TEST MODE
       </button>
-    </div>
+    </aside>
   );
 }
 const CheckoutModal = lazy(() => import('./components/Billing/CheckoutModal'));
@@ -115,7 +118,8 @@ function DeferredSection({ children, minHeight = 320 }) {
 
 function AppContent({ isLoaded, handleLoadComplete }) {
   const { currentView, navigateTo } = useCart();
-  const { isAdmin, isCashier, isViewer, logout } = useAuth();
+  const { isAdmin, isCashier, isViewer, isTester, logout } = useAuth();
+  const isTestMode = Boolean(isTester || isViewer);
   const [currentHash, setCurrentHash] = useState(() => (typeof window !== 'undefined' ? window.location.hash.toLowerCase() : ''));
 
   useEffect(() => {
@@ -131,12 +135,12 @@ function AppContent({ isLoaded, handleLoadComplete }) {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) void import('./components/Billing/BillingCounter');
-  }, [isAdmin]);
+    if (isAdmin || isTestMode) void import('./components/Billing/BillingCounter');
+  }, [isAdmin, isTestMode]);
 
-  // Route to Admin Dashboard UI (Protected)
+  // Route to Admin Dashboard UI (Protected - Requires Admin or Test Mode)
   if (currentView === 'admin') {
-    if (!isAdmin && !isViewer) {
+    if (!isAdmin && !isTestMode) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
           <StaffLoginModal initialRole="admin" onCancel={() => navigateTo('storefront')} />
@@ -153,8 +157,8 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     if (isAdminBilling) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading POS Billing Counter..." />}>
-          {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
-          <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+          {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+          <div style={isTestMode ? { marginTop: 36 } : undefined}>
             <BillingCounter />
             <InvoiceModal />
           </div>
@@ -164,8 +168,8 @@ function AppContent({ isLoaded, handleLoadComplete }) {
 
     return (
       <Suspense fallback={<ModuleLoader label="Loading Admin Portal..." />}>
-        {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
-        <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+        {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+        <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <AdminDashboard />
           <InvoiceModal />
         </div>
@@ -173,9 +177,9 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     );
   }
 
-  // Route to In-Store Billing POS Counter UI (Protected - Requires Cashier Login)
+  // Route to In-Store Billing POS Counter UI (Protected - Requires Cashier or Test Mode)
   if (currentView === 'billing') {
-    if (!isCashier && !isViewer) {
+    if (!isCashier && !isTestMode) {
       return (
         <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
           <StaffLoginModal initialRole="cashier" onCancel={() => navigateTo('storefront')} />
@@ -184,8 +188,8 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     }
     return (
       <Suspense fallback={<ModuleLoader label="Loading POS Billing Counter..." />}>
-        {isViewer && <ViewerBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
-        <div style={isViewer ? { marginTop: 38, pointerEvents: 'none', userSelect: 'none' } : undefined}>
+        {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+        <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <BillingCounter />
           <InvoiceModal />
         </div>

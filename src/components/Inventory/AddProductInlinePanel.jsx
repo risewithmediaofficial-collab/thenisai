@@ -39,7 +39,17 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'category') {
+        if (value === 'beverages' && (prev.unit === 'kg' || prev.unit === 'g')) {
+          updated.unit = '1 Cup';
+        } else if ((value === 'sweets' || value === 'karam') && (prev.unit === '1 Cup' || prev.unit === 'Cup')) {
+          updated.unit = 'kg';
+        }
+      }
+      return updated;
+    });
     if (errorMsg) setErrorMsg('');
   };
 
@@ -232,6 +242,8 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 className="panel-select"
               >
                 <option value="kg">kg (Kilogram)</option>
+                <option value="1 Cup">1 Cup (Cup / Hot Beverage)</option>
+                <option value="1 Pc">1 Pc (Piece / Snack)</option>
                 <option value="g">g (Gram - 250g / 500g)</option>
                 <option value="pcs">pcs (Piece / Unit)</option>
                 <option value="box">box (Gift Box / Pack)</option>

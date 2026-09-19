@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { STORE_DETAILS, ALL_BILLING_ITEMS } from '../../data/sweetsData';
-import PosThermalReceipt from './PosThermalReceipt';
+import './InvoiceModal.css';
+
 export default function InvoiceModal() {
   const { activeInvoice, closeInvoice, taxSettings } = useCart();
   const invoiceRef = useRef();
@@ -99,17 +100,22 @@ export default function InvoiceModal() {
   const deliveryFee = Number(activeInvoice.deliveryFee) || 0;
   const grandTotal = Number(activeInvoice.grandTotal) || (subtotal + deliveryFee);
 
-  const activeGstin = '';
+  const rawTax = activeInvoice.taxBreakdown || {};
+  const cgstRate = typeof rawTax.cgstRate === 'number' ? rawTax.cgstRate : (typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5);
+  const sgstRate = typeof rawTax.sgstRate === 'number' ? rawTax.sgstRate : (typeof taxSettings?.sgstRate === 'number' ? taxSettings.sgstRate : 2.5);
+  const totalTaxRate = typeof rawTax.rate === 'number' ? rawTax.rate : (typeof taxSettings?.totalGstRate === 'number' ? taxSettings.totalGstRate : (cgstRate + sgstRate));
+  const activeGstin = rawTax.gstin || taxSettings?.gstin || STORE_DETAILS.gstin;
+
   const taxBreakdown = {
-    isInterState: false,
-    cgst: 0,
-    sgst: 0,
-    igst: 0,
-    totalTax: 0,
-    cgstRate: 0,
-    sgstRate: 0,
-    totalTaxRate: 0,
-    gstin: '',
+    isInterState: Boolean(rawTax.isInterState),
+    cgst: typeof rawTax.cgst === 'number' ? rawTax.cgst : (Number(rawTax.cgst) || Math.round(subtotal * (cgstRate / 100) * 100) / 100),
+    sgst: typeof rawTax.sgst === 'number' ? rawTax.sgst : (Number(rawTax.sgst) || Math.round(subtotal * (sgstRate / 100) * 100) / 100),
+    igst: typeof rawTax.igst === 'number' ? rawTax.igst : (Number(rawTax.igst) || 0),
+    totalTax: typeof rawTax.totalTax === 'number' ? rawTax.totalTax : (Number(rawTax.totalTax) || Math.round(subtotal * (totalTaxRate / 100) * 100) / 100),
+    cgstRate,
+    sgstRate,
+    totalTaxRate,
+    gstin: activeGstin,
   };
 
 
@@ -226,16 +232,14 @@ export default function InvoiceModal() {
     return { wtQty, rate, amt };
   };
 
-  // Helper to get official inventory item number / SKU code
+  // Helper to get official inventory item number code (#01, #02, etc.)
   const getInventoryCode = (item, idx) => {
-    if (item.skuCode) return String(item.skuCode);
     if (item.itemNumber) return String(item.itemNumber).padStart(2, '0');
     if (item.code) return String(item.code).padStart(2, '0');
     if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
       const match = ALL_BILLING_ITEMS.find(
         (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
       );
-      if (match?.skuCode) return String(match.skuCode);
       if (match?.itemNumber) return String(match.itemNumber).padStart(2, '0');
     }
     return String(idx + 1).padStart(2, '0');
@@ -273,13 +277,130 @@ export default function InvoiceModal() {
 
   // Helper to render POS Thermal Receipt Copy (Authentic Indian Sweet Shop Format)
   const renderThermalReceiptCopy = (copyType, index) => {
+    const isShopCopy = copyType === 'shop';
+
     return (
-      <PosThermalReceipt
-        key={copyType}
-        invoice={activeInvoice}
-        copyType={copyType}
-        index={index}
-      />
+      <div key={copyType} className={`thermal-single-copy-wrap copy-${copyType} ${index > 0 ? 'page-break-before' : ''}`}>
+
+        <div className={`thermal-receipt-document pos-slip-document copy-${copyType}`}>
+          {/* Header matching exact layout without GST */}
+          <div className="pos-slip-header">
+            <div className="pos-store-name">{STORE_DETAILS.brandName.toUpperCase()}</div>
+            <div className="pos-store-sub">NATTAMAI KOTTAI, NH 44, KRISHNAGIRI</div>
+            <div className="pos-store-cell">CELL: {storeCell}</div>
+            <div className="pos-slip-title">
+              {isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT · CUSTOMER COPY'}
+            </div>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Bill & Date Row */}
+          <div className="pos-slip-bill-row">
+            <span className="pos-bill-no">BILL: {invoiceNumber}</span>
+            <span className="pos-bill-date">{orderDate} {orderTime}</span>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Table Header */}
+          <div className="pos-slip-table-head">
+            <span className="col-item">ITEM</span>
+            <span className="col-wt">WT/QTY</span>
+            <span className="col-price">PRICE</span>
+            <span className="col-amt">AMT</span>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Items List - 2-line layout with Inventory Number */}
+          <div className="pos-slip-items">
+            {items.map((item, idx) => {
+              const code = getInventoryCode(item, idx);
+              const { wtQty, rate, amt } = formatItemDetails(item);
+              const displayName = getItemDisplayName(item);
+              return (
+                <div key={idx} className="pos-slip-item-row">
+                  <div className="pos-item-title-line">
+                    <span className="pos-item-code">#{code}</span>
+                    <span className="pos-item-name">{displayName}</span>
+                  </div>
+                  <div className="pos-item-math-line">
+                    <span className="col-indent" />
+                    <span className="col-wt">{wtQty}</span>
+                    <span className="col-price">{rate}</span>
+                    <span className="col-amt">{amt}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Net Rs (Prominent Bold Amount - Without GST) */}
+          <div className="pos-slip-net-row">
+            <span className="net-lbl">Net Rs:</span>
+            <span className="net-val">{grandTotal.toFixed(2)}</span>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Packing Summary & Payment Mode */}
+          <div className="pos-slip-stats-block">
+            <div className="pos-stats-line">
+              <span>Items: {items.length}</span>
+              <span>Qty: {totalPieces}</span>
+              <span>Weight: {totalWeightKg > 0 ? `${totalWeightKg.toFixed(3)} kg` : `${totalPieces} pcs`}</span>
+            </div>
+            {Number(roundOff) !== 0 && (
+              <div className="pos-stats-line pos-stats-roundoff">
+                <span>Round Off</span>
+                <span>₹{roundOff}</span>
+              </div>
+            )}
+            {paymentMethod === 'split' ? (
+              <>
+                <div className="pos-stats-line pos-slip-split-header">
+                  <span>PAY MODE:</span>
+                  <strong>SPLIT PAY</strong>
+                </div>
+                <div className="pos-stats-line pos-slip-split-line">
+                  <span>├ CASH PAID:</span>
+                  <strong>₹{Number(splitCash || 0).toFixed(2)}</strong>
+                </div>
+                <div className="pos-stats-line pos-slip-split-line">
+                  <span>└ UPI PAID:</span>
+                  <strong>₹{Number(splitUpi || 0).toFixed(2)}</strong>
+                </div>
+              </>
+            ) : (
+              <div className="pos-stats-line pos-slip-pay-line">
+                <span>PAY MODE:</span>
+                <strong>{(paymentMethod || 'CASH').toUpperCase()}</strong>
+              </div>
+            )}
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Online Order & Doorstep Delivery Note */}
+          <div className="pos-slip-online-note">
+            <div className="pos-online-label">FOR ONLINE ORDER & DOORSTEP DELIVERY VISIT</div>
+            <div className="pos-online-web">www.thenisaisweets.com</div>
+          </div>
+
+          <div className="pos-slip-dashed-line" />
+
+          {/* Footer message */}
+          <div className="pos-slip-thank-you">
+            !! THANK YOU..VISIT AGAIN !!
+          </div>
+
+          {/* Clean paper feed gap before auto-cutter blade */}
+          <div className="pos-slip-cut-feed" aria-hidden="true" />
+        </div>
+      </div>
     );
   };
 
@@ -309,6 +430,7 @@ export default function InvoiceModal() {
               <div className="inv-reg-badges">
                 <span>Est: <strong>2006</strong></span>
                 <span>FSSAI Lic: <strong>{STORE_DETAILS.fssai}</strong></span>
+                <span>GSTIN: <strong>{activeGstin}</strong></span>
               </div>
             </div>
           </div>
@@ -453,9 +575,27 @@ export default function InvoiceModal() {
 
           <div className="inv-totals">
             <div className="total-row">
-              <span>Subtotal</span>
+              <span>Taxable Subtotal</span>
               <span>₹{subtotal.toFixed(2)}</span>
             </div>
+
+            {!taxBreakdown.isInterState ? (
+              <>
+                <div className="total-row tax">
+                  <span>CGST @ {taxBreakdown.cgstRate}%</span>
+                  <span>₹{taxBreakdown.cgst.toFixed(2)}</span>
+                </div>
+                <div className="total-row tax">
+                  <span>SGST @ {taxBreakdown.sgstRate}%</span>
+                  <span>₹{taxBreakdown.sgst.toFixed(2)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="total-row tax">
+                <span>IGST @ {taxBreakdown.totalTaxRate}%</span>
+                <span>₹{taxBreakdown.igst.toFixed(2)}</span>
+              </div>
+            )}
 
             <div className="total-row">
               <span>Delivery & Handling</span>
@@ -493,26 +633,22 @@ export default function InvoiceModal() {
 
   return (
     <AnimatePresence>
-      <div className={`invoice-portal invoice-docked-mode format-${billFormat}`} data-lenis-prevent>
-        {/* Subtle click-outside scrim (does not obscure the screen) */}
+      <div className={`invoice-portal format-${billFormat}`} data-lenis-prevent>
+        {/* Backdrop */}
         <motion.div
-          className="invoice-drawer-scrim"
+          className="invoice-backdrop"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={handleClose}
         />
 
-        {/* Fixed Right-Docked In-Screen Drawer Panel */}
-        <motion.aside
-          className={`invoice-modal-wrap invoice-docked-drawer ${billFormat === 'a4' ? 'wrap-a4' : 'wrap-thermal'}`}
-          role="dialog"
-          aria-label="Invoice Viewer Drawer"
+        {/* Modal Window */}
+        <motion.div
+          className={`invoice-modal-wrap ${billFormat === 'a4' ? 'wrap-a4' : 'wrap-thermal'}`}
           data-lenis-prevent
-          initial={{ x: '100%' }}
-          animate={{ x: 0 }}
-          exit={{ x: '100%' }}
-          transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+          initial={{ opacity: 0, scale: 0.94, y: 25 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
         >
           {/* Action Toolbar with Format Switcher & Quick Actions */}
           <div className="invoice-toolbar">
@@ -634,7 +770,7 @@ export default function InvoiceModal() {
               </div>
             )}
           </div>
-        </motion.aside>
+        </motion.div>
       </div>
     </AnimatePresence>
   );

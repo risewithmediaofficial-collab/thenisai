@@ -28,13 +28,13 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setLocalError('');
     if (role === 'admin') {
       setUsername('admin');
-      setPassword('');
-    } else if (role === 'viewer') {
-      setUsername('demo');
-      setPassword('');
-    } else {
+      setPassword('admin123');
+    } else if (role === 'cashier') {
       setUsername('cashier');
-      setPassword('');
+      setPassword('cashier123');
+    } else {
+      setUsername('tester');
+      setPassword('test123');
     }
   };
 
@@ -76,8 +76,14 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
           } else {
             navigateTo('billing', 'register');
           }
-        } else if (res.user?.role === 'viewer') {
-          navigateTo('admin');
+        } else if (res.user?.role === 'tester' || res.user?.role === 'viewer') {
+          const h = window.location.hash.toLowerCase();
+          if (h.startsWith('#admin')) {
+            const sub = h.replace('#admin/', '').split('?')[0];
+            navigateTo('admin', sub);
+          } else {
+            navigateTo('billing', 'register');
+          }
         }
       }
     } else {
@@ -146,6 +152,15 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               </svg>
               Cashier
             </button>
+            <button
+              type="button"
+              className={`neu-role-btn ${selectedRole === 'tester' ? 'active' : ''}`}
+              onClick={() => selectRolePreset('tester')}
+              title="Test billing and inventory with zero data impact"
+            >
+              <span style={{ fontSize: '13px', marginRight: '5px' }}>🧪</span>
+              Tester
+            </button>
           </div>
 
           {/* Login Form with Debossed Inset Inputs */}
@@ -212,7 +227,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
           {/* Bottom Link */}
           <div className="neu-footer">
             <span className="neu-footer-text">
-              Demo sample logins: <strong>admin</strong> / <strong>admin123</strong> · <strong>cashier</strong> / <strong>cashier123</strong>
+              Logins: <strong>admin / admin123</strong> · <strong>cashier / cashier123</strong> · <strong>tester / test123</strong> (Safe Sandbox)
             </span>
             <button
               type="button"

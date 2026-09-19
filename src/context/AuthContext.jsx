@@ -8,6 +8,7 @@ const AUTH_USER_KEY = 'thenisai_auth_user';
 const ADMIN_SESSION_KEY = 'thenisai_admin_session_unlocked';
 const BILLING_SESSION_KEY = 'thenisai_billing_session_unlocked';
 const VIEWER_SESSION_KEY = 'thenisai_viewer_session_unlocked';
+const TESTER_SESSION_KEY = 'thenisai_tester_session_unlocked';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -27,8 +28,8 @@ export function AuthProvider({ children }) {
       if (parsed.role === 'cashier') {
         return sessionStorage.getItem(BILLING_SESSION_KEY) === 'true' ? parsed : null;
       }
-      if (parsed.role === 'viewer') {
-        return sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true' ? parsed : null;
+      if (parsed.role === 'tester' || parsed.role === 'viewer') {
+        return (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true') ? parsed : null;
       }
       return null;
     } catch {
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(savedUser);
         if (parsed?.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) !== 'true') return null;
         if (parsed?.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) !== 'true') return null;
-        if (parsed?.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') return null;
+        if ((parsed?.role === 'tester' || parsed?.role === 'viewer') && sessionStorage.getItem(TESTER_SESSION_KEY) !== 'true' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') return null;
       }
       return sessionStorage.getItem(AUTH_TOKEN_KEY) || null;
     } catch {
@@ -85,7 +86,7 @@ export function AuthProvider({ children }) {
         return;
       }
 
-      if (parsedUser.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') {
+      if ((parsedUser.role === 'tester' || parsedUser.role === 'viewer') && sessionStorage.getItem(TESTER_SESSION_KEY) !== 'true' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') {
         setUser(null);
         setToken(null);
         setLoading(false);
@@ -107,8 +108,8 @@ export function AuthProvider({ children }) {
             sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
           } else if (res.user.role === 'cashier') {
             sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
-          } else if (res.user.role === 'viewer') {
-            sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
+          } else if (res.user.role === 'tester' || res.user.role === 'viewer') {
+            sessionStorage.setItem(TESTER_SESSION_KEY, 'true');
           }
         } else {
           setToken(null);
@@ -227,27 +228,29 @@ export function AuthProvider({ children }) {
         return { success: true, user: fallbackCashier };
       }
 
-      // ── Viewer / Demo read-only login ──────────────────────────────────────
-      if ((u === 'demo' || u === 'viewer' || u === 'test') && p === 'demo123') {
-        const viewerUser = {
-          id: 'viewer-1',
-          username: 'demo',
-          name: 'Demo Viewer',
-          title: 'Read-Only Preview',
-          role: 'viewer',
-          counter: 'View Only',
+      // ── Tester / Demo Sandbox login (No data impact) ──────────────────────
+      if ((u === 'tester' || u === 'test' || u === 'demo' || u === 'viewer') && (p === 'test123' || p === 'tester123' || p === 'demo123')) {
+        const testerUser = {
+          id: 'staff-3',
+          username: 'tester',
+          name: 'Demo Tester',
+          title: 'Sandbox Testing (No Data Impact)',
+          role: 'tester',
+          counter: 'Sandbox Terminal',
+          isSandbox: true,
         };
-        const tokenVal = `thenisai_session_viewer_${Date.now()}`;
+        const tokenVal = `thenisai_session_staff-3_${Date.now()}`;
         setToken(tokenVal);
-        setUser(viewerUser);
-        sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
+        setUser(testerUser);
+        sessionStorage.setItem(TESTER_SESSION_KEY, 'true');
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
         sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.removeItem(VIEWER_SESSION_KEY);
         sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
-        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(viewerUser));
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(testerUser));
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
-        return { success: true, user: viewerUser };
+        return { success: true, user: testerUser };
       }
 
       const finalMsg = err?.message || 'Authentication failed. Check credentials.';
@@ -267,6 +270,7 @@ export function AuthProvider({ children }) {
       setError(null);
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
       sessionStorage.removeItem(BILLING_SESSION_KEY);
+      sessionStorage.removeItem(TESTER_SESSION_KEY);
       sessionStorage.removeItem(VIEWER_SESSION_KEY);
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
       sessionStorage.removeItem(AUTH_USER_KEY);
@@ -285,7 +289,8 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user && token),
     isAdmin: Boolean(user && user.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'),
     isCashier: Boolean(user && user.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) === 'true'),
-    isViewer: Boolean(user && user.role === 'viewer' && sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true'),
+    isTester: Boolean(user && (user.role === 'tester' || user.role === 'viewer') && (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true')),
+    isViewer: Boolean(user && (user.role === 'tester' || user.role === 'viewer') && (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true')),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

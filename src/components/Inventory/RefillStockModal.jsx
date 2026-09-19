@@ -32,11 +32,24 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const [refillKg, setRefillKg] = useState('5');
   const [refillNote, setRefillNote] = useState('Counter tray refill from kitchen');
 
+  const getUnitLabel = (item) => {
+    if (!item) return 'kg';
+    const u = (item.unit || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const id = (item.id || '').toLowerCase();
+    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) return 'Cups';
+    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) return 'Pcs';
+    if (u.includes('pkt')) return 'pkts';
+    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') return 'bottles';
+    return 'kg';
+  };
+
   if (!isOpen) return null;
 
   const currentItem = inventory.find((it) => it.id === selectedSweetId) || inventory[0];
   const currentKg = currentItem ? currentItem.stockKg : 0;
   const targetKg = currentKg + (parseFloat(refillKg) || 0);
+  const activeUnitLabel = getUnitLabel(currentItem);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -94,10 +107,10 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
                         <line x1="12" y1="9" x2="12" y2="13" />
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
-                      Low ({currentKg} {currentItem?.unit || 'kg'})
+                      Low ({currentKg} {activeUnitLabel})
                     </strong>
                   ) : (
-                    <span>Available: {currentKg} {currentItem?.unit || 'kg'}</span>
+                    <span>Available: {currentKg} {activeUnitLabel}</span>
                   )}
                 </span>
               </label>
@@ -108,7 +121,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               >
                 {inventory.map((it) => (
                   <option key={it.id} value={it.id}>
-                    {it.name} — {it.stockKg} {it.unit === 'kg' ? 'kg' : it.unit === 'Pkt' ? 'pkts' : it.unit === 'Bottle' ? 'bottles' : 'units'} {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
+                    {it.name} — {it.stockKg} {getUnitLabel(it)} {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
                   </option>
                 ))}
               </select>
@@ -116,7 +129,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
 
             <div className="stock-field">
               <label>
-                <span>Refill Amount ({currentItem?.unit || 'kg'})</span>
+                <span>Refill Amount ({activeUnitLabel})</span>
                 <span className="stock-hint">Select quick preset or enter custom</span>
               </label>
               <input

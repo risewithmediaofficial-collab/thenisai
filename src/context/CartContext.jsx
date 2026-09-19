@@ -31,10 +31,12 @@ export const DEFAULT_TAX_SETTINGS = {
 };
 
 const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
-  const isKg = item.unit === 'kg';
-  const isLitre = item.unit === 'Litre' || item.unit === '1 Litre';
-  const isCup = item.unit === 'Cup' || item.unit === '1 Cup';
-  const isPc = item.unit === 'Pc' || item.unit === '1 Pc';
+  const isCup = item.unit === 'Cup' || item.unit === '1 Cup' || item.category === 'beverages' || item.id?.includes('tea') || item.id?.includes('coffee') || item.id?.includes('milk') || item.id?.includes('boost') || item.id?.includes('horlicks');
+  const isPc = item.unit === 'Pc' || item.unit === '1 Pc' || item.category === 'snacks' || item.id === 'vada';
+  const isLitre = item.unit === 'Litre' || item.unit === '1 Litre' || item.unit === 'Bottle';
+  const isKg = !isCup && !isPc && !isLitre && (item.unit === 'kg' || !item.unit);
+
+  const defaultUnit = isCup ? '1 Cup' : isPc ? '1 Pc' : isLitre ? (item.unit || '1 Litre') : (item.unit || 'kg');
 
   return {
     id: item.id,
@@ -45,10 +47,10 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
     englishName: item.englishName,
     tamilName: item.tamilName,
     stockKg: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
-    minThreshold: isKg ? 8 : 10,
+    minThreshold: isKg ? 8 : isCup ? 20 : isPc ? 15 : 10,
     batchDate: 'Today 06:30 AM',
     batchNote: item.description || 'Fresh counter stock',
-    unit: item.unit || 'kg',
+    unit: defaultUnit,
     price: item.price,
     unitPrice: item.price,
     pricePerKg: item.price,

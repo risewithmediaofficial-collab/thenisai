@@ -49,12 +49,25 @@ export default function AddStockModal({ isOpen, onClose }) {
     batchNote: 'New kitchen recipe introduction',
   });
 
+  const getUnitLabel = (item) => {
+    if (!item) return 'kg';
+    const u = (item.unit || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const id = (item.id || '').toLowerCase();
+    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) return 'Cups';
+    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) return 'Pcs';
+    if (u.includes('pkt')) return 'Pkts';
+    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') return 'Litres';
+    return 'kg';
+  };
+
   if (!isOpen) return null;
 
   const currentSweet = inventory.find((i) => i.id === existingForm.sweetId) ||
     SWEETS_CATALOG.find((s) => s.id === existingForm.sweetId);
   const currentKg = currentSweet?.stockKg || 0;
   const targetKg = currentKg + (parseFloat(existingForm.kg) || 0);
+  const activeUnitLabel = getUnitLabel(currentSweet);
 
   const handleExistingSubmit = (e) => {
     e.preventDefault();
@@ -140,7 +153,7 @@ export default function AddStockModal({ isOpen, onClose }) {
               <div className="stock-field">
                 <label>
                   <span>Select Sweet Variety</span>
-                  <span className="stock-hint">Current: {currentKg} kg</span>
+                  <span className="stock-hint">Current: {currentKg} {activeUnitLabel}</span>
                 </label>
                 <select
                   className="stock-select"
@@ -151,7 +164,7 @@ export default function AddStockModal({ isOpen, onClose }) {
                 >
                   {inventory.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} ({item.stockKg} kg currently)
+                      {item.name} ({item.stockKg} {getUnitLabel(item)} currently)
                     </option>
                   ))}
                   {/* Any catalog item not yet in inventory */}
@@ -165,7 +178,7 @@ export default function AddStockModal({ isOpen, onClose }) {
 
               <div className="stock-field">
                 <label>
-                  <span>Quantity to Inward (kg)</span>
+                  <span>Quantity to Inward ({activeUnitLabel})</span>
                 </label>
                 <input
                   type="number"

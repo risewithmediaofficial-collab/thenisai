@@ -7,8 +7,6 @@ import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import AddStockModal from '../Inventory/AddStockModal';
 import RefillStockModal from '../Inventory/RefillStockModal';
 import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
-import PosBillCompletedCard from './PosBillCompletedCard';
-import PosThermalReceipt from './PosThermalReceipt';
 import DeleteBillModal from './DeleteBillModal';
 import EditBillModal from './EditBillModal';
 import SideNavbar from '../Nav/SideNavbar';
@@ -91,8 +89,6 @@ export default function BillingCounter() {
 
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
-  // In-Screen High-Speed POS Bill Completion Card state (No blocking popups)
-  const [lastCompletedBill, setLastCompletedBill] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({
     fullName: '',
     phone: '',
@@ -185,10 +181,66 @@ export default function BillingCounter() {
   const isKgItem = (sweet) => {
     if (!sweet) return false;
     const u = (sweet.unit || '').toLowerCase();
+    const cat = (sweet.category || '').toLowerCase();
+    const id = (sweet.id || '').toLowerCase();
+    if (
+      cat === 'beverages' ||
+      cat === 'snacks' ||
+      id.includes('tea') ||
+      id.includes('coffee') ||
+      id.includes('milk') ||
+      id.includes('boost') ||
+      id.includes('horlicks') ||
+      id === 'vada' ||
+      u.includes('cup') ||
+      u.includes('pc')
+    ) {
+      return false;
+    }
     return u === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
   };
 
   const isMeasurableItem = (sweet) => isKgItem(sweet) || isLitreItem(sweet);
+
+  // Dedicated helpers for displaying quantity vs kg across inventory and POS
+  const getItemUnitDisplay = (prod) => {
+    if (!prod) return 'kg';
+    const cat = (prod.category || '').toLowerCase();
+    const u = (prod.unit || '').trim();
+    const id = (prod.id || '').toLowerCase();
+    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.toLowerCase().includes('cup')) {
+      return '1 Cup';
+    }
+    if (cat === 'snacks' || id === 'vada' || u.toLowerCase().includes('pc')) {
+      return '1 Pc';
+    }
+    if (u.toLowerCase() === 'litre' || u.toLowerCase() === '1 litre') return '1 Litre';
+    if (u.toLowerCase() === 'pkt' || u.toLowerCase() === 'packet') return '1 Pkt';
+    return u || 'kg';
+  };
+
+  const getItemStockDisplay = (prod, inventoryMap, rawInventory) => {
+    if (!prod) return '0';
+    const invItem = inventoryMap?.get(prod.id) || rawInventory?.find((i) => i.id === prod.id);
+    const stock = invItem ? invItem.stockKg : (prod.stockKg ?? prod.stock ?? 0);
+    const cat = (prod.category || '').toLowerCase();
+    const u = (prod.unit || '').toLowerCase();
+    const id = (prod.id || '').toLowerCase();
+
+    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) {
+      return `${stock} Cups`;
+    }
+    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) {
+      return `${stock} Pcs`;
+    }
+    if (u.includes('pkt')) {
+      return `${stock} Pkts`;
+    }
+    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') {
+      return `${stock} Litres`;
+    }
+    return `${stock} kg`;
+  };
 
   // Inline weight/volume popover state (popup inside each kg & litre row)
   const [inlineWeightId, setInlineWeightId] = useState(null); // sweet.id of open popover
@@ -681,7 +733,6 @@ export default function BillingCounter() {
     const handleKeyDown = (e) => {
       if (e.key === 'F2') {
         e.preventDefault();
-        setLastCompletedBill(null);
         searchInputRef.current?.focus();
         return;
       }
@@ -689,15 +740,8 @@ export default function BillingCounter() {
         setIsAddStockOpen(false);
         setIsRefillOpen(false);
         setIsMobileMenuOpen(false);
-        setLastCompletedBill(null);
       }
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
-      if (lastCompletedBill && billItems.length === 0 && e.key === 'Enter' && !isInput) {
-        e.preventDefault();
-        setLastCompletedBill(null);
-        searchInputRef.current?.focus();
-        return;
-      }
       if ((e.key === 'F9' || e.key === 'F8' || (e.key === 'Enter' && (!isInput || e.ctrlKey))) && billItems.length > 0 && !isAddStockOpen && !isRefillOpen) {
         e.preventDefault();
         handleCompleteSale({ autoPrint: true });
@@ -705,7 +749,7 @@ export default function BillingCounter() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [billItems, customerInfo, paymentMode, isAddStockOpen, isRefillOpen, lastCompletedBill]);
+  }, [billItems, customerInfo, paymentMode, isAddStockOpen, isRefillOpen]);
 
   // Incoming online orders
   const pendingOnlineOrders = (orders || []).filter(
@@ -881,7 +925,6 @@ export default function BillingCounter() {
 
   // Add product to bill with chosen cup/pc/weight/volume quantity
   const handleAddSweetToBill = (sweet, weight, addQty = 1, overridePrice = null) => {
-    if (lastCompletedBill) setLastCompletedBill(null);
     const qty = parseInt(addQty, 10) || 1;
     const isKg = isKgItem(sweet);
     const isLitre = isLitreItem(sweet);
@@ -1280,15 +1323,13 @@ export default function BillingCounter() {
     };
 
     const savedOrder = await addCounterSale(saleData);
-    const completedBill = savedOrder || saleData;
     handleClearBill();
-    // High-speed POS flow: display in-screen completion card (No blocking modal popups)
-    setLastCompletedBill(completedBill);
+    openInvoice(savedOrder || saleData);
 
     if (shouldPrint) {
       setTimeout(() => {
         window.print();
-      }, 300);
+      }, 400);
     }
   };
 
@@ -1563,10 +1604,7 @@ export default function BillingCounter() {
                     type="text"
                     placeholder="Search by number or name (1, 2, டீ, Coffee)... (Press F2)"
                     value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      if (lastCompletedBill) setLastCompletedBill(null);
-                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={handleSearchKeyDown}
                   />
                   {searchQuery && (
@@ -1947,11 +1985,19 @@ export default function BillingCounter() {
                           </div>
                           <span className="pos-list-rate">
                             ₹{sweet.price}
-                            {sweet.unit === 'kg' && <small className="pos-price-unit"> / kg</small>}
-                            {(sweet.unit === 'Pkt' || sweet.unit === 'pkt') && <small className="pos-price-unit"> / pkt</small>}
-                            {(sweet.unit === 'Pc' || sweet.unit === 'pc') && <small className="pos-price-unit"> / pc</small>}
-                            {sweet.unit === 'Litre' && <small className="pos-price-unit"> / Litre</small>}
-                            {sweet.unit === '1 Cup' && <small className="pos-price-unit"> / cup</small>}
+                            {((sweet.unit || '').toLowerCase().includes('cup') || (sweet.category || '').toLowerCase() === 'beverages' || (sweet.id || '').includes('tea') || (sweet.id || '').includes('coffee') || (sweet.id || '').includes('milk') || (sweet.id || '').includes('boost') || (sweet.id || '').includes('horlicks')) ? (
+                              <small className="pos-price-unit"> / cup</small>
+                            ) : ((sweet.unit || '').toLowerCase().includes('pc') || (sweet.category || '').toLowerCase() === 'snacks' || sweet.id === 'vada') ? (
+                              <small className="pos-price-unit"> / pc</small>
+                            ) : ((sweet.unit || '').toLowerCase() === 'kg' && (sweet.category || '').toLowerCase() !== 'beverages' && (sweet.category || '').toLowerCase() !== 'snacks') ? (
+                              <small className="pos-price-unit"> / kg</small>
+                            ) : ((sweet.unit || '').toLowerCase() === 'pkt') ? (
+                              <small className="pos-price-unit"> / pkt</small>
+                            ) : ((sweet.unit || '').toLowerCase() === 'litre') ? (
+                              <small className="pos-price-unit"> / Litre</small>
+                            ) : (
+                              <small className="pos-price-unit"> / {sweet.unit || 'cup'}</small>
+                            )}
                           </span>
                         </div>
 
@@ -2341,34 +2387,17 @@ export default function BillingCounter() {
               {/* Active Bill Items List (Independently Scrollable with data-lenis-prevent) */}
               <div className="pos-bill-items" data-lenis-prevent>
                 {billItems.length === 0 ? (
-                  lastCompletedBill ? (
-                    <PosBillCompletedCard
-                      bill={lastCompletedBill}
-                      onStartNextSale={() => {
-                        setLastCompletedBill(null);
-                        setTimeout(() => searchInputRef.current?.focus(), 50);
-                      }}
-                      onReprint={() => {
-                        window.print();
-                      }}
-                      onViewA4={() => {
-                        openInvoice(lastCompletedBill);
-                      }}
-                      onDismiss={() => setLastCompletedBill(null)}
-                    />
-                  ) : (
-                    <div className="pos-empty-bill">
-                      <div className="pos-empty-icon">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-                          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-                          <line x1="6" y1="1" x2="6" y2="4" />
-                          <line x1="10" y1="1" x2="10" y2="4" />
-                          <line x1="14" y1="1" x2="14" y2="4" />
-                        </svg>
-                      </div>
+                  <div className="pos-empty-bill">
+                    <div className="pos-empty-icon">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                        <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                        <line x1="6" y1="1" x2="6" y2="4" />
+                        <line x1="10" y1="1" x2="10" y2="4" />
+                        <line x1="14" y1="1" x2="14" y2="4" />
+                      </svg>
                     </div>
-                  )
+                  </div>
                 ) : (
                   <div className="pos-items-table">
                     {billItems.map((item) => {
@@ -3521,6 +3550,109 @@ export default function BillingCounter() {
               onAddProduct={(p) => addNewProduct(p, user)}
             />
 
+            {/* Category Division Chips (Previous Inventory Layout) */}
+            <div className="inventory-category-division-chips" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '4px' }}>
+                Categories:
+              </span>
+              <button
+                type="button"
+                className={`inv-div-chip ${invCategoryFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setInvCategoryFilter('all')}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  border: invCategoryFilter === 'all' ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                  background: invCategoryFilter === 'all' ? '#fef3c7' : '#fff',
+                  color: invCategoryFilter === 'all' ? '#92400e' : '#475569',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>All Products</span>
+                <span style={{ fontSize: '11px', background: invCategoryFilter === 'all' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'all' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                  {allBillingProducts.length}
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`inv-div-chip ${invCategoryFilter === 'beverages' ? 'active' : ''}`}
+                onClick={() => setInvCategoryFilter('beverages')}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  border: invCategoryFilter === 'beverages' ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                  background: invCategoryFilter === 'beverages' ? '#fef3c7' : '#fff',
+                  color: invCategoryFilter === 'beverages' ? '#92400e' : '#475569',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>☕ Beverages &amp; Hot Drinks (Quantity in Cups / Pcs)</span>
+                <span style={{ fontSize: '11px', background: invCategoryFilter === 'beverages' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'beverages' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                  {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'beverages' || (p.category || '').toLowerCase() === 'snacks' || (p.unit && p.unit.toLowerCase().includes('cup')) || p.id === 'vada' || (p.id && p.id.includes('tea')) || (p.id && p.id.includes('coffee'))).length}
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`inv-div-chip ${invCategoryFilter === 'sweets' ? 'active' : ''}`}
+                onClick={() => setInvCategoryFilter('sweets')}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  border: invCategoryFilter === 'sweets' ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                  background: invCategoryFilter === 'sweets' ? '#fef3c7' : '#fff',
+                  color: invCategoryFilter === 'sweets' ? '#92400e' : '#475569',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>🍯 Traditional Sweets (Weight in kg)</span>
+                <span style={{ fontSize: '11px', background: invCategoryFilter === 'sweets' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'sweets' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                  {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'sweets' || (!p.category && !p.id?.includes('tea') && !p.id?.includes('coffee'))).length}
+                </span>
+              </button>
+              <button
+                type="button"
+                className={`inv-div-chip ${invCategoryFilter === 'spices' ? 'active' : ''}`}
+                onClick={() => setInvCategoryFilter('spices')}
+                style={{
+                  padding: '7px 14px',
+                  borderRadius: '20px',
+                  border: invCategoryFilter === 'spices' ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                  background: invCategoryFilter === 'spices' ? '#fef3c7' : '#fff',
+                  color: invCategoryFilter === 'spices' ? '#92400e' : '#475569',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>🌶️ Spices &amp; Kara Vagai</span>
+                <span style={{ fontSize: '11px', background: invCategoryFilter === 'spices' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'spices' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
+                  {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'spices' || (p.subcategory || '').toLowerCase().includes('kara')).length}
+                </span>
+              </button>
+            </div>
+
             {/* Filter & Search Bar */}
             <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
               <div className="inventory-filter-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -3531,8 +3663,8 @@ export default function BillingCounter() {
                   style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '13px', background: '#fff', color: '#334155', fontWeight: 600 }}
                 >
                   <option value="all">All Categories ({allBillingProducts.length})</option>
-                  <option value="beverages">Beverages &amp; Fast Sellers</option>
-                  <option value="sweets">Traditional Sweets</option>
+                  <option value="beverages">Beverages &amp; Hot Drinks (Cups/Pcs)</option>
+                  <option value="sweets">Traditional Sweets (kg)</option>
                   <option value="spices">Spices &amp; Kara Vagai</option>
                   <option value="savouries">Savouries &amp; Mixtures</option>
                   <option value="other">Other</option>
@@ -3574,7 +3706,7 @@ export default function BillingCounter() {
               </div>
             </div>
 
-            {/* Products Table (7 Columns: #, PRODUCT DETAILS, CATEGORY, UNIT, SELLING PRICE, COUNTER AVAILABILITY, ACTIONS) */}
+            {/* Products Table (8 Columns: SKU, DETAILS, CATEGORY, UNIT, STOCK / QUANTITY, PRICE, AVAILABILITY, ACTIONS) */}
             <div className="inventory-table-wrap">
               {filteredInventory.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '48px 24px', color: '#64748b' }}>
@@ -3591,7 +3723,8 @@ export default function BillingCounter() {
                       <th>SKU Code</th>
                       <th>PRODUCT DETAILS</th>
                       <th>CATEGORY</th>
-                      <th>UNIT</th>
+                      <th>BILLING UNIT</th>
+                      <th>STOCK / QUANTITY</th>
                       <th>SELLING PRICE</th>
                       <th>COUNTER AVAILABILITY</th>
                       <th>ACTIONS</th>
@@ -3665,8 +3798,27 @@ export default function BillingCounter() {
                           </td>
                           <td>
                             <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                              {prod.unit || 'kg'}
+                              {getItemUnitDisplay(prod)}
                             </span>
+                          </td>
+                          <td>
+                            {(() => {
+                              const isBevOrSnack = (prod.category || '').toLowerCase() === 'beverages' || (prod.category || '').toLowerCase() === 'snacks' || (prod.id || '').includes('tea') || (prod.id || '').includes('coffee') || (prod.id || '').includes('milk') || (prod.id || '').includes('boost') || (prod.id || '').includes('horlicks') || prod.id === 'vada';
+                              return (
+                                <strong style={{
+                                  display: 'inline-block',
+                                  padding: '3px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  background: isBevOrSnack ? '#ecfdf5' : '#f8fafc',
+                                  color: isBevOrSnack ? '#047857' : '#1e293b',
+                                  border: isBevOrSnack ? '1px solid #a7f3d0' : '1px solid #e2e8f0'
+                                }}>
+                                  {getItemStockDisplay(prod, inventoryById, inventory)}
+                                </strong>
+                              );
+                            })()}
                           </td>
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -3683,7 +3835,7 @@ export default function BillingCounter() {
                                     englishName: prod.englishName || (prod.name || '').split('—')[0].trim(),
                                     tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
                                     category: prod.category || 'sweets',
-                                    unit: prod.unit || 'kg',
+                                    unit: getItemUnitDisplay(prod),
                                     price: String(prod.price || prod.unitPrice || '')
                                   });
                                 }}
@@ -3794,18 +3946,6 @@ export default function BillingCounter() {
         }}
         initialSweetId={refillTargetSweetId}
       />
-
-      {/* Silent Background Thermal Receipt Printable Container for instant POS print */}
-      {lastCompletedBill && (
-        <div className="pos-silent-print-container" aria-hidden="true">
-          <div className="invoice-portal format-thermal">
-            <div className="thermal-receipt-wrapper has-multiple">
-              <PosThermalReceipt invoice={lastCompletedBill} copyType="customer" index={0} />
-              <PosThermalReceipt invoice={lastCompletedBill} copyType="shop" index={1} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Staff / Admin Price Override Modal */}
       {editingPriceItem && (

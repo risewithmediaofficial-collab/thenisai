@@ -236,8 +236,15 @@ async function seedIfEmpty() {
     await Staff.insertMany([
       { id: 'staff-1', username: 'admin', password: 'admin123', name: 'S. Ramanathan', title: 'Kitchen Operations Head', role: 'admin', counter: 'Operations Central' },
       { id: 'staff-2', username: 'cashier', password: 'cashier123', name: 'M. Kannan', title: 'Counter Cashier', role: 'cashier', counter: 'Counter Desk 01' },
+      { id: 'staff-3', username: 'tester', password: 'test123', name: 'Demo Tester', title: 'Sandbox Testing (No Data Impact)', role: 'tester', counter: 'Sandbox Terminal' },
     ]);
     console.log('[Seed] Staff accounts created');
+  } else {
+    await Staff.updateOne(
+      { username: 'tester' },
+      { $setOnInsert: { id: 'staff-3', username: 'tester', password: 'test123', name: 'Demo Tester', title: 'Sandbox Testing (No Data Impact)', role: 'tester', counter: 'Sandbox Terminal' } },
+      { upsert: true }
+    );
   }
 
   const defaultItems = [
@@ -307,9 +314,32 @@ async function seedIfEmpty() {
   console.log('[Seed] Inventory verified/seeded for standard items');
 }
 
-// ============================================================
-// 1. AUTHENTICATION (ADMIN & CASHIER)
-// ============================================================
+function isSandboxRequest(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
+  const token = authHeader.split(' ')[1];
+  const user = activeSessions.get(token);
+  return user?.role === 'tester' || token.includes('staff-3') || token.includes('viewer');
+}
+
+// Sandbox safety middleware: Tester mutations are simulated without touching DB
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.path !== '/api/auth/login' && req.path !== '/api/auth/logout') {
+    if (isSandboxRequest(req)) {
+      console.log(`[Sandbox] Simulated ${req.method} ${req.path} for Tester (DB write blocked)`);
+      if (req.path === '/api/bills' && req.method === 'POST') {
+        const fakeBill = { ...req.body, id: `test-bill-${Date.now()}`, isSandbox: true };
+        return res.status(201).json({ success: true, isSandbox: true, message: 'Simulated bill creation in Sandbox', bill: fakeBill });
+      }
+      if (req.path === '/api/orders' && req.method === 'POST') {
+        const fakeOrder = { ...req.body, id: `test-ord-${Date.now()}`, isSandbox: true };
+        return res.status(201).json({ success: true, isSandbox: true, message: 'Simulated order in Sandbox', order: fakeOrder });
+      }
+      return res.json({ success: true, isSandbox: true, message: 'Simulated action in Sandbox Mode. Database was not modified.' });
+    }
+  }
+  next();
+});
 
 app.post('/api/auth/login', async (req, res) => {
   const { role, username, password } = req.body;
@@ -318,12 +348,31 @@ app.post('/api/auth/login', async (req, res) => {
 
   if (username && password) {
     const inputUname = username.trim().toLowerCase();
+    const inputPass = password.trim();
+
+    // Tester Sandbox Instant Login
+    if ((inputUname === 'tester' || inputUname === 'test' || inputUname === 'demo') && (inputPass === 'test123' || inputPass === 'tester123' || inputPass === 'demo123')) {
+      const token = `thenisai_session_staff-3_${Date.now()}`;
+      const userProfile = {
+        id: 'staff-3',
+        username: 'tester',
+        name: 'Demo Tester',
+        title: 'Sandbox Testing (No Data Impact)',
+        role: 'tester',
+        counter: 'Sandbox Terminal',
+        isSandbox: true,
+      };
+      activeSessions.set(token, userProfile);
+      console.log('[Auth] User Demo Tester logged in as TESTER (Sandbox Mode)');
+      return res.json({ success: true, message: 'Welcome to Sandbox Testing Mode', token, user: userProfile });
+    }
+
     matchedStaff = await Staff.findOne({
       $or: [
         { username: { $regex: new RegExp(`^${inputUname}$`, 'i') } },
         { id: { $regex: new RegExp(`^${inputUname}$`, 'i') } },
       ],
-      password: password.trim(),
+      password: inputPass,
     });
   }
 
