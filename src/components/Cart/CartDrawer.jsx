@@ -34,7 +34,11 @@ export default function CartDrawer() {
             onClick={() => setIsCartOpen(true)}
           >
             <div className="cart-toast__body">
-              <span className="cart-toast__sparkle">✦</span>
+              <span className="cart-toast__sparkle" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                </svg>
+              </span>
               <div className="cart-toast__text">
                 <span className="cart-toast__title">
                   {cartNotification.name} ({cartNotification.weight})
@@ -49,8 +53,13 @@ export default function CartDrawer() {
                 e.stopPropagation();
                 setIsCartOpen(true);
               }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
             >
-              View Box →
+              <span>View Box</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
             </button>
           </motion.div>
         )}
@@ -81,7 +90,7 @@ export default function CartDrawer() {
           {/* Header */}
           <div className="cart-drawer__header">
             <div className="cart-drawer__title-wrap">
-              <span className="cart-drawer__badge">✦ Thenisai Kitchen</span>
+              <span className="cart-drawer__badge">Thenisai Kitchen</span>
               <h2 className="cart-drawer__title">Your Sweet Box</h2>
             </div>
             <button
@@ -99,7 +108,11 @@ export default function CartDrawer() {
           <div className="cart-drawer__shipping-bar">
             {isFreeDelivery ? (
               <div className="cart-drawer__shipping-msg success">
-                <span className="shipping-icon">✓</span>
+                <span className="shipping-icon" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
                 <span>You unlocked <strong>FREE Home Delivery</strong> across Tamil Nadu!</span>
               </div>
             ) : (

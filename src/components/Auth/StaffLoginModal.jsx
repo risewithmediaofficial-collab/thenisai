@@ -1,26 +1,29 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import './StaffLoginModal.css';
+
 export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCancel }) {
   const { login, error: authError } = useAuth();
   const { navigateTo } = useCart();
 
-  const [selectedRole, setSelectedRole] = useState(initialRole);
-  const [username, setUsername] = useState(initialRole === 'admin' ? 'admin' : 'cashier');
+  const [selectedRole, setSelectedRole] = useState(
+    initialRole === 'cashier' ? 'cashier' : initialRole === 'tester' ? 'tester' : 'admin'
+  );
+  const [username, setUsername] = useState(
+    initialRole === 'cashier' ? 'cashier' : initialRole === 'tester' ? 'tester' : 'admin'
+  );
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState('');
 
   useEffect(() => {
-    setSelectedRole(initialRole);
-    if (initialRole === 'admin') {
-      setUsername('admin');
-      setPassword('');
-    } else {
-      setUsername('cashier');
-      setPassword('');
-    }
+    const role = initialRole === 'cashier' ? 'cashier' : initialRole === 'tester' ? 'tester' : 'admin';
+    setSelectedRole(role);
+    setUsername(role === 'tester' ? 'tester' : role);
+    setPassword(role === 'tester' ? 'test123' : '');
   }, [initialRole]);
 
   const selectRolePreset = (role) => {
@@ -28,11 +31,11 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     setLocalError('');
     if (role === 'admin') {
       setUsername('admin');
-      setPassword('admin123');
+      setPassword('');
     } else if (role === 'cashier') {
       setUsername('cashier');
-      setPassword('cashier123');
-    } else {
+      setPassword('');
+    } else if (role === 'tester') {
       setUsername('tester');
       setPassword('test123');
     }
@@ -76,14 +79,9 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
           } else {
             navigateTo('billing', 'register');
           }
-        } else if (res.user?.role === 'tester' || res.user?.role === 'viewer') {
-          const h = window.location.hash.toLowerCase();
-          if (h.startsWith('#admin')) {
-            const sub = h.replace('#admin/', '').split('?')[0];
-            navigateTo('admin', sub);
-          } else {
-            navigateTo('billing', 'register');
-          }
+        } else if (res.user?.role === 'tester') {
+          // Tester/Sandbox: goes to admin view (with sandbox banner)
+          navigateTo('admin');
         }
       }
     } else {
@@ -103,7 +101,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
 
   return (
     <div className="neu-auth-overlay" data-lenis-prevent="true">
-      {/* Top Left Back Arrow */}
+      {/* Top Left Back Arrow Button */}
       <button
         type="button"
         className="neu-back-btn"
@@ -135,7 +133,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               onClick={() => selectRolePreset('admin')}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               Admin
             </button>
@@ -152,29 +150,41 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               </svg>
               Cashier
             </button>
+            {/* Tester/Sandbox pill */}
             <button
               type="button"
-              className={`neu-role-btn ${selectedRole === 'tester' ? 'active' : ''}`}
+              className={`neu-role-btn neu-role-btn-tester ${selectedRole === 'tester' ? 'active' : ''}`}
               onClick={() => selectRolePreset('tester')}
-              title="Test billing and inventory with zero data impact"
+              title="Sandbox test mode — no real data affected"
             >
-              <span style={{ fontSize: '13px', marginRight: '5px' }}>🧪</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
+                <path d="M10 2v7.31a2 2 0 0 1-.37 1.16L4.14 18.5A2 2 0 0 0 5.8 21.5h12.4a2 2 0 0 0 1.66-3l-5.49-8.03A2 2 0 0 1 14 9.31V2" />
+                <line x1="8.5" y1="2" x2="15.5" y2="2" />
+              </svg>
               Tester
             </button>
           </div>
 
+          {/* Sandbox info badge shown when tester is selected */}
+          {selectedRole === 'tester' && (
+            <p className="neu-sandbox-note">
+              Sandbox mode — bills &amp; inventory actions are simulated in-memory only. No real data is affected.
+            </p>
+          )}
+
           {/* Login Form with Debossed Inset Inputs */}
           <form onSubmit={handleSubmit} className="neu-form">
-            {/* Input 1: Username */}
+            {/* Username */}
             <div className="neu-input-wrap">
               <span className="neu-input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
                 </svg>
               </span>
               <input
                 type="text"
-                placeholder="Username or Staff ID"
+                placeholder={selectedRole === 'admin' ? 'admin' : selectedRole === 'tester' ? 'tester' : 'cashier'}
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
@@ -186,15 +196,16 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               />
             </div>
 
-            {/* Input 2: Password */}
+            {/* Password */}
             <div className="neu-input-wrap">
               <span className="neu-input-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" />
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
               </span>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 value={password}
                 onChange={(e) => {
@@ -205,6 +216,24 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
                 autoComplete="current-password"
                 required
               />
+              <button
+                type="button"
+                className="neu-eye-btn"
+                onClick={() => setShowPassword((p) => !p)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
             </div>
 
             {/* Error Message */}
@@ -214,20 +243,24 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
               </div>
             )}
 
-            {/* Raised Neumorphic Action Button */}
+            {/* Raised Neumorphic Submit Button */}
             <button
               type="submit"
-              className="neu-submit-btn"
+              className={`neu-submit-btn ${
+                selectedRole === 'cashier' ? 'neu-submit-cashier' :
+                selectedRole === 'tester' ? 'neu-submit-tester' : ''
+              }`}
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'SIGNING IN...' : 'SIGN IN'}
+              {isSubmitting ? 'ENTERING...' : selectedRole === 'tester' ? 'ENTER SANDBOX' : 'SIGN IN'}
             </button>
           </form>
 
-          {/* Bottom Link */}
+          {/* Footer */}
           <div className="neu-footer">
             <span className="neu-footer-text">
-              Logins: <strong>admin / admin123</strong> · <strong>cashier / cashier123</strong> · <strong>tester / test123</strong> (Safe Sandbox)
+              Sample logins: <strong>admin</strong> / <strong>admin123</strong> · <strong>cashier</strong> / <strong>cashier123</strong>
+              {' · '}<strong>tester</strong> / <strong>test123</strong>
             </span>
             <button
               type="button"

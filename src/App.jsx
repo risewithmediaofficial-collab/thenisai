@@ -29,7 +29,11 @@ function SandboxBanner({ onLogout }) {
       }}
     >
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ fontSize: '15px' }}>🧪</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <path d="M10 2v7.31a2 2 0 0 1-.37 1.16L4.14 18.5A2 2 0 0 0 5.8 21.5h12.4a2 2 0 0 0 1.66-3l-5.49-8.03A2 2 0 0 1 14 9.31V2" />
+          <line x1="8.5" y1="2" x2="15.5" y2="2" />
+          <line x1="7" y1="16" x2="17" y2="16" />
+        </svg>
         <strong>SANDBOX TEST MODE:</strong>
         <span style={{ opacity: 0.95 }}>
           You can test billing, inventory, stock &amp; orders freely. Actions are simulated in-memory and will <u>NOT</u> modify real cashier or admin data.

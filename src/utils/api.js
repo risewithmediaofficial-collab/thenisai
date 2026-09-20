@@ -99,9 +99,36 @@ export async function request(endpoint, options = {}) {
     signal: controller.signal,
   };
 
+  // Support axios-style `data` property for payload (e.g. in DELETE requests)
+  if (config.data !== undefined && config.body === undefined) {
+    config.body = config.data;
+  }
+
   if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
     config.body = JSON.stringify(config.body);
   }
+
+  // ── Sandbox intercept: block all write calls for tester/demo users ──────────
+  // Tester sessions have isSandbox:true in their stored user object.
+  const _sandboxRaw = sessionStorage.getItem('thenisai_auth_user');
+  const _sandboxUser = _sandboxRaw ? (() => { try { return JSON.parse(_sandboxRaw); } catch { return null; } })() : null;
+  const _isSandbox = Boolean(_sandboxUser?.isSandbox || _sandboxUser?.role === 'tester');
+
+  const _method = (fetchOptions.method || 'GET').toUpperCase();
+
+  if (_isSandbox && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(_method)) {
+    if (import.meta.env.DEV) {
+      console.info(`[Sandbox] Intercepted ${_method} ${endpoint} — returning mock success (no real data changed)`);
+    }
+    // Return a mock success payload that matches common API shapes
+    return {
+      success: true,
+      sandbox: true,
+      message: 'Sandbox: action simulated — no real data was affected.',
+      data: null,
+    };
+  }
+  // ────────────────────────────────────────────────────────────────────────────
 
   const method = (config.method || 'GET').toUpperCase();
 
@@ -169,7 +196,19 @@ export const api = {
   post: (endpoint, body, options = {}) => request(endpoint, { ...options, method: 'POST', body }),
   put: (endpoint, body, options = {}) => request(endpoint, { ...options, method: 'PUT', body }),
   patch: (endpoint, body, options = {}) => request(endpoint, { ...options, method: 'PATCH', body }),
-  delete: (endpoint, options = {}) => request(endpoint, { ...options, method: 'DELETE' }),
+  delete: (endpoint, bodyOrOptions = {}, options = {}) => {
+    let finalOptions;
+    if (options && Object.keys(options).length > 0) {
+      finalOptions = { ...options, body: bodyOrOptions, method: 'DELETE' };
+    } else if (bodyOrOptions && (bodyOrOptions.data !== undefined || bodyOrOptions.body !== undefined || bodyOrOptions.headers !== undefined)) {
+      finalOptions = { ...bodyOrOptions, method: 'DELETE' };
+    } else if (bodyOrOptions && typeof bodyOrOptions === 'object' && Object.keys(bodyOrOptions).length > 0) {
+      finalOptions = { body: bodyOrOptions, method: 'DELETE' };
+    } else {
+      finalOptions = { ...bodyOrOptions, method: 'DELETE' };
+    }
+    return request(endpoint, finalOptions);
+  },
 };
 
 export default api;

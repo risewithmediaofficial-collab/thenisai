@@ -273,7 +273,12 @@ export default function CheckoutModal() {
           {/* Header */}
           <div className="checkout-modal__header">
             <div>
-              <span className="checkout-modal__eyebrow">✦ Secure Checkout</span>
+              <span className="checkout-modal__eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>Secure Checkout</span>
+              </span>
               <h2 className="checkout-modal__title">Billing & Delivery Details</h2>
             </div>
             <button
@@ -404,7 +409,14 @@ export default function CheckoutModal() {
 
                         {devOtpHint && (
                           <div className="otp-dev-helper">
-                            <span className="otp-helper-badge">✦ Demo OTP</span>
+                            <span className="otp-helper-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="16" x2="12" y2="12" />
+                                <line x1="12" y1="8" x2="12.01" y2="8" />
+                              </svg>
+                              <span>Demo OTP</span>
+                            </span>
                             <span className="otp-helper-code">{devOtpHint}</span>
                             <button
                               type="button"
@@ -718,8 +730,18 @@ export default function CheckoutModal() {
               </button>
 
               <div className="checkout-badges">
-                <span>✦ FSSAI Certified Kitchen</span>
-                <span>✦ Authentic krishnagiri Recipe</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>FSSAI Certified Kitchen</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span>Authentic krishnagiri Recipe</span>
+                </span>
               </div>
             </div>
           </div>

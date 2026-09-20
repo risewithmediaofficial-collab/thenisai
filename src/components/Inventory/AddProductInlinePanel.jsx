@@ -92,7 +92,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         await addNewProduct(productPayload);
       }
 
-      setSuccessMsg(`✓ Successfully added "${form.nameEn.trim()}" to catalog!`);
+      setSuccessMsg(`Successfully added "${form.nameEn.trim()}" to catalog!`);
       setTimeout(() => {
         onClose();
       }, 700);
@@ -151,7 +151,10 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         )}
 
         {successMsg && (
-          <div className="panel-alert-success">
+          <div className="panel-alert-success" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
             <span>{successMsg}</span>
           </div>
         )}

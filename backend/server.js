@@ -196,9 +196,26 @@ const deletedBillSchema = new mongoose.Schema({
   expiresAt: { type: Number, default: () => Date.now() + 30 * 24 * 60 * 60 * 1000 }, // 30 days retention
 });
 
+const deletedProductSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  name: String,
+  englishName: String,
+  tamilName: String,
+  productData: mongoose.Schema.Types.Mixed,
+  deletedBy: {
+    id: String,
+    name: String,
+    username: String,
+    role: String,
+  },
+  deletionReason: { type: String, default: 'Product removed from catalog' },
+  deletedAt: { type: Number, default: Date.now },
+  expiresAt: { type: Number, default: () => Date.now() + 30 * 24 * 60 * 60 * 1000 },
+});
+
 const activityLogSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
-  actionType: { type: String, required: true }, // 'BILL_DELETED' | 'BILL_RESTORED' | 'BILL_PERMANENTLY_PURGED' | 'PRICE_OVERRIDE' | 'PRODUCT_ADDED' | 'PRODUCT_PRICE_UPDATED' | 'PRODUCT_DELETED' | 'STOCK_TOGGLED'
+  actionType: { type: String, required: true }, // 'BILL_DELETED' | 'BILL_RESTORED' | 'BILL_PERMANENTLY_PURGED' | 'PRICE_OVERRIDE' | 'PRODUCT_ADDED' | 'PRODUCT_PRICE_UPDATED' | 'PRODUCT_DELETED' | 'PRODUCT_RESTORED' | 'PRODUCT_PERMANENTLY_PURGED' | 'STOCK_TOGGLED'
   performedBy: {
     id: String,
     name: String,
@@ -222,6 +239,7 @@ const Bill = mongoose.model('Bill', billSchema);
 const Customer = mongoose.model('Customer', customerSchema);
 const PriceOverrideLog = mongoose.model('PriceOverrideLog', priceOverrideLogSchema);
 const DeletedBill = mongoose.model('DeletedBill', deletedBillSchema);
+const DeletedProduct = mongoose.model('DeletedProduct', deletedProductSchema);
 const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
 // In-memory sessions store
@@ -264,7 +282,10 @@ async function seedIfEmpty() {
   ];
 
   for (const it of defaultItems) {
-    await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
+    const isDeleted = await DeletedProduct.findOne({ id: it.id });
+    if (!isDeleted) {
+      await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
+    }
   }
 
   // Load from catalog.json if available to keep MongoDB up to date
@@ -275,6 +296,8 @@ async function seedIfEmpty() {
       if (Array.isArray(catalogItems)) {
         for (const cItem of catalogItems) {
           if (!cItem.id) continue;
+          const isDeleted = await DeletedProduct.findOne({ id: cItem.id });
+          if (isDeleted) continue;
           const setFields = {
             skuCode: cItem.skuCode || (cItem.itemNumber ? String(cItem.itemNumber) : ''),
             price: cItem.price,
@@ -351,7 +374,7 @@ app.post('/api/auth/login', async (req, res) => {
     const inputPass = password.trim();
 
     // Tester Sandbox Instant Login
-    if ((inputUname === 'tester' || inputUname === 'test' || inputUname === 'demo') && (inputPass === 'test123' || inputPass === 'tester123' || inputPass === 'demo123')) {
+    if ((inputUname === 'tester' || inputUname === 'test' || inputUname === 'demo') && (inputPass === 'test123' || inputPass === 'tester123' || inputPass === 'demo123' || inputPass === '0000' || inputPass === 'test')) {
       const token = `thenisai_session_staff-3_${Date.now()}`;
       const userProfile = {
         id: 'staff-3',
@@ -614,7 +637,168 @@ app.post('/api/customer/wishlist/sync', async (req, res) => {
 });
 
 // ============================================================
-// 3. INVENTORY & BATCH MANAGEMENT
+// 3. STAFF ACCOUNT MANAGEMENT (Admin Only)
+// ============================================================
+
+// Middleware: verify request is from an authenticated admin
+async function requireAdmin(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    let sessionUser = activeSessions.get(token);
+
+    if (!sessionUser) {
+      const tokenParts = token.split('_');
+      const staffId = tokenParts[2];
+      if (staffId) {
+        const staff = await Staff.findOne({ id: staffId });
+        if (staff) {
+          sessionUser = {
+            id: staff.id,
+            username: staff.username,
+            name: staff.name,
+            title: staff.title,
+            role: staff.role,
+            counter: staff.counter,
+          };
+          activeSessions.set(token, sessionUser);
+        }
+      }
+    }
+
+    if (!sessionUser || sessionUser.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin privileges required.' });
+    }
+    req.adminUser = sessionUser;
+    next();
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Authorization check failed.' });
+  }
+}
+
+// GET all staff accounts
+app.get('/api/staff', requireAdmin, async (req, res) => {
+  try {
+    const staffList = await Staff.find({}, { password: 0 }); // never return password
+    return res.json({ success: true, staff: staffList });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Failed to fetch staff list.' });
+  }
+});
+
+// POST create a new staff account
+app.post('/api/staff', requireAdmin, async (req, res) => {
+  try {
+    const { username, password, name, title, role, counter } = req.body;
+
+    if (!username || !password || !name || !role) {
+      return res.status(400).json({ success: false, message: 'username, password, name and role are required.' });
+    }
+    if (!['admin', 'cashier'].includes(role)) {
+      return res.status(400).json({ success: false, message: 'Role must be admin or cashier.' });
+    }
+    if (password.length < 4) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 4 characters.' });
+    }
+
+    const existing = await Staff.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') } });
+    if (existing) {
+      return res.status(409).json({ success: false, message: `Username "${username}" is already taken.` });
+    }
+
+    // Generate a unique staff ID
+    const count = await Staff.countDocuments();
+    const newId = `staff-${count + 10}-${Date.now().toString(36)}`;
+
+    const newStaff = await Staff.create({
+      id: newId,
+      username: username.trim().toLowerCase(),
+      password: password.trim(),
+      name: name.trim(),
+      title: title?.trim() || (role === 'admin' ? 'Store Administrator' : 'Counter Cashier'),
+      role,
+      counter: counter?.trim() || (role === 'cashier' ? 'Counter Desk' : 'Admin Office'),
+    });
+
+    console.log(`[Staff] ✓ Created: ${newStaff.name} (${newStaff.role}) by ${req.adminUser.name}`);
+    return res.status(201).json({
+      success: true,
+      message: `Staff account for ${newStaff.name} created successfully.`,
+      staff: { id: newStaff.id, username: newStaff.username, name: newStaff.name, title: newStaff.title, role: newStaff.role, counter: newStaff.counter },
+    });
+  } catch (err) {
+    console.error('[Staff] Create error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to create staff account.' });
+  }
+});
+
+// PUT update a staff account (admin can update name, title, counter, password, role — but NOT the built-in staff-1 admin account username)
+app.put('/api/staff/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, title, role, counter, password, username } = req.body;
+
+    const staff = await Staff.findOne({ id });
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff account not found.' });
+
+    // Protect the primary admin account from role/username changes
+    if (staff.id === 'staff-1' && role && role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Cannot change the role of the primary admin account.' });
+    }
+
+    if (name?.trim()) staff.name = name.trim();
+    if (title?.trim()) staff.title = title.trim();
+    if (counter?.trim()) staff.counter = counter.trim();
+    if (role && ['admin', 'cashier'].includes(role)) staff.role = role;
+    if (password?.trim() && password.trim().length >= 4) staff.password = password.trim();
+    if (username?.trim() && staff.id !== 'staff-1') {
+      // Check uniqueness if username is being changed
+      const conflict = await Staff.findOne({ username: { $regex: new RegExp(`^${username.trim()}$`, 'i') }, id: { $ne: id } });
+      if (conflict) return res.status(409).json({ success: false, message: `Username "${username}" is already taken.` });
+      staff.username = username.trim().toLowerCase();
+    }
+
+    await staff.save();
+    console.log(`[Staff] ✏️  Updated: ${staff.name} (${staff.role}) by ${req.adminUser.name}`);
+    return res.json({
+      success: true,
+      message: `${staff.name}'s account updated successfully.`,
+      staff: { id: staff.id, username: staff.username, name: staff.name, title: staff.title, role: staff.role, counter: staff.counter },
+    });
+  } catch (err) {
+    console.error('[Staff] Update error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to update staff account.' });
+  }
+});
+
+// DELETE a staff account (cannot delete staff-1 or staff-2 built-in accounts)
+app.delete('/api/staff/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (id === 'staff-1' || id === 'staff-2') {
+      return res.status(403).json({ success: false, message: 'Built-in staff accounts cannot be deleted.' });
+    }
+    // Also prevent self-deletion
+    if (id === req.adminUser.id) {
+      return res.status(403).json({ success: false, message: 'You cannot delete your own account.' });
+    }
+    const staff = await Staff.findOne({ id });
+    if (!staff) return res.status(404).json({ success: false, message: 'Staff account not found.' });
+
+    await Staff.deleteOne({ id });
+    console.log(`[Staff] 🗑️  Deleted: ${staff.name} (${staff.role}) by ${req.adminUser.name}`);
+    return res.json({ success: true, message: `${staff.name}'s account has been removed.` });
+  } catch (err) {
+    console.error('[Staff] Delete error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to delete staff account.' });
+  }
+});
+
+// ============================================================
+// 4. INVENTORY & BATCH MANAGEMENT
 // ============================================================
 
 app.get('/api/inventory', async (req, res) => {
@@ -893,11 +1077,59 @@ app.patch('/api/inventory/:id/sku', async (req, res) => {
   }
 });
 
-// Delete product from catalog
+// Delete product from catalog & move to 30-Day Recycle Bin
 app.delete('/api/inventory/products/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Inventory.findOneAndDelete({ id });
+    let reason = req.body?.reason || req.query?.reason || 'Product removed from catalog';
+    if (typeof reason === 'string') reason = reason.trim();
+    let deletedBy = req.body?.deletedBy;
+    if (!deletedBy && req.query?.deletedBy) {
+      try { deletedBy = JSON.parse(req.query.deletedBy); } catch {}
+    }
+
+    let existing = await Inventory.findOne({ id });
+    let productData = existing ? (existing.toObject ? existing.toObject() : existing) : null;
+
+    if (!productData && fs.existsSync(CATALOG_FILE_PATH)) {
+      try {
+        const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          productData = list.find((p) => p.id === id);
+        }
+      } catch {}
+    }
+
+    const prodName = productData?.name || id;
+    const activeDeletedBy = (deletedBy && deletedBy.id) ? deletedBy : {
+      id: deletedBy?.id || 'staff-1',
+      username: deletedBy?.username || 'admin',
+      name: (deletedBy?.name && deletedBy.name !== 'Staff') ? deletedBy.name : 'S. Ramanathan',
+      role: deletedBy?.role || 'admin',
+    };
+
+    // Store in 30-Day Recycle Bin
+    const deletedRecord = await DeletedProduct.findOneAndUpdate(
+      { id },
+      {
+        id,
+        name: prodName,
+        englishName: productData?.englishName || '',
+        tamilName: productData?.tamilName || '',
+        productData: productData || { id, name: prodName },
+        deletedBy: activeDeletedBy,
+        deletionReason: reason,
+        deletedAt: Date.now(),
+        expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      },
+      { upsert: true, new: true }
+    );
+
+    // Remove from active inventory
+    await Inventory.deleteOne({ id });
+
+    // Remove from catalog file
     try {
       if (fs.existsSync(CATALOG_FILE_PATH)) {
         const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
@@ -908,8 +1140,24 @@ app.delete('/api/inventory/products/:id', async (req, res) => {
         }
       }
     } catch {}
-    console.log(`[Inventory] Deleted product ${id}`);
-    res.json({ success: true, message: `Product ${id} removed from catalog.`, deleted });
+
+    // Log Activity for Admin Audit Trail
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-delprod-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'PRODUCT_DELETED',
+      performedBy: activeDeletedBy,
+      targetId: id,
+      targetName: prodName,
+      details: { productId: id, name: prodName },
+      reason,
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Inventory] Moved product ${id} (${prodName}) to Recycle Bin`);
+    res.json({ success: true, message: `Product ${prodName} moved to 30-day Recycle Bin.`, deletedProduct: deletedRecord });
   } catch (err) {
     console.error('[Inventory] Error deleting product:', err);
     res.status(500).json({ success: false, message: 'Failed to delete product: ' + err.message });
@@ -1260,18 +1508,31 @@ app.put('/api/bills/:id', async (req, res) => {
 app.delete('/api/bills/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, deletedBy } = req.body || {};
+    let reason = req.body?.reason || req.query?.reason || req.headers['x-deletion-reason'];
+    if (typeof reason === 'string') reason = reason.trim();
+    let deletedBy = req.body?.deletedBy;
+    if (!deletedBy && req.query?.deletedBy) {
+      try { deletedBy = JSON.parse(req.query.deletedBy); } catch {}
+    }
 
     if (!reason || !reason.trim()) {
       return res.status(400).json({ success: false, message: 'A mandatory deletion reason is required.' });
     }
 
-    const bill = await Bill.findOne({
-      $or: [{ id }, { invoiceNumber: id }],
-    });
+    const queryOr = [{ id }, { invoiceNumber: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      queryOr.push({ _id: id });
+    }
+
+    let bill = await Bill.findOne({ $or: queryOr });
+    let fromOrderCollection = false;
 
     if (!bill) {
-      return res.status(404).json({ success: false, message: 'Bill not found in active bills.' });
+      bill = await Order.findOne({ $or: queryOr });
+      if (!bill) {
+        return res.status(404).json({ success: false, message: 'Bill not found in active bills.' });
+      }
+      fromOrderCollection = true;
     }
 
     const billObj = bill.toObject ? bill.toObject() : bill;
@@ -1288,8 +1549,8 @@ app.delete('/api/bills/:id', async (req, res) => {
 
     // Store in Recycle Bin with 30 days retention
     const deletedRecord = await DeletedBill.create({
-      id: billObj.id,
-      invoiceNumber: billObj.invoiceNumber,
+      id: billObj.id || billObj.invoiceNumber,
+      invoiceNumber: billObj.invoiceNumber || billObj.id,
       billData: billObj,
       deletedBy: activeDeletedBy,
       deletionReason: reason.trim(),
@@ -1297,18 +1558,19 @@ app.delete('/api/bills/:id', async (req, res) => {
       expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
     });
 
-    // Remove from active bills
-    await Bill.deleteOne({ id: billObj.id });
+    // Remove from both active bills AND orders collections
+    await Bill.deleteMany({ $or: queryOr });
+    await Order.deleteMany({ $or: queryOr });
 
     // Log Activity for Admin
     await ActivityLog.create({
       id: `act-del-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
       actionType: 'BILL_DELETED',
       performedBy: activeDeletedBy,
-      targetId: billObj.invoiceNumber,
-      targetName: `Invoice #${billObj.invoiceNumber} (₹${billObj.grandTotal})`,
+      targetId: billObj.invoiceNumber || billObj.id,
+      targetName: `Invoice #${billObj.invoiceNumber || billObj.id} (₹${billObj.grandTotal})`,
       details: {
-        invoiceNumber: billObj.invoiceNumber,
+        invoiceNumber: billObj.invoiceNumber || billObj.id,
         grandTotal: billObj.grandTotal,
         itemsCount: billObj.items?.length || 0,
         customer: billObj.customer,
@@ -1349,9 +1611,9 @@ app.post('/api/recycle-bin/bills/:id/restore', async (req, res) => {
     const { id } = req.params;
     const { restoredBy } = req.body || {};
 
-    const deletedRecord = await DeletedBill.findOne({
-      $or: [{ id }, { invoiceNumber: id }],
-    });
+    const billQuery = [{ id }, { invoiceNumber: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) billQuery.push({ _id: id });
+    const deletedRecord = await DeletedBill.findOne({ $or: billQuery });
 
     if (!deletedRecord) {
       return res.status(404).json({ success: false, message: 'Deleted bill not found in Recycle Bin.' });
@@ -1361,7 +1623,7 @@ app.post('/api/recycle-bin/bills/:id/restore', async (req, res) => {
     // Re-insert into active bills collection
     await Bill.create(billData);
     // Remove from recycle bin
-    await DeletedBill.deleteOne({ id: deletedRecord.id });
+    await DeletedBill.deleteOne({ _id: deletedRecord._id });
 
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1405,9 +1667,9 @@ app.delete('/api/recycle-bin/bills/:id/permanent', async (req, res) => {
     const { id } = req.params;
     const { purgedBy } = req.body || {};
 
-    const deletedRecord = await DeletedBill.findOneAndDelete({
-      $or: [{ id }, { invoiceNumber: id }],
-    });
+    const billQuery = [{ id }, { invoiceNumber: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) billQuery.push({ _id: id });
+    const deletedRecord = await DeletedBill.findOneAndDelete({ $or: billQuery });
 
     if (!deletedRecord) {
       return res.status(404).json({ success: false, message: 'Record not found in Recycle Bin.' });
@@ -1439,6 +1701,127 @@ app.delete('/api/recycle-bin/bills/:id/permanent', async (req, res) => {
   } catch (err) {
     console.error('[Recycle Bin] Error permanently deleting bill:', err);
     res.status(500).json({ success: false, message: 'Failed to permanently delete bill' });
+  }
+});
+
+// ─── Recycle Bin: Fetch Deleted Products (30 Days) ─────────────────────────
+app.get('/api/recycle-bin/products', async (req, res) => {
+  try {
+    const now = Date.now();
+    await DeletedProduct.deleteMany({ expiresAt: { $lt: now } });
+    const deletedProducts = await DeletedProduct.find({}).sort({ deletedAt: -1 });
+    res.json({ success: true, deletedProducts });
+  } catch (err) {
+    console.error('[Recycle Bin] Error fetching deleted products:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch deleted products: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Restore Product ──────────────────────────────────────────
+app.post('/api/recycle-bin/products/:id/restore', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { restoredBy } = req.body || {};
+
+    const prodQuery = [{ id }];
+    if (mongoose.Types.ObjectId.isValid(id)) prodQuery.push({ _id: id });
+    const deletedRecord = await DeletedProduct.findOne({ $or: prodQuery });
+    if (!deletedRecord) {
+      return res.status(404).json({ success: false, message: 'Record not found in Recycle Bin.' });
+    }
+
+    const prodData = deletedRecord.productData ? (deletedRecord.productData.toObject ? deletedRecord.productData.toObject() : deletedRecord.productData) : { id: deletedRecord.id, name: deletedRecord.name };
+    delete prodData._id;
+
+    // Restore to active Inventory
+    await Inventory.updateOne({ id: deletedRecord.id }, { $set: prodData }, { upsert: true });
+
+    // Restore to catalog file if available
+    try {
+      if (fs.existsSync(CATALOG_FILE_PATH)) {
+        const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list) && !list.some((p) => p.id === deletedRecord.id)) {
+          list.push(prodData);
+          fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(list, null, 2), 'utf8');
+        }
+      }
+    } catch {}
+
+    // Remove from Recycle Bin
+    await DeletedProduct.deleteOne({ _id: deletedRecord._id });
+
+    const activeRestoredBy = (restoredBy && restoredBy.id) ? restoredBy : {
+      id: restoredBy?.id || 'staff-1',
+      username: restoredBy?.username || 'admin',
+      name: (restoredBy?.name && restoredBy.name !== 'Staff') ? restoredBy.name : 'S. Ramanathan',
+      role: restoredBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-rstprod-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'PRODUCT_RESTORED',
+      performedBy: activeRestoredBy,
+      targetId: deletedRecord.id,
+      targetName: deletedRecord.name,
+      details: { productId: deletedRecord.id, name: deletedRecord.name },
+      reason: 'Restored from Recycle Bin by Administrator',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Restored product ${deletedRecord.id} (${deletedRecord.name})`);
+    res.json({ success: true, message: `Product ${deletedRecord.name} restored successfully.`, product: prodData });
+  } catch (err) {
+    console.error('[Recycle Bin] Error restoring product:', err);
+    res.status(500).json({ success: false, message: 'Failed to restore product: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Permanent Purge Product ──────────────────────────────────
+app.delete('/api/recycle-bin/products/:id/permanent', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let purgedBy = req.body?.purgedBy;
+    if (!purgedBy && req.query?.purgedBy) {
+      try { purgedBy = JSON.parse(req.query.purgedBy); } catch {}
+    }
+
+    const prodQuery = [{ id }];
+    if (mongoose.Types.ObjectId.isValid(id)) prodQuery.push({ _id: id });
+    const deletedRecord = await DeletedProduct.findOneAndDelete({ $or: prodQuery });
+    if (!deletedRecord) {
+      return res.status(404).json({ success: false, message: 'Record not found in Recycle Bin.' });
+    }
+
+    const activePurgedBy = (purgedBy && purgedBy.id) ? purgedBy : {
+      id: purgedBy?.id || 'staff-1',
+      username: purgedBy?.username || 'admin',
+      name: (purgedBy?.name && purgedBy.name !== 'Staff') ? purgedBy.name : 'S. Ramanathan',
+      role: purgedBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-prgprod-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'PRODUCT_PERMANENTLY_PURGED',
+      performedBy: activePurgedBy,
+      targetId: id,
+      targetName: deletedRecord.name,
+      details: { productId: id },
+      reason: 'Permanently deleted by Administrator',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Permanently purged product ${id}`);
+    res.json({ success: true, message: `Product ${deletedRecord.name} permanently purged.` });
+  } catch (err) {
+    console.error('[Recycle Bin] Error purging product:', err);
+    res.status(500).json({ success: false, message: 'Failed to purge product: ' + err.message });
   }
 });
 

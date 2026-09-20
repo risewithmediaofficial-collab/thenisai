@@ -17,6 +17,8 @@ const PRODUCT_AVAILABILITY_KEY = 'thenisai_product_availability_v1';
 const CUSTOM_PRODUCTS_KEY = 'thenisai_custom_products_v1';
 const PRICE_OVERRIDE_LOGS_KEY = 'thenisai_price_override_logs_v1';
 const RECYCLE_BIN_STORAGE_KEY = 'thenisai_recycle_bin_bills_v1';
+const RECYCLE_BIN_PRODUCTS_STORAGE_KEY = 'thenisai_recycle_bin_products_v1';
+const DELETED_PRODUCT_IDS_KEY = 'thenisai_deleted_product_ids_v1';
 const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
 const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
 
@@ -79,7 +81,30 @@ function getWeightInKg(weightStr) {
   return 0.5;
 }
 
+export const isSandboxActive = () => {
+  try {
+    if (typeof window === 'undefined') return false;
+    const userJson = sessionStorage.getItem('thenisai_auth_user');
+    if (userJson) {
+      const u = JSON.parse(userJson);
+      if (u?.isSandbox || u?.role === 'tester' || u?.role === 'viewer') return true;
+    }
+    if (sessionStorage.getItem('thenisai_tester_session_unlocked') === 'true') return true;
+    if (sessionStorage.getItem('thenisai_viewer_session_unlocked') === 'true') return true;
+  } catch {}
+  return false;
+};
+
 export const resolveActiveUser = (explicitUser = null) => {
+  if (isSandboxActive()) {
+    return {
+      id: 'staff-3',
+      username: 'tester',
+      name: 'Demo Tester',
+      role: 'tester',
+      title: 'Sandbox Testing (No Data Impact)',
+    };
+  }
   if (explicitUser && (explicitUser.name || explicitUser.id || explicitUser.username)) {
     const isAdminUser = explicitUser.role === 'admin' || explicitUser.id === 'staff-1' || explicitUser.username === 'admin' || explicitUser.name?.includes('Ramanathan');
     const role = isAdminUser ? 'admin' : (explicitUser.role || (typeof window !== 'undefined' && window.location.hash.toLowerCase().includes('admin') ? 'admin' : 'cashier'));
@@ -333,6 +358,29 @@ export function CartProvider({ children }) {
     }
   });
 
+  // 30-Day Recycle Bin for Deleted Products
+  const [recycleBinProducts, setRecycleBinProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY);
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      const now = Date.now();
+      return Array.isArray(parsed) ? parsed.filter((p) => !p.expiresAt || p.expiresAt >= now) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Track deleted product IDs to guarantee deleted items never return upon page refresh
+  const [deletedProductIds, setDeletedProductIds] = useState(() => {
+    try {
+      const saved = localStorage.getItem(DELETED_PRODUCT_IDS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   // Unified Admin Activity Logs (Sanitized to guarantee performer ID & name attribution)
   const [activityLogs, setActivityLogs] = useState(() => {
     try {
@@ -358,26 +406,29 @@ export function CartProvider({ children }) {
   });
 
 
-  // Inventory state
+  // Inventory state (guarded so deleted products never get resurrected)
   const [inventory, setInventory] = useState(() => {
     try {
       const saved = localStorage.getItem(INVENTORY_STORAGE_KEY);
+      const delIdsRaw = localStorage.getItem(DELETED_PRODUCT_IDS_KEY);
+      const deletedIds = new Set(delIdsRaw ? JSON.parse(delIdsRaw) : []);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          if (parsed.length < DEFAULT_INVENTORY.length) {
-            const existingIds = new Set(parsed.map((i) => i.id));
-            const missing = DEFAULT_INVENTORY.filter((i) => !existingIds.has(i.id));
-            const combined = [...parsed, ...missing];
+          const filtered = parsed.filter((i) => !deletedIds.has(i.id));
+          if (filtered.length < DEFAULT_INVENTORY.length) {
+            const existingIds = new Set(filtered.map((i) => i.id));
+            const missing = DEFAULT_INVENTORY.filter((i) => !existingIds.has(i.id) && !deletedIds.has(i.id));
+            const combined = [...filtered, ...missing];
             try {
               localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(combined));
             } catch {}
             return combined;
           }
-          return parsed;
+          return filtered;
         }
       }
-      return DEFAULT_INVENTORY;
+      return DEFAULT_INVENTORY.filter((i) => !deletedIds.has(i.id));
     } catch {
       return DEFAULT_INVENTORY;
     }
@@ -393,14 +444,19 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Combined Billing Items (Standard catalog + Custom Items, with live prices from masterPrices and inventory state)
+  // Combined Billing Items (Standard catalog + Custom Items, filtered against deleted products)
   const allBillingProducts = useMemo(() => {
-    // Start from the static catalog
-    const combined = [...ALL_BILLING_ITEMS];
+    const deletedSet = new Set([
+      ...(Array.isArray(deletedProductIds) ? deletedProductIds : []),
+      ...recycleBinProducts.map((p) => p.id),
+    ]);
 
-    // Append any custom products not already in the static list
+    // Start from the static catalog, excluding deleted items
+    const combined = ALL_BILLING_ITEMS.filter((item) => !deletedSet.has(item.id));
+
+    // Append any custom products not already in the static list and not deleted
     customProducts.forEach((cp, idx) => {
-      if (!combined.some((it) => it.id === cp.id)) {
+      if (!deletedSet.has(cp.id) && !combined.some((it) => it.id === cp.id)) {
         combined.push({
           ...cp,
           itemNumber: cp.itemNumber || (ALL_BILLING_ITEMS.length + idx + 1),
@@ -409,7 +465,6 @@ export function CartProvider({ children }) {
     });
 
     // Overlay updated prices: check masterPrices first, then inventory record, then original item price
-    // A price must always be > 0. Never allow 0 or null to overwrite valid catalog price.
     return combined.map((item) => {
       const explicitPrice = masterPrices[item.id];
       const invRecord = inventory.find((i) => i.id === item.id) || customProducts.find((cp) => cp.id === item.id);
@@ -454,7 +509,7 @@ export function CartProvider({ children }) {
         } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : undefined),
       };
     });
-  }, [customProducts, inventory, masterPrices]);
+  }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 
   // POS Counter Bills state
   const [bills, setBills] = useState(() => {
@@ -562,6 +617,7 @@ export function CartProvider({ children }) {
         'shift-bills': '#admin/shift-bills',
         'activity-logs': '#admin/activity-logs',
         'recycle-bin': '#admin/recycle-bin',
+        staff: '#admin/staff',
         billing: '#admin/billing',
         pos: '#admin/billing',
         register: '#admin/billing',
@@ -690,17 +746,48 @@ export function CartProvider({ children }) {
 
   // Fetch initial data from backend on mount and sync availability
   const syncWithBackend = useCallback(async () => {
+    if (isSandboxActive()) {
+      return; // In sandbox mode, maintain in-memory simulated state without overwriting from backend
+    }
     try {
-      const [invRes, ordRes, billsRes] = await Promise.all([
+      const [invRes, ordRes, billsRes, recBillsRes, recProdsRes] = await Promise.all([
         api.get('/api/inventory').catch(() => null),
         api.get('/api/orders').catch(() => null),
         api.get('/api/bills').catch(() => null),
+        api.get('/api/recycle-bin/bills').catch(() => null),
+        api.get('/api/recycle-bin/products').catch(() => null),
       ]);
+
+      if (recBillsRes && recBillsRes.success && Array.isArray(recBillsRes.deletedBills)) {
+        setRecycleBinBills(recBillsRes.deletedBills);
+        try {
+          localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(recBillsRes.deletedBills));
+        } catch {}
+      }
+
+      let activeDeletedIds = new Set(
+        JSON.parse(localStorage.getItem(DELETED_PRODUCT_IDS_KEY) || '[]')
+      );
+
+      if (recProdsRes && recProdsRes.success && Array.isArray(recProdsRes.deletedProducts)) {
+        setRecycleBinProducts(recProdsRes.deletedProducts);
+        try {
+          localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(recProdsRes.deletedProducts));
+        } catch {}
+        recProdsRes.deletedProducts.forEach((p) => activeDeletedIds.add(p.id));
+        const updatedDelList = Array.from(activeDeletedIds);
+        setDeletedProductIds(updatedDelList);
+        try {
+          localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updatedDelList));
+        } catch {}
+      }
 
       if (invRes && invRes.success && Array.isArray(invRes.inventory) && invRes.inventory.length > 0) {
         setInventory((prev) => {
           const backendMap = new Map(invRes.inventory.map((item) => [item.id, item]));
-          const baseList = prev && prev.length > 0 ? prev : DEFAULT_INVENTORY;
+          const rawBaseList = prev && prev.length > 0 ? prev : DEFAULT_INVENTORY;
+          // Filter out deleted items from baseList
+          const baseList = rawBaseList.filter((item) => !activeDeletedIds.has(item.id));
 
           let savedMaster = {};
           try {
@@ -737,9 +824,9 @@ export function CartProvider({ children }) {
             };
           });
 
-          // Also include any new backend products not already in baseList
+          // Also include any new backend products not already in baseList and not deleted
           invRes.inventory.forEach((bItem) => {
-            if (!merged.some((m) => m.id === bItem.id)) {
+            if (!activeDeletedIds.has(bItem.id) && !merged.some((m) => m.id === bItem.id)) {
               const backendEnglish = bItem.englishName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[0].trim() : '') || bItem.name || 'Product';
               const backendTamil = bItem.tamilName || (typeof bItem.name === 'string' && bItem.name.includes('—') ? bItem.name.split('—')[1].trim() : '') || '';
               const normalizedName = backendTamil ? `${backendEnglish} — ${backendTamil}` : backendEnglish;
@@ -976,10 +1063,16 @@ export function CartProvider({ children }) {
     setActivityLogs((prev) => {
       const updated = [fullEntry, ...prev.filter((a) => a.id !== fullEntry.id)];
       try {
-        localStorage.setItem(ACTIVITY_LOGS_STORAGE_KEY, JSON.stringify(updated.slice(0, 1000)));
+        if (!isSandboxActive()) {
+          localStorage.setItem(ACTIVITY_LOGS_STORAGE_KEY, JSON.stringify(updated.slice(0, 1000)));
+        }
       } catch {}
       return updated;
     });
+
+    if (isSandboxActive()) {
+      return fullEntry;
+    }
 
     try {
       await api.post('/api/audit/activity', fullEntry);
@@ -1042,61 +1135,129 @@ export function CartProvider({ children }) {
 
     const activePerformer = resolveActiveUser(deletedBy);
 
-    // Locate target bill in bills state
-    const targetBill = bills.find((b) => b.id === billIdOrInv || b.invoiceNumber === billIdOrInv);
-    if (!targetBill) return false;
+    // Locate target bill in bills state or orders state
+    const targetBill = bills.find((b) =>
+      b.id === billIdOrInv ||
+      b.invoiceNumber === billIdOrInv ||
+      b._id === billIdOrInv ||
+      String(b._id) === String(billIdOrInv)
+    ) || orders.find((b) =>
+      b.id === billIdOrInv ||
+      b.invoiceNumber === billIdOrInv ||
+      b._id === billIdOrInv ||
+      String(b._id) === String(billIdOrInv)
+    );
+
+    // Target identifier to send to backend API
+    const targetId = targetBill ? (targetBill.invoiceNumber || targetBill.id || targetBill._id) : billIdOrInv;
 
     const now = Date.now();
-    const deletedRecord = {
-      id: targetBill.id,
-      invoiceNumber: targetBill.invoiceNumber,
+    let deletedRecord = targetBill ? {
+      id: targetBill.id || targetBill.invoiceNumber,
+      invoiceNumber: targetBill.invoiceNumber || targetBill.id,
       billData: targetBill,
       deletedBy: activePerformer,
       deletionReason: reason.trim(),
       deletedAt: now,
       expiresAt: now + 30 * 24 * 60 * 60 * 1000, // 30-day retention
+    } : {
+      id: targetId,
+      invoiceNumber: targetId,
+      billData: { id: targetId, invoiceNumber: targetId, grandTotal: 0 },
+      deletedBy: activePerformer,
+      deletionReason: reason.trim(),
+      deletedAt: now,
+      expiresAt: now + 30 * 24 * 60 * 60 * 1000,
     };
 
-    // 1. Remove from active bills state & cache
+    if (isSandboxActive()) {
+      // Sandbox: delete from local in-memory only, never touch real DB or localStorage
+      setBills((prev) => prev.filter((b) => b.id !== targetId && b.invoiceNumber !== targetId && b._id !== targetId && String(b._id) !== String(targetId)));
+      setOrders((prev) => prev.filter((o) => o.id !== targetId && o.invoiceNumber !== targetId && o._id !== targetId && String(o._id) !== String(targetId)));
+      return true;
+    }
+
+    // ── BACKEND-FIRST: call the database BEFORE updating UI state ────────────
+    // This ensures that if the API fails, we do NOT show a false "deleted" state.
+    // A page refresh will always show the true database state.
+    try {
+      const res = await api.delete(`/api/bills/${encodeURIComponent(targetId)}`, {
+        data: { reason: reason.trim(), deletedBy: activePerformer },
+      });
+      if (!res || !res.success) {
+        // Backend rejected the deletion — propagate error to caller
+        throw new Error(res?.message || 'Server rejected the delete request.');
+      }
+      if (res.deletedRecord) {
+        deletedRecord = res.deletedRecord;
+      }
+    } catch (err) {
+      // Re-throw so DeleteBillModal / caller can show the user a real error message
+      throw new Error(err?.message || 'Failed to delete bill. Please try again.');
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // 1. API succeeded → now safe to remove from active bills & orders state
+    const matchesTarget = (item) => {
+      if (!item) return false;
+      const tIdStr = String(targetId);
+      const bIdStr = String(billIdOrInv);
+      return (
+        item.id === targetId ||
+        item.invoiceNumber === targetId ||
+        item._id === targetId ||
+        String(item._id) === tIdStr ||
+        item.id === billIdOrInv ||
+        item.invoiceNumber === billIdOrInv ||
+        item._id === billIdOrInv ||
+        String(item._id) === bIdStr ||
+        (targetBill && (item.id === targetBill.id || item.invoiceNumber === targetBill.invoiceNumber || item._id === targetBill._id))
+      );
+    };
+
     setBills((prev) => {
-      const updated = prev.filter((b) => b.id !== targetBill.id && b.invoiceNumber !== targetBill.invoiceNumber);
+      const updated = prev.filter((b) => !matchesTarget(b));
       try {
         localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
-    // 2. Add to Recycle Bin state & cache
+    setOrders((prev) => {
+      const updated = prev.filter((o) => !matchesTarget(o));
+      try {
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Add to local Recycle Bin state & cache (backend already has it in DeletedBill collection)
     setRecycleBinBills((prev) => {
-      const updated = [deletedRecord, ...prev.filter((d) => d.id !== targetBill.id && d.invoiceNumber !== targetBill.invoiceNumber)];
+      const updated = [deletedRecord, ...prev.filter((d) => !matchesTarget(d) && d.id !== deletedRecord.id && d.invoiceNumber !== deletedRecord.invoiceNumber)];
       try {
         localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
-    // 3. Record Admin Activity
-    await recordActivity({
+    // Refresh recycle bin in background for fresh ground truth
+    fetchRecycleBinBills().catch(() => {});
+
+    // 3. Record Admin Activity (best-effort, non-blocking)
+    recordActivity({
       actionType: 'BILL_DELETED',
       performedBy: activePerformer,
-      targetId: targetBill.invoiceNumber,
-      targetName: `Invoice #${targetBill.invoiceNumber} (₹${targetBill.grandTotal})`,
+      targetId: deletedRecord.invoiceNumber || targetId,
+      targetName: `Invoice #${deletedRecord.invoiceNumber || targetId} (₹${deletedRecord.billData?.grandTotal || 0})`,
       details: {
-        invoiceNumber: targetBill.invoiceNumber,
-        grandTotal: targetBill.grandTotal,
-        itemsCount: targetBill.items?.length || 0,
-        customer: targetBill.customer,
-        paymentMethod: targetBill.paymentMethod,
+        invoiceNumber: deletedRecord.invoiceNumber || targetId,
+        grandTotal: deletedRecord.billData?.grandTotal || 0,
+        itemsCount: deletedRecord.billData?.items?.length || 0,
+        customer: deletedRecord.billData?.customer,
+        paymentMethod: deletedRecord.billData?.paymentMethod,
       },
       reason: reason.trim(),
-    });
-
-    // 4. Sync with Backend
-    try {
-      await api.delete(`/api/bills/${targetBill.id}`, { data: { reason: reason.trim(), deletedBy: activePerformer } });
-    } catch (err) {
-      console.warn('Backend bill deletion failed, saved to local recycle bin:', err);
-    }
+    }).catch((e) => console.warn('[Activity] deleteBill log failed:', e));
 
     return true;
   };
@@ -1130,41 +1291,42 @@ export function CartProvider({ children }) {
     const originalGrandTotal = Number(targetBill.grandTotal || 0);
     const newGrandTotal = updatedFields.grandTotal !== undefined ? Number(updatedFields.grandTotal) : originalGrandTotal;
 
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+    // ── BACKEND-FIRST: persist to database before updating UI ──────────────
+    let persistedBill = null;
+    try {
+      const res = await api.put(`/api/bills/${targetBill.id || targetBill.invoiceNumber}`, {
+        ...updatedFields,
+        editReason: reason?.trim() || 'Billing correction',
+        editedBy: activePerformer,
+      });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected the bill edit.');
+      }
+      persistedBill = res.bill; // Use the actual DB record as the source of truth
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to update bill. Please try again.');
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
-    const editEvent = {
-      id: `edit-${Date.now()}`,
-      editedAt: Date.now(),
-      dateStr,
-      timeStr,
-      editedBy: activePerformer,
-      reason: reason?.trim() || 'Billing correction',
-      originalGrandTotal,
-      newGrandTotal,
-      difference: Math.round((newGrandTotal - originalGrandTotal) * 100) / 100,
-    };
-
-    const existingHistory = Array.isArray(targetBill.editHistory) ? targetBill.editHistory : [];
-    const updatedBill = {
+    // API succeeded → update UI state with the persisted DB record
+    const billToApply = persistedBill || {
       ...targetBill,
       ...updatedFields,
       isEdited: true,
-      editHistory: [...existingHistory, editEvent],
     };
 
-    // 1. Update bills state & local storage cache
     setBills((prev) => {
-      const updated = prev.map((b) => (b.id === targetBill.id || b.invoiceNumber === targetBill.invoiceNumber ? updatedBill : b));
+      const updated = prev.map((b) =>
+        b.id === targetBill.id || b.invoiceNumber === targetBill.invoiceNumber ? billToApply : b
+      );
       try {
         localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
 
-    // 2. Record Activity Log
-    await recordActivity({
+    // Record Activity Log (best-effort, non-blocking)
+    recordActivity({
       actionType: 'BILL_EDITED',
       performedBy: activePerformer,
       targetId: targetBill.invoiceNumber,
@@ -1173,26 +1335,12 @@ export function CartProvider({ children }) {
         invoiceNumber: targetBill.invoiceNumber,
         originalGrandTotal,
         newGrandTotal,
-        difference: editEvent.difference,
+        difference: Math.round((newGrandTotal - originalGrandTotal) * 100) / 100,
       },
       reason: reason?.trim() || 'Billing correction',
-    });
+    }).catch((e) => console.warn('[Activity] editBill log failed:', e));
 
-    // 3. Sync with Backend
-    try {
-      const res = await api.put(`/api/bills/${targetBill.id || targetBill.invoiceNumber}`, {
-        ...updatedFields,
-        editReason: reason?.trim() || 'Billing correction',
-        editedBy: activePerformer,
-      });
-      if (res && res.success && res.bill) {
-        return { success: true, bill: res.bill };
-      }
-    } catch (err) {
-      console.warn('Backend bill edit failed, saved locally:', err);
-    }
-
-    return { success: true, bill: updatedBill };
+    return { success: true, bill: billToApply };
   };
 
   const restoreBill = async (billIdOrInv, restoredBy = null) => {
@@ -1202,7 +1350,18 @@ export function CartProvider({ children }) {
 
     const restoredBill = record.billData;
 
-    // 1. Move back to active bills
+    // ── BACKEND-FIRST: persist restore to database before updating UI ───────
+    try {
+      const res = await api.post(`/api/recycle-bin/bills/${record.id}/restore`, { restoredBy: activePerformer });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected the restore request.');
+      }
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to restore bill. Please try again.');
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
+    // API succeeded → move back to active bills state & localStorage
     setBills((prev) => {
       const updated = [restoredBill, ...prev.filter((b) => b.id !== restoredBill.id && b.invoiceNumber !== restoredBill.invoiceNumber)];
       try {
@@ -1211,7 +1370,7 @@ export function CartProvider({ children }) {
       return updated;
     });
 
-    // 2. Remove from recycle bin
+    // Remove from recycle bin state & localStorage
     setRecycleBinBills((prev) => {
       const updated = prev.filter((d) => d.id !== record.id && d.invoiceNumber !== record.invoiceNumber);
       try {
@@ -1220,22 +1379,15 @@ export function CartProvider({ children }) {
       return updated;
     });
 
-    // 3. Record Admin Activity
-    await recordActivity({
+    // Record Admin Activity (best-effort, non-blocking)
+    recordActivity({
       actionType: 'BILL_RESTORED',
       performedBy: activePerformer,
       targetId: record.invoiceNumber,
       targetName: `Invoice #${record.invoiceNumber} (₹${restoredBill.grandTotal})`,
       details: { invoiceNumber: record.invoiceNumber, grandTotal: restoredBill.grandTotal },
       reason: 'Restored from Recycle Bin by Administrator',
-    });
-
-    // 4. Sync with Backend
-    try {
-      await api.post(`/api/recycle-bin/bills/${record.id}/restore`, { restoredBy: activePerformer });
-    } catch (err) {
-      console.warn('Backend bill restore sync fallback:', err);
-    }
+    }).catch((e) => console.warn('[Activity] restoreBill log failed:', e));
 
     return true;
   };
@@ -1244,6 +1396,19 @@ export function CartProvider({ children }) {
     const activePerformer = resolveActiveUser(purgedBy);
     const record = recycleBinBills.find((d) => d.id === billIdOrInv || d.invoiceNumber === billIdOrInv);
     if (!record) return false;
+
+    // ── BACKEND-FIRST: purge from database before updating local UI ───────
+    try {
+      const res = await api.delete(`/api/recycle-bin/bills/${record.id}/permanent`, {
+        data: { purgedBy: activePerformer },
+      });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected permanent deletion.');
+      }
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to permanently purge bill. Please try again.');
+    }
+    // ───────────────────────────────────────────────────────────────────────
 
     // 1. Remove permanently from recycle bin
     setRecycleBinBills((prev) => {
@@ -1262,14 +1427,7 @@ export function CartProvider({ children }) {
       targetName: `Invoice #${record.invoiceNumber}`,
       details: { invoiceNumber: record.invoiceNumber },
       reason: 'Permanently deleted by Administrator',
-    });
-
-    // 3. Sync with Backend
-    try {
-      await api.delete(`/api/recycle-bin/bills/${record.id}/permanent`, { data: { purgedBy: activePerformer } });
-    } catch (err) {
-      console.warn('Backend permanent bill purge failed:', err);
-    }
+    }).catch(() => {});
 
     return true;
   };
@@ -1301,7 +1459,9 @@ export function CartProvider({ children }) {
     setProductAvailabilityMap((prev) => {
       const updated = { ...prev, [productId]: nextInactive };
       try {
-        localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1312,7 +1472,9 @@ export function CartProvider({ children }) {
         item.id === productId ? { ...item, isInactive: nextInactive } : item
       );
       try {
-        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1337,6 +1499,11 @@ export function CartProvider({ children }) {
       details: { isInactive: nextInactive },
       reason: nextInactive ? 'Marked Out of Stock / இருப்பு இல்லை' : 'Reactivated / இருப்பு வந்தது',
     });
+
+    if (isSandboxActive()) {
+      // In sandbox mode, keep in memory only without mutating persistent storage or backend
+      return;
+    }
 
     try {
       await api.patch(`/api/inventory/${productId}/availability`, { isInactive: nextInactive });
@@ -1419,7 +1586,9 @@ export function CartProvider({ children }) {
     setCustomProducts((prev) => {
       const updated = [...prev, newProd];
       try {
-        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1442,7 +1611,9 @@ export function CartProvider({ children }) {
         isCustom: true,
       }];
       try {
-        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1456,6 +1627,11 @@ export function CartProvider({ children }) {
       reason: 'New product added to catalog',
     });
 
+    if (isSandboxActive()) {
+      // In sandbox mode, keep in memory only without mutating persistent storage or backend
+      return newProd;
+    }
+
     try {
       await api.post('/api/inventory/products', newProd);
     } catch (err) {
@@ -1465,11 +1641,65 @@ export function CartProvider({ children }) {
     return newProd;
   };
 
-  const deleteProduct = async (productId, performedBy = null) => {
+  const fetchRecycleBinProducts = async () => {
+    try {
+      const res = await api.get('/api/recycle-bin/products');
+      if (res && res.success && Array.isArray(res.deletedProducts)) {
+        setRecycleBinProducts(res.deletedProducts);
+        try {
+          localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(res.deletedProducts));
+        } catch {}
+        setDeletedProductIds((prev) => {
+          const combined = Array.from(new Set([...prev, ...res.deletedProducts.map((p) => p.id)]));
+          try {
+            localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(combined));
+          } catch {}
+          return combined;
+        });
+        return res.deletedProducts;
+      }
+    } catch (err) {
+      console.warn('Backend fetch recycle bin products failed:', err);
+    }
+    return recycleBinProducts;
+  };
+
+  const deleteProduct = async (productId, performedBy = null, reason = 'Product removed from catalog') => {
     const activePerformer = resolveActiveUser(performedBy);
-    const item = allBillingProducts.find((it) => it.id === productId);
+    const item = allBillingProducts.find((it) => it.id === productId) || inventory.find((it) => it.id === productId);
     const prodName = item ? item.name : productId;
 
+    if (isSandboxActive()) {
+      setCustomProducts((prev) => prev.filter((p) => p.id !== productId));
+      setInventory((prev) => prev.filter((p) => p.id !== productId));
+      setDeletedProductIds((prev) => [...prev, productId]);
+      return true;
+    }
+
+    // BACKEND-FIRST: Call backend delete (which moves product into DeletedProduct collection)
+    let deletedProductRecord = null;
+    try {
+      const res = await api.delete(`/api/inventory/products/${productId}`, {
+        data: { reason: reason || 'Product removed from catalog', deletedBy: activePerformer },
+      });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected product deletion.');
+      }
+      deletedProductRecord = res.deletedProduct;
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to delete product from database.');
+    }
+
+    // 1. Mark in deletedProductIds (so static catalog and DEFAULT_INVENTORY never resurrect it)
+    setDeletedProductIds((prev) => {
+      const updated = Array.from(new Set([...prev, productId]));
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // 2. Remove from customProducts & inventory
     setCustomProducts((prev) => {
       const updated = prev.filter((p) => p.id !== productId);
       try {
@@ -1486,11 +1716,24 @@ export function CartProvider({ children }) {
       return updated;
     });
 
-    // Also mark in availability map as inactive
-    setProductAvailabilityMap((prev) => {
-      const updated = { ...prev, [productId]: true };
+    // 3. Add to local Recycle Bin state
+    const fallbackRecord = {
+      id: productId,
+      name: prodName,
+      englishName: item?.englishName || '',
+      tamilName: item?.tamilName || '',
+      productData: item || { id: productId, name: prodName },
+      deletedBy: activePerformer,
+      deletionReason: reason,
+      deletedAt: Date.now(),
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+    };
+    const recToAdd = deletedProductRecord || fallbackRecord;
+
+    setRecycleBinProducts((prev) => {
+      const updated = [recToAdd, ...prev.filter((p) => p.id !== productId)];
       try {
-        localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(updated));
+        localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -1500,14 +1743,119 @@ export function CartProvider({ children }) {
       performedBy: activePerformer,
       targetId: productId,
       targetName: prodName,
-      reason: 'Product deleted from catalog',
+      reason,
     });
 
-    try {
-      await api.delete(`/api/inventory/products/${productId}`);
-    } catch (err) {
-      console.warn('Backend product delete failed:', err);
+    return true;
+  };
+
+  const restoreProduct = async (productId, restoredBy = null) => {
+    const activePerformer = resolveActiveUser(restoredBy);
+    const record = recycleBinProducts.find((p) => p.id === productId);
+    if (!record) throw new Error('Product not found in Recycle Bin.');
+
+    if (isSandboxActive()) {
+      setRecycleBinProducts((prev) => prev.filter((p) => p.id !== productId));
+      setDeletedProductIds((prev) => prev.filter((id) => id !== productId));
+      if (record.productData) {
+        setInventory((prev) => [...prev, record.productData]);
+      }
+      return true;
     }
+
+    // BACKEND-FIRST: Call restore endpoint
+    let restoredData = null;
+    try {
+      const res = await api.post(`/api/recycle-bin/products/${productId}/restore`, {
+        restoredBy: activePerformer,
+      });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected product restoration.');
+      }
+      restoredData = res.product;
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to restore product.');
+    }
+
+    // Remove from Recycle Bin state & localStorage
+    setRecycleBinProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Remove from deletedProductIds
+    setDeletedProductIds((prev) => {
+      const updated = prev.filter((id) => id !== productId);
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Restore to inventory state
+    const toRestore = restoredData || record.productData || { id: productId, name: record.name };
+    setInventory((prev) => {
+      const exists = prev.some((p) => p.id === productId);
+      const updated = exists ? prev.map((p) => (p.id === productId ? { ...p, ...toRestore } : p)) : [...prev, toRestore];
+      try {
+        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_RESTORED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: record.name,
+      reason: 'Restored from Recycle Bin by Administrator',
+    });
+
+    return true;
+  };
+
+  const permanentDeleteProduct = async (productId, purgedBy = null) => {
+    const activePerformer = resolveActiveUser(purgedBy);
+    const record = recycleBinProducts.find((p) => p.id === productId);
+
+    if (isSandboxActive()) {
+      setRecycleBinProducts((prev) => prev.filter((p) => p.id !== productId));
+      return true;
+    }
+
+    // BACKEND-FIRST: Expunge from database
+    try {
+      const res = await api.delete(`/api/recycle-bin/products/${productId}/permanent`, {
+        data: { purgedBy: activePerformer },
+      });
+      if (!res || !res.success) {
+        throw new Error(res?.message || 'Server rejected product purge.');
+      }
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to permanently delete product.');
+    }
+
+    // Remove from Recycle Bin
+    setRecycleBinProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try {
+        localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_PERMANENTLY_PURGED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName: record?.name || productId,
+      reason: 'Permanently deleted by Administrator',
+    });
+
+    return true;
   };
 
   const updateProductMasterPrice = async (productId, newPrice, performedBy = null) => {
@@ -1523,7 +1871,9 @@ export function CartProvider({ children }) {
     setMasterPrices((prev) => {
       const updated = { ...prev, [productId]: numPrice };
       try {
-        localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1532,7 +1882,9 @@ export function CartProvider({ children }) {
     setCustomProducts((prev) => {
       const updated = prev.map((p) => (p.id === productId ? { ...p, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice } : p));
       try {
-        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1548,7 +1900,9 @@ export function CartProvider({ children }) {
         updated = [...prev, { ...base, id: productId, name: prodName, price: numPrice, unitPrice: numPrice, pricePerKg: numPrice }];
       }
       try {
-        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1561,6 +1915,11 @@ export function CartProvider({ children }) {
       details: { oldPrice, newPrice: numPrice },
       reason: `Master catalog price changed: ₹${oldPrice} → ₹${numPrice}`,
     });
+
+    if (isSandboxActive()) {
+      // In sandbox mode, keep in memory only
+      return;
+    }
 
     try {
       await api.patch(`/api/inventory/${productId}/price`, { price: numPrice });
@@ -1600,7 +1959,9 @@ export function CartProvider({ children }) {
         description: updates.description || p.description || 'Updated product details',
       } : p));
       try {
-        localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1639,7 +2000,9 @@ export function CartProvider({ children }) {
             },
           ];
       try {
-        localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1647,7 +2010,9 @@ export function CartProvider({ children }) {
     setMasterPrices((prev) => {
       const updated = { ...prev, [productId]: nextPrice };
       try {
-        localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+        if (!isSandboxActive()) {
+          localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(updated));
+        }
       } catch {}
       return updated;
     });
@@ -1667,6 +2032,10 @@ export function CartProvider({ children }) {
       },
       reason: 'Product details updated from admin inventory',
     });
+
+    if (isSandboxActive()) {
+      return { success: true };
+    }
 
     try {
       await api.patch(`/api/inventory/${productId}`, {
@@ -1699,6 +2068,13 @@ export function CartProvider({ children }) {
       };
     }
 
+    if (isSandboxActive()) {
+      setInventory((prev) =>
+        prev.map((p) => (p.id === productId ? { ...p, skuCode: skuStr } : p))
+      );
+      return { success: true };
+    }
+
     try {
       const result = await api.patch(`/api/inventory/${productId}/sku`, { skuCode: skuStr });
 
@@ -1722,7 +2098,15 @@ export function CartProvider({ children }) {
       source: 'counter',
       status: 'Completed',
       createdAt: Date.now(),
+      isSandbox: isSandboxActive(),
     };
+
+    if (isSandboxActive()) {
+      // Counter sales in Sandbox: keep in memory only; DO NOT write to real database or real offline ledger
+      setBills((prev) => [fullOrder, ...prev]);
+      deductStockForItems(saleData.items);
+      return fullOrder;
+    }
 
     // Auto-detect and record Price Override audit logs for any price-overridden items
     if (Array.isArray(saleData.items)) {
@@ -1833,6 +2217,10 @@ export function CartProvider({ children }) {
       }
     });
 
+    if (isSandboxActive()) {
+      return;
+    }
+
     try {
       await api.post('/api/inventory/stock', {
         sweetId,
@@ -1851,6 +2239,10 @@ export function CartProvider({ children }) {
         item.id === sweetId ? { ...item, stockKg: Math.round(val * 100) / 100 } : item
       )
     );
+
+    if (isSandboxActive()) {
+      return;
+    }
 
     try {
       await api.post('/api/inventory/stock', {
@@ -1894,6 +2286,10 @@ export function CartProvider({ children }) {
         },
       ];
     });
+
+    if (isSandboxActive()) {
+      return;
+    }
 
     try {
       await api.post('/api/inventory/products', {
@@ -2131,6 +2527,11 @@ export function CartProvider({ children }) {
         restoreBill,
         permanentDeleteBill,
         fetchRecycleBinBills,
+        // Product Deletion & 30-Day Recycle Bin
+        recycleBinProducts,
+        restoreProduct,
+        permanentDeleteProduct,
+        fetchRecycleBinProducts,
         // Unified Activity Audit Trail
         activityLogs,
         recordActivity,

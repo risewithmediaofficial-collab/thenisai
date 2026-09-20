@@ -160,8 +160,13 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
             {refillKg && (
               <div className="stock-preview-box" style={{ background: '#ECFDF5', borderColor: '#A7F3D0', color: '#065F46' }}>
                 <span>Tray level after refill:</span>
-                <span className="stock-preview-val" style={{ color: '#047857' }}>
-                  {currentKg} kg ➔ {targetKg} kg
+                <span className="stock-preview-val" style={{ color: '#047857', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span>{currentKg} kg</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                  <span>{targetKg} kg</span>
                 </span>
               </div>
             )}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '../../context/CartContext';
+import { useCart, isSandboxActive } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
@@ -1170,8 +1170,12 @@ export default function BillingCounter() {
 
   const handleConfirmDeleteProduct = async () => {
     if (!deleteConfirmItem) return;
-    await deleteProduct(deleteConfirmItem.id, user);
-    setDeleteConfirmItem(null);
+    try {
+      await deleteProduct(deleteConfirmItem.id, user, 'Product deleted from POS Counter');
+      setDeleteConfirmItem(null);
+    } catch (err) {
+      alert(err?.message || 'Failed to delete product.');
+    }
   };
 
   // Hold active bill
@@ -1251,19 +1255,21 @@ export default function BillingCounter() {
 
       if (enteredSum < billGrandTotal) {
         const remaining = Math.round((billGrandTotal - enteredSum) * 100) / 100;
-        alert(`⚠️ Split payment incomplete!\n\nTotal Bill: ₹${billGrandTotal}\nEntered: ₹${enteredSum} (Cash: ₹${finalSplitCash} + UPI: ₹${finalSplitUpi})\n\nRemaining pending: ₹${remaining}\n\nPlease balance the split amount before settling.`);
+        alert(`Split payment incomplete!\n\nTotal Bill: ₹${billGrandTotal}\nEntered: ₹${enteredSum} (Cash: ₹${finalSplitCash} + UPI: ₹${finalSplitUpi})\n\nRemaining pending: ₹${remaining}\n\nPlease balance the split amount before settling.`);
         return;
       }
     }
 
     const year = new Date().getFullYear();
     const seq = Math.floor(1000 + Math.random() * 9000);
-    const invoiceNumber = `POS-${year}-${seq}`;
+    const isSandbox = isSandboxActive() || user?.role === 'tester' || Boolean(user?.isSandbox);
+    const invoiceNumber = isSandbox ? `TEST-${year}-${seq}` : `POS-${year}-${seq}`;
     const now = new Date();
 
     const saleData = {
       source: 'pos',
       invoiceNumber,
+      isSandbox,
       orderDate: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       orderTime: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       cashier: {
@@ -1471,7 +1477,7 @@ export default function BillingCounter() {
             navigateTo('admin', 'recycle-bin');
           }
           else if (sec === 'pos-bills' || sec === 'pos-daily-sales') {
-            handleSwitchTab('daily-sales');
+            handleSwitchTab('my-bills');
           }
           else if (sec === 'pos-online') {
             handleSwitchTab('online-orders');
@@ -1522,12 +1528,8 @@ export default function BillingCounter() {
               <span>
                 {posTab === 'register'
                   ? (user?.counter || 'Terminal 01')
-                  : posTab === 'my-bills'
+                  : posTab === 'daily-sales' || posTab === 'my-bills'
                   ? 'Shift Ledger'
-                  : posTab === 'online-orders'
-                  ? 'Online Dispatch'
-                  : posTab === 'daily-sales'
-                  ? 'Daily Revenue'
                   : 'Products & Inventory'}
               </span>
             </div>
@@ -1674,7 +1676,10 @@ export default function BillingCounter() {
                           onClick={() => setShowHeldDropdown(false)}
                           aria-label="Close"
                         >
-                          ✕
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                          </svg>
                         </button>
                       </div>
 
@@ -1718,7 +1723,10 @@ export default function BillingCounter() {
                                   handleDeleteHeldBill(h.id);
                                 }}
                               >
-                                ✕
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18" />
+                                  <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
                               </button>
                             </div>
                           </div>
@@ -1764,7 +1772,10 @@ export default function BillingCounter() {
                             onClick={() => setShowRecentBillsDropdown(false)}
                             title="Close Popover"
                           >
-                            ✕
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="18" y1="6" x2="6" y2="18" />
+                              <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
                           </button>
                         </div>
 
@@ -2969,19 +2980,45 @@ export default function BillingCounter() {
                 </button>
                 <button
                   type="button"
-                  className="btn-shift-del-inv"
                   onClick={() => setBulkDeleteBills(selectedShiftBills)}
                   disabled={!selectedShiftBills.length}
-                  style={{ opacity: selectedShiftBills.length ? 1 : 0.55 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 16px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    border: '1.5px solid #dc2626',
+                    background: 'transparent',
+                    color: '#dc2626',
+                    cursor: selectedShiftBills.length ? 'pointer' : 'not-allowed',
+                    opacity: selectedShiftBills.length ? 1 : 0.5,
+                    transition: 'background 0.15s, color 0.15s',
+                  }}
                 >
                   Delete Selected ({selectedShiftBills.length})
                 </button>
                 <button
                   type="button"
-                  className="btn-shift-del-inv"
                   onClick={() => setBulkDeleteBills(myShiftBills)}
                   disabled={!myShiftBills.length}
-                  style={{ background: '#991b1b', color: '#fff', borderColor: '#991b1b', opacity: myShiftBills.length ? 1 : 0.55 }}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 16px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    border: '1.5px solid #991b1b',
+                    background: '#991b1b',
+                    color: '#fff',
+                    cursor: myShiftBills.length ? 'pointer' : 'not-allowed',
+                    opacity: myShiftBills.length ? 1 : 0.5,
+                    transition: 'background 0.15s',
+                  }}
                 >
                   Delete All Today ({myShiftBills.length})
                 </button>
@@ -3133,14 +3170,14 @@ export default function BillingCounter() {
                                   background: '#eff6ff',
                                   color: '#1d4ed8',
                                   border: '1px solid #bfdbfe',
-                                  borderRadius: '6px',
-                                  padding: '5px 9px',
+                                  borderRadius: '8px',
+                                  padding: '6px 12px',
                                   fontSize: '11px',
                                   fontWeight: 700,
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '3px',
+                                  gap: '4px',
                                 }}
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3158,14 +3195,14 @@ export default function BillingCounter() {
                                   background: '#fee2e2',
                                   color: '#dc2626',
                                   border: '1px solid #fca5a5',
-                                  borderRadius: '6px',
-                                  padding: '5px 9px',
+                                  borderRadius: '8px',
+                                  padding: '6px 12px',
                                   fontSize: '11px',
                                   fontWeight: 700,
                                   cursor: 'pointer',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: '3px',
+                                  gap: '4px',
                                 }}
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3598,7 +3635,14 @@ export default function BillingCounter() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span>☕ Beverages &amp; Hot Drinks (Quantity in Cups / Pcs)</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+                  <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+                  <line x1="6" y1="1" x2="6" y2="4" />
+                  <line x1="10" y1="1" x2="10" y2="4" />
+                  <line x1="14" y1="1" x2="14" y2="4" />
+                </svg>
+                <span>Beverages &amp; Hot Drinks (Cups / Pcs)</span>
                 <span style={{ fontSize: '11px', background: invCategoryFilter === 'beverages' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'beverages' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
                   {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'beverages' || (p.category || '').toLowerCase() === 'snacks' || (p.unit && p.unit.toLowerCase().includes('cup')) || p.id === 'vada' || (p.id && p.id.includes('tea')) || (p.id && p.id.includes('coffee'))).length}
                 </span>
@@ -3622,7 +3666,12 @@ export default function BillingCounter() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span>🍯 Traditional Sweets (Weight in kg)</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="8" width="18" height="12" rx="2" />
+                  <path d="M12 8V4" />
+                  <path d="M8 4h8" />
+                </svg>
+                <span>Traditional Sweets (Weight in kg)</span>
                 <span style={{ fontSize: '11px', background: invCategoryFilter === 'sweets' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'sweets' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
                   {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'sweets' || (!p.category && !p.id?.includes('tea') && !p.id?.includes('coffee'))).length}
                 </span>
@@ -3646,7 +3695,10 @@ export default function BillingCounter() {
                   transition: 'all 0.15s ease',
                 }}
               >
-                <span>🌶️ Spices &amp; Kara Vagai</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                </svg>
+                <span>Spices &amp; Kara Vagai</span>
                 <span style={{ fontSize: '11px', background: invCategoryFilter === 'spices' ? '#f59e0b' : '#e2e8f0', color: invCategoryFilter === 'spices' ? '#fff' : '#475569', padding: '1px 6px', borderRadius: '10px' }}>
                   {allBillingProducts.filter(p => (p.category || '').toLowerCase() === 'spices' || (p.subcategory || '').toLowerCase().includes('kara')).length}
                 </span>
@@ -3698,9 +3750,12 @@ export default function BillingCounter() {
                   <button
                     type="button"
                     onClick={() => setInventorySearch('')}
-                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '13px' }}
+                    style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center' }}
                   >
-                    ✕
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
                   </button>
                 )}
               </div>
@@ -3724,7 +3779,6 @@ export default function BillingCounter() {
                       <th>PRODUCT DETAILS</th>
                       <th>CATEGORY</th>
                       <th>BILLING UNIT</th>
-                      <th>STOCK / QUANTITY</th>
                       <th>SELLING PRICE</th>
                       <th>COUNTER AVAILABILITY</th>
                       <th>ACTIONS</th>
@@ -3758,9 +3812,14 @@ export default function BillingCounter() {
                                   <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                                     onClick={async () => { const res = await updateProductSkuCode(prod.id, newSkuInput); if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); } }}
                                   >Save</button>
-                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                  <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                                     onClick={() => { setEditingSkuProduct(null); setSkuError(''); }}
-                                  >✕</button>
+                                  >
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" />
+                                      <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                  </button>
                                 </div>
                                 {skuError && <span style={{ fontSize: '10px', color: '#ef4444' }}>{skuError}</span>}
                               </div>
@@ -3801,25 +3860,7 @@ export default function BillingCounter() {
                               {getItemUnitDisplay(prod)}
                             </span>
                           </td>
-                          <td>
-                            {(() => {
-                              const isBevOrSnack = (prod.category || '').toLowerCase() === 'beverages' || (prod.category || '').toLowerCase() === 'snacks' || (prod.id || '').includes('tea') || (prod.id || '').includes('coffee') || (prod.id || '').includes('milk') || (prod.id || '').includes('boost') || (prod.id || '').includes('horlicks') || prod.id === 'vada';
-                              return (
-                                <strong style={{
-                                  display: 'inline-block',
-                                  padding: '3px 8px',
-                                  borderRadius: '6px',
-                                  fontSize: '12px',
-                                  fontWeight: 700,
-                                  background: isBevOrSnack ? '#ecfdf5' : '#f8fafc',
-                                  color: isBevOrSnack ? '#047857' : '#1e293b',
-                                  border: isBevOrSnack ? '1px solid #a7f3d0' : '1px solid #e2e8f0'
-                                }}>
-                                  {getItemStockDisplay(prod, inventoryById, inventory)}
-                                </strong>
-                              );
-                            })()}
-                          </td>
+
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                               <strong style={{ fontSize: '15px', color: '#0f172a' }}>
@@ -3917,19 +3958,7 @@ export default function BillingCounter() {
           </main>
         )}
 
-        {/* TAB 4: DAILY SALES & REVENUE SETTLEMENT */}
-        {posTab === 'daily-sales' && (
-          <main className="pos-daily-sales-page" data-lenis-prevent="true">
-            <DailyRevenueReport
-              allSales={myShiftBills}
-              onOpenInvoice={openInvoice}
-              onRefresh={fetchBills}
-              onBack={() => handleSwitchTab('register')}
-              isCashierOnly={true}
-              currentUser={user}
-            />
-          </main>
-        )}
+        {/* TAB 4: DAILY SALES - merged into TERMINAL SHIFT REPORT above */}
       </div>
 
       {/* MODALS */}
@@ -3964,7 +3993,10 @@ export default function BillingCounter() {
                 className="btn-modal-close"
                 onClick={() => setEditingPriceItem(null)}
               >
-                ✕
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
 
@@ -4093,7 +4125,10 @@ export default function BillingCounter() {
                 className="btn-modal-close"
                 onClick={() => setEditingMasterPriceItem(null)}
               >
-                ✕
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
             <div className="pos-price-modal-body" style={{ display: 'grid', gap: '12px' }}>
@@ -4199,7 +4234,10 @@ export default function BillingCounter() {
                 className="btn-modal-close"
                 onClick={() => setDeleteConfirmItem(null)}
               >
-                ✕
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
               </button>
             </div>
             <div className="pos-price-modal-body">
@@ -4251,16 +4289,20 @@ export default function BillingCounter() {
             role: user?.role || 'cashier',
           };
 
-          if (Array.isArray(billOrBills)) {
-            const identifiers = billOrBills.map((bill) => bill.id || bill.invoiceNumber).filter(Boolean);
-            await deleteBills(identifiers, reason, deleteActor);
-            setSelectedShiftBillIds((previous) => previous.filter((id) => !identifiers.includes(id)));
-          } else {
-            await deleteBill(billOrBills.id, reason, deleteActor);
+          try {
+            if (Array.isArray(billOrBills)) {
+              const identifiers = billOrBills.map((bill) => bill.id || bill.invoiceNumber).filter(Boolean);
+              await deleteBills(identifiers, reason, deleteActor);
+              setSelectedShiftBillIds((previous) => previous.filter((id) => !identifiers.includes(id)));
+            } else {
+              await deleteBill(billOrBills.id, reason, deleteActor);
+            }
+            setDeleteBillModalItem(null);
+            setBulkDeleteBills(null);
+          } catch (err) {
+            // deleteBill now throws on backend failure — surface the real error
+            alert(err?.message || 'Delete failed. Please check your connection and try again.');
           }
-
-          setDeleteBillModalItem(null);
-          setBulkDeleteBills(null);
         }}
         user={user}
       />

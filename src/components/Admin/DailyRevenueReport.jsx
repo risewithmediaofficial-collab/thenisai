@@ -879,8 +879,13 @@ export default function DailyRevenueReport({
                   type="button"
                   className="z-close-btn"
                   onClick={() => setIsZReportOpen(false)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  ✕ Close
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  <span>Close</span>
                 </button>
               </div>
 
@@ -1018,9 +1023,12 @@ export default function DailyRevenueReport({
                   className="btn-modal-close"
                   onClick={() => !isDeleting && setDeleteModalItem(null)}
                   aria-label="Close"
-                  style={{ marginLeft: 'auto', background: 'none', border: 'none', fontSize: '16px', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
+                  style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
                 >
-                  ✕
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
 
@@ -1058,7 +1066,7 @@ export default function DailyRevenueReport({
                     if (!deleteReasonInput.trim()) return;
                     setIsDeleting(true);
                     try {
-                      const billId = deleteModalItem._id || deleteModalItem.id || deleteModalItem.invoiceNumber;
+                      const billId = deleteModalItem.invoiceNumber || deleteModalItem.id || deleteModalItem._id;
                       await deleteBill(billId, deleteReasonInput.trim(), currentUser);
                       setDeleteModalItem(null);
                       if (onRefresh) onRefresh();

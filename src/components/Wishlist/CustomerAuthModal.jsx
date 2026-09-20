@@ -137,7 +137,10 @@ export default function CustomerAuthModal() {
               </svg>
             </div>
             <button type="button" className="cust-auth-close-btn" onClick={handleClose} aria-label="Close">
-              ✕
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
 
@@ -200,7 +203,17 @@ export default function CustomerAuthModal() {
                   className="cust-auth-submit-btn"
                   disabled={loading || phone.replace(/\D/g, '').length < 10}
                 >
-                  {loading ? 'Sending Verification Code...' : 'Send OTP & Continue ➔'}
+                  {loading ? (
+                    'Sending Verification Code...'
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <span>Send OTP &amp; Continue</span>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
               </form>
             )}
@@ -268,7 +281,16 @@ export default function CustomerAuthModal() {
                   className="cust-auth-submit-btn"
                   disabled={loading || otp.trim().length < 4}
                 >
-                  {loading ? 'Verifying Account...' : 'Verify & Save to Wishlist ✓'}
+                  {loading ? (
+                    'Verifying Account...'
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <span>Verify &amp; Save to Wishlist</span>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
               </form>
             )}

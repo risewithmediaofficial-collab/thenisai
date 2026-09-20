@@ -106,7 +106,9 @@ export default function CustomerReviews() {
                 {/* Stars */}
                 <div className="reviews__stars" aria-label="5 stars">
                   {[...Array(5)].map((_, i) => (
-                    <span key={i} className="reviews__star">★</span>
+                    <svg key={i} className="reviews__star" width="16" height="16" viewBox="0 0 24 24" fill="#EAB308" stroke="#CA8A04" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
                   ))}
                 </div>
               </motion.div>

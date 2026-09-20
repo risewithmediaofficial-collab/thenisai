@@ -228,8 +228,8 @@ export function AuthProvider({ children }) {
         return { success: true, user: fallbackCashier };
       }
 
-      // ── Tester / Demo Sandbox login (No data impact) ──────────────────────
-      if ((u === 'tester' || u === 'test' || u === 'demo' || u === 'viewer') && (p === 'test123' || p === 'tester123' || p === 'demo123')) {
+      // ── Tester Sandbox login (No data impact) ─────────────────────────────
+      if ((u === 'tester' || u === 'test' || u === 'viewer') && (p === 'test123' || p === 'tester123' || p === '0000' || p === 'test')) {
         const testerUser = {
           id: 'staff-3',
           username: 'tester',

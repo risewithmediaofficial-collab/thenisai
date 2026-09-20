@@ -14,9 +14,6 @@ export default function InvoiceModal() {
     return saved === 'a4' ? 'a4' : 'thermal';
   });
 
-  // Default: always print 2 copies (Customer Copy + Shop Copy)
-  const [printCopies, setPrintCopies] = useState('both'); // 'both' | 'customer'
-
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
     localStorage.setItem('thenisai_pos_roll_format', fmt);
@@ -33,7 +30,6 @@ export default function InvoiceModal() {
       } else {
         setBillFormat('thermal');
       }
-      setPrintCopies('both'); // Default is always 2 copies (Customer + Shop)
     }
   }, [activeInvoice]);
 
@@ -119,17 +115,15 @@ export default function InvoiceModal() {
   };
 
 
-  // Determine copies to render:
-  // When printingTarget is active during print execution, ONLY render that single bill to printer!
-  const copiesToRender = printCopies === 'shop'
-    ? ['shop']
-    : printCopies === 'customer'
-    ? ['customer']
-    : ['customer', 'shop'];
+  // Determine copies to render: Always exactly 1 single bill copy
+  const copiesToRender = ['customer'];
+
+  // Determine if this is a test invoice or live invoice
+  const isTestInvoice = Boolean(activeInvoice.isSandbox || String(invoiceNumber).startsWith('TEST-'));
 
   // Determine if this is a Counter/POS bill or an Online Website order
   const isOnlineOrder = activeInvoice.source === 'online';
-  const isPosSale = !isOnlineOrder || String(invoiceNumber).startsWith('POS-');
+  const isPosSale = !isOnlineOrder || String(invoiceNumber).startsWith('POS-') || isTestInvoice;
 
   // Customer name & phone formatting
   const rawCustomerName = (customer?.fullName || '').trim();
@@ -289,7 +283,9 @@ export default function InvoiceModal() {
             <div className="pos-store-sub">NATTAMAI KOTTAI, NH 44, KRISHNAGIRI</div>
             <div className="pos-store-cell">CELL: {storeCell}</div>
             <div className="pos-slip-title">
-              {isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT · CUSTOMER COPY'}
+              {isTestInvoice
+                ? 'TEST BILL · SANDBOX MODE'
+                : (isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT')}
             </div>
           </div>
 
@@ -436,10 +432,19 @@ export default function InvoiceModal() {
           </div>
 
           <div className="inv-title-block">
-            <span className={`inv-tax-badge ${isShopCopy ? 'shop-badge' : ''}`}>
-              {isShopCopy
-                ? 'DUPLICATE FOR SUPPLIER (SHOP / STORE COPY)'
-                : 'ORIGINAL FOR RECIPIENT (CUSTOMER COPY)'}
+            <span className={`inv-tax-badge ${isTestInvoice ? 'test-badge' : (isShopCopy ? 'shop-badge' : '')}`} style={isTestInvoice ? { background: '#FEE2E2', color: '#991B1B', borderColor: '#FCA5A5', display: 'inline-flex', alignItems: 'center', gap: '6px' } : undefined}>
+              {isTestInvoice ? (
+                <>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 2v7.31a2 2 0 0 1-.37 1.16L4.14 18.5A2 2 0 0 0 5.8 21.5h12.4a2 2 0 0 0 1.66-3l-5.49-8.03A2 2 0 0 1 14 9.31V2" />
+                    <line x1="8.5" y1="2" x2="15.5" y2="2" />
+                    <line x1="7" y1="16" x2="17" y2="16" />
+                  </svg>
+                  <span>SANDBOX TEST INVOICE (DEMO BILL · NO FINANCIAL IMPACT)</span>
+                </>
+              ) : (isShopCopy
+                    ? 'DUPLICATE FOR SUPPLIER (SHOP / STORE COPY)'
+                    : 'ORIGINAL FOR RECIPIENT (CUSTOMER COPY)')}
             </span>
             <div className="inv-meta-table">
               <div>
@@ -653,7 +658,18 @@ export default function InvoiceModal() {
           {/* Action Toolbar with Format Switcher & Quick Actions */}
           <div className="invoice-toolbar">
             <div className="invoice-toolbar-top-row">
-              <span className="invoice-quick-inv-badge">{invoiceNumber}</span>
+              {isTestInvoice ? (
+                <span className="invoice-quick-inv-badge" style={{ background: '#FEE2E2', color: '#991B1B', border: '1px solid #F87171', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 2v7.31a2 2 0 0 1-.37 1.16L4.14 18.5A2 2 0 0 0 5.8 21.5h12.4a2 2 0 0 0 1.66-3l-5.49-8.03A2 2 0 0 1 14 9.31V2" />
+                    <line x1="8.5" y1="2" x2="15.5" y2="2" />
+                    <line x1="7" y1="16" x2="17" y2="16" />
+                  </svg>
+                  <span>{invoiceNumber} (TEST BILL)</span>
+                </span>
+              ) : (
+                <span className="invoice-quick-inv-badge">{invoiceNumber}</span>
+              )}
 
               {/* Format Switcher Pills */}
               <div className="invoice-format-switcher">
@@ -687,26 +703,6 @@ export default function InvoiceModal() {
                   <span>A4 Invoice</span>
                 </button>
               </div>
-
-              {/* Copies Switcher (Default: 2 Copies) */}
-              <div className="invoice-copies-switcher">
-                <button
-                  type="button"
-                  className={`copies-pill-btn ${printCopies === 'both' ? 'active' : ''}`}
-                  onClick={() => setPrintCopies('both')}
-                  title="Default: 2 copies (Customer Copy + Shop Copy)"
-                >
-                  <span>2 Copies (Customer + Shop)</span>
-                </button>
-                <button
-                  type="button"
-                  className={`copies-pill-btn ${printCopies === 'customer' ? 'active' : ''}`}
-                  onClick={() => setPrintCopies('customer')}
-                  title="Single copy: Customer Copy Only"
-                >
-                  <span>1 Copy (Customer)</span>
-                </button>
-              </div>
             </div>
 
             <div className="invoice-toolbar-actions">
@@ -720,7 +716,7 @@ export default function InvoiceModal() {
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                <span>{printCopies === 'both' ? 'Print 2 Copies' : 'Print Receipt'}</span>
+                <span>Print Bill</span>
               </button>
 
               <a
