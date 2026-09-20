@@ -115,8 +115,8 @@ export default function InvoiceModal() {
   };
 
 
-  // Determine copies to render: Always exactly 1 single bill copy
-  const copiesToRender = ['customer'];
+  // Determine copies to render: Customer Copy + Shop Reference Copy (each on a separate printed page)
+  const copiesToRender = ['customer', 'shop'];
 
   // Determine if this is a test invoice or live invoice
   const isTestInvoice = Boolean(activeInvoice.isSandbox || String(invoiceNumber).startsWith('TEST-'));
@@ -309,7 +309,7 @@ export default function InvoiceModal() {
 
           <div className="pos-slip-dashed-line" />
 
-          {/* Items List - 2-line layout with Inventory Number */}
+          {/* Items List - Single row layout with perfect column alignment */}
           <div className="pos-slip-items">
             {items.map((item, idx) => {
               const code = getInventoryCode(item, idx);
@@ -317,16 +317,13 @@ export default function InvoiceModal() {
               const displayName = getItemDisplayName(item);
               return (
                 <div key={idx} className="pos-slip-item-row">
-                  <div className="pos-item-title-line">
+                  <div className="col-item">
                     <span className="pos-item-code">#{code}</span>
                     <span className="pos-item-name">{displayName}</span>
                   </div>
-                  <div className="pos-item-math-line">
-                    <span className="col-indent" />
-                    <span className="col-wt">{wtQty}</span>
-                    <span className="col-price">{rate}</span>
-                    <span className="col-amt">{amt}</span>
-                  </div>
+                  <span className="col-wt">{wtQty}</span>
+                  <span className="col-price">{rate}</span>
+                  <span className="col-amt">{amt}</span>
                 </div>
               );
             })}

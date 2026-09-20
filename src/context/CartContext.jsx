@@ -21,6 +21,33 @@ const RECYCLE_BIN_PRODUCTS_STORAGE_KEY = 'thenisai_recycle_bin_products_v1';
 const DELETED_PRODUCT_IDS_KEY = 'thenisai_deleted_product_ids_v1';
 const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
 const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
+const CUSTOM_CATEGORIES_KEY = 'thenisai_custom_categories_v1';
+const CUSTOM_UNITS_KEY = 'thenisai_custom_units_v1';
+
+// Default categories (built-in, cannot be deleted by admin)
+export const DEFAULT_PRODUCT_CATEGORIES = [
+  { value: 'sweets', label: 'Authentic Sweets (இனிப்புகள்)' },
+  { value: 'beverages', label: 'Tea & Beverages (டீ & பானங்கள்)' },
+  { value: 'spices', label: 'Spices & Kara (கார வகைகள்)' },
+  { value: 'halwa', label: 'Halwa Specialties (அல்வா)' },
+  { value: 'savouries', label: 'Savouries / Mixtures (கார வகைகள்)' },
+  { value: 'ghee-bakery', label: 'Pure Ghee & Bakery' },
+  { value: 'traditional-rice-dal', label: 'Traditional Rice & Dals' },
+  { value: 'spices-masalas', label: 'Spices & Podi Varieties' },
+  { value: 'other', label: 'Other Products' },
+];
+
+// Default units (built-in, cannot be deleted by admin)
+export const DEFAULT_PRODUCT_UNITS = [
+  { value: 'kg', label: 'kg — Weighted in g / kg' },
+  { value: 'Litre', label: 'Litre — Volume in ml / L' },
+  { value: '1 Cup', label: '1 Cup — Fast seller cup' },
+  { value: '1 Pc', label: '1 Pc — Single piece' },
+  { value: '1 Pkt', label: '1 Pkt — Packaged packet' },
+  { value: 'Bottle', label: 'Bottle (பாட்டில்)' },
+  { value: 'box', label: 'Box (பெட்டி)' },
+  { value: 'piece', label: 'Piece (எண்ணிக்கை)' },
+];
 
 
 export const DEFAULT_TAX_SETTINGS = {
@@ -443,6 +470,62 @@ export function CartProvider({ children }) {
       return {};
     }
   });
+
+  // Admin-managed custom product categories (persisted to localStorage)
+  const [customCategories, setCustomCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Admin-managed custom product units (persisted to localStorage)
+  const [customUnits, setCustomUnits] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CUSTOM_UNITS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addCustomCategory = (cat) => {
+    // cat: { value: string, label: string }
+    setCustomCategories((prev) => {
+      if (prev.some((c) => c.value === cat.value)) return prev;
+      const updated = [...prev, cat];
+      try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const removeCustomCategory = (value) => {
+    setCustomCategories((prev) => {
+      const updated = prev.filter((c) => c.value !== value);
+      try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const addCustomUnit = (unit) => {
+    // unit: { value: string, label: string }
+    setCustomUnits((prev) => {
+      if (prev.some((u) => u.value === unit.value)) return prev;
+      const updated = [...prev, unit];
+      try { localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const removeCustomUnit = (value) => {
+    setCustomUnits((prev) => {
+      const updated = prev.filter((u) => u.value !== value);
+      try { localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
 
   // Combined Billing Items (Standard catalog + Custom Items, filtered against deleted products)
   const allBillingProducts = useMemo(() => {
@@ -1514,20 +1597,18 @@ export function CartProvider({ children }) {
 
   const getNextAvailableSkuCode = () => {
     const usedNumbers = new Set();
-    const validNumbers = [];
 
     [...ALL_BILLING_ITEMS, ...customProducts, ...inventory].forEach((item) => {
       const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
       const parentNum = Number(raw);
       if (raw && Number.isInteger(parentNum) && parentNum > 0) {
         usedNumbers.add(parentNum);
-        validNumbers.push(parentNum);
       }
     });
 
-    const highestExisting = validNumbers.length ? Math.max(...validNumbers) : 0;
-    let nextSku = highestExisting + 1;
-
+    // Fill gaps: find lowest positive integer NOT currently in use
+    // This means deleted SKUs become available again automatically
+    let nextSku = 1;
     while (usedNumbers.has(nextSku)) {
       nextSku += 1;
     }
@@ -2515,6 +2596,13 @@ export function CartProvider({ children }) {
         updateProductMasterPrice,
         updateProductSkuCode,
         masterPrices,
+        // Admin-managed custom Categories & Units
+        customCategories,
+        customUnits,
+        addCustomCategory,
+        removeCustomCategory,
+        addCustomUnit,
+        removeCustomUnit,
         // Price Override Auditing
         priceOverrideLogs,
         recordPriceOverrideLog,

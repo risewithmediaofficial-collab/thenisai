@@ -25,30 +25,6 @@
     "tamilName": "டீ"
   },
   {
-    "_id": "6aa3d7fc8ef5b9dbec7c881d",
-    "id": "coffee",
-    "__v": 0,
-    "batchDate": "Today",
-    "batchNote": "Fresh coffee brew counter",
-    "category": "beverages",
-    "hsn": "0901",
-    "image": "/products/coffee.svg",
-    "minThreshold": 15,
-    "name": "Coffee — காபி",
-    "pricePerKg": 10,
-    "stockKg": 95.5,
-    "isCustom": false,
-    "isInactive": false,
-    "unit": "1 Cup",
-    "unitPrice": 10,
-    "price": 20,
-    "englishName": "Coffee",
-    "itemNumber": 2,
-    "nameTa": "காபி",
-    "subcategory": "",
-    "skuCode": "2"
-  },
-  {
     "_id": "6aa3d7fc8ef5b9dbec7c881e",
     "id": "filter-coffee",
     "__v": 0,
@@ -3395,5 +3371,37 @@
     "pricePerKg": 20,
     "unit": "kg",
     "category": "sweets"
+  },
+  {
+    "id": "custom-1789909950054",
+    "name": "Coffee — காபி",
+    "nameTa": "",
+    "skuCode": "129",
+    "hsn": "2",
+    "price": 20,
+    "unitPrice": 20,
+    "pricePerKg": 20,
+    "unit": "1 Cup",
+    "category": "beverages"
+  },
+  {
+    "id": "coffee",
+    "__v": 0,
+    "batchDate": "Today",
+    "batchNote": "Fresh coffee brew counter",
+    "category": "Hot Beverages",
+    "hsn": "0901",
+    "image": "/images/products/coffee.svg",
+    "isCustom": false,
+    "isInactive": false,
+    "minThreshold": 15,
+    "name": "Coffee — காபி",
+    "pricePerKg": 10,
+    "stockKg": 100,
+    "unit": "1 Cup",
+    "unitPrice": 10,
+    "englishName": "Coffee",
+    "price": 20,
+    "skuCode": "2"
   }
 ]

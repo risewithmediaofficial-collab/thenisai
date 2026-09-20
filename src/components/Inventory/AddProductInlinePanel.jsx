@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 
 export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct }) {
-  const { getNextAvailableSkuCode, addNewProduct } = useCart();
+  const { getNextAvailableSkuCode, addNewProduct, customCategories, customUnits } = useCart();
+
+  const allCategories = [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
+  const allUnits = [...DEFAULT_PRODUCT_UNITS, ...customUnits];
 
   const [form, setForm] = useState({
     nameEn: '',
@@ -226,11 +230,9 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 onChange={handleChange}
                 className="panel-select"
               >
-                <option value="sweets">Traditional Sweets (இனிப்புகள்)</option>
-                <option value="karam">Karam &amp; Savouries (கார வகைகள்)</option>
-                <option value="bakery">Bakery &amp; Puffs (பேக்கரி)</option>
-                <option value="beverages">Beverages &amp; Juices (பானங்கள்)</option>
-                <option value="traditional">Special Traditional (பாரம்பரியம்)</option>
+                {allCategories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
               </select>
             </div>
 
@@ -244,13 +246,9 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 onChange={handleChange}
                 className="panel-select"
               >
-                <option value="kg">kg (Kilogram)</option>
-                <option value="1 Cup">1 Cup (Cup / Hot Beverage)</option>
-                <option value="1 Pc">1 Pc (Piece / Snack)</option>
-                <option value="g">g (Gram - 250g / 500g)</option>
-                <option value="pcs">pcs (Piece / Unit)</option>
-                <option value="box">box (Gift Box / Pack)</option>
-                <option value="L">L (Litre / ml)</option>
+                {allUnits.map((u) => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))}
               </select>
             </div>
 

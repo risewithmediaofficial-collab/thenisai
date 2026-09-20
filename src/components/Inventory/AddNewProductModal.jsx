@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 export default function AddNewProductModal({ isOpen, onClose }) {
-  const { addNewProduct, getNextAvailableSkuCode } = useCart();
+  const { addNewProduct, getNextAvailableSkuCode, customCategories, customUnits } = useCart();
+
+  const allCategories = [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
+  const allUnits = [...DEFAULT_PRODUCT_UNITS, ...customUnits];
 
   useScrollLock(isOpen);
 
@@ -40,6 +44,7 @@ export default function AddNewProductModal({ isOpen, onClose }) {
     const nextCode = getNextAvailableSkuCode();
     setForm((prev) => ({
       ...prev,
+      // Auto-fill only if empty so admin can override with a specific SKU
       skuCode: prev.skuCode || nextCode,
       hsn: prev.hsn || nextCode,
     }));
@@ -183,11 +188,9 @@ export default function AddNewProductModal({ isOpen, onClose }) {
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                 >
-                  <option value="sweets">Authentic Sweets (இனிப்புகள்)</option>
-                  <option value="beverages">Tea &amp; Beverages (டீ &amp; பானங்கள்)</option>
-                  <option value="spices">Spices &amp; Kara (கார வகைகள்)</option>
-                  <option value="halwa">Halwa Specialties (அல்வா)</option>
-                  <option value="other">Other</option>
+                  {allCategories.map((cat) => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
                 </select>
               </div>
 
@@ -200,12 +203,9 @@ export default function AddNewProductModal({ isOpen, onClose }) {
                   value={form.unit}
                   onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 >
-                  <option value="kg">kg (Weighted in g / kg)</option>
-                  <option value="Litre">Litre (Volume in ml / L)</option>
-                  <option value="1 Cup">1 Cup (Fast seller cup)</option>
-                  <option value="1 Pc">1 Pc (Single piece)</option>
-                  <option value="1 Pkt">1 Pkt (Packaged packet)</option>
-                  <option value="Bottle">Bottle (பாட்டில்)</option>
+                  {allUnits.map((u) => (
+                    <option key={u.value} value={u.value}>{u.label}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -229,15 +229,15 @@ export default function AddNewProductModal({ isOpen, onClose }) {
 
               <div className="stock-field">
                 <label>
-                  <span>SKU / HSN Code (குறியீடு)</span>
+                  <span>SKU Code (குறியீடு) <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '11px' }}>— editable</span></span>
                 </label>
                 <input
                   type="text"
                   className="stock-input"
-                  placeholder="Auto-generated next code"
+                  placeholder="Auto-generated — can edit"
                   value={form.skuCode}
-                  readOnly
-                  onChange={(e) => setForm({ ...form, skuCode: e.target.value })}
+                  onChange={(e) => setForm({ ...form, skuCode: e.target.value, hsn: e.target.value || form.hsn })}
+                  style={{ background: '#fff' }}
                 />
               </div>
             </div>
@@ -245,15 +245,15 @@ export default function AddNewProductModal({ isOpen, onClose }) {
             <div className="stock-form-row-2">
               <div className="stock-field">
                 <label>
-                  <span>HSN Number</span>
+                  <span>HSN Number <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '11px' }}>— editable</span></span>
                 </label>
                 <input
                   type="text"
                   className="stock-input"
                   placeholder="Auto-generated HSN"
                   value={form.hsn}
-                  readOnly
                   onChange={(e) => setForm({ ...form, hsn: e.target.value })}
+                  style={{ background: '#fff' }}
                 />
               </div>
             </div>

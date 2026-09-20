@@ -9,6 +9,7 @@ import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from '../Billing/DeleteBillModal';
 import EditBillModal from '../Billing/EditBillModal';
 import StaffManagement from './StaffManagement';
+import CatalogSettingsModal from './CatalogSettingsModal';
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -99,6 +100,7 @@ export default function AdminDashboard() {
   const [isRefreshingRecycle, setIsRefreshingRecycle] = useState(false);
   const [productToRestore, setProductToRestore] = useState(null);
   const [productToPurge, setProductToPurge] = useState(null);
+  const [isCatalogSettingsOpen, setIsCatalogSettingsOpen] = useState(false);
 
   // Activity Logs filter state
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
@@ -912,6 +914,40 @@ export default function AdminDashboard() {
                       <span>Add New Product</span>
                     </>
                   )}
+                </button>
+                <button
+                  type="button"
+                  className="btn-catalog-settings"
+                  onClick={() => setIsCatalogSettingsOpen(true)}
+                  title="Manage custom categories & units"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    background: '#f1f5f9',
+                    color: '#0f172a',
+                    border: '1px solid #cbd5e1',
+                    padding: '9px 16px',
+                    borderRadius: '10px',
+                    fontWeight: 600,
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                    <path d="M4.93 4.93a10 10 0 0 0 0 14.14" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="M4.22 4.22l1.42 1.42" />
+                    <path d="M18.36 18.36l1.42 1.42" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                    <path d="M4.22 19.78l1.42-1.42" />
+                    <path d="M18.36 5.64l1.42-1.42" />
+                  </svg>
+                  <span>Catalog Settings</span>
                 </button>
                 <button
                   type="button"
@@ -3035,6 +3071,12 @@ export default function AdminDashboard() {
             currentUser={user}
           />
         )}
+
+        {/* Catalog Settings Modal — custom categories & units */}
+        <CatalogSettingsModal
+          isOpen={isCatalogSettingsOpen}
+          onClose={() => setIsCatalogSettingsOpen(false)}
+        />
       </main>
       </div>
     </div>

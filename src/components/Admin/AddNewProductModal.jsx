@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
+import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
-  const { getNextAvailableSkuCode } = useCart();
+  const { getNextAvailableSkuCode, customCategories, customUnits } = useCart();
+
+  const allCategories = [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
+  const allUnits = [...DEFAULT_PRODUCT_UNITS, ...customUnits];
   const [formData, setFormData] = useState({
     name: '',
     tamilName: '',
@@ -20,6 +24,7 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
     const nextCode = getNextAvailableSkuCode();
     setFormData((prev) => ({
       ...prev,
+      // Auto-fill only if empty — admin can override with a deleted SKU number
       hsn: prev.hsn || nextCode,
     }));
   }, [isOpen, getNextAvailableSkuCode]);
@@ -167,11 +172,9 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
                 onChange={handleChange}
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
               >
-                <option value="sweets">Sweets (இனிப்புகள்)</option>
-                <option value="savouries">Savouries / Mixtures (கார வகைகள்)</option>
-                <option value="ghee-bakery">Pure Ghee &amp; Bakery</option>
-                <option value="traditional-rice-dal">Traditional Rice &amp; Dals</option>
-                <option value="spices-masalas">Spices &amp; Podi Varieties</option>
+                {allCategories.map((cat) => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
               </select>
             </div>
 
@@ -185,11 +188,9 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
                 onChange={handleChange}
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
               >
-                <option value="kg">kg (கிலோ)</option>
-                <option value="litre">litre (லிட்டர்)</option>
-                <option value="box">box (பெட்டி)</option>
-                <option value="packet">packet (பாக்கெட்)</option>
-                <option value="piece">piece (எண்ணிக்கை)</option>
+                {allUnits.map((u) => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))}
               </select>
             </div>
 
@@ -214,16 +215,16 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
           <div style={{ marginBottom: '14px' }}>
             <div className="admin-form-group">
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                HSN Code
+                SKU / HSN Code
+                <span style={{ fontWeight: 400, color: '#94a3b8', fontSize: '11px', marginLeft: '6px' }}>— auto-generated, editable</span>
               </label>
               <input
                 type="text"
                 name="hsn"
                 value={formData.hsn}
-                readOnly
                 onChange={handleChange}
-                placeholder="Auto-generated HSN"
-                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#f8fafc' }}
+                placeholder="Auto-generated — can override"
+                style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
               />
             </div>
           </div>
