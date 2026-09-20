@@ -23,6 +23,8 @@ const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
 const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
 const CUSTOM_CATEGORIES_KEY = 'thenisai_custom_categories_v1';
 const CUSTOM_UNITS_KEY = 'thenisai_custom_units_v1';
+const CATEGORY_OVERRIDES_KEY = 'thenisai_category_overrides_v1';
+const UNIT_OVERRIDES_KEY = 'thenisai_unit_overrides_v1';
 
 // Default categories (built-in, cannot be deleted by admin)
 export const DEFAULT_PRODUCT_CATEGORIES = [
@@ -491,6 +493,43 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Category and Unit overrides (for editing built-in category/unit display names)
+  const [categoryOverrides, setCategoryOverrides] = useState(() => {
+    try {
+      const saved = localStorage.getItem(CATEGORY_OVERRIDES_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [unitOverrides, setUnitOverrides] = useState(() => {
+    try {
+      const saved = localStorage.getItem(UNIT_OVERRIDES_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Combined allCategories with overrides applied
+  const allCategories = useMemo(() => {
+    const base = DEFAULT_PRODUCT_CATEGORIES.map((c) => ({
+      ...c,
+      label: categoryOverrides[c.value] || c.label,
+    }));
+    return [...base, ...customCategories];
+  }, [categoryOverrides, customCategories]);
+
+  // Combined allUnits with overrides applied
+  const allUnits = useMemo(() => {
+    const base = DEFAULT_PRODUCT_UNITS.map((u) => ({
+      ...u,
+      label: unitOverrides[u.value] || u.label,
+    }));
+    return [...base, ...customUnits];
+  }, [unitOverrides, customUnits]);
+
   const addCustomCategory = (cat) => {
     // cat: { value: string, label: string }
     setCustomCategories((prev) => {
@@ -501,11 +540,37 @@ export function CartProvider({ children }) {
     });
   };
 
+  const updateCategory = (oldValue, updatedCat) => {
+    const isBuiltIn = DEFAULT_PRODUCT_CATEGORIES.some((c) => c.value === oldValue);
+    if (isBuiltIn) {
+      setCategoryOverrides((prev) => {
+        const updated = { ...prev, [oldValue]: updatedCat.label };
+        try { localStorage.setItem(CATEGORY_OVERRIDES_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+    } else {
+      setCustomCategories((prev) => {
+        const updated = prev.map((c) => (c.value === oldValue ? { ...c, ...updatedCat } : c));
+        try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+    }
+  };
+
   const removeCustomCategory = (value) => {
     setCustomCategories((prev) => {
       const updated = prev.filter((c) => c.value !== value);
       try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(updated)); } catch {}
       return updated;
+    });
+    setCategoryOverrides((prev) => {
+      if (prev[value]) {
+        const copy = { ...prev };
+        delete copy[value];
+        try { localStorage.setItem(CATEGORY_OVERRIDES_KEY, JSON.stringify(copy)); } catch {}
+        return copy;
+      }
+      return prev;
     });
   };
 
@@ -519,11 +584,37 @@ export function CartProvider({ children }) {
     });
   };
 
+  const updateUnit = (oldValue, updatedUnit) => {
+    const isBuiltIn = DEFAULT_PRODUCT_UNITS.some((u) => u.value === oldValue);
+    if (isBuiltIn) {
+      setUnitOverrides((prev) => {
+        const updated = { ...prev, [oldValue]: updatedUnit.label };
+        try { localStorage.setItem(UNIT_OVERRIDES_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+    } else {
+      setCustomUnits((prev) => {
+        const updated = prev.map((u) => (u.value === oldValue ? { ...u, ...updatedUnit } : u));
+        try { localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
+    }
+  };
+
   const removeCustomUnit = (value) => {
     setCustomUnits((prev) => {
       const updated = prev.filter((u) => u.value !== value);
       try { localStorage.setItem(CUSTOM_UNITS_KEY, JSON.stringify(updated)); } catch {}
       return updated;
+    });
+    setUnitOverrides((prev) => {
+      if (prev[value]) {
+        const copy = { ...prev };
+        delete copy[value];
+        try { localStorage.setItem(UNIT_OVERRIDES_KEY, JSON.stringify(copy)); } catch {}
+        return copy;
+      }
+      return prev;
     });
   };
 
@@ -547,8 +638,18 @@ export function CartProvider({ children }) {
       }
     });
 
+    // Also include any custom/backend inventory products not in combined and not deleted
+    (inventory || []).forEach((invItem, idx) => {
+      if (!deletedSet.has(invItem.id) && !combined.some((it) => it.id === invItem.id)) {
+        combined.push({
+          ...invItem,
+          itemNumber: invItem.itemNumber || (ALL_BILLING_ITEMS.length + customProducts.length + idx + 1),
+        });
+      }
+    });
+
     // Overlay updated prices: check masterPrices first, then inventory record, then original item price
-    return combined.map((item) => {
+    const mapped = combined.map((item) => {
       const explicitPrice = masterPrices[item.id];
       const invRecord = inventory.find((i) => i.id === item.id) || customProducts.find((cp) => cp.id === item.id);
       const invPrice = invRecord
@@ -591,6 +692,18 @@ export function CartProvider({ children }) {
           '2kg': livePrice * 2,
         } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : undefined),
       };
+    });
+
+    // Sort numerically by SKU code / itemNumber so items like SKU 2 Coffee appear in proper order
+    return mapped.sort((a, b) => {
+      const aNum = Number(a.skuCode ?? a.itemNumber);
+      const bNum = Number(b.skuCode ?? b.itemNumber);
+      const aValid = Number.isInteger(aNum) && aNum > 0;
+      const bValid = Number.isInteger(bNum) && bNum > 0;
+      if (aValid && bValid) return aNum - bNum;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
     });
   }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 
@@ -708,12 +821,6 @@ export function CartProvider({ children }) {
       const targetHash = subTab ? (adminRouteMap[subTab] || `#admin/${subTab}`) : '#admin/inventory';
       if (window.location.hash !== targetHash) {
         window.location.hash = targetHash;
-      } else {
-        try {
-          window.dispatchEvent(new HashChangeEvent('hashchange'));
-        } catch {
-          window.dispatchEvent(new Event('hashchange'));
-        }
       }
     } else if (view === 'billing') {
       const billingRouteMap = {
@@ -728,12 +835,6 @@ export function CartProvider({ children }) {
       const targetHash = subTab ? (billingRouteMap[subTab] || `#billing/${subTab}`) : '#billing';
       if (window.location.hash !== targetHash) {
         window.location.hash = targetHash;
-      } else {
-        try {
-          window.dispatchEvent(new HashChangeEvent('hashchange'));
-        } catch {
-          window.dispatchEvent(new Event('hashchange'));
-        }
       }
     } else {
       // Storefront: Clear any path /admin or /billing back to /
@@ -746,12 +847,6 @@ export function CartProvider({ children }) {
       }
       if (window.location.hash !== '') {
         window.location.hash = '';
-      } else {
-        try {
-          window.dispatchEvent(new HashChangeEvent('hashchange'));
-        } catch {
-          window.dispatchEvent(new Event('hashchange'));
-        }
       }
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1595,10 +1690,47 @@ export function CartProvider({ children }) {
     }
   };
 
+  const getActiveProductsForSku = () => {
+    const deletedSet = new Set([
+      ...(Array.isArray(deletedProductIds) ? deletedProductIds : []),
+      ...recycleBinProducts.map((p) => p.id),
+    ]);
+
+    const active = [];
+    const seenIds = new Set();
+
+    // 1. Static items not deleted
+    ALL_BILLING_ITEMS.forEach((item) => {
+      if (!deletedSet.has(item.id) && !seenIds.has(item.id)) {
+        active.push(item);
+        seenIds.add(item.id);
+      }
+    });
+
+    // 2. Custom products not deleted
+    customProducts.forEach((item) => {
+      if (!deletedSet.has(item.id) && !seenIds.has(item.id)) {
+        active.push(item);
+        seenIds.add(item.id);
+      }
+    });
+
+    // 3. Inventory items not deleted
+    inventory.forEach((item) => {
+      if (!deletedSet.has(item.id) && !seenIds.has(item.id)) {
+        active.push(item);
+        seenIds.add(item.id);
+      }
+    });
+
+    return active;
+  };
+
   const getNextAvailableSkuCode = () => {
     const usedNumbers = new Set();
+    const activeProducts = getActiveProductsForSku();
 
-    [...ALL_BILLING_ITEMS, ...customProducts, ...inventory].forEach((item) => {
+    activeProducts.forEach((item) => {
       const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
       const parentNum = Number(raw);
       if (raw && Number.isInteger(parentNum) && parentNum > 0) {
@@ -1616,6 +1748,29 @@ export function CartProvider({ children }) {
     return String(nextSku);
   };
 
+  const getAvailableSkuCodes = (limit = 10) => {
+    const usedNumbers = new Set();
+    const activeProducts = getActiveProductsForSku();
+
+    activeProducts.forEach((item) => {
+      const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+      const parentNum = Number(raw);
+      if (raw && Number.isInteger(parentNum) && parentNum > 0) {
+        usedNumbers.add(parentNum);
+      }
+    });
+
+    const available = [];
+    let candidate = 1;
+    while (available.length < limit) {
+      if (!usedNumbers.has(candidate)) {
+        available.push(candidate);
+      }
+      candidate += 1;
+    }
+    return available;
+  };
+
   const resolveUniqueSkuCode = (requestedCode) => {
     const cleaned = String(requestedCode ?? '').trim();
     if (!cleaned) return getNextAvailableSkuCode();
@@ -1624,7 +1779,8 @@ export function CartProvider({ children }) {
     const numeric = Number(cleaned);
     if (!Number.isInteger(numeric) || numeric <= 0) return getNextAvailableSkuCode();
 
-    const taken = [...ALL_BILLING_ITEMS, ...customProducts, ...inventory].some((item) => {
+    const activeProducts = getActiveProductsForSku();
+    const taken = activeProducts.some((item) => {
       const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
       return raw && /^\d+$/.test(raw) && Number(raw) === numeric;
     });
@@ -1635,8 +1791,8 @@ export function CartProvider({ children }) {
   const addNewProduct = async (productData, performedBy = null) => {
     const activePerformer = resolveActiveUser(performedBy);
 
-    const nextItemNum = Number(getNextAvailableSkuCode());
     const generatedSku = resolveUniqueSkuCode(productData.skuCode);
+    const nextItemNum = Number(generatedSku) || Number(getNextAvailableSkuCode());
     const generatedHsn = String(productData.hsn ?? '').trim() || generatedSku;
 
     const newId = productData.id || `custom-${Date.now()}`;
@@ -1699,6 +1855,20 @@ export function CartProvider({ children }) {
       return updated;
     });
 
+    setDeletedProductIds((prev) => {
+      const updated = prev.filter(
+        (id) =>
+          id !== newProd.id &&
+          id !== productData.id &&
+          id !== (productData.nameEn || '').toLowerCase().replace(/[^a-z0-9]/g, '-') &&
+          id !== (productData.englishName || '').toLowerCase().replace(/[^a-z0-9]/g, '-')
+      );
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
     recordActivity({
       actionType: 'PRODUCT_ADDED',
       performedBy: activePerformer,
@@ -1714,7 +1884,33 @@ export function CartProvider({ children }) {
     }
 
     try {
-      await api.post('/api/inventory/products', newProd);
+      const res = await api.post('/api/inventory/products', newProd);
+      if (res && res.success) {
+        if (Array.isArray(res.inventory)) {
+          setInventory(res.inventory);
+          try {
+            if (!isSandboxActive()) {
+              localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(res.inventory));
+            }
+          } catch {}
+        }
+        if (res.product) {
+          setCustomProducts((prev) => {
+            const idx = prev.findIndex((p) => p.id === newProd.id);
+            if (idx !== -1) {
+              const copy = [...prev];
+              copy[idx] = { ...copy[idx], ...res.product, skuCode: String(res.product.skuCode || copy[idx].skuCode) };
+              try {
+                if (!isSandboxActive()) {
+                  localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(copy));
+                }
+              } catch {}
+              return copy;
+            }
+            return prev;
+          });
+        }
+      }
     } catch (err) {
       console.warn('Backend product creation failed, saved locally:', err);
     }
@@ -1904,6 +2100,11 @@ export function CartProvider({ children }) {
 
     if (isSandboxActive()) {
       setRecycleBinProducts((prev) => prev.filter((p) => p.id !== productId));
+      setDeletedProductIds((prev) => {
+        const updated = prev.filter((id) => id !== productId);
+        try { localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated)); } catch {}
+        return updated;
+      });
       return true;
     }
 
@@ -1924,6 +2125,15 @@ export function CartProvider({ children }) {
       const updated = prev.filter((p) => p.id !== productId);
       try {
         localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Also remove from deletedProductIds so it is completely expunged and reusable
+    setDeletedProductIds((prev) => {
+      const updated = prev.filter((id) => id !== productId);
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
     });
@@ -2589,6 +2799,7 @@ export function CartProvider({ children }) {
         addNewProduct,
         addNewProductDetails: addNewProduct,
         getNextAvailableSkuCode,
+        getAvailableSkuCodes,
         resolveUniqueSkuCode,
         updateProductDetails,
         updateProduct: updateProductDetails,
@@ -2597,11 +2808,15 @@ export function CartProvider({ children }) {
         updateProductSkuCode,
         masterPrices,
         // Admin-managed custom Categories & Units
+        allCategories,
+        allUnits,
         customCategories,
         customUnits,
         addCustomCategory,
+        updateCategory,
         removeCustomCategory,
         addCustomUnit,
+        updateUnit,
         removeCustomUnit,
         // Price Override Auditing
         priceOverrideLogs,

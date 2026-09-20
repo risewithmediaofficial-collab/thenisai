@@ -37,15 +37,15 @@
 }
 
 .invoice-modal-wrap.wrap-thermal {
-  max-width: 440px;
+  max-width: min(520px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-thermal-58 {
-  max-width: 400px;
+  max-width: min(440px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-a4 {
-  max-width: 860px;
+  max-width: min(880px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-thermal .printable-invoice-container {
@@ -199,27 +199,53 @@
   font-size: 0.75rem;
 }
 
+.invoice-top-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #64748B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.invoice-top-close-btn:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FCA5A5;
+  transform: translateY(-1px);
+}
+
 .invoice-toolbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .invoice-toolbar-actions .toolbar-btn {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 90px;
   justify-content: center;
   padding: 9px 12px;
   border-radius: 8px;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .toolbar-btn.print-btn {
@@ -231,6 +257,30 @@
 
 .toolbar-btn.print-btn:hover {
   background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.edit-bill-btn {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  border: 1px solid #BFDBFE;
+}
+
+.toolbar-btn.edit-bill-btn:hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.delete-bill-btn {
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+}
+
+.toolbar-btn.delete-bill-btn:hover {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
   transform: translateY(-1px);
 }
 
@@ -666,11 +716,11 @@
   margin: 0 auto;
   background: #FFFFFF !important;
   color: #000000 !important;
-  font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+  font-family: 'Consolas', 'Courier New', 'SF Mono', 'Roboto Mono', Menlo, monospace !important;
   font-size: 10.5px;
-  line-height: 1.25;
-  font-weight: 600;
-  padding: 8px 6px 12px 6px;
+  line-height: 1.32;
+  font-weight: 700;
+  padding: 10px 8px 14px 8px;
   border-radius: 4px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
   border: 1px solid #CBD5E1;
@@ -681,7 +731,7 @@
 }
 
 .pos-slip-document * {
-  font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+  font-family: 'Consolas', 'Courier New', 'SF Mono', 'Roboto Mono', Menlo, monospace !important;
   color: #000000 !important;
   box-sizing: border-box;
 }
@@ -969,13 +1019,72 @@
   background: #0369A1;
 }
 
-/* ==============================================================================
-   DEDICATED PRINT STYLESHEET (@media print)
-   Guaranteed Zero Blank Sheet Print Architecture for Thermal & A4 Invoices
-   ============================================================================== */
-@page {
-  size: auto;
-  margin: 0mm;
+/* Responsive Screen Styles for Mobile and Tablet */
+@media (max-width: 640px) {
+  .invoice-portal {
+    padding: 8px;
+    align-items: center;
+  }
+
+  .invoice-modal-wrap {
+    max-height: calc(100vh - 16px);
+    border-radius: 12px;
+  }
+
+  .invoice-toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .invoice-toolbar-top-row {
+    gap: 6px;
+  }
+
+  .invoice-quick-inv-badge {
+    font-size: 0.78rem;
+    padding: 4px 8px;
+  }
+
+  .format-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .invoice-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .invoice-toolbar-actions .toolbar-btn {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .printable-invoice-container {
+    padding: 8px 4px !important;
+  }
+
+  .invoice-document {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .invoice-portal {
+    padding: 4px;
+  }
+
+  .invoice-toolbar-top-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pos-slip-document {
+    padding: 6px 4px 10px;
+  }
 }
 
 @media print {

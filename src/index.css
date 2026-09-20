@@ -1750,7 +1750,7 @@ time, .hours {
 .admin-sales-tab {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .admin-sales-toolbar-top {
@@ -1758,20 +1758,20 @@ time, .hours {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 .btn-sync-sales {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
   color: #334155;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  padding: 8px 14px;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -1782,39 +1782,39 @@ time, .hours {
   border-color: #94A3B8;
 }
 
-/* Sales Overview 4-Card Grid */
+/* Sales Overview 4-Card Grid - Compact layout */
 .sales-overview-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 @media (max-width: 1360px) {
   .sales-overview-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 8px;
   }
 }
 
 @media (max-width: 600px) {
   .sales-overview-metrics {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
   }
 }
 
 .sales-stat-card {
   background: #FFFFFF;
-  border-radius: 12px;
-  padding: 16px 20px;
+  border-radius: 8px;
+  padding: 8px 14px;
   border: 1px solid #E2E8F0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -1836,7 +1836,7 @@ time, .hours {
 }
 
 .sales-stat-card .stat-label {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -1844,10 +1844,11 @@ time, .hours {
 }
 
 .sales-stat-card .stat-val {
-  font-size: 1.55rem;
+  font-size: 1.2rem;
   font-weight: 800;
   color: #0F172A;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .sales-stat-card.total .stat-val {
@@ -1855,29 +1856,30 @@ time, .hours {
 }
 
 .sales-stat-card .stat-sub {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: #64748B;
 }
 
 .payment-split-pills {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: 0.78rem;
+  gap: 2px;
+  margin-top: 2px;
+  font-size: 0.72rem;
   font-weight: 600;
   color: #334155;
 }
 
-/* Cashier Performance Cards Section */
+/* Cashier Performance Cards Section - Compact */
 .cashier-performance-section {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 18px 20px;
+  border-radius: 8px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 6px;
+  margin-bottom: 0;
 }
 
 .section-sub-header {
@@ -1885,25 +1887,25 @@ time, .hours {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .section-sub-header .sub-title {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: #0F172A;
 }
 
 .section-sub-header .sub-note {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   color: #64748B;
 }
 
 .cashier-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
 }
@@ -1911,13 +1913,13 @@ time, .hours {
 .cashier-card {
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 14px 16px;
+  border-radius: 8px;
+  padding: 8px 10px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
   min-width: 0;
   box-sizing: border-box;
 }
@@ -1925,7 +1927,7 @@ time, .hours {
 .cashier-card:hover {
   border-color: #CBD5E1;
   background: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
 }
 
 .cashier-card.selected {
@@ -1937,37 +1939,37 @@ time, .hours {
 .cashier-card__header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .cashier-avatar {
-  width: 34px;
-  height: 34px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
+  font-size: 0.85rem;
 }
 
 .cashier-name {
   margin: 0;
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: #0F172A;
 }
 
 .cashier-meta {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #64748B;
 }
 
 .filter-indicator-badge {
   margin-left: auto;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 999px;
   background: #E2E8F0;
   color: #475569;
@@ -1981,10 +1983,10 @@ time, .hours {
 .cashier-card__stats {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 4px 0;
   border-top: 1px dashed #E2E8F0;
   border-bottom: 1px dashed #E2E8F0;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
 }
 
 .cashier-card__stats .lbl {
@@ -1999,32 +2001,32 @@ time, .hours {
 
 .cashier-card__footer {
   display: flex;
-  gap: 8px;
-  font-size: 0.74rem;
+  gap: 6px;
+  font-size: 0.7rem;
   color: #475569;
 }
 
-/* Sales Toolbar Filters */
+/* Sales Toolbar Filters - Compact */
 .sales-tab-filters-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .sales-filter-controls {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
 .admin-select-filter {
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.82rem;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
   font-weight: 600;
   color: #334155;
   outline: none;
@@ -2041,18 +2043,18 @@ time, .hours {
   align-items: center;
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
-  border-radius: 8px;
-  padding: 6px 12px;
-  gap: 8px;
+  border-radius: 6px;
+  padding: 5px 10px;
+  gap: 6px;
   flex: 1;
-  max-width: 380px;
+  max-width: 320px;
 }
 
 .sales-search-wrap input {
   border: none;
   background: transparent;
   outline: none;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #0F172A;
   width: 100%;
 }
@@ -2062,14 +2064,14 @@ time, .hours {
   border: none;
   color: #94A3B8;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   padding: 0 4px;
 }
 
 /* Master Sales Table */
 .sales-table-card {
   background: #FFFFFF;
-  border-radius: 12px;
+  border-radius: 10px;
   border: 1px solid #E2E8F0;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
   overflow-x: auto;
@@ -2079,13 +2081,13 @@ time, .hours {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .sales-table th {
   background: #F8FAFC;
-  padding: 12px 16px;
-  font-size: 0.74rem;
+  padding: 9px 12px;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2095,7 +2097,7 @@ time, .hours {
 }
 
 .sales-table td {
-  padding: 13px 16px;
+  padding: 9px 12px;
   border-bottom: 1px solid #F1F5F9;
   vertical-align: middle;
   color: #334155;
@@ -2108,31 +2110,31 @@ time, .hours {
 .cashier-cell {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .cashier-cell small {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748B;
 }
 
 .cashier-online-tag {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #64748B;
   background: #F1F5F9;
-  padding: 2px 7px;
+  padding: 2px 6px;
   border-radius: 4px;
 }
 
 .table-items-summary {
   font-weight: 600;
   color: #0F172A;
-  max-width: 280px;
+  max-width: 260px;
 }
 
 .table-items-summary small {
   display: block;
-  font-size: 0.73rem;
+  font-size: 0.72rem;
   font-weight: 400;
   color: #64748B;
   white-space: nowrap;
@@ -2141,7 +2143,7 @@ time, .hours {
 }
 
 .sale-amount {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 800;
   color: #0F172A;
 }
@@ -2152,8 +2154,8 @@ time, .hours {
   color: #0F172A;
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -2163,6 +2165,116 @@ time, .hours {
   background: #0F172A;
   color: #FFFFFF;
   border-color: #0F172A;
+}
+
+/* Sales Table Compact Action Cell & Popover */
+.table-action-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+}
+
+.btn-view-bill-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  color: #0F172A;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-view-bill-action:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #B45309;
+}
+
+.table-row-actions-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.btn-row-more-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  color: #64748B;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  letter-spacing: 1px;
+}
+
+.btn-row-more-actions:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+  color: #0F172A;
+}
+
+.row-actions-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  min-width: 130px;
+  padding: 4px;
+  z-index: 100;
+}
+
+.popover-action-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  width: 100%;
+}
+
+.popover-action-item:hover {
+  background: #F1F5F9;
+}
+
+.popover-action-item.print:hover {
+  color: #B45309;
+}
+
+.popover-action-item.edit:hover {
+  color: #2563EB;
+  background: #EFF6FF;
+}
+
+.popover-action-item.delete:hover {
+  color: #DC2626;
+  background: #FEF2F2;
 }
 
 @media (max-width: 1024px) {
@@ -13632,15 +13744,15 @@ time, .hours {
 }
 
 .invoice-modal-wrap.wrap-thermal {
-  max-width: 440px;
+  max-width: min(520px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-thermal-58 {
-  max-width: 400px;
+  max-width: min(440px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-a4 {
-  max-width: 860px;
+  max-width: min(880px, calc(100vw - 32px));
 }
 
 .invoice-modal-wrap.wrap-thermal .printable-invoice-container {
@@ -13794,27 +13906,53 @@ time, .hours {
   font-size: 0.75rem;
 }
 
+.invoice-top-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #64748B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.invoice-top-close-btn:hover {
+  background: #FEE2E2;
+  color: #DC2626;
+  border-color: #FCA5A5;
+  transform: translateY(-1px);
+}
+
 .invoice-toolbar-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .invoice-toolbar-actions .toolbar-btn {
-  flex: 1;
+  flex: 1 1 auto;
+  min-width: 90px;
   justify-content: center;
   padding: 9px 12px;
   border-radius: 8px;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.2s;
   text-decoration: none;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .toolbar-btn.print-btn {
@@ -14261,10 +14399,10 @@ time, .hours {
   margin: 0 auto;
   background: #FFFFFF !important;
   color: #000000 !important;
-  font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+  font-family: 'Consolas', 'Courier New', 'SF Mono', 'Roboto Mono', Menlo, monospace !important;
   font-size: 10.5px;
-  line-height: 1.25;
-  font-weight: 600;
+  line-height: 1.32;
+  font-weight: 700;
   padding: 8px 6px 12px 6px;
   border-radius: 4px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
@@ -14276,7 +14414,7 @@ time, .hours {
 }
 
 .pos-slip-document * {
-  font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
+  font-family: 'Consolas', 'Courier New', 'SF Mono', 'Roboto Mono', Menlo, monospace !important;
   color: #000000 !important;
   box-sizing: border-box;
 }
@@ -14563,6 +14701,74 @@ time, .hours {
 
 .inv-tax-badge.shop-badge {
   background: #0369A1;
+}
+
+/* Responsive Screen Styles for Mobile and Tablet */
+@media (max-width: 640px) {
+  .invoice-portal {
+    padding: 8px;
+    align-items: center;
+  }
+
+  .invoice-modal-wrap {
+    max-height: calc(100vh - 16px);
+    border-radius: 12px;
+  }
+
+  .invoice-toolbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .invoice-toolbar-top-row {
+    gap: 6px;
+  }
+
+  .invoice-quick-inv-badge {
+    font-size: 0.78rem;
+    padding: 4px 8px;
+  }
+
+  .format-btn {
+    padding: 5px 10px;
+    font-size: 0.75rem;
+  }
+
+  .invoice-toolbar-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .invoice-toolbar-actions .toolbar-btn {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .printable-invoice-container {
+    padding: 8px 4px !important;
+  }
+
+  .invoice-document {
+    padding: 20px 16px;
+  }
+}
+
+@media (max-width: 420px) {
+  .invoice-portal {
+    padding: 4px;
+  }
+
+  .invoice-toolbar-top-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pos-slip-document {
+    padding: 6px 4px 10px;
+  }
 }
 
 /* ==============================================================================

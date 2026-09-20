@@ -461,34 +461,7 @@ export default function BillingCounter() {
     const handleHashSync = () => {
       const h = window.location.hash.toLowerCase();
 
-      // Admin hash interceptions (only when on #admin routes)
-      if (user?.role === 'admin' && h.startsWith('#admin/')) {
-        if (h.startsWith('#admin/inventory') || h === '#inventory') {
-          navigateTo('admin', 'inventory');
-          return;
-        }
-        if (h.startsWith('#admin/sales') || h === '#sales') {
-          navigateTo('admin', 'sales');
-          return;
-        }
-        if (h.startsWith('#admin/shift-bills') || h.startsWith('#admin/daily-revenue') || h === '#shift-bills' || h === '#daily-revenue') {
-          navigateTo('admin', 'shift-bills');
-          return;
-        }
-        if (h.startsWith('#admin/dispatch') || h.startsWith('#admin/orders') || h === '#dispatch' || h === '#orders') {
-          navigateTo('admin', 'dispatch');
-          return;
-        }
-        if (h.startsWith('#admin/activity-logs') || h === '#activity-logs') {
-          navigateTo('admin', 'activity-logs');
-          return;
-        }
-        if (h.startsWith('#admin/recycle-bin') || h === '#recycle-bin') {
-          navigateTo('admin', 'recycle-bin');
-          return;
-        }
-      }
-
+      // Only handle billing routes inside BillingCounter
       if (!h.startsWith('#billing') && !h.startsWith('#admin/billing') && !h.startsWith('#admin/pos')) return;
 
       if (h.includes('bills')) {
@@ -498,10 +471,6 @@ export default function BillingCounter() {
       } else if (h.includes('daily') || h.includes('revenue') || h.includes('sales')) {
         setPosTab('daily-sales');
       } else if (h.includes('inventory') || h.includes('stock') || h.includes('products')) {
-        if (user?.role === 'admin' && h.startsWith('#admin')) {
-          navigateTo('admin', 'inventory');
-          return;
-        }
         setPosTab('inventory');
       } else {
         setPosTab('register');
@@ -514,7 +483,7 @@ export default function BillingCounter() {
       window.removeEventListener('hashchange', handleHashSync);
       window.removeEventListener('popstate', handleHashSync);
     };
-  }, [user]);
+  }, []);
 
   const syncBillingHash = (hash) => {
     let target = hash;
@@ -526,14 +495,6 @@ export default function BillingCounter() {
     }
     if (window.location.hash !== target) {
       window.location.hash = target;
-      return;
-    }
-
-    try {
-      const event = new HashChangeEvent('hashchange');
-      window.dispatchEvent(event);
-    } catch {
-      window.dispatchEvent(new Event('hashchange'));
     }
   };
 
@@ -839,6 +800,15 @@ export default function BillingCounter() {
         if (!matches) return false;
       }
       return true;
+    }).sort((a, b) => {
+      const aNum = Number(a.skuCode ?? a.itemNumber);
+      const bNum = Number(b.skuCode ?? b.itemNumber);
+      const aValid = Number.isInteger(aNum) && aNum > 0;
+      const bValid = Number.isInteger(bNum) && bNum > 0;
+      if (aValid && bValid) return aNum - bNum;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
     });
   }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventoryById]);
 
@@ -3841,11 +3811,6 @@ export default function BillingCounter() {
                               {(prod.tamilName || (prod.name.includes('—') ? prod.name.split('—')[1].trim() : '')) && (
                                 <span style={{ display: 'block', fontSize: '12px', color: '#b45309', fontWeight: 600 }}>
                                   {prod.tamilName || (prod.name.includes('—') ? prod.name.split('—')[1].trim() : '')}
-                                </span>
-                              )}
-                              {prod.isCustom && (
-                                <span style={{ display: 'inline-block', marginTop: '2px', fontSize: '10px', background: '#e0e7ff', color: '#3730a3', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                                  CUSTOM ITEM
                                 </span>
                               )}
                             </div>

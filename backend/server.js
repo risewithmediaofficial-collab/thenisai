@@ -849,9 +849,12 @@ app.post('/api/inventory/products', async (req, res) => {
       const used = new Set();
       inventoryList.forEach((item) => {
         const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
-        if (/^\d+$/.test(raw)) used.add(Number(raw));
+        if (/^\d+$/.test(raw)) {
+          const num = Number(raw);
+          if (Number.isInteger(num) && num > 0) used.add(num);
+        }
       });
-      let nextCode = Math.max(0, ...inventoryList.map((item) => Number(item?.skuCode ?? item?.itemNumber ?? 0))) + 1;
+      let nextCode = 1;
       while (used.has(nextCode)) nextCode += 1;
       return String(nextCode);
     };

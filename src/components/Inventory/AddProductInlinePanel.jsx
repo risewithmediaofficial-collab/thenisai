@@ -4,10 +4,10 @@ import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 
 export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct }) {
-  const { getNextAvailableSkuCode, addNewProduct, customCategories, customUnits } = useCart();
+  const { getNextAvailableSkuCode, getAvailableSkuCodes, addNewProduct, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
 
-  const allCategories = [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
-  const allUnits = [...DEFAULT_PRODUCT_UNITS, ...customUnits];
+  const allCategories = ctxCategories || [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
+  const allUnits = ctxUnits || [...DEFAULT_PRODUCT_UNITS, ...customUnits];
 
   const [form, setForm] = useState({
     nameEn: '',
@@ -18,6 +18,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
     skuCode: '',
   });
 
+  const [availableSkus, setAvailableSkus] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -25,7 +26,9 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
   // Reset and auto-suggest next SKU whenever panel opens
   useEffect(() => {
     if (isOpen) {
-      const nextCode = getNextAvailableSkuCode ? getNextAvailableSkuCode() : 'SWT-01';
+      const skus = getAvailableSkuCodes ? getAvailableSkuCodes(10) : [];
+      setAvailableSkus(skus);
+      const nextCode = skus.length > 0 ? String(skus[0]) : (getNextAvailableSkuCode ? getNextAvailableSkuCode() : '1');
       setForm({
         nameEn: '',
         nameTa: '',
@@ -37,7 +40,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
       setErrorMsg('');
       setSuccessMsg('');
     }
-  }, [isOpen, getNextAvailableSkuCode]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -259,13 +262,72 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 id="prod-sku"
                 type="text"
                 name="skuCode"
-                placeholder="e.g., SWT-76"
+                placeholder="e.g., 2, 42, SWT-76"
                 value={form.skuCode}
                 onChange={handleChange}
                 className="panel-input"
               />
             </div>
           </div>
+
+          {/* Available SKU Numbers Quick-Select */}
+          {availableSkus && availableSkus.length > 0 && (
+            <div
+              className="available-skus-container"
+              style={{
+                margin: '0 0 16px',
+                padding: '10px 14px',
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                  </svg>
+                  <span>Available SKU Numbers:</span>
+                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>(Click any number to auto-assign)</span>
+                </div>
+                <span style={{ fontSize: '11px', color: '#059669', fontWeight: 600 }}>
+                  ✓ Unused &amp; restored numbers ready for use
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '2px' }}>
+                {availableSkus.map((sku) => {
+                  const isSelected = String(form.skuCode).trim() === String(sku);
+                  return (
+                    <button
+                      key={sku}
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, skuCode: String(sku) }))}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        border: isSelected ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                        background: isSelected ? '#fef3c7' : '#ffffff',
+                        color: isSelected ? '#92400e' : '#334155',
+                        boxShadow: isSelected ? '0 1px 4px rgba(217, 119, 6, 0.2)' : 'none',
+                        transform: isSelected ? 'scale(1.05)' : 'none',
+                      }}
+                      title={`Click to use available SKU #${sku}`}
+                    >
+                      #{sku}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="panel-action-bar">
             <div className="hint-text">

@@ -3360,48 +3360,5 @@
     "tamilName": "அத்திப்பழம் ரோல்",
     "unit": "kg",
     "unitPrice": 0
-  },
-  {
-    "id": "custom-1789815746259",
-    "name": "new",
-    "nameTa": "",
-    "skuCode": "1",
-    "price": 20,
-    "unitPrice": 20,
-    "pricePerKg": 20,
-    "unit": "kg",
-    "category": "sweets"
-  },
-  {
-    "id": "custom-1789909950054",
-    "name": "Coffee — காபி",
-    "nameTa": "",
-    "skuCode": "129",
-    "hsn": "2",
-    "price": 20,
-    "unitPrice": 20,
-    "pricePerKg": 20,
-    "unit": "1 Cup",
-    "category": "beverages"
-  },
-  {
-    "id": "coffee",
-    "__v": 0,
-    "batchDate": "Today",
-    "batchNote": "Fresh coffee brew counter",
-    "category": "Hot Beverages",
-    "hsn": "0901",
-    "image": "/images/products/coffee.svg",
-    "isCustom": false,
-    "isInactive": false,
-    "minThreshold": 15,
-    "name": "Coffee — காபி",
-    "pricePerKg": 10,
-    "stockKg": 100,
-    "unit": "1 Cup",
-    "unitPrice": 10,
-    "englishName": "Coffee",
-    "price": 20,
-    "skuCode": "2"
   }
 ]

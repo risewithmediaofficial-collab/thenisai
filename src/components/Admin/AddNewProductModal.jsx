@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
-  const { getNextAvailableSkuCode, customCategories, customUnits } = useCart();
+  const { getNextAvailableSkuCode, getAvailableSkuCodes, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
 
-  const allCategories = [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
-  const allUnits = [...DEFAULT_PRODUCT_UNITS, ...customUnits];
+  const allCategories = ctxCategories || [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
+  const allUnits = ctxUnits || [...DEFAULT_PRODUCT_UNITS, ...customUnits];
   const [formData, setFormData] = useState({
     name: '',
     tamilName: '',
@@ -16,18 +16,21 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
     hsn: '',
   });
 
+  const [availableSkus, setAvailableSkus] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
-    const nextCode = getNextAvailableSkuCode();
+    const skus = getAvailableSkuCodes ? getAvailableSkuCodes(10) : [];
+    setAvailableSkus(skus);
+    const nextCode = skus.length > 0 ? String(skus[0]) : (getNextAvailableSkuCode ? getNextAvailableSkuCode() : '1');
     setFormData((prev) => ({
       ...prev,
       // Auto-fill only if empty — admin can override with a deleted SKU number
       hsn: prev.hsn || nextCode,
     }));
-  }, [isOpen, getNextAvailableSkuCode]);
+  }, [isOpen, getNextAvailableSkuCode, getAvailableSkuCodes]);
 
   if (!isOpen) return null;
 
@@ -226,6 +229,44 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
                 placeholder="Auto-generated — can override"
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px', background: '#fff' }}
               />
+              {availableSkus && availableSkus.length > 0 && (
+                <div style={{ marginTop: '8px' }}>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span>Available SKU Numbers (click to select):</span>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {availableSkus.map((sku) => {
+                      const isSelected = String(formData.hsn).trim() === String(sku);
+                      return (
+                        <button
+                          key={sku}
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, hsn: String(sku) }))}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            fontSize: '12px',
+                            fontFamily: 'monospace',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            border: isSelected ? '1.5px solid #d97706' : '1px solid #cbd5e1',
+                            background: isSelected ? '#fef3c7' : '#f8fafc',
+                            color: isSelected ? '#92400e' : '#334155',
+                            boxShadow: isSelected ? '0 1px 3px rgba(217, 119, 6, 0.2)' : 'none',
+                          }}
+                          title={`Assign available SKU #${sku}`}
+                        >
+                          #{sku}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

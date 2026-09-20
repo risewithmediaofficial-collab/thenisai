@@ -88,6 +88,15 @@ export default function AdminDashboard() {
   const [billToRestore, setBillToRestore] = useState(null);
   const [billToPurge, setBillToPurge] = useState(null);
   const [editBillModalItem, setEditBillModalItem] = useState(null);
+  const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+
+  useEffect(() => {
+    const handleDocClick = () => setActiveActionMenuId(null);
+    if (activeActionMenuId) {
+      document.addEventListener('click', handleDocClick);
+      return () => document.removeEventListener('click', handleDocClick);
+    }
+  }, [activeActionMenuId]);
 
   // Inventory filter state
   const [inventorySearchTerm, setInventorySearchTerm] = useState('');
@@ -152,14 +161,6 @@ export default function AdminDashboard() {
   const syncAdminHash = (hash) => {
     if (window.location.hash !== hash) {
       window.location.hash = hash;
-      return;
-    }
-
-    try {
-      const event = new HashChangeEvent('hashchange');
-      window.dispatchEvent(event);
-    } catch {
-      window.dispatchEvent(new Event('hashchange'));
     }
   };
 
@@ -424,6 +425,15 @@ export default function AdminDashboard() {
         if (!matchName && !matchTamil && !matchId && !matchNum && !matchSku && !matchSub) return false;
       }
       return true;
+    }).sort((a, b) => {
+      const aNum = Number(a.skuCode ?? a.itemNumber);
+      const bNum = Number(b.skuCode ?? b.itemNumber);
+      const aValid = Number.isInteger(aNum) && aNum > 0;
+      const bValid = Number.isInteger(bNum) && bNum > 0;
+      if (aValid && bValid) return aNum - bNum;
+      if (aValid) return -1;
+      if (bValid) return 1;
+      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
     });
   }, [allBillingProducts, inventoryCategoryFilter, inventoryStatusFilter, inventorySearchTerm, productAvailabilityMap, inventory]);
 
@@ -1240,11 +1250,6 @@ export default function AdminDashboard() {
                                   {prod.tamilName || (prod.name.includes('—') ? prod.name.split('—')[1].trim() : '')}
                                 </span>
                               )}
-                              {prod.isCustom && (
-                                <span style={{ display: 'inline-block', marginTop: '2px', fontSize: '10px', background: '#e0e7ff', color: '#3730a3', padding: '1px 6px', borderRadius: '4px', fontWeight: 700 }}>
-                                  CUSTOM ITEM
-                                </span>
-                              )}
                             </div>
                           </td>
                           <td>
@@ -1715,41 +1720,80 @@ export default function AdminDashboard() {
                             {sale.status || sale.orderStatus || 'Completed'}
                           </span>
                         </td>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <td style={{ whiteSpace: 'nowrap' }}>
+                          <div className="table-action-cell">
                             <button
                               type="button"
-                              className="table-invoice-btn"
+                              className="btn-view-bill-action"
                               onClick={() => openInvoice(sale)}
-                              title="View / Print Tax Invoice"
+                              title="Click to view bill (Print, Edit, Delete options inside)"
                             >
-                              Print Bill
-                            </button>
-                            <button
-                              type="button"
-                              className="table-invoice-btn"
-                              onClick={() => setEditBillModalItem(sale)}
-                              title="Edit Bill Details &amp; Items"
-                              style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
-                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
                               </svg>
-                              Edit
+                              <span>View Bill</span>
                             </button>
-                            <button
-                              type="button"
-                              className="table-delete-bill-btn"
-                              onClick={() => setBillToDelete(sale)}
-                              title="Delete Bill (Protected in 30-Day Recycle Bin)"
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="3 6 5 6 21 6" />
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              </svg>
-                              Delete
-                            </button>
+                            <div className="table-row-actions-dropdown">
+                              <button
+                                type="button"
+                                className="btn-row-more-actions"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveActionMenuId(activeActionMenuId === (sale.id || sale.invoiceNumber) ? null : (sale.id || sale.invoiceNumber));
+                                }}
+                                title="More Options"
+                              >
+                                •••
+                              </button>
+                              {activeActionMenuId === (sale.id || sale.invoiceNumber) && (
+                                <div className="row-actions-popover" onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    className="popover-action-item print"
+                                    onClick={() => {
+                                      setActiveActionMenuId(null);
+                                      openInvoice(sale);
+                                    }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="6 9 6 2 18 2 18 9" />
+                                      <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                      <rect x="6" y="14" width="12" height="8" />
+                                    </svg>
+                                    <span>Print Bill</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="popover-action-item edit"
+                                    onClick={() => {
+                                      setActiveActionMenuId(null);
+                                      setEditBillModalItem(sale);
+                                    }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                    </svg>
+                                    <span>Edit Bill</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="popover-action-item delete"
+                                    onClick={() => {
+                                      setActiveActionMenuId(null);
+                                      setBillToDelete(sale);
+                                    }}
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="3 6 5 6 21 6" />
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                    <span>Delete Bill</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>
