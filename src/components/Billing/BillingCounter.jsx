@@ -89,6 +89,13 @@ export default function BillingCounter() {
 
   // Active POS Bill Items
   const [billItems, setBillItems] = useState([]);
+
+  // Manual / Custom Item (not in inventory)
+  const [showManualItemForm, setShowManualItemForm] = useState(false);
+  const [manualItemName, setManualItemName] = useState('');
+  const [manualItemAmount, setManualItemAmount] = useState('');
+  const [manualItemQty, setManualItemQty] = useState('1');
+  const manualItemNameRef = useRef(null);
   const [customerInfo, setCustomerInfo] = useState({
     fullName: '',
     phone: '',
@@ -1003,6 +1010,32 @@ export default function BillingCounter() {
 
   const handleRemoveBillItem = (id, weight) => {
     setBillItems((prev) => prev.filter((it) => !(it.id === id && it.weight === weight)));
+  };
+
+  // Add a custom/manual item (not in inventory) directly to the bill
+  const handleAddManualItem = () => {
+    const name = manualItemName.trim();
+    const amount = parseFloat(manualItemAmount);
+    const qty = Math.max(1, parseInt(manualItemQty, 10) || 1);
+    if (!name || isNaN(amount) || amount <= 0) return;
+    const id = `manual-${Date.now()}`;
+    setBillItems((prev) => [
+      ...prev,
+      {
+        id,
+        name,
+        weight: '1 Pc',
+        price: amount,
+        quantity: qty,
+        hsn: '2106',
+        unit: '1 Pc',
+        isManual: true,
+      },
+    ]);
+    setManualItemName('');
+    setManualItemAmount('');
+    setManualItemQty('1');
+    setShowManualItemForm(false);
   };
 
   // Handle Bidirectional Split Calculations (Cash <-> UPI)
@@ -2522,6 +2555,99 @@ export default function BillingCounter() {
                       );
                     })}
                   </div>
+                )}
+              </div>
+
+              {/* Custom / Manual Item Entry */}
+              <div className="pos-manual-item-wrap">
+                {showManualItemForm ? (
+                  <div className="pos-manual-item-form">
+                    <div className="manual-form-title">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                      Add Custom Item
+                    </div>
+                    <input
+                      ref={manualItemNameRef}
+                      type="text"
+                      className="manual-input manual-name"
+                      placeholder="Item name (e.g. Packing Charge, Special Sweet…)"
+                      value={manualItemName}
+                      onChange={(e) => setManualItemName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleAddManualItem();
+                        if (e.key === 'Escape') setShowManualItemForm(false);
+                      }}
+                      autoFocus
+                    />
+                    <div className="manual-row-inline">
+                      <div className="manual-input-group">
+                        <span className="manual-input-prefix">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          className="manual-input manual-amount"
+                          placeholder="Amount"
+                          value={manualItemAmount}
+                          onChange={(e) => setManualItemAmount(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddManualItem();
+                            if (e.key === 'Escape') setShowManualItemForm(false);
+                          }}
+                        />
+                      </div>
+                      <div className="manual-input-group">
+                        <span className="manual-input-prefix">Qty</span>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          className="manual-input manual-qty"
+                          placeholder="1"
+                          value={manualItemQty}
+                          onChange={(e) => setManualItemQty(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddManualItem();
+                            if (e.key === 'Escape') setShowManualItemForm(false);
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="manual-form-actions">
+                      <button
+                        type="button"
+                        className="manual-cancel-btn"
+                        onClick={() => { setShowManualItemForm(false); setManualItemName(''); setManualItemAmount(''); setManualItemQty('1'); }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        className="manual-add-btn"
+                        disabled={!manualItemName.trim() || !manualItemAmount || parseFloat(manualItemAmount) <= 0}
+                        onClick={handleAddManualItem}
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Add to Bill
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-add-manual-item"
+                    onClick={() => { setShowManualItemForm(true); setTimeout(() => manualItemNameRef.current?.focus(), 60); }}
+                    title="Add a custom product not in inventory"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                    Custom Item
+                  </button>
                 )}
               </div>
 

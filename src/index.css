@@ -7189,6 +7189,187 @@ time, .hours {
 }
 
 /* =========================================================
+   4b. MANUAL / CUSTOM ITEM ENTRY (Non-inventory quick add)
+   ========================================================= */
+.pos-manual-item-wrap {
+  flex-shrink: 0;
+  padding: 6px 14px 8px;
+  border-top: 1px dashed #CBD5E1;
+  background: #F8FAFC;
+}
+
+/* Trigger button */
+.btn-add-manual-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1.5px dashed #94A3B8;
+  background: transparent;
+  color: #64748B;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  letter-spacing: 0.02em;
+}
+.btn-add-manual-item:hover {
+  border-color: #F59E0B;
+  color: #B45309;
+  background: #FFFBEB;
+}
+
+/* Expanded inline form */
+.pos-manual-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #FFFBEB;
+  border: 1.5px solid #FDE68A;
+  border-radius: 10px;
+  animation: manualFormSlideIn 0.18s ease;
+}
+@keyframes manualFormSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.manual-form-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.77rem;
+  font-weight: 700;
+  color: #92400E;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+}
+
+.manual-input {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 7px;
+  border: 1.5px solid #FCD34D;
+  background: #fff;
+  font-size: 0.85rem;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  color: #1E293B;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.manual-input:focus {
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+}
+.manual-input.manual-name {
+  font-weight: 600;
+}
+
+.manual-row-inline {
+  display: flex;
+  gap: 8px;
+}
+
+.manual-input-group {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  border: 1.5px solid #FCD34D;
+  border-radius: 7px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.manual-input-group:focus-within {
+  border-color: #F59E0B;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.12);
+}
+.manual-input-prefix {
+  padding: 0 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #92400E;
+  background: #FEF3C7;
+  border-right: 1px solid #FCD34D;
+  white-space: nowrap;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+.manual-input-group .manual-input {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 7px 8px;
+}
+.manual-input-group .manual-input:focus {
+  border: none;
+  box-shadow: none;
+}
+.manual-input.manual-qty {
+  max-width: 60px;
+}
+.manual-input.manual-amount {
+  max-width: 120px;
+}
+
+.manual-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.manual-cancel-btn {
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: 1.5px solid #CBD5E1;
+  background: #fff;
+  color: #64748B;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.manual-cancel-btn:hover {
+  background: #F1F5F9;
+  border-color: #94A3B8;
+}
+
+.manual-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  border: none;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 2px 6px rgba(217,119,6,0.3);
+}
+.manual-add-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #D97706, #B45309);
+  box-shadow: 0 3px 10px rgba(180,83,9,0.35);
+  transform: translateY(-1px);
+}
+.manual-add-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* =========================================================
    5. BILL CALCULATION & TOUCH NUMPAD TENDER
    ========================================================= */
 .pos-bill-calc {
