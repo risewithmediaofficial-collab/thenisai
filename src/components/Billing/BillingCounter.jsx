@@ -688,6 +688,14 @@ export default function BillingCounter() {
 
   // Search input ref for keyboard shortcut (F2)
   const searchInputRef = useRef(null);
+  // Catalog pane ref to manage scroll on category switch
+  const catalogPaneRef = useRef(null);
+
+  useEffect(() => {
+    if (catalogPaneRef.current) {
+      catalogPaneRef.current.scrollTop = 0;
+    }
+  }, [selectedCategory]);
 
   // Freeze background screen scroll when popups or drawers are active
   useScrollLock(
@@ -1630,9 +1638,11 @@ export default function BillingCounter() {
             style={catalogWidth ? { gridTemplateColumns: `minmax(320px, ${catalogWidth}px) 8px minmax(380px, 1fr)` } : undefined}
           >
             {/* LEFT COLUMN: BEVERAGE & SNACK CATALOG */}
-            <section className="pos-catalog-pane" data-lenis-prevent>
-              {/* Quick Toolbar: Search & List/Grid Switcher */}
-              <div className="pos-catalog-toolbar">
+            <section className="pos-catalog-pane" data-lenis-prevent ref={catalogPaneRef}>
+              {/* Sticky Top Header: Search Bar & Category Filter Pills */}
+              <div className="pos-catalog-sticky-header">
+                {/* Quick Toolbar: Search & List/Grid Switcher */}
+                <div className="pos-catalog-toolbar">
                 <div className="pos-search">
                   <span className="pos-search-icon">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1915,6 +1925,7 @@ export default function BillingCounter() {
                   </button>
                 ))}
               </div>
+            </div>
 
               {/* LIST VIEW (Fast Clean Table - Names, Type Weight/Volume & Stepper) */}
               <div className="pos-sweets-list">

@@ -5560,7 +5560,7 @@ time, .hours {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding: 16px 24px;
+  padding: 0;
   background: #F8FAFC;
   border-right: none;
   scrollbar-width: thin;
@@ -5578,6 +5578,28 @@ time, .hours {
 .pos-catalog-pane::-webkit-scrollbar-thumb {
   background-color: #CBD5E1;
   border-radius: 6px;
+}
+
+/* Sticky Catalog Header (Search Toolbar + Category Filter Bar) */
+.pos-catalog-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  background: #F8FAFC;
+  padding: 16px 24px 8px 24px;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
+}
+
+.pos-catalog-sticky-header .pos-catalog-toolbar {
+  margin-bottom: 8px;
+}
+
+.pos-catalog-sticky-header .pos-category-bar {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-bottom: 4px;
 }
 
 .pos-catalog-toolbar {
@@ -5800,7 +5822,7 @@ time, .hours {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 14px;
-  padding-bottom: 24px;
+  padding: 14px 24px 24px 24px;
 }
 
 .pos-sweet-card {
@@ -5942,7 +5964,7 @@ time, .hours {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding-bottom: 24px;
+  padding: 14px 24px 24px 24px;
 }
 
 .pos-list-row {
@@ -9201,8 +9223,12 @@ time, .hours {
   .pos-main-split.show-catalog .pos-catalog-pane {
     display: flex !important;
     height: 100%;
-    padding: 12px 14px 75px 14px;
+    padding: 0 !important;
     border-right: none;
+  }
+
+  .pos-catalog-sticky-header {
+    padding: 12px 14px 6px 14px;
   }
 
   .pos-main-split.show-bill .pos-catalog-pane {
@@ -9223,6 +9249,11 @@ time, .hours {
   .pos-sweets-grid {
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 10px;
+    padding: 10px 14px 80px 14px;
+  }
+
+  .pos-sweets-list {
+    padding: 10px 14px 80px 14px;
   }
 
   .shift-kpis-grid {
@@ -9246,7 +9277,7 @@ time, .hours {
   }
 
   .pos-sweets-list {
-    padding-bottom: 80px;
+    padding: 10px 14px 80px 14px;
     gap: 6px;
   }
 
