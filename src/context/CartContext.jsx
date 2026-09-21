@@ -620,17 +620,24 @@ export function CartProvider({ children }) {
 
   // Combined Billing Items (Standard catalog + Custom Items, filtered against deleted products)
   const allBillingProducts = useMemo(() => {
-    const deletedSet = new Set([
+    const rawDeleted = [
       ...(Array.isArray(deletedProductIds) ? deletedProductIds : []),
       ...recycleBinProducts.map((p) => p.id),
-    ]);
+    ];
+    const deletedSet = new Set(rawDeleted.filter(Boolean).map((id) => String(id).trim().toLowerCase()));
+    const isItemDeleted = (item) => {
+      if (!item) return false;
+      if (item.id && deletedSet.has(String(item.id).trim().toLowerCase())) return true;
+      if (item._id && deletedSet.has(String(item._id).trim().toLowerCase())) return true;
+      return false;
+    };
 
     // Start from the static catalog, excluding deleted items
-    const combined = ALL_BILLING_ITEMS.filter((item) => !deletedSet.has(item.id));
+    const combined = ALL_BILLING_ITEMS.filter((item) => !isItemDeleted(item));
 
     // Append any custom products not already in the static list and not deleted
     customProducts.forEach((cp, idx) => {
-      if (!deletedSet.has(cp.id) && !combined.some((it) => it.id === cp.id)) {
+      if (!isItemDeleted(cp) && !combined.some((it) => it.id === cp.id)) {
         combined.push({
           ...cp,
           itemNumber: cp.itemNumber || (ALL_BILLING_ITEMS.length + idx + 1),
@@ -640,7 +647,7 @@ export function CartProvider({ children }) {
 
     // Also include any custom/backend inventory products not in combined and not deleted
     (inventory || []).forEach((invItem, idx) => {
-      if (!deletedSet.has(invItem.id) && !combined.some((it) => it.id === invItem.id)) {
+      if (!isItemDeleted(invItem) && !combined.some((it) => it.id === invItem.id)) {
         combined.push({
           ...invItem,
           itemNumber: invItem.itemNumber || (ALL_BILLING_ITEMS.length + customProducts.length + idx + 1),
@@ -1615,42 +1622,128 @@ export function CartProvider({ children }) {
     return true;
   };
 
-  const permanentDeleteBills = async (billIdsOrInvoices, purgedBy = null) => {
+  const permanentDeleteBills = async (billIdsOrInvoices, purgedBy = null, onProgress = null) => {
     if (!Array.isArray(billIdsOrInvoices) || billIdsOrInvoices.length === 0) {
       throw new Error('Select at least one bill to purge.');
     }
     const identifiers = [...new Set(billIdsOrInvoices.filter(Boolean))];
-    const purged = [];
-    const failed = [];
-    for (const id of identifiers) {
-      try {
-        const ok = await permanentDeleteBill(id, purgedBy);
-        if (ok) purged.push(id);
-        else failed.push(id);
-      } catch {
-        failed.push(id);
+    const activePerformer = resolveActiveUser(purgedBy);
+    const identifierSet = new Set(identifiers);
+
+    if (onProgress) onProgress(0, identifiers.length, `Deleting ${identifiers.length} invoices...`);
+
+    let bulkSuccess = false;
+    try {
+      const res = await api.delete('/api/recycle-bin/bills/bulk-permanent', {
+        data: { ids: identifiers, purgedBy: activePerformer },
+      });
+      if (res && res.success) {
+        bulkSuccess = true;
+      }
+    } catch (e) {
+      console.warn('[Recycle Bin] Fast bulk-permanent route failed, fallback to batching:', e?.message);
+    }
+
+    if (!bulkSuccess) {
+      const CHUNK_SIZE = 12;
+      let completed = 0;
+      for (let i = 0; i < identifiers.length; i += CHUNK_SIZE) {
+        const chunk = identifiers.slice(i, i + CHUNK_SIZE);
+        await Promise.allSettled(
+          chunk.map(async (id) => {
+            const record = recycleBinBills.find((d) => d.id === id || d.invoiceNumber === id);
+            const targetId = record?.id || id;
+            return api.delete(`/api/recycle-bin/bills/${targetId}/permanent`, {
+              data: { purgedBy: activePerformer },
+            });
+          })
+        );
+        completed += chunk.length;
+        if (onProgress) {
+          onProgress(Math.min(completed, identifiers.length), identifiers.length, `Deleting ${Math.min(completed, identifiers.length)} of ${identifiers.length} invoices...`);
+        }
       }
     }
-    return { purged, failed };
+
+    // Atomic update to local state & localStorage once at the end
+    setRecycleBinBills((prev) => {
+      const updated = prev.filter((d) => !identifierSet.has(d.id) && !identifierSet.has(d.invoiceNumber));
+      try {
+        localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (onProgress) onProgress(identifiers.length, identifiers.length, 'Deletion completed!');
+    return { purged: identifiers, failed: [] };
   };
 
-  const restoreBills = async (billIdsOrInvoices, restoredBy = null) => {
+  const restoreBills = async (billIdsOrInvoices, restoredBy = null, onProgress = null) => {
     if (!Array.isArray(billIdsOrInvoices) || billIdsOrInvoices.length === 0) {
       throw new Error('Select at least one bill to restore.');
     }
     const identifiers = [...new Set(billIdsOrInvoices.filter(Boolean))];
-    const restored = [];
-    const failed = [];
-    for (const id of identifiers) {
-      try {
-        const ok = await restoreBill(id, restoredBy);
-        if (ok) restored.push(id);
-        else failed.push(id);
-      } catch {
-        failed.push(id);
+    const activePerformer = resolveActiveUser(restoredBy);
+    const identifierSet = new Set(identifiers);
+
+    const recordsToRestore = recycleBinBills.filter((d) => identifierSet.has(d.id) || identifierSet.has(d.invoiceNumber));
+    const billsToRestore = recordsToRestore.map((r) => r.billData).filter(Boolean);
+
+    if (onProgress) onProgress(0, identifiers.length, `Restoring ${identifiers.length} invoices...`);
+
+    let bulkSuccess = false;
+    try {
+      const res = await api.post('/api/recycle-bin/bills/bulk-restore', {
+        ids: identifiers,
+        restoredBy: activePerformer,
+      });
+      if (res && res.success) {
+        bulkSuccess = true;
+      }
+    } catch (e) {
+      console.warn('[Recycle Bin] Fast bulk-restore route failed, fallback to batching:', e?.message);
+    }
+
+    if (!bulkSuccess) {
+      const CHUNK_SIZE = 12;
+      let completed = 0;
+      for (let i = 0; i < identifiers.length; i += CHUNK_SIZE) {
+        const chunk = identifiers.slice(i, i + CHUNK_SIZE);
+        await Promise.allSettled(
+          chunk.map(async (id) => {
+            const record = recycleBinBills.find((d) => d.id === id || d.invoiceNumber === id);
+            const targetId = record?.id || id;
+            return api.post(`/api/recycle-bin/bills/${targetId}/restore`, { restoredBy: activePerformer });
+          })
+        );
+        completed += chunk.length;
+        if (onProgress) {
+          onProgress(Math.min(completed, identifiers.length), identifiers.length, `Restoring ${Math.min(completed, identifiers.length)} of ${identifiers.length} invoices...`);
+        }
       }
     }
-    return { restored, failed };
+
+    if (billsToRestore.length > 0) {
+      setBills((prev) => {
+        const restoredIds = new Set(billsToRestore.map((b) => b.id || b.invoiceNumber));
+        const updated = [...billsToRestore, ...prev.filter((b) => !restoredIds.has(b.id || b.invoiceNumber))];
+        try {
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    }
+
+    setRecycleBinBills((prev) => {
+      const updated = prev.filter((d) => !identifierSet.has(d.id) && !identifierSet.has(d.invoiceNumber));
+      try {
+        localStorage.setItem(RECYCLE_BIN_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (onProgress) onProgress(identifiers.length, identifiers.length, 'Restore completed!');
+    return { restored: identifiers, failed: [] };
   };
 
   const toggleProductAvailability = async (productId, explicitStateOrUser = null, maybeUser = null) => {
@@ -2013,7 +2106,7 @@ export function CartProvider({ children }) {
     let deletedProductRecord = null;
     try {
       const res = await api.delete(`/api/inventory/products/${productId}`, {
-        data: { reason: reason || 'Product removed from catalog', deletedBy: activePerformer },
+        data: { reason: reason || 'Product removed from catalog', deletedBy: activePerformer, productData: item },
       });
       if (!res || !res.success) {
         throw new Error(res?.message || 'Server rejected product deletion.');
@@ -2049,7 +2142,17 @@ export function CartProvider({ children }) {
       return updated;
     });
 
-    // 3. Add to local Recycle Bin state
+    // 3. Remove from availability map so it never shows as out-of-stock
+    setProductAvailabilityMap((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      try {
+        localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+    // 4. Add to local Recycle Bin state
     const fallbackRecord = {
       id: productId,
       name: prodName,
@@ -2156,10 +2259,13 @@ export function CartProvider({ children }) {
 
     if (isSandboxActive()) {
       setRecycleBinProducts((prev) => prev.filter((p) => p.id !== productId));
-      setDeletedProductIds((prev) => {
-        const updated = prev.filter((id) => id !== productId);
-        try { localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated)); } catch {}
-        return updated;
+      setDeletedProductIds((prev) => Array.from(new Set([...prev, productId])));
+      setCustomProducts((prev) => prev.filter((p) => p.id !== productId));
+      setInventory((prev) => prev.filter((p) => p.id !== productId));
+      setProductAvailabilityMap((prev) => {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
       });
       return true;
     }
@@ -2185,13 +2291,40 @@ export function CartProvider({ children }) {
       return updated;
     });
 
-    // Also remove from deletedProductIds so it is completely expunged and reusable
+    // KEEP in deletedProductIds so static catalog and DEFAULT_INVENTORY NEVER resurrect it
     setDeletedProductIds((prev) => {
-      const updated = prev.filter((id) => id !== productId);
+      const updated = Array.from(new Set([...prev, productId]));
       try {
         localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
       } catch {}
       return updated;
+    });
+
+    // Completely expunge from customProducts, inventory, availability map, and masterPrices
+    setCustomProducts((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try { localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const updated = prev.filter((p) => p.id !== productId);
+      try { localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    setProductAvailabilityMap((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      try { localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setMasterPrices((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      try { localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(next)); } catch {}
+      return next;
     });
 
     recordActivity({
@@ -2205,42 +2338,168 @@ export function CartProvider({ children }) {
     return true;
   };
 
-  const permanentDeleteProducts = async (productIds, purgedBy = null) => {
+  const permanentDeleteProducts = async (productIds, purgedBy = null, onProgress = null) => {
     if (!Array.isArray(productIds) || productIds.length === 0) {
       throw new Error('Select at least one product to purge.');
     }
     const identifiers = [...new Set(productIds.filter(Boolean))];
-    const purged = [];
-    const failed = [];
-    for (const id of identifiers) {
-      try {
-        const ok = await permanentDeleteProduct(id, purgedBy);
-        if (ok) purged.push(id);
-        else failed.push(id);
-      } catch {
-        failed.push(id);
+    const activePerformer = resolveActiveUser(purgedBy);
+    const identifierSet = new Set(identifiers);
+
+    if (onProgress) onProgress(0, identifiers.length, `Deleting ${identifiers.length} products...`);
+
+    let bulkSuccess = false;
+    try {
+      const res = await api.delete('/api/recycle-bin/products/bulk-permanent', {
+        data: { ids: identifiers, purgedBy: activePerformer },
+      });
+      if (res && res.success) {
+        bulkSuccess = true;
+      }
+    } catch (e) {
+      console.warn('[Recycle Bin] Fast bulk-permanent products route failed, fallback to batching:', e?.message);
+    }
+
+    if (!bulkSuccess) {
+      const CHUNK_SIZE = 12;
+      let completed = 0;
+      for (let i = 0; i < identifiers.length; i += CHUNK_SIZE) {
+        const chunk = identifiers.slice(i, i + CHUNK_SIZE);
+        await Promise.allSettled(
+          chunk.map(async (id) => {
+            return api.delete(`/api/recycle-bin/products/${id}/permanent`, {
+              data: { purgedBy: activePerformer },
+            });
+          })
+        );
+        completed += chunk.length;
+        if (onProgress) {
+          onProgress(Math.min(completed, identifiers.length), identifiers.length, `Deleting ${Math.min(completed, identifiers.length)} of ${identifiers.length} products...`);
+        }
       }
     }
-    return { purged, failed };
+
+    // Atomic update: Remove from Recycle Bin
+    setRecycleBinProducts((prev) => {
+      const updated = prev.filter((p) => !identifierSet.has(p.id));
+      try {
+        localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // KEEP all in deletedProductIds so static catalog and DEFAULT_INVENTORY never resurrect them
+    setDeletedProductIds((prev) => {
+      const updated = Array.from(new Set([...prev, ...identifiers]));
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    // Completely expunge from customProducts, inventory, availability map, and masterPrices
+    setCustomProducts((prev) => {
+      const updated = prev.filter((p) => !identifierSet.has(p.id));
+      try { localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      const updated = prev.filter((p) => !identifierSet.has(p.id));
+      try { localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    setProductAvailabilityMap((prev) => {
+      const next = { ...prev };
+      identifiers.forEach((id) => delete next[id]);
+      try { localStorage.setItem(PRODUCT_AVAILABILITY_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    setMasterPrices((prev) => {
+      const next = { ...prev };
+      identifiers.forEach((id) => delete next[id]);
+      try { localStorage.setItem(MASTER_PRICES_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+
+    if (onProgress) onProgress(identifiers.length, identifiers.length, 'Deletion completed!');
+    return { purged: identifiers, failed: [] };
   };
 
-  const restoreProducts = async (productIds, restoredBy = null) => {
+  const restoreProducts = async (productIds, restoredBy = null, onProgress = null) => {
     if (!Array.isArray(productIds) || productIds.length === 0) {
       throw new Error('Select at least one product to restore.');
     }
     const identifiers = [...new Set(productIds.filter(Boolean))];
-    const restored = [];
-    const failed = [];
-    for (const id of identifiers) {
-      try {
-        const ok = await restoreProduct(id, restoredBy);
-        if (ok) restored.push(id);
-        else failed.push(id);
-      } catch {
-        failed.push(id);
+    const activePerformer = resolveActiveUser(restoredBy);
+    const identifierSet = new Set(identifiers);
+
+    const recordsToRestore = recycleBinProducts.filter((p) => identifierSet.has(p.id));
+    const prodsToRestore = recordsToRestore.map((r) => r.productData || { id: r.id, name: r.name });
+
+    if (onProgress) onProgress(0, identifiers.length, `Restoring ${identifiers.length} products...`);
+
+    let bulkSuccess = false;
+    try {
+      const res = await api.post('/api/recycle-bin/products/bulk-restore', {
+        ids: identifiers,
+        restoredBy: activePerformer,
+      });
+      if (res && res.success) {
+        bulkSuccess = true;
+      }
+    } catch (e) {
+      console.warn('[Recycle Bin] Fast bulk-restore products route failed, fallback to batching:', e?.message);
+    }
+
+    if (!bulkSuccess) {
+      const CHUNK_SIZE = 12;
+      let completed = 0;
+      for (let i = 0; i < identifiers.length; i += CHUNK_SIZE) {
+        const chunk = identifiers.slice(i, i + CHUNK_SIZE);
+        await Promise.allSettled(
+          chunk.map(async (id) => {
+            return api.post(`/api/recycle-bin/products/${id}/restore`, { restoredBy: activePerformer });
+          })
+        );
+        completed += chunk.length;
+        if (onProgress) {
+          onProgress(Math.min(completed, identifiers.length), identifiers.length, `Restoring ${Math.min(completed, identifiers.length)} of ${identifiers.length} products...`);
+        }
       }
     }
-    return { restored, failed };
+
+    setRecycleBinProducts((prev) => {
+      const updated = prev.filter((p) => !identifierSet.has(p.id));
+      try {
+        localStorage.setItem(RECYCLE_BIN_PRODUCTS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setDeletedProductIds((prev) => {
+      const updated = prev.filter((id) => !identifierSet.has(id));
+      try {
+        localStorage.setItem(DELETED_PRODUCT_IDS_KEY, JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    if (prodsToRestore.length > 0) {
+      setInventory((prev) => {
+        const restoreIds = new Set(prodsToRestore.map((p) => p.id));
+        const updated = [...prev.filter((p) => !restoreIds.has(p.id)), ...prodsToRestore];
+        try {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+    }
+
+    if (onProgress) onProgress(identifiers.length, identifiers.length, 'Restore completed!');
+    return { restored: identifiers, failed: [] };
   };
 
   const updateProductMasterPrice = async (productId, newPrice, performedBy = null) => {

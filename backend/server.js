@@ -213,6 +213,11 @@ const deletedProductSchema = new mongoose.Schema({
   expiresAt: { type: Number, default: () => Date.now() + 30 * 24 * 60 * 60 * 1000 },
 });
 
+const purgedProductSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  purgedAt: { type: Number, default: Date.now },
+});
+
 const activityLogSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   actionType: { type: String, required: true }, // 'BILL_DELETED' | 'BILL_RESTORED' | 'BILL_PERMANENTLY_PURGED' | 'PRICE_OVERRIDE' | 'PRODUCT_ADDED' | 'PRODUCT_PRICE_UPDATED' | 'PRODUCT_DELETED' | 'PRODUCT_RESTORED' | 'PRODUCT_PERMANENTLY_PURGED' | 'STOCK_TOGGLED'
@@ -240,6 +245,7 @@ const Customer = mongoose.model('Customer', customerSchema);
 const PriceOverrideLog = mongoose.model('PriceOverrideLog', priceOverrideLogSchema);
 const DeletedBill = mongoose.model('DeletedBill', deletedBillSchema);
 const DeletedProduct = mongoose.model('DeletedProduct', deletedProductSchema);
+const PurgedProduct = mongoose.model('PurgedProduct', purgedProductSchema);
 const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
 // In-memory sessions store
@@ -282,8 +288,9 @@ async function seedIfEmpty() {
   ];
 
   for (const it of defaultItems) {
+    const isPurged = await PurgedProduct.findOne({ id: it.id });
     const isDeleted = await DeletedProduct.findOne({ id: it.id });
-    if (!isDeleted) {
+    if (!isPurged && !isDeleted) {
       await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
     }
   }
@@ -296,8 +303,9 @@ async function seedIfEmpty() {
       if (Array.isArray(catalogItems)) {
         for (const cItem of catalogItems) {
           if (!cItem.id) continue;
+          const isPurged = await PurgedProduct.findOne({ id: cItem.id });
           const isDeleted = await DeletedProduct.findOne({ id: cItem.id });
-          if (isDeleted) continue;
+          if (isPurged || isDeleted) continue;
           const setFields = {
             skuCode: cItem.skuCode || (cItem.itemNumber ? String(cItem.itemNumber) : ''),
             price: cItem.price,
@@ -802,7 +810,16 @@ app.delete('/api/staff/:id', requireAdmin, async (req, res) => {
 // ============================================================
 
 app.get('/api/inventory', async (req, res) => {
-  const inventory = await Inventory.find({});
+  const [purgedList, deletedList] = await Promise.all([
+    PurgedProduct.find({}, 'id').lean(),
+    DeletedProduct.find({}, 'id').lean(),
+  ]);
+  const excludedIds = new Set([
+    ...purgedList.map((p) => p.id),
+    ...deletedList.map((p) => p.id),
+  ]);
+  const allInv = await Inventory.find({});
+  const inventory = allInv.filter((p) => !excludedIds.has(p.id));
   inventory.sort((a, b) => {
     const getNum = (p) => {
       const sku = String(p?.skuCode ?? '').trim();
@@ -1115,15 +1132,18 @@ app.delete('/api/inventory/products/:id', async (req, res) => {
       try { deletedBy = JSON.parse(req.query.deletedBy); } catch {}
     }
 
-    let existing = await Inventory.findOne({ id });
-    let productData = existing ? (existing.toObject ? existing.toObject() : existing) : null;
+    const orQuery = [{ id }];
+    if (mongoose.Types.ObjectId.isValid(id)) orQuery.push({ _id: id });
+
+    let existing = await Inventory.findOne({ $or: orQuery });
+    let productData = existing ? (existing.toObject ? existing.toObject() : existing) : (req.body?.productData || null);
 
     if (!productData && fs.existsSync(CATALOG_FILE_PATH)) {
       try {
         const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
-          productData = list.find((p) => p.id === id);
+          productData = list.find((p) => p.id === id || String(p._id) === String(id));
         }
       } catch {}
     }
@@ -1153,8 +1173,8 @@ app.delete('/api/inventory/products/:id', async (req, res) => {
       { upsert: true, new: true }
     );
 
-    // Remove from active inventory
-    await Inventory.deleteOne({ id });
+    // Remove from active inventory completely
+    await Inventory.deleteMany({ $or: orQuery });
 
     // Remove from catalog file
     try {
@@ -1162,7 +1182,7 @@ app.delete('/api/inventory/products/:id', async (req, res) => {
         const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
         const list = JSON.parse(raw);
         if (Array.isArray(list)) {
-          const filtered = list.filter((p) => p.id !== id);
+          const filtered = list.filter((p) => p.id !== id && String(p._id) !== String(id));
           fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf8');
         }
       }
@@ -1636,6 +1656,124 @@ app.get('/api/recycle-bin/bills', async (req, res) => {
   }
 });
 
+// ─── Recycle Bin: Bulk Restore Bills back to active sales ────────────────────
+app.post('/api/recycle-bin/bills/bulk-restore', async (req, res) => {
+  try {
+    const { ids, restoredBy } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No bill IDs provided.' });
+    }
+
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const stringIds = ids.map(String);
+
+    const orConditions = [
+      { id: { $in: stringIds } },
+      { invoiceNumber: { $in: stringIds } },
+    ];
+    if (objectIds.length > 0) {
+      orConditions.push({ _id: { $in: objectIds } });
+    }
+
+    const records = await DeletedBill.find({ $or: orConditions });
+    if (!records || records.length === 0) {
+      return res.status(404).json({ success: false, message: 'No matching records in Recycle Bin.' });
+    }
+
+    const billsToInsert = records.map((r) => {
+      const b = r.billData ? (r.billData.toObject ? r.billData.toObject() : r.billData) : null;
+      if (b && b._id) delete b._id;
+      return b;
+    }).filter(Boolean);
+
+    if (billsToInsert.length > 0) {
+      for (const billData of billsToInsert) {
+        await Bill.updateOne({ invoiceNumber: billData.invoiceNumber }, { $set: billData }, { upsert: true });
+      }
+    }
+
+    const recordDbIds = records.map((r) => r._id);
+    await DeletedBill.deleteMany({ _id: { $in: recordDbIds } });
+
+    const activeRestoredBy = (restoredBy && restoredBy.id) ? restoredBy : {
+      id: restoredBy?.id || 'staff-1',
+      username: restoredBy?.username || 'admin',
+      name: (restoredBy?.name && restoredBy.name !== 'Staff') ? restoredBy.name : 'S. Ramanathan',
+      role: restoredBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-rstbulk-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_RESTORED',
+      performedBy: activeRestoredBy,
+      targetId: `${records.length} bills`,
+      targetName: `${records.length} Invoices Restored`,
+      details: { count: records.length },
+      reason: 'Restored from Recycle Bin by Administrator (Bulk)',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Bulk restored ${records.length} bills.`);
+    res.json({ success: true, message: `${records.length} bills successfully restored!`, count: records.length });
+  } catch (err) {
+    console.error('[Recycle Bin] Error bulk restoring bills:', err);
+    res.status(500).json({ success: false, message: 'Failed to bulk restore bills: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Bulk Permanent Purge Bills ────────────────────────────────
+app.delete('/api/recycle-bin/bills/bulk-permanent', async (req, res) => {
+  try {
+    const { ids, purgedBy } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No bill IDs provided.' });
+    }
+
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const stringIds = ids.map(String);
+
+    const orConditions = [
+      { id: { $in: stringIds } },
+      { invoiceNumber: { $in: stringIds } },
+    ];
+    if (objectIds.length > 0) {
+      orConditions.push({ _id: { $in: objectIds } });
+    }
+
+    const deleteResult = await DeletedBill.deleteMany({ $or: orConditions });
+
+    const activePurgedBy = (purgedBy && purgedBy.id) ? purgedBy : {
+      id: purgedBy?.id || 'staff-1',
+      username: purgedBy?.username || 'admin',
+      name: (purgedBy?.name && purgedBy.name !== 'Staff') ? purgedBy.name : 'S. Ramanathan',
+      role: purgedBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-prgbulk-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'BILL_PERMANENTLY_PURGED',
+      performedBy: activePurgedBy,
+      targetId: `${ids.length} bills`,
+      targetName: `${ids.length} Invoices Purged`,
+      details: { count: ids.length, deletedCount: deleteResult.deletedCount },
+      reason: 'Permanently deleted by Administrator (Bulk)',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Bulk permanently deleted ${deleteResult.deletedCount} invoices.`);
+    res.json({ success: true, message: `${deleteResult.deletedCount} invoices permanently purged.`, count: deleteResult.deletedCount });
+  } catch (err) {
+    console.error('[Recycle Bin] Error bulk permanently deleting bills:', err);
+    res.status(500).json({ success: false, message: 'Failed to bulk purge bills: ' + err.message });
+  }
+});
+
 // ─── Recycle Bin: Restore Bill back to active sales ──────────────────────────
 app.post('/api/recycle-bin/bills/:id/restore', async (req, res) => {
   try {
@@ -1748,6 +1886,134 @@ app.get('/api/recycle-bin/products', async (req, res) => {
   }
 });
 
+// ─── Recycle Bin: Bulk Restore Products ────────────────────────────────────
+app.post('/api/recycle-bin/products/bulk-restore', async (req, res) => {
+  try {
+    const { ids, restoredBy } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No product IDs provided.' });
+    }
+
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const stringIds = ids.map(String);
+
+    const orConditions = [{ id: { $in: stringIds } }];
+    if (objectIds.length > 0) {
+      orConditions.push({ _id: { $in: objectIds } });
+    }
+
+    const records = await DeletedProduct.find({ $or: orConditions });
+    if (!records || records.length === 0) {
+      return res.status(404).json({ success: false, message: 'No matching records in Recycle Bin.' });
+    }
+
+    for (const record of records) {
+      const prodData = record.productData ? (record.productData.toObject ? record.productData.toObject() : record.productData) : { id: record.id, name: record.name };
+      delete prodData._id;
+      await Inventory.updateOne({ id: record.id }, { $set: prodData }, { upsert: true });
+    }
+
+    const recordDbIds = records.map((r) => r._id);
+    await DeletedProduct.deleteMany({ _id: { $in: recordDbIds } });
+    await PurgedProduct.deleteMany({ $or: orConditions });
+
+    const activeRestoredBy = (restoredBy && restoredBy.id) ? restoredBy : {
+      id: restoredBy?.id || 'staff-1',
+      username: restoredBy?.username || 'admin',
+      name: (restoredBy?.name && restoredBy.name !== 'Staff') ? restoredBy.name : 'S. Ramanathan',
+      role: restoredBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-rstprodbulk-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'PRODUCT_RESTORED',
+      performedBy: activeRestoredBy,
+      targetId: `${records.length} products`,
+      targetName: `${records.length} Products Restored`,
+      details: { count: records.length },
+      reason: 'Restored from Recycle Bin by Administrator (Bulk)',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Bulk restored ${records.length} products.`);
+    res.json({ success: true, message: `${records.length} products successfully restored!`, count: records.length });
+  } catch (err) {
+    console.error('[Recycle Bin] Error bulk restoring products:', err);
+    res.status(500).json({ success: false, message: 'Failed to bulk restore products: ' + err.message });
+  }
+});
+
+// ─── Recycle Bin: Bulk Permanent Purge Products ────────────────────────────
+app.delete('/api/recycle-bin/products/bulk-permanent', async (req, res) => {
+  try {
+    const { ids, purgedBy } = req.body || {};
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'No product IDs provided.' });
+    }
+
+    const objectIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    const stringIds = ids.map(String);
+
+    const orConditions = [{ id: { $in: stringIds } }];
+    if (objectIds.length > 0) {
+      orConditions.push({ _id: { $in: objectIds } });
+    }
+
+    const deleteResult = await DeletedProduct.deleteMany({ $or: orConditions });
+
+    // Expunge completely from active Inventory collection as well
+    await Inventory.deleteMany({ $or: orConditions });
+
+    // Expunge completely from catalog.json
+    try {
+      if (fs.existsSync(CATALOG_FILE_PATH)) {
+        const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const idSet = new Set([...stringIds, ...objectIds.map(String)]);
+          const filtered = list.filter((p) => !idSet.has(String(p.id)) && !idSet.has(String(p._id)));
+          fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf8');
+        }
+      }
+    } catch {}
+
+    // Record as permanently purged so seeder / sync NEVER resurrects them
+    for (const pid of stringIds) {
+      await PurgedProduct.updateOne({ id: pid }, { $set: { id: pid, purgedAt: Date.now() } }, { upsert: true });
+    }
+
+    const activePurgedBy = (purgedBy && purgedBy.id) ? purgedBy : {
+      id: purgedBy?.id || 'staff-1',
+      username: purgedBy?.username || 'admin',
+      name: (purgedBy?.name && purgedBy.name !== 'Staff') ? purgedBy.name : 'S. Ramanathan',
+      role: purgedBy?.role || 'admin',
+    };
+
+    const now = new Date();
+    await ActivityLog.create({
+      id: `act-prgprodbulk-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
+      actionType: 'PRODUCT_PERMANENTLY_PURGED',
+      performedBy: activePurgedBy,
+      targetId: `${ids.length} products`,
+      targetName: `${ids.length} Products Purged`,
+      details: { count: ids.length, deletedCount: deleteResult.deletedCount },
+      reason: 'Permanently deleted by Administrator (Bulk)',
+      timestamp: Date.now(),
+      dateStr: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+      timeStr: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+    });
+
+    console.log(`[Recycle Bin] Bulk permanently deleted ${deleteResult.deletedCount} products.`);
+    res.json({ success: true, message: `${deleteResult.deletedCount} products permanently purged.`, count: deleteResult.deletedCount });
+  } catch (err) {
+    console.error('[Recycle Bin] Error bulk permanently deleting products:', err);
+    res.status(500).json({ success: false, message: 'Failed to bulk purge products: ' + err.message });
+  }
+});
+
 // ─── Recycle Bin: Restore Product ──────────────────────────────────────────
 app.post('/api/recycle-bin/products/:id/restore', async (req, res) => {
   try {
@@ -1779,8 +2045,9 @@ app.post('/api/recycle-bin/products/:id/restore', async (req, res) => {
       }
     } catch {}
 
-    // Remove from Recycle Bin
+    // Remove from Recycle Bin and Purged list
     await DeletedProduct.deleteOne({ _id: deletedRecord._id });
+    await PurgedProduct.deleteOne({ id: deletedRecord.id });
 
     const activeRestoredBy = (restoredBy && restoredBy.id) ? restoredBy : {
       id: restoredBy?.id || 'staff-1',
@@ -1823,9 +2090,25 @@ app.delete('/api/recycle-bin/products/:id/permanent', async (req, res) => {
     const prodQuery = [{ id }];
     if (mongoose.Types.ObjectId.isValid(id)) prodQuery.push({ _id: id });
     const deletedRecord = await DeletedProduct.findOneAndDelete({ $or: prodQuery });
-    if (!deletedRecord) {
-      return res.status(404).json({ success: false, message: 'Record not found in Recycle Bin.' });
-    }
+    const prodName = deletedRecord?.name || id;
+
+    // Completely expunge from active Inventory as well
+    await Inventory.deleteMany({ $or: prodQuery });
+
+    // Completely expunge from catalog.json
+    try {
+      if (fs.existsSync(CATALOG_FILE_PATH)) {
+        const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
+        const list = JSON.parse(raw);
+        if (Array.isArray(list)) {
+          const filtered = list.filter((p) => p.id !== id && String(p._id) !== String(id));
+          fs.writeFileSync(CATALOG_FILE_PATH, JSON.stringify(filtered, null, 2), 'utf8');
+        }
+      }
+    } catch {}
+
+    // Record as permanently purged so seeder / sync NEVER resurrects it
+    await PurgedProduct.updateOne({ id }, { $set: { id, purgedAt: Date.now() } }, { upsert: true });
 
     const activePurgedBy = (purgedBy && purgedBy.id) ? purgedBy : {
       id: purgedBy?.id || 'staff-1',
@@ -1840,7 +2123,7 @@ app.delete('/api/recycle-bin/products/:id/permanent', async (req, res) => {
       actionType: 'PRODUCT_PERMANENTLY_PURGED',
       performedBy: activePurgedBy,
       targetId: id,
-      targetName: deletedRecord.name,
+      targetName: prodName,
       details: { productId: id },
       reason: 'Permanently deleted by Administrator',
       timestamp: Date.now(),
@@ -1849,7 +2132,7 @@ app.delete('/api/recycle-bin/products/:id/permanent', async (req, res) => {
     });
 
     console.log(`[Recycle Bin] Permanently purged product ${id}`);
-    res.json({ success: true, message: `Product ${deletedRecord.name} permanently purged.` });
+    res.json({ success: true, message: `Product ${prodName} permanently purged.` });
   } catch (err) {
     console.error('[Recycle Bin] Error purging product:', err);
     res.status(500).json({ success: false, message: 'Failed to purge product: ' + err.message });

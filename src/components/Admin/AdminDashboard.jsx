@@ -118,6 +118,12 @@ export default function AdminDashboard() {
   const [isRefreshingRecycle, setIsRefreshingRecycle] = useState(false);
   const [productToRestore, setProductToRestore] = useState(null);
   const [productToPurge, setProductToPurge] = useState(null);
+  const [recycleActionLoading, setRecycleActionLoading] = useState({
+    isRunning: false,
+    message: '',
+    current: 0,
+    total: 0,
+  });
   const [isCatalogSettingsOpen, setIsCatalogSettingsOpen] = useState(false);
 
   // Activity Logs filter state
@@ -3302,8 +3308,8 @@ export default function AdminDashboard() {
 
         {/* Confirm Restore Bill Modal */}
         {billToRestore && (
-          <div className="admin-modal-overlay" onClick={() => setBillToRestore(null)}>
-            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+          <div className="admin-modal-overlay" onClick={() => !recycleActionLoading.isRunning && setBillToRestore(null)}>
+            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
               <div className="admin-modal-header" style={{ background: '#f0fdf4', borderBottomColor: '#bbf7d0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3321,7 +3327,13 @@ export default function AdminDashboard() {
                     </span>
                   </div>
                 </div>
-                <button type="button" className="admin-modal-close" onClick={() => setBillToRestore(null)}>
+                <button
+                  type="button"
+                  className="admin-modal-close"
+                  disabled={recycleActionLoading.isRunning}
+                  onClick={() => !recycleActionLoading.isRunning && setBillToRestore(null)}
+                  style={{ opacity: recycleActionLoading.isRunning ? 0.4 : 1, cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer' }}
+                >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -3346,21 +3358,69 @@ export default function AdminDashboard() {
                     <strong style={{ color: '#0f172a' }}>{billToRestore.deletionReason}</strong>
                   </div>
                 )}
+
+                {recycleActionLoading.isRunning && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '11px 14px',
+                    background: '#f0fdf4',
+                    border: '1.5px solid #86efac',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    color: '#15803d',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2.5px solid #16a34a',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                      flexShrink: 0,
+                    }} />
+                    <span>{recycleActionLoading.message || 'Restoring invoices... Please wait'}</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={() => setBillToRestore(null)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      opacity: recycleActionLoading.isRunning ? 0.5 : 1,
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={async () => {
                       try {
+                        const totalCount = Array.isArray(billToRestore) ? billToRestore.length : 1;
+                        setRecycleActionLoading({
+                          isRunning: true,
+                          message: Array.isArray(billToRestore) ? `Restoring ${totalCount} invoices...` : 'Restoring invoice...',
+                          current: 0,
+                          total: totalCount,
+                        });
                         if (Array.isArray(billToRestore)) {
                           const ids = billToRestore.map((b) => b.id || b.invoiceNumber);
-                          await restoreBills(ids, user);
+                          await restoreBills(ids, user, (cur, tot, msg) => {
+                            setRecycleActionLoading({ isRunning: true, message: msg, current: cur, total: tot });
+                          });
                           setSelectedRecycleBillIds(new Set());
                         } else {
                           await restoreBill(billToRestore.id || billToRestore.invoiceNumber, user);
@@ -3373,11 +3433,35 @@ export default function AdminDashboard() {
                         setBillToRestore(null);
                       } catch (err) {
                         alert(err?.message || 'Restore failed. Please try again.');
+                      } finally {
+                        setRecycleActionLoading({ isRunning: false, message: '', current: 0, total: 0 });
                       }
                     }}
-                    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#16a34a', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: recycleActionLoading.isRunning ? '#4ade80' : '#16a34a',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
                   >
-                    Confirm Restore
+                    {recycleActionLoading.isRunning && (
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        border: '2px solid #ffffff',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    )}
+                    {recycleActionLoading.isRunning ? (recycleActionLoading.message || 'Restoring...') : 'Confirm Restore'}
                   </button>
                 </div>
               </div>
@@ -3387,8 +3471,8 @@ export default function AdminDashboard() {
 
         {/* Confirm Permanent Purge Modal */}
         {billToPurge && (
-          <div className="admin-modal-overlay" onClick={() => setBillToPurge(null)}>
-            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+          <div className="admin-modal-overlay" onClick={() => !recycleActionLoading.isRunning && setBillToPurge(null)}>
+            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
               <div className="admin-modal-header" style={{ background: '#450a0a', borderBottomColor: '#7f1d1d' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#7f1d1d', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3404,7 +3488,13 @@ export default function AdminDashboard() {
                     <span style={{ fontSize: '11px', color: '#fca5a5' }}>Permanent deletion cannot be undone</span>
                   </div>
                 </div>
-                <button type="button" className="admin-modal-close" onClick={() => setBillToPurge(null)} style={{ background: '#7f1d1d', color: '#fecaca' }}>
+                <button
+                  type="button"
+                  className="admin-modal-close"
+                  disabled={recycleActionLoading.isRunning}
+                  onClick={() => !recycleActionLoading.isRunning && setBillToPurge(null)}
+                  style={{ background: '#7f1d1d', color: '#fecaca', opacity: recycleActionLoading.isRunning ? 0.4 : 1, cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer' }}
+                >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -3423,21 +3513,69 @@ export default function AdminDashboard() {
                     </>
                   )}
                 </p>
+
+                {recycleActionLoading.isRunning && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    background: '#fff1f2',
+                    border: '1.5px solid #fecdd3',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    color: '#9f1239',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2.5px solid #e11d48',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                      flexShrink: 0,
+                    }} />
+                    <span>{recycleActionLoading.message || 'Deleting invoices... Please wait'}</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={() => setBillToPurge(null)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      opacity: recycleActionLoading.isRunning ? 0.5 : 1,
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={async () => {
                       try {
+                        const totalCount = Array.isArray(billToPurge) ? billToPurge.length : 1;
+                        setRecycleActionLoading({
+                          isRunning: true,
+                          message: Array.isArray(billToPurge) ? `Deleting ${totalCount} invoices...` : 'Deleting invoice...',
+                          current: 0,
+                          total: totalCount,
+                        });
                         if (Array.isArray(billToPurge)) {
                           const ids = billToPurge.map((b) => b.id || b.invoiceNumber);
-                          await permanentDeleteBills(ids, user);
+                          await permanentDeleteBills(ids, user, (cur, tot, msg) => {
+                            setRecycleActionLoading({ isRunning: true, message: msg, current: cur, total: tot });
+                          });
                           setSelectedRecycleBillIds(new Set());
                         } else {
                           await permanentDeleteBill(billToPurge.id || billToPurge.invoiceNumber, user);
@@ -3450,11 +3588,35 @@ export default function AdminDashboard() {
                         setBillToPurge(null);
                       } catch (err) {
                         alert(err?.message || 'Purge failed. Please try again.');
+                      } finally {
+                        setRecycleActionLoading({ isRunning: false, message: '', current: 0, total: 0 });
                       }
                     }}
-                    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#991b1b', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: recycleActionLoading.isRunning ? '#b91c1c' : '#991b1b',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
                   >
-                    Purge Permanently
+                    {recycleActionLoading.isRunning && (
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        border: '2px solid #ffffff',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    )}
+                    {recycleActionLoading.isRunning ? (recycleActionLoading.message || 'Deleting...') : 'Purge Permanently'}
                   </button>
                 </div>
               </div>
@@ -3464,8 +3626,8 @@ export default function AdminDashboard() {
 
         {/* Confirm Restore Product Modal */}
         {productToRestore && (
-          <div className="admin-modal-overlay" onClick={() => setProductToRestore(null)}>
-            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+          <div className="admin-modal-overlay" onClick={() => !recycleActionLoading.isRunning && setProductToRestore(null)}>
+            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
               <div className="admin-modal-header" style={{ background: '#f0fdf4', borderBottomColor: '#bbf7d0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3481,7 +3643,13 @@ export default function AdminDashboard() {
                     <span style={{ fontSize: '11px', color: '#15803d' }}>Returns product(s) back to inventory catalog</span>
                   </div>
                 </div>
-                <button type="button" className="admin-modal-close" onClick={() => setProductToRestore(null)}>
+                <button
+                  type="button"
+                  className="admin-modal-close"
+                  disabled={recycleActionLoading.isRunning}
+                  onClick={() => !recycleActionLoading.isRunning && setProductToRestore(null)}
+                  style={{ opacity: recycleActionLoading.isRunning ? 0.4 : 1, cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer' }}
+                >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -3502,21 +3670,69 @@ export default function AdminDashboard() {
                     <strong style={{ color: '#0f172a' }}>{productToRestore.deletionReason || 'Removed from catalog'}</strong>
                   </div>
                 )}
+
+                {recycleActionLoading.isRunning && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '11px 14px',
+                    background: '#f0fdf4',
+                    border: '1.5px solid #86efac',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    color: '#15803d',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2.5px solid #16a34a',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                      flexShrink: 0,
+                    }} />
+                    <span>{recycleActionLoading.message || 'Restoring products... Please wait'}</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={() => setProductToRestore(null)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      opacity: recycleActionLoading.isRunning ? 0.5 : 1,
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={async () => {
                       try {
+                        const totalCount = Array.isArray(productToRestore) ? productToRestore.length : 1;
+                        setRecycleActionLoading({
+                          isRunning: true,
+                          message: Array.isArray(productToRestore) ? `Restoring ${totalCount} products...` : 'Restoring product...',
+                          current: 0,
+                          total: totalCount,
+                        });
                         if (Array.isArray(productToRestore)) {
                           const ids = productToRestore.map((p) => p.id);
-                          await restoreProducts(ids, user);
+                          await restoreProducts(ids, user, (cur, tot, msg) => {
+                            setRecycleActionLoading({ isRunning: true, message: msg, current: cur, total: tot });
+                          });
                           setSelectedRecycleProductIds(new Set());
                         } else {
                           await restoreProduct(productToRestore.id, user);
@@ -3529,11 +3745,35 @@ export default function AdminDashboard() {
                         setProductToRestore(null);
                       } catch (err) {
                         alert(err?.message || 'Restore failed. Please try again.');
+                      } finally {
+                        setRecycleActionLoading({ isRunning: false, message: '', current: 0, total: 0 });
                       }
                     }}
-                    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#16a34a', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: recycleActionLoading.isRunning ? '#4ade80' : '#16a34a',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
                   >
-                    Confirm Restore
+                    {recycleActionLoading.isRunning && (
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        border: '2px solid #ffffff',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    )}
+                    {recycleActionLoading.isRunning ? (recycleActionLoading.message || 'Restoring...') : 'Confirm Restore'}
                   </button>
                 </div>
               </div>
@@ -3543,8 +3783,8 @@ export default function AdminDashboard() {
 
         {/* Confirm Permanent Purge Product Modal */}
         {productToPurge && (
-          <div className="admin-modal-overlay" onClick={() => setProductToPurge(null)}>
-            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+          <div className="admin-modal-overlay" onClick={() => !recycleActionLoading.isRunning && setProductToPurge(null)}>
+            <div className="admin-modal-container" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
               <div className="admin-modal-header" style={{ background: '#450a0a', borderBottomColor: '#7f1d1d' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#7f1d1d', color: '#fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -3560,7 +3800,13 @@ export default function AdminDashboard() {
                     <span style={{ fontSize: '11px', color: '#fca5a5' }}>Permanent deletion cannot be undone</span>
                   </div>
                 </div>
-                <button type="button" className="admin-modal-close" onClick={() => setProductToPurge(null)} style={{ background: '#7f1d1d', color: '#fecaca' }}>
+                <button
+                  type="button"
+                  className="admin-modal-close"
+                  disabled={recycleActionLoading.isRunning}
+                  onClick={() => !recycleActionLoading.isRunning && setProductToPurge(null)}
+                  style={{ background: '#7f1d1d', color: '#fecaca', opacity: recycleActionLoading.isRunning ? 0.4 : 1, cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer' }}
+                >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
@@ -3575,21 +3821,69 @@ export default function AdminDashboard() {
                     <>Are you sure you want to permanently purge product <strong>{productToPurge.englishName || productToPurge.name}</strong>? It will be permanently expunged from the 30-day recycle bin and cannot be restored again.</>
                   )}
                 </p>
+
+                {recycleActionLoading.isRunning && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '12px 14px',
+                    background: '#fff1f2',
+                    border: '1.5px solid #fecdd3',
+                    borderRadius: '8px',
+                    marginBottom: '16px',
+                    color: '#9f1239',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                  }}>
+                    <div style={{
+                      width: '16px',
+                      height: '16px',
+                      border: '2.5px solid #e11d48',
+                      borderTopColor: 'transparent',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                      flexShrink: 0,
+                    }} />
+                    <span>{recycleActionLoading.message || 'Deleting products... Please wait'}</span>
+                  </div>
+                )}
+
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={() => setProductToPurge(null)}
-                    style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #cbd5e1', background: '#fff', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      border: '1px solid #cbd5e1',
+                      background: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      opacity: recycleActionLoading.isRunning ? 0.5 : 1,
+                    }}
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    disabled={recycleActionLoading.isRunning}
                     onClick={async () => {
                       try {
+                        const totalCount = Array.isArray(productToPurge) ? productToPurge.length : 1;
+                        setRecycleActionLoading({
+                          isRunning: true,
+                          message: Array.isArray(productToPurge) ? `Deleting ${totalCount} products...` : 'Deleting product...',
+                          current: 0,
+                          total: totalCount,
+                        });
                         if (Array.isArray(productToPurge)) {
                           const ids = productToPurge.map((p) => p.id);
-                          await permanentDeleteProducts(ids, user);
+                          await permanentDeleteProducts(ids, user, (cur, tot, msg) => {
+                            setRecycleActionLoading({ isRunning: true, message: msg, current: cur, total: tot });
+                          });
                           setSelectedRecycleProductIds(new Set());
                         } else {
                           await permanentDeleteProduct(productToPurge.id, user);
@@ -3602,11 +3896,35 @@ export default function AdminDashboard() {
                         setProductToPurge(null);
                       } catch (err) {
                         alert(err?.message || 'Purge failed. Please try again.');
+                      } finally {
+                        setRecycleActionLoading({ isRunning: false, message: '', current: 0, total: 0 });
                       }
                     }}
-                    style={{ padding: '8px 18px', borderRadius: '8px', border: 'none', background: '#991b1b', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: recycleActionLoading.isRunning ? '#b91c1c' : '#991b1b',
+                      color: '#fff',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: recycleActionLoading.isRunning ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
                   >
-                    Purge Permanently
+                    {recycleActionLoading.isRunning && (
+                      <div style={{
+                        width: '14px',
+                        height: '14px',
+                        border: '2px solid #ffffff',
+                        borderTopColor: 'transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                      }} />
+                    )}
+                    {recycleActionLoading.isRunning ? (recycleActionLoading.message || 'Deleting...') : 'Purge Permanently'}
                   </button>
                 </div>
               </div>
