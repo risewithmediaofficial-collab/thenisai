@@ -133,9 +133,6 @@ export default function SideNavbar({
                     <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                   </svg>
                   <span className="nav-text">Shift Bills</span>
-                  {shiftBillsCount > 0 && (
-                    <span className="nav-badge">{shiftBillsCount}</span>
-                  )}
                 </button>
 
                 {/* 3. Dispatch Queue */}
@@ -326,9 +323,6 @@ export default function SideNavbar({
                     <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                   </svg>
                   <span className="nav-text">{user?.role === 'admin' ? 'Shift Bills & Daily Revenue' : "Today's Shift Bills & Revenue"}</span>
-                  {shiftBillsCount > 0 && (
-                    <span className="nav-badge">{shiftBillsCount}</span>
-                  )}
                 </button>
 
                 <button
