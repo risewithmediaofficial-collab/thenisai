@@ -801,14 +801,19 @@ export default function BillingCounter() {
       }
       return true;
     }).sort((a, b) => {
-      const aNum = Number(a.skuCode ?? a.itemNumber);
-      const bNum = Number(b.skuCode ?? b.itemNumber);
-      const aValid = Number.isInteger(aNum) && aNum > 0;
-      const bValid = Number.isInteger(bNum) && bNum > 0;
-      if (aValid && bValid) return aNum - bNum;
-      if (aValid) return -1;
-      if (bValid) return 1;
-      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
+      const getNum = (p) => {
+        const sku = String(p?.skuCode ?? '').trim();
+        const itemNum = String(p?.itemNumber ?? '').trim();
+        const skuMatch = sku.match(/\d+/)?.[0];
+        if (skuMatch) return parseInt(skuMatch, 10);
+        const itemMatch = itemNum.match(/\d+/)?.[0];
+        if (itemMatch) return parseInt(itemMatch, 10);
+        return 999999;
+      };
+      const aNum = getNum(a);
+      const bNum = getNum(b);
+      if (aNum !== bNum) return aNum - bNum;
+      return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
     });
   }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventoryById]);
 
@@ -1231,9 +1236,30 @@ export default function BillingCounter() {
     }
 
     const year = new Date().getFullYear();
-    const seq = Math.floor(1000 + Math.random() * 9000);
     const isSandbox = isSandboxActive() || user?.role === 'tester' || Boolean(user?.isSandbox);
-    const invoiceNumber = isSandbox ? `TEST-${year}-${seq}` : `POS-${year}-${seq}`;
+    
+    // Calculate sequential bill number starting from 1 for today's billed bills
+    const todayKey = new Date().toDateString();
+    const todayBills = (bills || []).filter((b) => {
+      const bDate = b.createdAt ? new Date(b.createdAt).toDateString() : (b.orderDate ? new Date(b.orderDate).toDateString() : '');
+      return bDate === todayKey && !b.isSandbox;
+    });
+
+    let nextSeq = 1;
+    const existingNums = todayBills
+      .map((b) => {
+        const match = String(b.invoiceNumber || '').match(/^POS-(\d+)$/i) || String(b.invoiceNumber || '').match(/^(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((n) => n > 0 && n < 1000); // Exclude legacy random 4-digit numbers (>= 1000)
+
+    if (existingNums.length > 0) {
+      nextSeq = Math.max(...existingNums) + 1;
+    } else {
+      nextSeq = 1;
+    }
+
+    const invoiceNumber = isSandbox ? `TEST-${year}-${nextSeq}` : `POS-${nextSeq}`;
     const now = new Date();
 
     const saleData = {
@@ -1376,8 +1402,17 @@ export default function BillingCounter() {
   // Always keep strictly orderwise (sorted by itemNumber 1..13)
   // If user searches a number/SKU, exact SKU match is prioritized at top
   const filteredSweets = [...rawFiltered].sort((a, b) => {
-    const numA = a.itemNumber || 999;
-    const numB = b.itemNumber || 999;
+    const getNum = (p) => {
+      const sku = String(p?.skuCode ?? '').trim();
+      const itemNum = String(p?.itemNumber ?? '').trim();
+      const skuMatch = sku.match(/\d+/)?.[0];
+      if (skuMatch) return parseInt(skuMatch, 10);
+      const itemMatch = itemNum.match(/\d+/)?.[0];
+      if (itemMatch) return parseInt(itemMatch, 10);
+      return 999999;
+    };
+    const numA = getNum(a);
+    const numB = getNum(b);
 
     const cleanNum = searchQuery.trim().replace(/^#/, '').replace(/\.$/, '');
     const cleanNumLower = cleanNum.toLowerCase();
@@ -1389,7 +1424,8 @@ export default function BillingCounter() {
       if (numA === targetNum) return -1;
       if (numB === targetNum) return 1;
     }
-    return numA - numB;
+    if (numA !== numB) return numA - numB;
+    return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
   });
 
   // Fast Enter key in search box adds the top matched item directly to bill

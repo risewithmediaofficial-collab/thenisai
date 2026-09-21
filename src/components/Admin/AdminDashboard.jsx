@@ -10,6 +10,7 @@ import DeleteBillModal from '../Billing/DeleteBillModal';
 import EditBillModal from '../Billing/EditBillModal';
 import StaffManagement from './StaffManagement';
 import CatalogSettingsModal from './CatalogSettingsModal';
+import { translateToTamil } from '../../utils/translateToTamil';
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -426,10 +427,19 @@ export default function AdminDashboard() {
       }
       return true;
     }).sort((a, b) => {
-      const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
-      const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      const getNum = (p) => {
+        const sku = String(p?.skuCode ?? '').trim();
+        const itemNum = String(p?.itemNumber ?? '').trim();
+        const skuMatch = sku.match(/\d+/)?.[0];
+        if (skuMatch) return parseInt(skuMatch, 10);
+        const itemMatch = itemNum.match(/\d+/)?.[0];
+        if (itemMatch) return parseInt(itemMatch, 10);
+        return 999999;
+      };
+      const aNum = getNum(a);
+      const bNum = getNum(b);
       if (aNum !== bNum) return aNum - bNum;
-      return String(a.englishName || a.name).localeCompare(String(b.englishName || b.name));
+      return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
     });
   }, [allBillingProducts, inventoryCategoryFilter, inventoryStatusFilter, inventorySearchTerm, productAvailabilityMap, inventory]);
 
@@ -2695,15 +2705,36 @@ export default function AdminDashboard() {
                     <input
                       type="text"
                       value={productEditForm.nameEn}
-                      onChange={(e) => setProductEditForm((prev) => ({ ...prev, nameEn: e.target.value }))}
+                      onChange={async (e) => {
+                        const val = e.target.value;
+                        setProductEditForm((prev) => ({ ...prev, nameEn: val }));
+                        if (!productEditForm.nameTa.trim() && val.trim()) {
+                          const ta = await translateToTamil(val);
+                          if (ta) setProductEditForm((prev) => ({ ...prev, nameTa: ta }));
+                        }
+                      }}
                       style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px' }}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                      Product Name (Tamil)
-                    </label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: 700, color: '#334155' }}>
+                        Product Name (Tamil)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (productEditForm.nameEn.trim()) {
+                            const ta = await translateToTamil(productEditForm.nameEn);
+                            if (ta) setProductEditForm((prev) => ({ ...prev, nameTa: ta }));
+                          }
+                        }}
+                        style={{ fontSize: '11px', color: '#6366f1', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                      >
+                        ⚡ Translate from English
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={productEditForm.nameTa}

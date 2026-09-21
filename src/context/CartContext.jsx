@@ -696,10 +696,19 @@ export function CartProvider({ children }) {
 
     // Sort numerically by SKU code / itemNumber so items appear in proper order (1, 2, 3... 12, 13...)
     return mapped.sort((a, b) => {
-      const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
-      const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      const getNum = (p) => {
+        const sku = String(p?.skuCode ?? '').trim();
+        const itemNum = String(p?.itemNumber ?? '').trim();
+        const skuMatch = sku.match(/\d+/)?.[0];
+        if (skuMatch) return parseInt(skuMatch, 10);
+        const itemMatch = itemNum.match(/\d+/)?.[0];
+        if (itemMatch) return parseInt(itemMatch, 10);
+        return 999999;
+      };
+      const aNum = getNum(a);
+      const bNum = getNum(b);
       if (aNum !== bNum) return aNum - bNum;
-      return String(a.englishName || a.name).localeCompare(String(b.englishName || b.name));
+      return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
     });
   }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 

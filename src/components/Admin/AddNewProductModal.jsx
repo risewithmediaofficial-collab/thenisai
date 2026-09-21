@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
+import { translateToTamil } from '../../utils/translateToTamil';
+
 export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
   const { allBillingProducts, getNextAvailableSkuCode, getAvailableSkuCodes, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
 
@@ -19,6 +21,9 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
   const [availableSkus, setAvailableSkus] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [userEditedTamil, setUserEditedTamil] = useState(false);
+  const translateTimerRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -30,9 +35,46 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
       // Auto-fill only if empty — admin can override with a deleted SKU number
       hsn: prev.hsn || nextCode,
     }));
+    setUserEditedTamil(false);
+    setIsTranslating(false);
+    return () => {
+      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+    };
   }, [isOpen, getNextAvailableSkuCode, getAvailableSkuCodes]);
 
   if (!isOpen) return null;
+
+  const handleNameChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, name: value }));
+    if (errorMsg) setErrorMsg('');
+
+    if (!userEditedTamil || !formData.tamilName.trim()) {
+      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+      if (!value.trim()) {
+        setFormData((prev) => ({ ...prev, tamilName: '' }));
+        setIsTranslating(false);
+        return;
+      }
+      setIsTranslating(true);
+      translateTimerRef.current = setTimeout(async () => {
+        try {
+          const tamil = await translateToTamil(value);
+          if (tamil) setFormData((prev) => ({ ...prev, tamilName: tamil }));
+        } catch {
+          // ignore
+        } finally {
+          setIsTranslating(false);
+        }
+      }, 300);
+    }
+  };
+
+  const handleTamilNameChange = (e) => {
+    const val = e.target.value;
+    setUserEditedTamil(Boolean(val.trim()));
+    setFormData((prev) => ({ ...prev, tamilName: val }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -158,20 +200,25 @@ export default function AddNewProductModal({ isOpen, onClose, onAddProduct }) {
                 required
                 placeholder="e.g. Dry Fruit Halwa"
                 value={formData.name}
-                onChange={handleChange}
+                onChange={handleNameChange}
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px' }}
               />
             </div>
             <div className="admin-form-group">
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                Tamil Name (தமிழ் பெயர்)
+              <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                <span>Tamil Name (தமிழ் பெயர்)</span>
+                {isTranslating ? (
+                  <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 600 }}>Translating...</span>
+                ) : formData.tamilName ? (
+                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>✓ Auto-translated</span>
+                ) : null}
               </label>
               <input
                 type="text"
                 name="tamilName"
                 placeholder="எ.கா. உலர் பழ அல்வா"
                 value={formData.tamilName}
-                onChange={handleChange}
+                onChange={handleTamilNameChange}
                 style={{ width: '100%', padding: '10px 12px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '13px' }}
               />
             </div>

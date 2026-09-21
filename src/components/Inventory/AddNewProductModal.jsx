@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { translateToTamil } from '../../utils/translateToTamil';
+
 export default function AddNewProductModal({ isOpen, onClose }) {
   const { allBillingProducts, addNewProduct, getNextAvailableSkuCode, getAvailableSkuCodes, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
 
@@ -24,6 +26,9 @@ export default function AddNewProductModal({ isOpen, onClose }) {
   const [availableSkus, setAvailableSkus] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [userEditedTamil, setUserEditedTamil] = useState(false);
+  const translateTimerRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -37,7 +42,12 @@ export default function AddNewProductModal({ isOpen, onClose }) {
         hsn: '',
       });
       setErrorMsg('');
+      setUserEditedTamil(false);
+      setIsTranslating(false);
     }
+    return () => {
+      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -176,20 +186,53 @@ export default function AddNewProductModal({ isOpen, onClose }) {
                   className="stock-input"
                   placeholder="e.g. Badam Halwa Special"
                   value={form.nameEn}
-                  onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setForm((prev) => ({ ...prev, nameEn: value }));
+                    if (errorMsg) setErrorMsg('');
+
+                    if (!userEditedTamil || !form.nameTa.trim()) {
+                      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+                      if (!value.trim()) {
+                        setForm((prev) => ({ ...prev, nameTa: '' }));
+                        setIsTranslating(false);
+                        return;
+                      }
+                      setIsTranslating(true);
+                      translateTimerRef.current = setTimeout(async () => {
+                        try {
+                          const tamil = await translateToTamil(value);
+                          if (tamil) setForm((prev) => ({ ...prev, nameTa: tamil }));
+                        } catch {
+                          // ignore
+                        } finally {
+                          setIsTranslating(false);
+                        }
+                      }, 300);
+                    }
+                  }}
                 />
               </div>
 
               <div className="stock-field">
-                <label>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span>Name (Tamil — தமிழ்)</span>
+                  {isTranslating ? (
+                    <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 600 }}>Translating...</span>
+                  ) : form.nameTa ? (
+                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>✓ Auto-translated</span>
+                  ) : null}
                 </label>
                 <input
                   type="text"
                   className="stock-input"
                   placeholder="எ.கா. பாதாம் அல்வா ஸ்பெஷல்"
                   value={form.nameTa}
-                  onChange={(e) => setForm({ ...form, nameTa: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setUserEditedTamil(Boolean(val.trim()));
+                    setForm((prev) => ({ ...prev, nameTa: val }));
+                  }}
                 />
               </div>
             </div>

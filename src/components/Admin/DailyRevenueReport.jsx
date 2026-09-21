@@ -166,6 +166,11 @@ export default function DailyRevenueReport({
       }
 
       return true;
+    }).sort((a, b) => {
+      // Sort chronologically: oldest first so first bill of the day is #1
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return aTime - bTime;
     });
   }, [allSales, activeDateString, isCashier, todayKey, activeUser, selectedStaffFilter, selectedPaymentFilter, searchTerm]);
 
@@ -759,6 +764,7 @@ export default function DailyRevenueReport({
             <table className="daily-bills-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>#</th>
                   <th>Invoice #</th>
                   <th>Time</th>
                   <th>Customer</th>
@@ -770,10 +776,13 @@ export default function DailyRevenueReport({
                 </tr>
               </thead>
               <tbody>
-                {daySales.map((s) => {
+                {daySales.map((s, idx) => {
                   const pm = (s.paymentMethod || 'cash').toLowerCase();
                   return (
                     <tr key={s.id || s.invoiceNumber}>
+                      <td style={{ textAlign: 'center', fontWeight: 700, color: '#6366f1', fontSize: '13px' }}>
+                        {idx + 1}
+                      </td>
                       <td>
                         <div className="inv-badge-wrap">
                           <strong className="inv-badge">{s.invoiceNumber || s.id}</strong>

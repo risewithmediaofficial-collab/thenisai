@@ -804,8 +804,17 @@ app.delete('/api/staff/:id', requireAdmin, async (req, res) => {
 app.get('/api/inventory', async (req, res) => {
   const inventory = await Inventory.find({});
   inventory.sort((a, b) => {
-    const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
-    const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+    const getNum = (p) => {
+      const sku = String(p?.skuCode ?? '').trim();
+      const itemNum = String(p?.itemNumber ?? '').trim();
+      const skuMatch = sku.match(/\d+/)?.[0];
+      if (skuMatch) return parseInt(skuMatch, 10);
+      const itemMatch = itemNum.match(/\d+/)?.[0];
+      if (itemMatch) return parseInt(itemMatch, 10);
+      return 999999;
+    };
+    const aNum = getNum(a);
+    const bNum = getNum(b);
     if (aNum !== bNum) return aNum - bNum;
     return String(a.name || '').localeCompare(String(b.name || ''));
   });
@@ -1316,8 +1325,12 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 app.post('/api/bills', async (req, res) => {
   try {
     const billData = req.body;
-    const now = new Date();
-    const invoiceNumber = billData.invoiceNumber || `POS-${now.getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    let invoiceNumber = billData.invoiceNumber;
+    if (!invoiceNumber) {
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todayBillCount = await Bill.countDocuments({ createdAt: { $gte: startOfDay } });
+      invoiceNumber = `POS-${todayBillCount + 1}`;
+    }
 
     const finalBill = await Bill.create({
       ...billData,

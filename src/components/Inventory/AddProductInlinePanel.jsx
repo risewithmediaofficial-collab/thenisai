@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
+import { translateToTamil } from '../../utils/translateToTamil';
 
 export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct }) {
   const { allBillingProducts, getNextAvailableSkuCode, getAvailableSkuCodes, addNewProduct, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
@@ -22,6 +23,9 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [userEditedTamil, setUserEditedTamil] = useState(false);
+  const translateTimerRef = useRef(null);
 
   // Reset and auto-suggest next SKU whenever panel opens
   useEffect(() => {
@@ -39,10 +43,51 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
       });
       setErrorMsg('');
       setSuccessMsg('');
+      setUserEditedTamil(false);
+      setIsTranslating(false);
     }
+    return () => {
+      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
+
+  const handleNameEnChange = (e) => {
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, nameEn: value }));
+    if (errorMsg) setErrorMsg('');
+
+    // Auto-translate to Tamil if user has not explicitly typed a custom Tamil name
+    if (!userEditedTamil || !form.nameTa.trim()) {
+      if (translateTimerRef.current) clearTimeout(translateTimerRef.current);
+      if (!value.trim()) {
+        setForm((prev) => ({ ...prev, nameTa: '' }));
+        setIsTranslating(false);
+        return;
+      }
+      setIsTranslating(true);
+      translateTimerRef.current = setTimeout(async () => {
+        try {
+          const tamil = await translateToTamil(value);
+          if (tamil) {
+            setForm((prev) => ({ ...prev, nameTa: tamil }));
+          }
+        } catch {
+          // ignore translation errors
+        } finally {
+          setIsTranslating(false);
+        }
+      }, 300);
+    }
+  };
+
+  const handleNameTaChange = (e) => {
+    const val = e.target.value;
+    // If cleared, allow auto-translate again
+    setUserEditedTamil(Boolean(val.trim()));
+    setForm((prev) => ({ ...prev, nameTa: val }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -192,7 +237,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 name="nameEn"
                 placeholder="e.g., Ghee Mysore Pak"
                 value={form.nameEn}
-                onChange={handleChange}
+                onChange={handleNameEnChange}
                 className="panel-input"
                 autoFocus
                 required
@@ -201,8 +246,19 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
 
             {/* Tamil Name */}
             <div className="form-field-group">
-              <label htmlFor="prod-name-ta">
-                Tamil Name (Optional)
+              <label htmlFor="prod-name-ta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Tamil Name</span>
+                {isTranslating ? (
+                  <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 600 }}>
+                    Translating...
+                  </span>
+                ) : form.nameTa ? (
+                  <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>
+                    ✓ Auto-translated
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>Auto-fills from English</span>
+                )}
               </label>
               <input
                 id="prod-name-ta"
@@ -210,7 +266,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 name="nameTa"
                 placeholder="e.g., நெய் மைசூர் பாக்"
                 value={form.nameTa}
-                onChange={handleChange}
+                onChange={handleNameTaChange}
                 className="panel-input"
               />
             </div>
