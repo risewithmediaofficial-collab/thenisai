@@ -40,12 +40,16 @@ export default function AdminDashboard() {
     deleteBill,
     deleteBills,
     restoreBill,
+    restoreBills,
     permanentDeleteBill,
+    permanentDeleteBills,
     fetchRecycleBinBills,
     // Product Deletion & 30-Day Recycle Bin
     recycleBinProducts,
     restoreProduct,
+    restoreProducts,
     permanentDeleteProduct,
+    permanentDeleteProducts,
     fetchRecycleBinProducts,
     // Unified Activity Audit Trail
     activityLogs,
@@ -109,6 +113,8 @@ export default function AdminDashboard() {
   // Recycle Bin filter & sub-tab state
   const [recycleBinTab, setRecycleBinTab] = useState('bills'); // 'bills' | 'products'
   const [recycleSearchTerm, setRecycleSearchTerm] = useState('');
+  const [selectedRecycleBillIds, setSelectedRecycleBillIds] = useState(new Set());
+  const [selectedRecycleProductIds, setSelectedRecycleProductIds] = useState(new Set());
   const [isRefreshingRecycle, setIsRefreshingRecycle] = useState(false);
   const [productToRestore, setProductToRestore] = useState(null);
   const [productToPurge, setProductToPurge] = useState(null);
@@ -548,6 +554,84 @@ export default function AdminDashboard() {
       return true;
     });
   }, [recycleBinProducts, recycleSearchTerm]);
+
+  // Recycle Bin Bills Selection Handlers
+  const handleToggleSelectRecycleBill = (billKey) => {
+    setSelectedRecycleBillIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(billKey)) {
+        next.delete(billKey);
+      } else {
+        next.add(billKey);
+      }
+      return next;
+    });
+  };
+
+  const isAllFilteredRecycleBillsSelected = useMemo(() => {
+    if (filteredRecycleBills.length === 0) return false;
+    return filteredRecycleBills.every((b) => selectedRecycleBillIds.has(b.id || b.invoiceNumber));
+  }, [filteredRecycleBills, selectedRecycleBillIds]);
+
+  const handleToggleSelectAllRecycleBills = () => {
+    if (isAllFilteredRecycleBillsSelected) {
+      setSelectedRecycleBillIds(new Set());
+    } else {
+      const allIds = new Set(filteredRecycleBills.map((b) => b.id || b.invoiceNumber));
+      setSelectedRecycleBillIds(allIds);
+    }
+  };
+
+  const handleBulkPurgeSelectedBills = () => {
+    const selected = filteredRecycleBills.filter((b) => selectedRecycleBillIds.has(b.id || b.invoiceNumber));
+    if (selected.length === 0) return;
+    setBillToPurge(selected);
+  };
+
+  const handleBulkRestoreSelectedBills = () => {
+    const selected = filteredRecycleBills.filter((b) => selectedRecycleBillIds.has(b.id || b.invoiceNumber));
+    if (selected.length === 0) return;
+    setBillToRestore(selected);
+  };
+
+  // Recycle Bin Products Selection Handlers
+  const handleToggleSelectRecycleProduct = (productId) => {
+    setSelectedRecycleProductIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(productId)) {
+        next.delete(productId);
+      } else {
+        next.add(productId);
+      }
+      return next;
+    });
+  };
+
+  const isAllFilteredRecycleProductsSelected = useMemo(() => {
+    if (filteredRecycleProducts.length === 0) return false;
+    return filteredRecycleProducts.every((p) => selectedRecycleProductIds.has(p.id));
+  }, [filteredRecycleProducts, selectedRecycleProductIds]);
+
+  const handleToggleSelectAllRecycleProducts = () => {
+    if (isAllFilteredRecycleProductsSelected) {
+      setSelectedRecycleProductIds(new Set());
+    } else {
+      const allIds = new Set(filteredRecycleProducts.map((p) => p.id));
+      setSelectedRecycleProductIds(allIds);
+    }
+  };
+
+  const handleBulkPurgeSelectedProducts = () => {
+    const selected = filteredRecycleProducts.filter((p) => selectedRecycleProductIds.has(p.id));
+    if (selected.length === 0) return;
+    setProductToPurge(selected);
+  };
+
+  const handleBulkRestoreSelectedProducts = () => {
+    const selected = filteredRecycleProducts.filter((p) => selectedRecycleProductIds.has(p.id));
+    if (selected.length === 0) return;
+    setProductToRestore(selected);
+  };
 
   // Unified Filtered Activities for Audit Trail Tab
   const filteredActivities = useMemo(() => {
@@ -2474,121 +2558,230 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <table className="inventory-table recycle-table">
-                    <thead>
-                      <tr>
-                        <th>Invoice No</th>
-                        <th>Deleted On</th>
-                        <th>30-Day Expiry</th>
-                        <th>Cashier / Deleted By</th>
-                        <th>Mandatory Reason</th>
-                        <th>Customer &amp; Items</th>
-                        <th>Amount</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRecycleBills.map((b) => {
-                        const now = Date.now();
-                        const expiryTime = b.expiresAt || (b.deletedAt + 30 * 24 * 60 * 60 * 1000);
-                        const daysLeft = Math.max(0, Math.ceil((expiryTime - now) / (24 * 60 * 60 * 1000)));
+                  <>
+                    {selectedRecycleBillIds.size > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 18px',
+                        background: '#f8fafc',
+                        borderBottom: '2px solid #e2e8f0',
+                        borderTop: '3px solid #dc2626',
+                        flexWrap: 'wrap',
+                        gap: '10px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                            ✓ {selectedRecycleBillIds.size} {selectedRecycleBillIds.size === 1 ? 'invoice' : 'invoices'} selected
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>
+                            (Total Amount: ₹{filteredRecycleBills.filter(b => selectedRecycleBillIds.has(b.id || b.invoiceNumber)).reduce((sum, b) => sum + Number(b.billData?.grandTotal || 0), 0).toLocaleString('en-IN')})
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecycleBillIds(new Set())}
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              padding: '6px 12px',
+                              background: '#fff',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '6px',
+                              color: '#475569',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Deselect All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleBulkRestoreSelectedBills}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              padding: '6px 14px',
+                              background: '#16a34a',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="1 4 1 10 7 10" />
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                            </svg>
+                            Restore Selected ({selectedRecycleBillIds.size})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleBulkPurgeSelectedBills}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              padding: '6px 14px',
+                              background: '#dc2626',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            Delete Selected ({selectedRecycleBillIds.size})
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <table className="inventory-table recycle-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '40px', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isAllFilteredRecycleBillsSelected}
+                              onChange={handleToggleSelectAllRecycleBills}
+                              title="Select / Deselect all visible invoices"
+                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#dc2626' }}
+                            />
+                          </th>
+                          <th>Invoice No</th>
+                          <th>Deleted On</th>
+                          <th>30-Day Expiry</th>
+                          <th>Cashier / Deleted By</th>
+                          <th>Mandatory Reason</th>
+                          <th>Customer &amp; Items</th>
+                          <th>Amount</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecycleBills.map((b) => {
+                          const billKey = b.id || b.invoiceNumber;
+                          const isSelected = selectedRecycleBillIds.has(billKey);
+                          const now = Date.now();
+                          const expiryTime = b.expiresAt || (b.deletedAt + 30 * 24 * 60 * 60 * 1000);
+                          const daysLeft = Math.max(0, Math.ceil((expiryTime - now) / (24 * 60 * 60 * 1000)));
 
-                        const delDateStr = b.deletedAt
-                          ? new Date(b.deletedAt).toLocaleString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : 'Recent';
+                          const delDateStr = b.deletedAt
+                            ? new Date(b.deletedAt).toLocaleString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : 'Recent';
 
-                        return (
-                          <tr key={b.id || b.invoiceNumber}>
-                            <td>
-                              <strong style={{ fontSize: '13px', color: '#0284c7' }}>
-                                {b.invoiceNumber}
-                              </strong>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
-                                {delDateStr}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`recycle-expiry-pill ${daysLeft <= 3 ? 'warning' : 'safe'}`}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                                {daysLeft === 0 ? 'Purges Today' : `${daysLeft} days left`}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
-                                {b.deletedBy?.name || 'Staff'}
-                              </span>
-                              {b.deletedBy?.role && (
-                                <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
-                                  {b.deletedBy.role?.toUpperCase()}
+                          return (
+                            <tr key={billKey} style={{ background: isSelected ? '#fef2f2' : undefined }}>
+                              <td style={{ textAlign: 'center' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleToggleSelectRecycleBill(billKey)}
+                                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#dc2626' }}
+                                />
+                              </td>
+                              <td>
+                                <strong style={{ fontSize: '13px', color: '#0284c7' }}>
+                                  {b.invoiceNumber}
+                                </strong>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                                  {delDateStr}
                                 </span>
-                              )}
-                            </td>
-                            <td>
-                              <span className="deletion-reason-badge">
-                                {b.deletionReason || 'Cancelled by staff'}
-                              </span>
-                            </td>
-                            <td>
-                              <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
-                                {b.billData?.customer?.fullName || 'Walk-in Guest'}
-                                {b.billData?.customer?.phone && (
-                                  <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 400 }}>
-                                    +91 {b.billData.customer.phone}
+                              </td>
+                              <td>
+                                <span className={`recycle-expiry-pill ${daysLeft <= 3 ? 'warning' : 'safe'}`}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                  </svg>
+                                  {daysLeft === 0 ? 'Purges Today' : `${daysLeft} days left`}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
+                                  {b.deletedBy?.name || 'Staff'}
+                                </span>
+                                {b.deletedBy?.role && (
+                                  <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
+                                    {b.deletedBy.role?.toUpperCase()}
                                   </span>
                                 )}
-                                <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                                  {b.billData?.items?.length || 0} item(s) sold
+                              </td>
+                              <td>
+                                <span className="deletion-reason-badge">
+                                  {b.deletionReason || 'Cancelled by staff'}
                                 </span>
-                              </div>
-                            </td>
-                            <td>
-                              <strong style={{ fontSize: '14px', color: '#0f172a' }}>
-                                ₹{b.billData?.grandTotal || 0}
-                              </strong>
-                            </td>
-                            <td className="recycle-action-cell">
-                              <div className="recycle-action-buttons">
-                                <button
-                                  type="button"
-                                  className="btn-restore-bill"
-                                  onClick={() => setBillToRestore(b)}
-                                  title="Restore bill back to active sales"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="1 4 1 10 7 10" />
-                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-                                  </svg>
-                                  Restore Bill
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-purge-bill"
-                                  onClick={() => setBillToPurge(b)}
-                                  title="Permanently delete from database"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                  </svg>
-                                  Purge
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                              </td>
+                              <td>
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155' }}>
+                                  {b.billData?.customer?.fullName || 'Walk-in Guest'}
+                                  {b.billData?.customer?.phone && (
+                                    <span style={{ display: 'block', fontSize: '11px', color: '#64748b', fontWeight: 400 }}>
+                                      +91 {b.billData.customer.phone}
+                                    </span>
+                                  )}
+                                  <span style={{ display: 'block', fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                                    {b.billData?.items?.length || 0} item(s) sold
+                                  </span>
+                                </div>
+                              </td>
+                              <td>
+                                <strong style={{ fontSize: '14px', color: '#0f172a' }}>
+                                  ₹{b.billData?.grandTotal || 0}
+                                </strong>
+                              </td>
+                              <td className="recycle-action-cell">
+                                <div className="recycle-action-buttons">
+                                  <button
+                                    type="button"
+                                    className="btn-restore-bill"
+                                    onClick={() => setBillToRestore(b)}
+                                    title="Restore bill back to active sales"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="1 4 1 10 7 10" />
+                                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                    </svg>
+                                    Restore Bill
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-purge-bill"
+                                    onClick={() => setBillToPurge(b)}
+                                    title="Permanently delete from database"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" />
+                                      <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Purge
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </>
                 )
               ) : (
                 /* DELETED PRODUCTS TABLE */
@@ -2603,142 +2796,247 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <table className="inventory-table recycle-table">
-                    <thead>
-                      <tr>
-                        <th>Product Info</th>
-                        <th>Category &amp; Unit</th>
-                        <th>Price &amp; Stock</th>
-                        <th>Deleted On</th>
-                        <th>30-Day Expiry</th>
-                        <th>Deleted By</th>
-                        <th>Reason</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredRecycleProducts.map((p) => {
-                        const now = Date.now();
-                        const expiryTime = p.expiresAt || (p.deletedAt + 30 * 24 * 60 * 60 * 1000);
-                        const daysLeft = Math.max(0, Math.ceil((expiryTime - now) / (24 * 60 * 60 * 1000)));
+                  <>
+                    {selectedRecycleProductIds.size > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '12px 18px',
+                        background: '#f8fafc',
+                        borderBottom: '2px solid #e2e8f0',
+                        borderTop: '3px solid #dc2626',
+                        flexWrap: 'wrap',
+                        gap: '10px'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                            ✓ {selectedRecycleProductIds.size} {selectedRecycleProductIds.size === 1 ? 'product' : 'products'} selected
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecycleProductIds(new Set())}
+                            style={{
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              padding: '6px 12px',
+                              background: '#fff',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '6px',
+                              color: '#475569',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Deselect All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleBulkRestoreSelectedProducts}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              padding: '6px 14px',
+                              background: '#16a34a',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 4px rgba(22, 163, 74, 0.25)'
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="1 4 1 10 7 10" />
+                              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                            </svg>
+                            Restore Selected ({selectedRecycleProductIds.size})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleBulkPurgeSelectedProducts}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              fontSize: '12px',
+                              fontWeight: 700,
+                              padding: '6px 14px',
+                              background: '#dc2626',
+                              border: 'none',
+                              borderRadius: '6px',
+                              color: '#fff',
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 4px rgba(220, 38, 38, 0.25)'
+                            }}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                            Delete Selected ({selectedRecycleProductIds.size})
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    <table className="inventory-table recycle-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: '40px', textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isAllFilteredRecycleProductsSelected}
+                              onChange={handleToggleSelectAllRecycleProducts}
+                              title="Select / Deselect all visible products"
+                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#dc2626' }}
+                            />
+                          </th>
+                          <th>Product Info</th>
+                          <th>Category &amp; Unit</th>
+                          <th>Price &amp; Stock</th>
+                          <th>Deleted On</th>
+                          <th>30-Day Expiry</th>
+                          <th>Deleted By</th>
+                          <th>Reason</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecycleProducts.map((p) => {
+                          const isSelected = selectedRecycleProductIds.has(p.id);
+                          const now = Date.now();
+                          const expiryTime = p.expiresAt || (p.deletedAt + 30 * 24 * 60 * 60 * 1000);
+                          const daysLeft = Math.max(0, Math.ceil((expiryTime - now) / (24 * 60 * 60 * 1000)));
 
-                        const delDateStr = p.deletedAt
-                          ? new Date(p.deletedAt).toLocaleString('en-IN', {
-                              day: '2-digit',
-                              month: 'short',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })
-                          : 'Recent';
+                          const delDateStr = p.deletedAt
+                            ? new Date(p.deletedAt).toLocaleString('en-IN', {
+                                day: '2-digit',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            : 'Recent';
 
-                        const prodPrice = p.productData?.price || p.price || 0;
-                        const prodUnit = p.productData?.unit || p.unit || 'kg';
-                        const prodCategory = p.productData?.category || p.category || 'sweets';
+                          const prodPrice = p.productData?.price || p.price || 0;
+                          const prodUnit = p.productData?.unit || p.unit || 'kg';
+                          const prodCategory = p.productData?.category || p.category || 'sweets';
 
-                        return (
-                          <tr key={p.id}>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', overflow: 'hidden' }}>
-                                  {p.productData?.image ? (
-                                    <img src={p.productData.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                                  ) : (
-                                    '🍬'
-                                  )}
-                                </div>
-                                <div>
-                                  <strong style={{ fontSize: '13px', color: '#0f172a' }}>
-                                    {p.englishName || p.name}
-                                  </strong>
-                                  {p.tamilName && (
-                                    <span style={{ display: 'block', fontSize: '11px', color: '#b45309' }}>
-                                      {p.tamilName}
+                          return (
+                            <tr key={p.id} style={{ background: isSelected ? '#fef2f2' : undefined }}>
+                              <td style={{ textAlign: 'center' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => handleToggleSelectRecycleProduct(p.id)}
+                                  style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#dc2626' }}
+                                />
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', overflow: 'hidden' }}>
+                                    {p.productData?.image ? (
+                                      <img src={p.productData.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                                    ) : (
+                                      '🍬'
+                                    )}
+                                  </div>
+                                  <div>
+                                    <strong style={{ fontSize: '13px', color: '#0f172a' }}>
+                                      {p.englishName || p.name}
+                                    </strong>
+                                    {p.tamilName && (
+                                      <span style={{ display: 'block', fontSize: '11px', color: '#b45309' }}>
+                                        {p.tamilName}
+                                      </span>
+                                    )}
+                                    <span style={{ display: 'inline-block', fontSize: '10px', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px', marginTop: '2px' }}>
+                                      ID: {p.id}
                                     </span>
-                                  )}
-                                  <span style={{ display: 'inline-block', fontSize: '10px', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: '4px', marginTop: '2px' }}>
-                                    ID: {p.id}
-                                  </span>
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155', textTransform: 'capitalize' }}>
-                                {prodCategory}
-                              </span>
-                              <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>
-                                Per {prodUnit}
-                              </span>
-                            </td>
-                            <td>
-                              <strong style={{ fontSize: '13.5px', color: '#0f172a' }}>
-                                ₹{prodPrice}
-                              </strong>
-                              <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>
-                                Stock: {p.productData?.stockKg ?? '0'} {prodUnit}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
-                                {delDateStr}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={`recycle-expiry-pill ${daysLeft <= 3 ? 'warning' : 'safe'}`}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                                {daysLeft === 0 ? 'Purges Today' : `${daysLeft} days left`}
-                              </span>
-                            </td>
-                            <td>
-                              <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
-                                {p.deletedBy?.name || 'Staff'}
-                              </span>
-                              {p.deletedBy?.role && (
-                                <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
-                                  {p.deletedBy.role?.toUpperCase()}
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#334155', textTransform: 'capitalize' }}>
+                                  {prodCategory}
                                 </span>
-                              )}
-                            </td>
-                            <td>
-                              <span className="deletion-reason-badge">
-                                {p.deletionReason || 'Removed from catalog'}
-                              </span>
-                            </td>
-                            <td className="recycle-action-cell">
-                              <div className="recycle-action-buttons">
-                                <button
-                                  type="button"
-                                  className="btn-restore-bill"
-                                  onClick={() => setProductToRestore(p)}
-                                  title="Restore product back to active catalog"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <polyline points="1 4 1 10 7 10" />
-                                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>
+                                  Per {prodUnit}
+                                </span>
+                              </td>
+                              <td>
+                                <strong style={{ fontSize: '13.5px', color: '#0f172a' }}>
+                                  ₹{prodPrice}
+                                </strong>
+                                <span style={{ display: 'block', fontSize: '11px', color: '#64748b' }}>
+                                  Stock: {p.productData?.stockKg ?? '0'} {prodUnit}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>
+                                  {delDateStr}
+                                </span>
+                              </td>
+                              <td>
+                                <span className={`recycle-expiry-pill ${daysLeft <= 3 ? 'warning' : 'safe'}`}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
                                   </svg>
-                                  Restore Product
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn-purge-bill"
-                                  onClick={() => setProductToPurge(p)}
-                                  title="Permanently expunge product"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                  </svg>
-                                  Purge
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                                  {daysLeft === 0 ? 'Purges Today' : `${daysLeft} days left`}
+                                </span>
+                              </td>
+                              <td>
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
+                                  {p.deletedBy?.name || 'Staff'}
+                                </span>
+                                {p.deletedBy?.role && (
+                                  <span style={{ display: 'block', fontSize: '10px', color: '#64748b' }}>
+                                    {p.deletedBy.role?.toUpperCase()}
+                                  </span>
+                                )}
+                              </td>
+                              <td>
+                                <span className="deletion-reason-badge">
+                                  {p.deletionReason || 'Removed from catalog'}
+                                </span>
+                              </td>
+                              <td className="recycle-action-cell">
+                                <div className="recycle-action-buttons">
+                                  <button
+                                    type="button"
+                                    className="btn-restore-bill"
+                                    onClick={() => setProductToRestore(p)}
+                                    title="Restore product back to active catalog"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="1 4 1 10 7 10" />
+                                      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                                    </svg>
+                                    Restore Product
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn-purge-bill"
+                                    onClick={() => setProductToPurge(p)}
+                                    title="Permanently expunge product"
+                                  >
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" />
+                                      <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Purge
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </>
                 )
               )}
             </div>
@@ -3015,8 +3313,12 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#166534' }}>Restore Deleted Invoice</h4>
-                    <span style={{ fontSize: '11px', color: '#15803d' }}>Invoice #{billToRestore.invoiceNumber} will return to active sales</span>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#166534' }}>
+                      {Array.isArray(billToRestore) ? `Restore ${billToRestore.length} Invoices` : 'Restore Deleted Invoice'}
+                    </h4>
+                    <span style={{ fontSize: '11px', color: '#15803d' }}>
+                      {Array.isArray(billToRestore) ? `${billToRestore.length} invoices will return to active sales` : `Invoice #${billToRestore.invoiceNumber} will return to active sales`}
+                    </span>
                   </div>
                 </div>
                 <button type="button" className="admin-modal-close" onClick={() => setBillToRestore(null)}>
@@ -3028,12 +3330,22 @@ export default function AdminDashboard() {
               </div>
               <div style={{ padding: '20px 24px' }}>
                 <p style={{ fontSize: '13px', color: '#334155', margin: '0 0 12px', lineHeight: 1.5 }}>
-                  This will restore invoice <strong>#{billToRestore.invoiceNumber}</strong> (Amount: <strong>₹{billToRestore.billData?.grandTotal}</strong>) back to active sales, POS shift bills, and daily revenue reports.
+                  {Array.isArray(billToRestore) ? (
+                    <>
+                      This will restore <strong>{billToRestore.length} selected invoices</strong> (Total Amount: <strong>₹{billToRestore.reduce((sum, b) => sum + Number(b.billData?.grandTotal || 0), 0).toLocaleString('en-IN')}</strong>) back to active sales, POS shift bills, and daily revenue reports.
+                    </>
+                  ) : (
+                    <>
+                      This will restore invoice <strong>#{billToRestore.invoiceNumber}</strong> (Amount: <strong>₹{billToRestore.billData?.grandTotal}</strong>) back to active sales, POS shift bills, and daily revenue reports.
+                    </>
+                  )}
                 </p>
-                <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', marginBottom: '18px' }}>
-                  <span style={{ color: '#64748b' }}>Original Deletion Reason: </span>
-                  <strong style={{ color: '#0f172a' }}>{billToRestore.deletionReason}</strong>
-                </div>
+                {!Array.isArray(billToRestore) && (
+                  <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', marginBottom: '18px' }}>
+                    <span style={{ color: '#64748b' }}>Original Deletion Reason: </span>
+                    <strong style={{ color: '#0f172a' }}>{billToRestore.deletionReason}</strong>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
@@ -3046,7 +3358,18 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await restoreBill(billToRestore.id || billToRestore.invoiceNumber, user);
+                        if (Array.isArray(billToRestore)) {
+                          const ids = billToRestore.map((b) => b.id || b.invoiceNumber);
+                          await restoreBills(ids, user);
+                          setSelectedRecycleBillIds(new Set());
+                        } else {
+                          await restoreBill(billToRestore.id || billToRestore.invoiceNumber, user);
+                          setSelectedRecycleBillIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(billToRestore.id || billToRestore.invoiceNumber);
+                            return next;
+                          });
+                        }
                         setBillToRestore(null);
                       } catch (err) {
                         alert(err?.message || 'Restore failed. Please try again.');
@@ -3075,7 +3398,9 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fef2f2' }}>Permanently Purge Invoice</h4>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fef2f2' }}>
+                      {Array.isArray(billToPurge) ? `Permanently Purge ${billToPurge.length} Invoices` : 'Permanently Purge Invoice'}
+                    </h4>
                     <span style={{ fontSize: '11px', color: '#fca5a5' }}>Permanent deletion cannot be undone</span>
                   </div>
                 </div>
@@ -3088,7 +3413,15 @@ export default function AdminDashboard() {
               </div>
               <div style={{ padding: '20px 24px' }}>
                 <p style={{ fontSize: '13px', color: '#334155', margin: '0 0 16px', lineHeight: 1.5 }}>
-                  Are you sure you want to permanently purge invoice <strong>#{billToPurge.invoiceNumber}</strong>? It will be permanently removed from the 30-day recycle bin and cannot be restored again.
+                  {Array.isArray(billToPurge) ? (
+                    <>
+                      Are you sure you want to permanently purge <strong>{billToPurge.length} selected invoices</strong> (Total Amount: <strong>₹{billToPurge.reduce((sum, b) => sum + Number(b.billData?.grandTotal || 0), 0).toLocaleString('en-IN')}</strong>)? They will be permanently removed from the 30-day recycle bin and cannot be restored again.
+                    </>
+                  ) : (
+                    <>
+                      Are you sure you want to permanently purge invoice <strong>#{billToPurge.invoiceNumber}</strong>? It will be permanently removed from the 30-day recycle bin and cannot be restored again.
+                    </>
+                  )}
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
@@ -3102,7 +3435,18 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await permanentDeleteBill(billToPurge.id || billToPurge.invoiceNumber, user);
+                        if (Array.isArray(billToPurge)) {
+                          const ids = billToPurge.map((b) => b.id || b.invoiceNumber);
+                          await permanentDeleteBills(ids, user);
+                          setSelectedRecycleBillIds(new Set());
+                        } else {
+                          await permanentDeleteBill(billToPurge.id || billToPurge.invoiceNumber, user);
+                          setSelectedRecycleBillIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(billToPurge.id || billToPurge.invoiceNumber);
+                            return next;
+                          });
+                        }
                         setBillToPurge(null);
                       } catch (err) {
                         alert(err?.message || 'Purge failed. Please try again.');
@@ -3131,8 +3475,10 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#166534' }}>Restore Product</h4>
-                    <span style={{ fontSize: '11px', color: '#15803d' }}>Returns product back to inventory catalog</span>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#166534' }}>
+                      {Array.isArray(productToRestore) ? `Restore ${productToRestore.length} Products` : 'Restore Product'}
+                    </h4>
+                    <span style={{ fontSize: '11px', color: '#15803d' }}>Returns product(s) back to inventory catalog</span>
                   </div>
                 </div>
                 <button type="button" className="admin-modal-close" onClick={() => setProductToRestore(null)}>
@@ -3144,12 +3490,18 @@ export default function AdminDashboard() {
               </div>
               <div style={{ padding: '20px 24px' }}>
                 <p style={{ fontSize: '13.5px', color: '#334155', margin: '0 0 12px', lineHeight: 1.5 }}>
-                  Are you sure you want to restore <strong>{productToRestore.englishName || productToRestore.name}</strong> back to the active catalog and POS billing counter?
+                  {Array.isArray(productToRestore) ? (
+                    <>Are you sure you want to restore <strong>{productToRestore.length} selected products</strong> back to the active catalog and POS billing counter?</>
+                  ) : (
+                    <>Are you sure you want to restore <strong>{productToRestore.englishName || productToRestore.name}</strong> back to the active catalog and POS billing counter?</>
+                  )}
                 </p>
-                <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', marginBottom: '18px' }}>
-                  <span style={{ color: '#64748b' }}>Original Deletion Reason: </span>
-                  <strong style={{ color: '#0f172a' }}>{productToRestore.deletionReason || 'Removed from catalog'}</strong>
-                </div>
+                {!Array.isArray(productToRestore) && (
+                  <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '12px', marginBottom: '18px' }}>
+                    <span style={{ color: '#64748b' }}>Original Deletion Reason: </span>
+                    <strong style={{ color: '#0f172a' }}>{productToRestore.deletionReason || 'Removed from catalog'}</strong>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
                     type="button"
@@ -3162,7 +3514,18 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await restoreProduct(productToRestore.id, user);
+                        if (Array.isArray(productToRestore)) {
+                          const ids = productToRestore.map((p) => p.id);
+                          await restoreProducts(ids, user);
+                          setSelectedRecycleProductIds(new Set());
+                        } else {
+                          await restoreProduct(productToRestore.id, user);
+                          setSelectedRecycleProductIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(productToRestore.id);
+                            return next;
+                          });
+                        }
                         setProductToRestore(null);
                       } catch (err) {
                         alert(err?.message || 'Restore failed. Please try again.');
@@ -3191,7 +3554,9 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fef2f2' }}>Permanently Purge Product</h4>
+                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fef2f2' }}>
+                      {Array.isArray(productToPurge) ? `Permanently Purge ${productToPurge.length} Products` : 'Permanently Purge Product'}
+                    </h4>
                     <span style={{ fontSize: '11px', color: '#fca5a5' }}>Permanent deletion cannot be undone</span>
                   </div>
                 </div>
@@ -3204,7 +3569,11 @@ export default function AdminDashboard() {
               </div>
               <div style={{ padding: '20px 24px' }}>
                 <p style={{ fontSize: '13px', color: '#334155', margin: '0 0 16px', lineHeight: 1.5 }}>
-                  Are you sure you want to permanently purge product <strong>{productToPurge.englishName || productToPurge.name}</strong>? It will be permanently expunged from the 30-day recycle bin and cannot be restored again.
+                  {Array.isArray(productToPurge) ? (
+                    <>Are you sure you want to permanently purge <strong>{productToPurge.length} selected products</strong>? They will be permanently expunged from the 30-day recycle bin and cannot be restored again.</>
+                  ) : (
+                    <>Are you sure you want to permanently purge product <strong>{productToPurge.englishName || productToPurge.name}</strong>? It will be permanently expunged from the 30-day recycle bin and cannot be restored again.</>
+                  )}
                 </p>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                   <button
@@ -3218,7 +3587,18 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={async () => {
                       try {
-                        await permanentDeleteProduct(productToPurge.id, user);
+                        if (Array.isArray(productToPurge)) {
+                          const ids = productToPurge.map((p) => p.id);
+                          await permanentDeleteProducts(ids, user);
+                          setSelectedRecycleProductIds(new Set());
+                        } else {
+                          await permanentDeleteProduct(productToPurge.id, user);
+                          setSelectedRecycleProductIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(productToPurge.id);
+                            return next;
+                          });
+                        }
                         setProductToPurge(null);
                       } catch (err) {
                         alert(err?.message || 'Purge failed. Please try again.');

@@ -1615,6 +1615,44 @@ export function CartProvider({ children }) {
     return true;
   };
 
+  const permanentDeleteBills = async (billIdsOrInvoices, purgedBy = null) => {
+    if (!Array.isArray(billIdsOrInvoices) || billIdsOrInvoices.length === 0) {
+      throw new Error('Select at least one bill to purge.');
+    }
+    const identifiers = [...new Set(billIdsOrInvoices.filter(Boolean))];
+    const purged = [];
+    const failed = [];
+    for (const id of identifiers) {
+      try {
+        const ok = await permanentDeleteBill(id, purgedBy);
+        if (ok) purged.push(id);
+        else failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    return { purged, failed };
+  };
+
+  const restoreBills = async (billIdsOrInvoices, restoredBy = null) => {
+    if (!Array.isArray(billIdsOrInvoices) || billIdsOrInvoices.length === 0) {
+      throw new Error('Select at least one bill to restore.');
+    }
+    const identifiers = [...new Set(billIdsOrInvoices.filter(Boolean))];
+    const restored = [];
+    const failed = [];
+    for (const id of identifiers) {
+      try {
+        const ok = await restoreBill(id, restoredBy);
+        if (ok) restored.push(id);
+        else failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    return { restored, failed };
+  };
+
   const toggleProductAvailability = async (productId, explicitStateOrUser = null, maybeUser = null) => {
     let nextInactive;
     let userObj = null;
@@ -2165,6 +2203,44 @@ export function CartProvider({ children }) {
     });
 
     return true;
+  };
+
+  const permanentDeleteProducts = async (productIds, purgedBy = null) => {
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('Select at least one product to purge.');
+    }
+    const identifiers = [...new Set(productIds.filter(Boolean))];
+    const purged = [];
+    const failed = [];
+    for (const id of identifiers) {
+      try {
+        const ok = await permanentDeleteProduct(id, purgedBy);
+        if (ok) purged.push(id);
+        else failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    return { purged, failed };
+  };
+
+  const restoreProducts = async (productIds, restoredBy = null) => {
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      throw new Error('Select at least one product to restore.');
+    }
+    const identifiers = [...new Set(productIds.filter(Boolean))];
+    const restored = [];
+    const failed = [];
+    for (const id of identifiers) {
+      try {
+        const ok = await restoreProduct(id, restoredBy);
+        if (ok) restored.push(id);
+        else failed.push(id);
+      } catch {
+        failed.push(id);
+      }
+    }
+    return { restored, failed };
   };
 
   const updateProductMasterPrice = async (productId, newPrice, performedBy = null) => {
@@ -2848,12 +2924,16 @@ export function CartProvider({ children }) {
         deleteBills,
         editBill,
         restoreBill,
+        restoreBills,
         permanentDeleteBill,
+        permanentDeleteBills,
         fetchRecycleBinBills,
         // Product Deletion & 30-Day Recycle Bin
         recycleBinProducts,
         restoreProduct,
+        restoreProducts,
         permanentDeleteProduct,
+        permanentDeleteProducts,
         fetchRecycleBinProducts,
         // Unified Activity Audit Trail
         activityLogs,
