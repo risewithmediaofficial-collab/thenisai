@@ -38,6 +38,7 @@ export default function AdminDashboard() {
     // Bill Deletion & 30-Day Recycle Bin
     recycleBinBills,
     deleteBill,
+    deleteBills,
     restoreBill,
     permanentDeleteBill,
     fetchRecycleBinBills,
@@ -86,6 +87,7 @@ export default function AdminDashboard() {
   const [skuError, setSkuError] = useState('');
   const [deletingProduct, setDeletingProduct] = useState(null);
   const [billToDelete, setBillToDelete] = useState(null);
+  const [selectedSalesIds, setSelectedSalesIds] = useState(new Set());
   const [billToRestore, setBillToRestore] = useState(null);
   const [billToPurge, setBillToPurge] = useState(null);
   const [editBillModalItem, setEditBillModalItem] = useState(null);
@@ -334,6 +336,38 @@ export default function AdminDashboard() {
 
     return true;
   });
+
+  const handleToggleSelectSale = (saleKey) => {
+    setSelectedSalesIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(saleKey)) {
+        next.delete(saleKey);
+      } else {
+        next.add(saleKey);
+      }
+      return next;
+    });
+  };
+
+  const isAllFilteredSalesSelected = useMemo(() => {
+    if (filteredSales.length === 0) return false;
+    return filteredSales.every((s) => selectedSalesIds.has(s.id || s.invoiceNumber));
+  }, [filteredSales, selectedSalesIds]);
+
+  const handleToggleSelectAllSales = () => {
+    if (isAllFilteredSalesSelected) {
+      setSelectedSalesIds(new Set());
+    } else {
+      const allIds = new Set(filteredSales.map((s) => s.id || s.invoiceNumber));
+      setSelectedSalesIds(allIds);
+    }
+  };
+
+  const handleBulkDeleteSelectedSales = () => {
+    const selectedBills = filteredSales.filter((s) => selectedSalesIds.has(s.id || s.invoiceNumber));
+    if (selectedBills.length === 0) return;
+    setBillToDelete(selectedBills);
+  };
 
   const handleSyncAllSales = async () => {
     setIsSyncingSales(true);
@@ -1600,6 +1634,70 @@ export default function AdminDashboard() {
 
             {/* Sales Table Card */}
             <div className="sales-table-card" data-lenis-prevent="true">
+              {selectedSalesIds.size > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 18px',
+                  background: '#f8fafc',
+                  borderBottom: '2px solid #e2e8f0',
+                  borderTop: '3px solid #ef4444',
+                  flexWrap: 'wrap',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                      ✓ {selectedSalesIds.size} {selectedSalesIds.size === 1 ? 'bill' : 'bills'} selected
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      (Total Amount: ₹{filteredSales.filter(s => selectedSalesIds.has(s.id || s.invoiceNumber)).reduce((sum, s) => sum + Number(s.grandTotal || 0), 0).toLocaleString('en-IN')})
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSalesIds(new Set())}
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        padding: '6px 12px',
+                        background: '#fff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        color: '#475569',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkDeleteSelectedSales}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        padding: '6px 14px',
+                        background: '#ef4444',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#fff',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 4px rgba(239, 68, 68, 0.25)'
+                      }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                      Delete Selected ({selectedSalesIds.size})
+                    </button>
+                  </div>
+                </div>
+              )}
               {filteredSales.length === 0 ? (
                 <div className="empty-tab-state">
                   <div className="empty-icon">
@@ -1617,6 +1715,15 @@ export default function AdminDashboard() {
                 <table className="sales-table">
                   <thead>
                     <tr>
+                      <th style={{ width: '40px', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={isAllFilteredSalesSelected}
+                          onChange={handleToggleSelectAllSales}
+                          title="Select / Deselect all visible bills"
+                          style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ef4444' }}
+                        />
+                      </th>
                       <th>Invoice No</th>
                       <th>Date & Time</th>
                       <th>Channel</th>
@@ -1630,11 +1737,22 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSales.map((sale) => (
-                      <tr key={sale.id || sale.invoiceNumber}>
-                        <td>
-                          <strong>{sale.invoiceNumber}</strong>
-                        </td>
+                    {filteredSales.map((sale) => {
+                      const saleKey = sale.id || sale.invoiceNumber;
+                      const isSelected = selectedSalesIds.has(saleKey);
+                      return (
+                        <tr key={saleKey} style={{ background: isSelected ? '#fef2f2' : undefined }}>
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleToggleSelectSale(saleKey)}
+                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ef4444' }}
+                            />
+                          </td>
+                          <td>
+                            <strong>{sale.invoiceNumber}</strong>
+                          </td>
                         <td>
                           <div>{sale.orderDate}</div>
                           <small style={{ color: '#64748B' }}>{sale.orderTime}</small>
@@ -1822,7 +1940,8 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               )}
@@ -2640,11 +2759,22 @@ export default function AdminDashboard() {
           onClose={() => setBillToDelete(null)}
           onConfirmDelete={async (targetBill, reason) => {
             try {
-              await deleteBill(
-                targetBill.id || targetBill.invoiceNumber,
-                reason,
-                user
-              );
+              if (Array.isArray(targetBill)) {
+                const ids = targetBill.map((b) => b.id || b.invoiceNumber);
+                await deleteBills(ids, reason, user);
+                setSelectedSalesIds(new Set());
+              } else {
+                await deleteBill(
+                  targetBill.id || targetBill.invoiceNumber,
+                  reason,
+                  user
+                );
+                setSelectedSalesIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(targetBill.id || targetBill.invoiceNumber);
+                  return next;
+                });
+              }
               setBillToDelete(null);
             } catch (err) {
               alert(err?.message || 'Delete failed. Please try again.');
