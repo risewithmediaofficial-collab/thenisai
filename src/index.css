@@ -6622,7 +6622,7 @@ time, .hours {
 }
 
 /* =========================================================
-   4. RIGHT COLUMN: ACTIVE POS CASH REGISTER (Dedicated Independent Scroll)
+   4. RIGHT COLUMN: ACTIVE POS CASH REGISTER (Fixed Layout, Inline Items Scroll)
    ========================================================= */
 .pos-bill-pane {
   display: flex;
@@ -6630,26 +6630,11 @@ time, .hours {
   height: 100%;
   max-height: 100%;
   min-height: 0;
-  overflow-y: auto !important;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+  overflow: hidden !important;
   background: #FFFFFF;
   border-left: none;
   box-shadow: -2px 0 12px rgba(15, 23, 42, 0.04);
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
-}
-
-.pos-bill-pane::-webkit-scrollbar {
-  width: 6px;
-}
-.pos-bill-pane::-webkit-scrollbar-track {
-  background: transparent;
-}
-.pos-bill-pane::-webkit-scrollbar-thumb {
-  background-color: #CBD5E1;
-  border-radius: 6px;
 }
 
 .pos-bill-header {
@@ -6993,13 +6978,34 @@ time, .hours {
   box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
 }
 
-/* Active Bill Items List: Natural Flow (Whole Bill Pane Scrolls Smoothly) */
+/* Active Bill Items List: Inline Scrollable (Items scroll internally; Header & Totals stay pinned) */
 .pos-bill-items {
-  flex: 1 0 auto;
-  min-height: auto;
-  overflow: visible !important;
+  flex: 1 1 0px;
+  min-height: 0;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 12px 20px;
   background: #FFFFFF;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 transparent;
+}
+
+.pos-bill-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pos-bill-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pos-bill-items::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border-radius: 6px;
+}
+
+.pos-bill-items::-webkit-scrollbar-thumb:hover {
+  background-color: #94A3B8;
 }
 
 .pos-empty-bill {
@@ -7404,6 +7410,7 @@ time, .hours {
   flex-direction: column;
   gap: 8px;
   z-index: 10;
+  box-shadow: 0 -2px 8px rgba(15, 23, 42, 0.04);
 }
 
 .calc-item {
@@ -9243,7 +9250,7 @@ time, .hours {
     width: 100% !important;
     max-width: 100% !important;
     border-left: none;
-    overflow-y: auto !important;
+    overflow: hidden !important;
   }
 
   .pos-sweets-grid {

@@ -691,6 +691,19 @@ export default function BillingCounter() {
   // Catalog pane ref to manage scroll on category switch
   const catalogPaneRef = useRef(null);
 
+  // Bill items list ref for inline scrolling & auto-scroll on add
+  const billItemsRef = useRef(null);
+  const prevBillItemsCount = useRef(billItems.length);
+
+  useEffect(() => {
+    if (billItems.length > prevBillItemsCount.current) {
+      if (billItemsRef.current) {
+        billItemsRef.current.scrollTop = billItemsRef.current.scrollHeight;
+      }
+    }
+    prevBillItemsCount.current = billItems.length;
+  }, [billItems.length]);
+
   useEffect(() => {
     if (catalogPaneRef.current) {
       catalogPaneRef.current.scrollTop = 0;
@@ -2445,8 +2458,8 @@ export default function BillingCounter() {
                 />
               </div>
 
-              {/* Active Bill Items List (Independently Scrollable with data-lenis-prevent) */}
-              <div className="pos-bill-items" data-lenis-prevent>
+              {/* Active Bill Items List (Inline Scrollable with data-lenis-prevent) */}
+              <div className="pos-bill-items" data-lenis-prevent ref={billItemsRef}>
                 {billItems.length === 0 ? (
                   <div className="pos-empty-bill">
                     <div className="pos-empty-icon">
