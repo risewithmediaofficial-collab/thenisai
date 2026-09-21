@@ -4,7 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { DEFAULT_PRODUCT_CATEGORIES, DEFAULT_PRODUCT_UNITS } from '../../context/CartContext';
 
 export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct }) {
-  const { getNextAvailableSkuCode, getAvailableSkuCodes, addNewProduct, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
+  const { allBillingProducts, getNextAvailableSkuCode, getAvailableSkuCodes, addNewProduct, allCategories: ctxCategories, allUnits: ctxUnits, customCategories, customUnits } = useCart();
 
   const allCategories = ctxCategories || [...DEFAULT_PRODUCT_CATEGORIES, ...customCategories];
   const allUnits = ctxUnits || [...DEFAULT_PRODUCT_UNITS, ...customUnits];
@@ -70,6 +70,19 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
     if (isNaN(priceNum) || priceNum <= 0) {
       setErrorMsg('Please enter a valid selling price per unit.');
       return;
+    }
+
+    const enteredSku = form.skuCode.trim();
+    if (enteredSku) {
+      const duplicate = (allBillingProducts || []).find((p) => {
+        const raw = String(p.skuCode ?? p.itemNumber ?? '').trim();
+        return raw && raw.toLowerCase() === enteredSku.toLowerCase();
+      });
+      if (duplicate) {
+        const dupName = duplicate.englishName || duplicate.name.split('—')[0].trim();
+        setErrorMsg(`SKU #${enteredSku} is already added for "${dupName}". Please choose a different SKU number.`);
+        return;
+      }
     }
 
     setIsSubmitting(true);

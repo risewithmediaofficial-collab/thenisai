@@ -2765,6 +2765,206 @@ time, .hours {
 }
 
 /* ==========================================================================
+   RECYCLE BIN DASHBOARD RESPONSIVE ARCHITECTURE
+   ========================================================================== */
+.admin-recycle-tab {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.recycle-header-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-refresh-recycle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-refresh-recycle:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.recycle-subtabs-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.recycle-subtab-btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1.5px solid #cbd5e1;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.recycle-subtab-btn:hover {
+  border-color: #b45309;
+  color: #b45309;
+}
+
+.recycle-subtab-btn.active {
+  border-color: #b45309;
+  background: #b45309;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.2);
+}
+
+.recycle-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.recycle-table {
+  min-width: 760px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.recycle-table th {
+  background: #f8fafc;
+  padding: 12px 14px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.recycle-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 0.85rem;
+}
+
+.recycle-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.recycle-action-buttons .btn-restore-bill,
+.recycle-action-buttons .btn-purge-bill {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Tablet Screens (<= 900px) */
+@media (max-width: 900px) {
+  .recycle-kpis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px;
+  }
+
+  .recycle-table {
+    min-width: 720px;
+  }
+}
+
+/* Mobile Screens (<= 640px) */
+@media (max-width: 640px) {
+  .recycle-header-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .btn-refresh-recycle {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+  }
+
+  .recycle-kpis-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  .recycle-subtabs-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .recycle-subtab-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .recycle-table {
+    min-width: 680px;
+  }
+
+  .recycle-table th,
+  .recycle-table td {
+    padding: 10px 10px;
+    font-size: 0.8rem;
+  }
+
+  .recycle-action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .recycle-action-buttons button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Small Phones (<= 420px) */
+@media (max-width: 420px) {
+  .recycle-header-strip h2 {
+    font-size: 18px !important;
+  }
+
+  .recycle-table th,
+  .recycle-table td {
+    padding: 8px 8px;
+    font-size: 0.76rem;
+  }
+}
+
+/* ==========================================================================
    ADMIN ACTIVITY AUDIT LOGS STYLING
    ========================================================================== */
 .audit-type-pill {

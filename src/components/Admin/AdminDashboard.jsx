@@ -426,14 +426,10 @@ export default function AdminDashboard() {
       }
       return true;
     }).sort((a, b) => {
-      const aNum = Number(a.skuCode ?? a.itemNumber);
-      const bNum = Number(b.skuCode ?? b.itemNumber);
-      const aValid = Number.isInteger(aNum) && aNum > 0;
-      const bValid = Number.isInteger(bNum) && bNum > 0;
-      if (aValid && bValid) return aNum - bNum;
-      if (aValid) return -1;
-      if (bValid) return 1;
-      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
+      const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      if (aNum !== bNum) return aNum - bNum;
+      return String(a.englishName || a.name).localeCompare(String(b.englishName || b.name));
     });
   }, [allBillingProducts, inventoryCategoryFilter, inventoryStatusFilter, inventorySearchTerm, productAvailabilityMap, inventory]);
 
@@ -1207,6 +1203,14 @@ export default function AdminDashboard() {
                                   onChange={(e) => { setNewSkuInput(e.target.value); setSkuError(''); }}
                                   onKeyDown={async (e) => {
                                     if (e.key === 'Enter') {
+                                      const trimmed = newSkuInput.trim();
+                                      if (trimmed) {
+                                        const duplicate = allBillingProducts.find((p) => p.id !== prod.id && String(p.skuCode ?? p.itemNumber ?? '').trim().toLowerCase() === trimmed.toLowerCase());
+                                        if (duplicate) {
+                                          setSkuError(`SKU #${trimmed} is already added for "${duplicate.englishName || duplicate.name.split('—')[0].trim()}".`);
+                                          return;
+                                        }
+                                      }
                                       const res = await updateProductSkuCode(prod.id, newSkuInput);
                                       if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); }
                                     } else if (e.key === 'Escape') { setEditingSkuProduct(null); setSkuError(''); }
@@ -1217,7 +1221,18 @@ export default function AdminDashboard() {
                                 />
                                 <div style={{ display: 'flex', gap: '4px' }}>
                                   <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                                    onClick={async () => { const res = await updateProductSkuCode(prod.id, newSkuInput); if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); } }}
+                                    onClick={async () => {
+                                      const trimmed = newSkuInput.trim();
+                                      if (trimmed) {
+                                        const duplicate = allBillingProducts.find((p) => p.id !== prod.id && String(p.skuCode ?? p.itemNumber ?? '').trim().toLowerCase() === trimmed.toLowerCase());
+                                        if (duplicate) {
+                                          setSkuError(`SKU #${trimmed} is already added for "${duplicate.englishName || duplicate.name.split('—')[0].trim()}".`);
+                                          return;
+                                        }
+                                      }
+                                      const res = await updateProductSkuCode(prod.id, newSkuInput);
+                                      if (res?.success) { setEditingSkuProduct(null); } else { setSkuError(res?.message || 'Error'); }
+                                    }}
                                   >Save</button>
                                   <button type="button" style={{ fontSize: '10px', padding: '2px 6px', background: '#e2e8f0', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}
                                     onClick={() => { setEditingSkuProduct(null); setSkuError(''); }}
@@ -2191,7 +2206,7 @@ export default function AdminDashboard() {
            ========================================= */}
         {activeTab === 'recycle-bin' && (
           <section className="tab-content admin-recycle-tab">
-            <div className="inventory-header-strip">
+            <div className="inventory-header-strip recycle-header-strip">
               <div>
                 <span className="inventory-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#dc2626', letterSpacing: '0.08em' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -2210,21 +2225,9 @@ export default function AdminDashboard() {
 
               <button
                 type="button"
+                className="btn-refresh-recycle"
                 onClick={handleRefreshRecycle}
                 disabled={isRefreshingRecycle}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  background: '#ffffff',
-                  border: '1px solid #cbd5e1',
-                  borderRadius: '8px',
-                  padding: '8px 14px',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#334155',
-                  cursor: isRefreshingRecycle ? 'wait' : 'pointer',
-                }}
               >
                 <svg
                   width="14"
@@ -2246,7 +2249,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Recycle Bin KPIs */}
-            <div className="inventory-kpis-grid" style={{ marginBottom: '20px' }}>
+            <div className="inventory-kpis-grid recycle-kpis-grid" style={{ marginBottom: '20px' }}>
               <div className="inv-kpi-card warning">
                 <span className="kpi-label">Invoices in Bin</span>
                 <div className="kpi-val">{recycleBinBills.length}</div>
@@ -2267,25 +2270,11 @@ export default function AdminDashboard() {
             </div>
 
             {/* Sub-Tab Selector: Invoices vs Products */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+            <div className="recycle-subtabs-bar">
               <button
                 type="button"
+                className={`recycle-subtab-btn ${recycleBinTab === 'bills' ? 'active' : ''}`}
                 onClick={() => setRecycleBinTab('bills')}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '8px',
-                  border: '1.5px solid',
-                  borderColor: recycleBinTab === 'bills' ? '#b45309' : '#cbd5e1',
-                  background: recycleBinTab === 'bills' ? '#b45309' : '#ffffff',
-                  color: recycleBinTab === 'bills' ? '#ffffff' : '#475569',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s ease',
-                }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -2298,22 +2287,8 @@ export default function AdminDashboard() {
 
               <button
                 type="button"
+                className={`recycle-subtab-btn ${recycleBinTab === 'products' ? 'active' : ''}`}
                 onClick={() => setRecycleBinTab('products')}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '8px',
-                  border: '1.5px solid',
-                  borderColor: recycleBinTab === 'products' ? '#b45309' : '#cbd5e1',
-                  background: recycleBinTab === 'products' ? '#b45309' : '#ffffff',
-                  color: recycleBinTab === 'products' ? '#ffffff' : '#475569',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s ease',
-                }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
@@ -2323,7 +2298,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Search Bar */}
-            <div className="inventory-filter-bar">
+            <div className="inventory-filter-bar recycle-filter-bar">
               <div className="inventory-search-wrap">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="11" cy="11" r="8" />
@@ -2355,7 +2330,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Table Wrap */}
-            <div className="inventory-table-wrap">
+            <div className="inventory-table-wrap recycle-table-wrap">
               {recycleBinTab === 'bills' ? (
                 /* DELETED BILLS TABLE */
                 filteredRecycleBills.length === 0 ? (
@@ -2370,7 +2345,7 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <table className="inventory-table">
+                  <table className="inventory-table recycle-table">
                     <thead>
                       <tr>
                         <th>Invoice No</th>
@@ -2452,14 +2427,13 @@ export default function AdminDashboard() {
                                 ₹{b.billData?.grandTotal || 0}
                               </strong>
                             </td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <td className="recycle-action-cell">
+                              <div className="recycle-action-buttons">
                                 <button
                                   type="button"
                                   className="btn-restore-bill"
                                   onClick={() => setBillToRestore(b)}
                                   title="Restore bill back to active sales"
-                                  style={{ padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="1 4 1 10 7 10" />
@@ -2472,7 +2446,6 @@ export default function AdminDashboard() {
                                   className="btn-purge-bill"
                                   onClick={() => setBillToPurge(b)}
                                   title="Permanently delete from database"
-                                  style={{ padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18" />
@@ -2501,7 +2474,7 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 ) : (
-                  <table className="inventory-table">
+                  <table className="inventory-table recycle-table">
                     <thead>
                       <tr>
                         <th>Product Info</th>
@@ -2604,14 +2577,13 @@ export default function AdminDashboard() {
                                 {p.deletionReason || 'Removed from catalog'}
                               </span>
                             </td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <td className="recycle-action-cell">
+                              <div className="recycle-action-buttons">
                                 <button
                                   type="button"
                                   className="btn-restore-bill"
                                   onClick={() => setProductToRestore(p)}
                                   title="Restore product back to active catalog"
-                                  style={{ padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <polyline points="1 4 1 10 7 10" />
@@ -2624,7 +2596,6 @@ export default function AdminDashboard() {
                                   className="btn-purge-bill"
                                   onClick={() => setProductToPurge(p)}
                                   title="Permanently expunge product"
-                                  style={{ padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <line x1="18" y1="6" x2="6" y2="18" />

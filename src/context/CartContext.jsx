@@ -694,16 +694,12 @@ export function CartProvider({ children }) {
       };
     });
 
-    // Sort numerically by SKU code / itemNumber so items like SKU 2 Coffee appear in proper order
+    // Sort numerically by SKU code / itemNumber so items appear in proper order (1, 2, 3... 12, 13...)
     return mapped.sort((a, b) => {
-      const aNum = Number(a.skuCode ?? a.itemNumber);
-      const bNum = Number(b.skuCode ?? b.itemNumber);
-      const aValid = Number.isInteger(aNum) && aNum > 0;
-      const bValid = Number.isInteger(bNum) && bNum > 0;
-      if (aValid && bValid) return aNum - bNum;
-      if (aValid) return -1;
-      if (bValid) return 1;
-      return String(a.skuCode || a.name).localeCompare(String(b.skuCode || b.name));
+      const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+      if (aNum !== bNum) return aNum - bNum;
+      return String(a.englishName || a.name).localeCompare(String(b.englishName || b.name));
     });
   }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 
@@ -1791,7 +1787,20 @@ export function CartProvider({ children }) {
   const addNewProduct = async (productData, performedBy = null) => {
     const activePerformer = resolveActiveUser(performedBy);
 
-    const generatedSku = resolveUniqueSkuCode(productData.skuCode);
+    const requestedSku = String(productData.skuCode || productData.hsn || '').trim();
+    if (requestedSku) {
+      const activeProducts = getActiveProductsForSku();
+      const duplicate = activeProducts.find((item) => {
+        const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
+        return raw && raw.toLowerCase() === requestedSku.toLowerCase();
+      });
+      if (duplicate) {
+        const dupName = duplicate.englishName || duplicate.name.split('—')[0].trim();
+        throw new Error(`SKU #${requestedSku} is already added for product "${dupName}". Please use a different SKU number.`);
+      }
+    }
+
+    const generatedSku = requestedSku || getNextAvailableSkuCode();
     const nextItemNum = Number(generatedSku) || Number(getNextAvailableSkuCode());
     const generatedHsn = String(productData.hsn ?? '').trim() || generatedSku;
 
@@ -2350,12 +2359,14 @@ export function CartProvider({ children }) {
       return { success: false, message: 'SKU code is required.' };
     }
 
-    const duplicateExists = inventory.some((item) => item.id !== productId && String(item.skuCode ?? item.itemNumber ?? '').trim() === skuStr);
-    if (duplicateExists) {
-      const nextCode = getNextAvailableSkuCode();
+    const duplicate = (allBillingProducts || inventory || []).find(
+      (item) => item.id !== productId && String(item.skuCode ?? item.itemNumber ?? '').trim().toLowerCase() === skuStr.toLowerCase()
+    );
+    if (duplicate) {
+      const dupName = duplicate.englishName || duplicate.name.split('—')[0].trim();
       return {
         success: false,
-        message: `SKU already exists. Use the next available code: ${nextCode}`,
+        message: `SKU #${skuStr} is already added for product "${dupName}". Please use a different SKU number.`,
       };
     }
 

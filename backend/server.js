@@ -803,6 +803,12 @@ app.delete('/api/staff/:id', requireAdmin, async (req, res) => {
 
 app.get('/api/inventory', async (req, res) => {
   const inventory = await Inventory.find({});
+  inventory.sort((a, b) => {
+    const aNum = parseInt(String(a.skuCode ?? a.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+    const bNum = parseInt(String(b.skuCode ?? b.itemNumber ?? '').match(/\d+/)?.[0] || '999999', 10);
+    if (aNum !== bNum) return aNum - bNum;
+    return String(a.name || '').localeCompare(String(b.name || ''));
+  });
   res.json({ success: true, inventory });
 });
 
@@ -864,13 +870,22 @@ app.post('/api/inventory/products', async (req, res) => {
     const existing = await Inventory.findOne({ id });
     if (existing) return res.status(400).json({ success: false, message: 'A product with this identifier or name already exists.' });
 
+    const requestedSku = String(skuCode ?? hsn ?? '').trim();
+    if (requestedSku) {
+      const duplicate = inventoryList.find((item) => {
+        const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim().toLowerCase();
+        return raw && raw === requestedSku.toLowerCase();
+      });
+      if (duplicate) {
+        return res.status(400).json({
+          success: false,
+          message: `SKU code "${requestedSku}" is already added for product "${duplicate.englishName || duplicate.name}". Please use a different SKU number.`,
+        });
+      }
+    }
+
     const finalPrice = parseFloat(price || unitPrice || pricePerKg) || 500;
-    const requestedSku = String(skuCode ?? '').trim();
-    const requestedNumeric = /^\d+$/.test(requestedSku) ? Number(requestedSku) : null;
-    const finalSku = requestedNumeric && !inventoryList.some((item) => {
-      const raw = String(item?.skuCode ?? item?.itemNumber ?? '').trim();
-      return /^\d+$/.test(raw) && Number(raw) === requestedNumeric;
-    }) ? requestedSku : getNextInventoryCode();
+    const finalSku = requestedSku || getNextInventoryCode();
     const finalHsn = String(hsn ?? '').trim() || finalSku;
 
     const newProduct = await Inventory.create({
