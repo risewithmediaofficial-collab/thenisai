@@ -586,6 +586,8 @@ export default function BillingCounter() {
   const [showRecentBillsDropdown, setShowRecentBillsDropdown] = useState(false);
   const [editBillModalItem, setEditBillModalItem] = useState(null);
 
+  const [shiftSortBy, setShiftSortBy] = useState('date-desc');
+
   const filteredShiftBills = myShiftBills.filter((b) => {
     if (billPaymentFilter !== 'all') {
       const pm = (b.paymentMethod || '').toLowerCase();
@@ -608,6 +610,22 @@ export default function BillingCounter() {
     }
     return true;
   });
+
+  const sortedShiftBills = useMemo(() => {
+    const list = [...filteredShiftBills];
+    return list.sort((a, b) => {
+      if (shiftSortBy === 'date-desc') return (b.createdAt || 0) - (a.createdAt || 0);
+      if (shiftSortBy === 'date-asc') return (a.createdAt || 0) - (b.createdAt || 0);
+      if (shiftSortBy === 'inv-asc' || shiftSortBy === 'inv-desc') {
+        const numA = parseInt(String(a.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        const numB = parseInt(String(b.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        return shiftSortBy === 'inv-asc' ? numA - numB : numB - numA;
+      }
+      if (shiftSortBy === 'amount-desc') return (b.grandTotal || 0) - (a.grandTotal || 0);
+      if (shiftSortBy === 'amount-asc') return (a.grandTotal || 0) - (b.grandTotal || 0);
+      return 0;
+    });
+  }, [filteredShiftBills, shiftSortBy]);
 
   const selectedShiftBills = useMemo(() => {
     const selected = new Set(selectedShiftBillIds);
@@ -1292,25 +1310,48 @@ export default function BillingCounter() {
     const year = new Date().getFullYear();
     const isSandbox = isSandboxActive() || user?.role === 'tester' || Boolean(user?.isSandbox);
     
-    // Calculate sequential bill number starting from 1 for today's billed bills
-    const todayKey = new Date().toDateString();
-    const todayBills = (bills || []).filter((b) => {
-      const bDate = b.createdAt ? new Date(b.createdAt).toDateString() : (b.orderDate ? new Date(b.orderDate).toDateString() : '');
-      return bDate === todayKey && !b.isSandbox;
+    // Calculate sequential bill number starting from 1 for active bills
+    // Collect all active bills from state, cache, and ledger to guarantee continuous unique numbering
+    let cachedBills = [];
+    try {
+      cachedBills = JSON.parse(localStorage.getItem('thenisai_bills_cache') || '[]');
+    } catch {}
+    let ledgerBills = [];
+    try {
+      ledgerBills = JSON.parse(localStorage.getItem('thenisai_offline_backup_ledger') || '[]');
+    } catch {}
+
+    const allCandidateBills = [...(bills || []), ...cachedBills, ...ledgerBills];
+    const candidateMap = new Map();
+    allCandidateBills.forEach((b) => {
+      const k = b.id || b._id || b.invoiceNumber;
+      if (k && !candidateMap.has(k)) candidateMap.set(k, b);
+    });
+
+    const activeBills = Array.from(candidateMap.values()).filter((b) => {
+      if (isSandbox) return Boolean(b.isSandbox);
+      return !b.isSandbox;
     });
 
     let nextSeq = 1;
-    const existingNums = todayBills
+    const existingNums = activeBills
       .map((b) => {
-        const match = String(b.invoiceNumber || '').match(/^POS-(\d+)$/i) || String(b.invoiceNumber || '').match(/^(\d+)$/);
+        const invStr = String(b.invoiceNumber || '');
+        const match = isSandbox ? invStr.match(/^TEST-\d+-(\d+)$/i) : (invStr.match(/^POS-(\d+)$/i) || invStr.match(/^(\d+)$/));
         return match ? parseInt(match[1], 10) : 0;
       })
-      .filter((n) => n > 0 && n < 1000); // Exclude legacy random 4-digit numbers (>= 1000)
+      .filter((n) => n > 0 && n < 100000);
 
     if (existingNums.length > 0) {
       nextSeq = Math.max(...existingNums) + 1;
     } else {
       nextSeq = 1;
+    }
+
+    // Ensure continuous unique invoice number: never reuse an existing invoice number
+    const existingInvoices = new Set(activeBills.map((b) => b.invoiceNumber).filter(Boolean));
+    while (existingInvoices.has(isSandbox ? `TEST-${year}-${nextSeq}` : `POS-${nextSeq}`)) {
+      nextSeq += 1;
     }
 
     const invoiceNumber = isSandbox ? `TEST-${year}-${nextSeq}` : `POS-${nextSeq}`;
@@ -3124,6 +3165,32 @@ export default function BillingCounter() {
                   </button>
                 ))}
               </div>
+
+              <div className="shift-sort-wrap" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="filter-label" style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Sort:</span>
+                <select
+                  value={shiftSortBy}
+                  onChange={(e) => setShiftSortBy(e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: '#334155',
+                    cursor: 'pointer'
+                  }}
+                  aria-label="Sort shift bills"
+                >
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="inv-asc">Invoice No: Low to High</option>
+                  <option value="inv-desc">Invoice No: High to Low</option>
+                  <option value="amount-desc">Amount: High to Low</option>
+                  <option value="amount-asc">Amount: Low to High</option>
+                </select>
+              </div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', margin: '0 0 14px', padding: '10px 12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', flexWrap: 'wrap' }}>
@@ -3200,18 +3267,36 @@ export default function BillingCounter() {
                             aria-label="Select all visible bills"
                           />
                         </th>
-                        <th>Invoice No</th>
-                        <th>Time</th>
+                        <th
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          onClick={() => setShiftSortBy(prev => prev === 'inv-asc' ? 'inv-desc' : 'inv-asc')}
+                          title="Click to sort by Invoice No"
+                        >
+                          Invoice No {shiftSortBy === 'inv-asc' ? '▲' : shiftSortBy === 'inv-desc' ? '▼' : ''}
+                        </th>
+                        <th
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          onClick={() => setShiftSortBy(prev => prev === 'date-desc' ? 'date-asc' : 'date-desc')}
+                          title="Click to sort by Time"
+                        >
+                          Time {shiftSortBy === 'date-desc' ? '▼' : shiftSortBy === 'date-asc' ? '▲' : ''}
+                        </th>
                         <th>Customer</th>
                         <th>Items Sold</th>
                         <th>Payment</th>
-                        <th>Amount</th>
+                        <th
+                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          onClick={() => setShiftSortBy(prev => prev === 'amount-desc' ? 'amount-asc' : 'amount-desc')}
+                          title="Click to sort by Amount"
+                        >
+                          Amount {shiftSortBy === 'amount-desc' ? '▼' : shiftSortBy === 'amount-asc' ? '▲' : ''}
+                        </th>
                         <th>Status</th>
                         <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredShiftBills.map((bill) => (
+                      {sortedShiftBills.map((bill) => (
                         <tr key={bill.id || bill.invoiceNumber}>
                           <td>
                             <input

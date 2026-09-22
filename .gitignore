@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 backend/data/backup_*.json
+test-results/
+playwright-report/
+

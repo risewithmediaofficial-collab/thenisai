@@ -1344,6 +1344,7 @@ app.patch('/api/orders/:id/status', async (req, res) => {
 
 app.post('/api/bills', async (req, res) => {
   try {
+    const now = new Date();
     const billData = req.body;
     let invoiceNumber = billData.invoiceNumber;
     if (!invoiceNumber) {

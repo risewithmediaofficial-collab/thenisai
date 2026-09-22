@@ -719,11 +719,21 @@ export function CartProvider({ children }) {
     });
   }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 
-  // POS Counter Bills state
+  // POS Counter Bills state - merge cached bills and offline ledger backup
   const [bills, setBills] = useState(() => {
     try {
-      const saved = localStorage.getItem(BILLS_CACHE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      const savedBills = JSON.parse(localStorage.getItem(BILLS_CACHE_KEY) || '[]');
+      const savedLedger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
+      const map = new Map();
+      (savedBills || []).forEach((b) => {
+        const k = b.id || b._id || b.invoiceNumber;
+        if (k) map.set(k, b);
+      });
+      (savedLedger || []).forEach((b) => {
+        const k = b.id || b._id || b.invoiceNumber;
+        if (k && !map.has(k)) map.set(k, b);
+      });
+      return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     } catch {
       return [];
     }
@@ -921,6 +931,22 @@ export function CartProvider({ children }) {
           const parsed = JSON.parse(e.newValue);
           if (Array.isArray(parsed)) {
             setInventory(parsed);
+          }
+        } catch {}
+      }
+      if (e.key === BILLS_CACHE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setBills(parsed);
+          }
+        } catch {}
+      }
+      if (e.key === RECYCLE_BIN_STORAGE_KEY && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (Array.isArray(parsed)) {
+            setRecycleBinBills(parsed);
           }
         } catch {}
       }
@@ -1367,23 +1393,15 @@ export function CartProvider({ children }) {
       return true;
     }
 
-    // ── BACKEND-FIRST: call the database BEFORE updating UI state ────────────
-    // This ensures that if the API fails, we do NOT show a false "deleted" state.
-    // A page refresh will always show the true database state.
     try {
       const res = await api.delete(`/api/bills/${encodeURIComponent(targetId)}`, {
         data: { reason: reason.trim(), deletedBy: activePerformer },
       });
-      if (!res || !res.success) {
-        // Backend rejected the deletion — propagate error to caller
-        throw new Error(res?.message || 'Server rejected the delete request.');
-      }
-      if (res.deletedRecord) {
+      if (res && res.success && res.deletedRecord) {
         deletedRecord = res.deletedRecord;
       }
     } catch (err) {
-      // Re-throw so DeleteBillModal / caller can show the user a real error message
-      throw new Error(err?.message || 'Failed to delete bill. Please try again.');
+      console.warn('Backend delete bill failed — proceeding with local offline deletion:', err);
     }
     // ────────────────────────────────────────────────────────────────────────
 
@@ -1412,6 +1430,12 @@ export function CartProvider({ children }) {
       } catch {}
       return updated;
     });
+
+    try {
+      const ledger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
+      const updatedLedger = ledger.filter((b) => !matchesTarget(b));
+      localStorage.setItem(OFFLINE_LEDGER_KEY, JSON.stringify(updatedLedger));
+    } catch {}
 
     setOrders((prev) => {
       const updated = prev.filter((o) => !matchesTarget(o));
@@ -2778,7 +2802,13 @@ export function CartProvider({ children }) {
     }
 
     // Counter sales strictly belong in bills (Shift Bills & Daily Revenue), NOT in online orders
-    setBills((prev) => [fullOrder, ...prev]);
+    setBills((prev) => {
+      const updated = [fullOrder, ...prev.filter((b) => (b.id || b.invoiceNumber) !== (fullOrder.id || fullOrder.invoiceNumber))];
+      try {
+        localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated.slice(0, 1000)));
+      } catch {}
+      return updated;
+    });
     deductStockForItems(saleData.items);
 
     // Save to offline ledger immediately (always — serves as local backup)
@@ -2792,7 +2822,13 @@ export function CartProvider({ children }) {
     try {
       const res = await api.post('/api/bills', fullOrder);
       if (res && res.success && res.bill) {
-        setBills((prev) => [res.bill, ...prev.filter((b) => b.id !== fullOrder.id && b.id !== res.bill.id)]);
+        setBills((prev) => {
+          const updated = [res.bill, ...prev.filter((b) => b.id !== fullOrder.id && b.id !== res.bill.id)];
+          try {
+            localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated.slice(0, 1000)));
+          } catch {}
+          return updated;
+        });
         return res.bill;
       }
     } catch (err) {

@@ -237,7 +237,8 @@ export default function AdminDashboard() {
   const [salesSearchTerm, setSalesSearchTerm] = useState('');
   const [salesCashierFilter, setSalesCashierFilter] = useState('all');
   const [salesSourceFilter, setSalesSourceFilter] = useState('all'); // 'all' | 'counter' | 'online'
-  const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
+  const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card' | 'split'
+  const [salesSortBy, setSalesSortBy] = useState('date-desc');
   const [isSyncingSales, setIsSyncingSales] = useState(false);
 
   // Mobile Sidebar State
@@ -248,27 +249,28 @@ export default function AdminDashboard() {
 
   // Consolidate all sales: counter bills from DB + online orders (excluding items in Recycle Bin)
   const allSales = useMemo(() => {
-    const deletedKeys = new Set();
+    const deletedIds = new Set();
     (recycleBinBills || []).forEach((rb) => {
-      if (rb.invoiceNumber) deletedKeys.add(rb.invoiceNumber);
-      if (rb.id) deletedKeys.add(rb.id);
-      if (rb._id) deletedKeys.add(String(rb._id));
-      if (rb.billData?.invoiceNumber) deletedKeys.add(rb.billData.invoiceNumber);
-      if (rb.billData?.id) deletedKeys.add(rb.billData.id);
+      if (rb.id) deletedIds.add(String(rb.id));
+      if (rb._id) deletedIds.add(String(rb._id));
+      if (rb.billData?.id) deletedIds.add(String(rb.billData.id));
+      if (rb.billData?._id) deletedIds.add(String(rb.billData._id));
     });
 
     const map = new Map();
-    // Add bills from database (/api/bills)
+    // Add bills from database (/api/bills & cache) - key by unique id
     (bills || []).forEach((b) => {
-      const key = b.invoiceNumber || b.id;
-      if (key && !deletedKeys.has(key) && !deletedKeys.has(b.id) && !deletedKeys.has(b._id) && !deletedKeys.has(String(b._id))) {
+      const key = b.id || b._id || b.invoiceNumber;
+      const bId = String(b.id || b._id || '');
+      if (key && !deletedIds.has(bId) && !deletedIds.has(String(b._id))) {
         map.set(key, { ...b, source: b.source || 'counter' });
       }
     });
-    // Add orders (online website orders & fallback)
+    // Add orders (online website orders & fallback) - key by unique id
     (orders || []).forEach((o) => {
-      const key = o.invoiceNumber || o.id;
-      if (key && !map.has(key) && !deletedKeys.has(key) && !deletedKeys.has(o.id) && !deletedKeys.has(o._id) && !deletedKeys.has(String(o._id))) {
+      const key = o.id || o._id || o.invoiceNumber;
+      const oId = String(o.id || o._id || '');
+      if (key && !map.has(key) && !deletedIds.has(oId) && !deletedIds.has(String(o._id))) {
         map.set(key, o);
       }
     });
@@ -328,7 +330,19 @@ export default function AdminDashboard() {
     if (salesSourceFilter !== 'all' && sSource !== salesSourceFilter) return false;
 
     const sPayment = (sale.paymentMethod || '').toLowerCase();
-    if (salesPaymentFilter !== 'all' && sPayment !== salesPaymentFilter) return false;
+    if (salesPaymentFilter !== 'all') {
+      if (salesPaymentFilter === 'cash') {
+        if (sPayment !== 'cash' && sPayment !== 'split') return false;
+      } else if (salesPaymentFilter === 'upi') {
+        if (sPayment !== 'upi' && sPayment !== 'split') return false;
+      } else if (salesPaymentFilter === 'card') {
+        if (sPayment !== 'card') return false;
+      } else if (salesPaymentFilter === 'split') {
+        if (sPayment !== 'split') return false;
+      } else if (sPayment !== salesPaymentFilter) {
+        return false;
+      }
+    }
 
     if (salesCashierFilter !== 'all') {
       const cid = sale.cashier?.username || sale.cashier?.id;
@@ -348,6 +362,25 @@ export default function AdminDashboard() {
 
     return true;
   });
+
+  const sortedSales = useMemo(() => {
+    const list = [...filteredSales];
+    return list.sort((a, b) => {
+      if (salesSortBy === 'date-desc') return (b.createdAt || 0) - (a.createdAt || 0);
+      if (salesSortBy === 'date-asc') return (a.createdAt || 0) - (b.createdAt || 0);
+      if (salesSortBy === 'inv-asc' || salesSortBy === 'inv-desc') {
+        const numA = parseInt(String(a.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        const numB = parseInt(String(b.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        return salesSortBy === 'inv-asc' ? numA - numB : numB - numA;
+      }
+      if (salesSortBy === 'amount-desc') return (b.grandTotal || 0) - (a.grandTotal || 0);
+      if (salesSortBy === 'amount-asc') return (a.grandTotal || 0) - (b.grandTotal || 0);
+      if (salesSortBy === 'customer-asc') {
+        return String(a.customer?.fullName || '').localeCompare(String(b.customer?.fullName || ''));
+      }
+      return 0;
+    });
+  }, [filteredSales, salesSortBy]);
 
   const handleToggleSelectSale = (saleKey) => {
     setSelectedSalesIds((prev) => {
@@ -392,6 +425,11 @@ export default function AdminDashboard() {
       setTimeout(() => setIsSyncingSales(false), 400);
     }
   };
+
+  // Automatically synchronize sales and recycle bin bills on mount
+  useEffect(() => {
+    handleSyncAllSales();
+  }, []);
 
   // Filtered orders list for Tab 1 (Strictly Online Delivery Orders)
   const filteredOrders = useMemo(() => {
@@ -1696,6 +1734,23 @@ export default function AdminDashboard() {
                   <option value="cash">Cash Only</option>
                   <option value="upi">UPI QR Only</option>
                   <option value="card">Card Swipe Only</option>
+                  <option value="split">Split (Cash + UPI)</option>
+                </select>
+
+                {/* Sort By Filter */}
+                <select
+                  value={salesSortBy}
+                  onChange={(e) => setSalesSortBy(e.target.value)}
+                  className="admin-select-filter"
+                  aria-label="Sort sales records"
+                >
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="inv-asc">Invoice No: Low to High</option>
+                  <option value="inv-desc">Invoice No: High to Low</option>
+                  <option value="amount-desc">Amount: High to Low</option>
+                  <option value="amount-asc">Amount: Low to High</option>
+                  <option value="customer-asc">Customer Name: A to Z</option>
                 </select>
               </div>
 
@@ -1814,20 +1869,44 @@ export default function AdminDashboard() {
                           style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ef4444' }}
                         />
                       </th>
-                      <th>Invoice No</th>
-                      <th>Date & Time</th>
+                      <th
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => setSalesSortBy(prev => prev === 'inv-asc' ? 'inv-desc' : 'inv-asc')}
+                        title="Click to sort by Invoice No"
+                      >
+                        Invoice No {salesSortBy === 'inv-asc' ? '▲' : salesSortBy === 'inv-desc' ? '▼' : ''}
+                      </th>
+                      <th
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => setSalesSortBy(prev => prev === 'date-desc' ? 'date-asc' : 'date-desc')}
+                        title="Click to sort by Date & Time"
+                      >
+                        Date & Time {salesSortBy === 'date-desc' ? '▼' : salesSortBy === 'date-asc' ? '▲' : ''}
+                      </th>
                       <th>Channel</th>
                       <th>Billed By / Cashier</th>
-                      <th>Customer Details</th>
+                      <th
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => setSalesSortBy(prev => prev === 'customer-asc' ? 'date-desc' : 'customer-asc')}
+                        title="Click to sort by Customer"
+                      >
+                        Customer Details {salesSortBy === 'customer-asc' ? '▲' : ''}
+                      </th>
                       <th>Items Sold</th>
                       <th>Payment</th>
-                      <th>Amount</th>
+                      <th
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
+                        onClick={() => setSalesSortBy(prev => prev === 'amount-desc' ? 'amount-asc' : 'amount-desc')}
+                        title="Click to sort by Amount"
+                      >
+                        Amount {salesSortBy === 'amount-desc' ? '▼' : salesSortBy === 'amount-asc' ? '▲' : ''}
+                      </th>
                       <th>Status</th>
                       <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSales.map((sale) => {
+                    {sortedSales.map((sale) => {
                       const saleKey = sale.id || sale.invoiceNumber;
                       const isSelected = selectedSalesIds.has(saleKey);
                       return (
