@@ -937,9 +937,9 @@ export default function DailyRevenueReport({
               {/* Thermal Slip Content */}
               <div className="z-slip-paper" id="daily-z-slip">
                 <div className="z-slip-header">
-                  <h3 className="z-brand-title">{STORE_DETAILS.name}</h3>
+                  <h3 className="z-brand-title">{STORE_DETAILS.brandName || STORE_DETAILS.name || 'Thenisai Palkova & Sweets'}</h3>
                   <p className="z-brand-sub">{STORE_DETAILS.tagline}</p>
-                  <p className="z-brand-loc">{STORE_DETAILS.address.line1}, {STORE_DETAILS.address.city}</p>
+                  <p className="z-brand-loc">{STORE_DETAILS.addressLine1 || STORE_DETAILS.address?.line1 || 'Nattamai Kottai, NH 44'}, {STORE_DETAILS.cityStatePin || STORE_DETAILS.address?.city || 'Krishnagiri'}</p>
                   <p className="z-brand-fssai">FSSAI: {STORE_DETAILS.fssai}</p>
                 </div>
 

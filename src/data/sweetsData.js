@@ -1004,10 +1004,15 @@ export const ALL_BILLING_ITEMS = [
 ];
 export const STORE_DETAILS = {
   brandName: 'Thenisai Palkova & Sweets',
+  name: 'Thenisai Palkova & Sweets',
   tagline: 'The Taste of Tradition · Since 2006 · Krishnagiri',
   establishedYear: '2006',
   addressLine1: 'Nattamai Kottai, Near H.P. Petrol Bunk, NH 44',
   cityStatePin: 'Krishnagiri, Tamil Nadu - 635001',
+  address: {
+    line1: 'Nattamai Kottai, Near H.P. Petrol Bunk, NH 44',
+    city: 'Krishnagiri, Tamil Nadu - 635001',
+  },
   landmark: 'NH 44 Bangalore–Salem Highway, Near HP Petrol Bunk',
   phone: '+91 93448 93547',
   secondaryPhone: '+91 86818 58723',
