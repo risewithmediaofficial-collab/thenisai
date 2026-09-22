@@ -371,4 +371,129 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     expect(tableText).toContain('Suresh');
   });
 
+  test('6. Monthly report print and export as CSV date to date option', async ({ page }) => {
+    const multiDateBills = [
+      {
+        id: 'bill-month-1',
+        invoiceNumber: 'AA001',
+        grandTotal: 150,
+        paymentMethod: 'cash',
+        orderDate: '2026-09-02',
+        orderTime: '10:00 am',
+        createdAt: new Date('2026-09-02T10:00:00').getTime(),
+        source: 'counter',
+        status: 'Completed',
+        cashier: { id: 'staff-2', username: 'cashier', name: 'M. Kannan', counter: 'Counter Desk 01' },
+        customer: { fullName: 'Ramesh', phone: '9876500001' },
+        items: [{ name: 'Palkova', quantity: 1, price: 150 }],
+      },
+      {
+        id: 'bill-month-2',
+        invoiceNumber: 'AA002',
+        grandTotal: 250,
+        paymentMethod: 'upi',
+        orderDate: '2026-09-15',
+        orderTime: '11:00 am',
+        createdAt: new Date('2026-09-15T11:00:00').getTime(),
+        source: 'counter',
+        status: 'Completed',
+        cashier: { id: 'staff-2', username: 'cashier', name: 'M. Kannan', counter: 'Counter Desk 01' },
+        customer: { fullName: 'Suresh', phone: '9876500002' },
+        items: [{ name: 'Mysore Pak', quantity: 1, price: 250 }],
+      },
+      {
+        id: 'bill-month-3',
+        invoiceNumber: 'AA003',
+        grandTotal: 500,
+        paymentMethod: 'card',
+        orderDate: '2026-09-22',
+        orderTime: '01:00 pm',
+        createdAt: new Date('2026-09-22T13:00:00').getTime(),
+        source: 'counter',
+        status: 'Completed',
+        cashier: { id: 'staff-1', username: 'admin', name: 'S. Ramanathan', counter: 'Operations Central' },
+        customer: { fullName: 'Dinesh', phone: '9876500003' },
+        items: [{ name: 'Kaju Katli', quantity: 2, price: 250 }],
+      },
+    ];
+
+    await page.addInitScript((bills) => {
+      sessionStorage.setItem('thenisai_auth_user', JSON.stringify({
+        id: 'staff-1',
+        username: 'admin',
+        name: 'Thirumal',
+        role: 'admin',
+        title: 'Kitchen Operations Head',
+      }));
+      sessionStorage.setItem('thenisai_admin_session_unlocked', 'true');
+      sessionStorage.setItem('thenisai_auth_token', 'mock_admin_token');
+      localStorage.setItem('thenisai_bills_cache', JSON.stringify(bills));
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(bills));
+      localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
+    }, multiDateBills);
+
+    // Navigate to shift bills
+    await page.goto('/#admin/shift-bills');
+    await page.waitForSelector('.daily-revenue-wrapper', { timeout: 15000 });
+
+    // Click "This Month" preset pill
+    const thisMonthPill = page.locator('.date-pill:has-text("This Month")');
+    await expect(thisMonthPill).toBeVisible();
+    await thisMonthPill.click();
+    await page.waitForTimeout(300);
+
+    // Verify dual date pickers appear
+    const fromInput = page.locator('.range-date-pickers input[type="date"]').first();
+    const toInput = page.locator('.range-date-pickers input[type="date"]').last();
+    await expect(fromInput).toBeVisible();
+    await expect(toInput).toBeVisible();
+
+    // Verify all 3 bills in September are included in This Month
+    const grossRev = await page.locator('.rev-card.gross .rev-value').innerText();
+    expect(grossRev).toContain('900'); // 150 + 250 + 500 = 900
+
+    // Print button should say "Print Monthly Report"
+    const printBtn = page.locator('.daily-action-btn.primary');
+    await expect(printBtn).toContainText('Print Monthly Report');
+
+    // Click "Print Monthly Report"
+    await printBtn.click();
+    const modal = page.locator('.z-report-modal');
+    await expect(modal).toBeVisible();
+
+    // Check report modal content
+    const modalText = await modal.innerText();
+    expect(modalText).toContain('MONTHLY FINANCIAL REPORT');
+    expect(modalText).toContain('DAILY BREAKDOWN');
+    expect(modalText).toContain('TOP PRODUCTS SOLD');
+    expect(modalText).toContain('900');
+
+    // Close modal
+    await page.locator('.z-close-btn').click();
+    await expect(modal).toBeHidden();
+
+    // Test "Date to Date" range filter
+    const dateToDatePill = page.locator('.date-pill:has-text("Date to Date")');
+    await dateToDatePill.click();
+    await page.waitForTimeout(300);
+
+    // Set range from 2026-09-01 to 2026-09-10 (should only include AA001, ₹150)
+    await fromInput.fill('2026-09-01');
+    await toInput.fill('2026-09-10');
+    await page.waitForTimeout(300);
+
+    const rangeRev = await page.locator('.rev-card.gross .rev-value').innerText();
+    expect(rangeRev).toContain('150');
+
+    // Print button should say "Print Period Report"
+    await expect(printBtn).toContainText('Print Period Report');
+
+    // Test CSV download
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('.daily-action-btn:has-text("Export CSV")').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toContain('.csv');
+    expect(download.suggestedFilename()).toContain('Thenisai');
+  });
+
 });

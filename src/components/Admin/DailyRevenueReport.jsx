@@ -93,6 +93,11 @@ export default function DailyRevenueReport({
   // Date Selection: For cashiers, strictly 'today' (no yesterday, no all-time)
   const [dateMode, setDateMode] = useState('today');
   const [customDate, setCustomDate] = useState(todayKey);
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  });
+  const [toDate, setToDate] = useState(todayKey);
   const [selectedPaymentFilter, setSelectedPaymentFilter] = useState('all');
   const [selectedStaffFilter, setSelectedStaffFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,22 +137,40 @@ export default function DailyRevenueReport({
       return toDateKey(yesterday);
     }
     if (dateMode === 'custom') return toDateKey(customDate);
+    if (dateMode === 'this-month' || dateMode === 'range') {
+      return `${fromDate}_to_${toDate}`;
+    }
     return ''; // 'all' mode
-  }, [isCashier, dateMode, todayKey, customDate]);
+  }, [isCashier, dateMode, todayKey, customDate, fromDate, toDate]);
 
   // Filter sales for the selected date and staff
   const daySales = useMemo(() => {
     return allSales.filter((sale) => {
       // Check date matching: Cashier strictly matches todayKey
-      const targetDateKey = isCashier ? todayKey : activeDateString;
-      if (targetDateKey) {
+      if (isCashier) {
         const createdKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
         const orderDateKey = sale.orderDate ? toDateKey(sale.orderDate) : '';
         const rawDateKey = sale.date ? toDateKey(sale.date) : '';
         const matchesDate = (
-          createdKey === targetDateKey ||
-          orderDateKey === targetDateKey ||
-          rawDateKey === targetDateKey
+          createdKey === todayKey ||
+          orderDateKey === todayKey ||
+          rawDateKey === todayKey
+        );
+        if (!matchesDate) return false;
+      } else if (dateMode === 'this-month' || dateMode === 'range') {
+        const createdKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
+        const orderDateKey = sale.orderDate ? toDateKey(sale.orderDate) : '';
+        const rawDateKey = sale.date ? toDateKey(sale.date) : '';
+        const saleKey = createdKey || orderDateKey || rawDateKey;
+        if (!saleKey || saleKey < fromDate || saleKey > toDate) return false;
+      } else if (activeDateString) {
+        const createdKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
+        const orderDateKey = sale.orderDate ? toDateKey(sale.orderDate) : '';
+        const rawDateKey = sale.date ? toDateKey(sale.date) : '';
+        const matchesDate = (
+          createdKey === activeDateString ||
+          orderDateKey === activeDateString ||
+          rawDateKey === activeDateString
         );
         if (!matchesDate) return false;
       }
@@ -208,7 +231,7 @@ export default function DailyRevenueReport({
       const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return aTime - bTime;
     });
-  }, [allSales, activeDateString, isCashier, todayKey, activeUser, selectedStaffFilter, selectedPaymentFilter, searchTerm]);
+  }, [allSales, activeDateString, isCashier, todayKey, dateMode, fromDate, toDate, activeUser, selectedStaffFilter, selectedPaymentFilter, searchTerm]);
 
   // Key Financial Calculations
   const grossRevenue = useMemo(() => {
@@ -353,36 +376,170 @@ export default function DailyRevenueReport({
     return Object.values(map);
   }, [daySales]);
 
-  // CSV Export Handler
+  // Daily Breakdown Aggregation for Monthly and Date-to-Date Reports
+  const dailyBreakdown = useMemo(() => {
+    const dayMap = {};
+    daySales.forEach((s) => {
+      const createdKey = s.createdAt ? toDateKey(s.createdAt) : '';
+      const orderDateKey = s.orderDate ? toDateKey(s.orderDate) : '';
+      const rawDateKey = s.date ? toDateKey(s.date) : '';
+      const dKey = createdKey || orderDateKey || rawDateKey || 'Unknown';
+
+      if (!dayMap[dKey]) {
+        dayMap[dKey] = {
+          dateKey: dKey,
+          bills: 0,
+          cash: 0,
+          upi: 0,
+          card: 0,
+          total: 0,
+        };
+      }
+      dayMap[dKey].bills += 1;
+      const amt = s.grandTotal || 0;
+      dayMap[dKey].total += amt;
+      const pm = (s.paymentMethod || '').toLowerCase();
+      if (pm === 'cash') dayMap[dKey].cash += amt;
+      else if (pm === 'upi') dayMap[dKey].upi += amt;
+      else if (pm === 'card') dayMap[dKey].card += amt;
+      else if (pm === 'split') {
+        dayMap[dKey].cash += (s.paymentDetails?.cash ?? s.splitCash ?? 0);
+        dayMap[dKey].upi += (s.paymentDetails?.upi ?? s.splitUpi ?? 0);
+      } else {
+        dayMap[dKey].cash += amt;
+      }
+    });
+
+    return Object.values(dayMap).sort((a, b) => a.dateKey.localeCompare(b.dateKey));
+  }, [daySales]);
+
+  // CSV Export Handler with Date-to-Date & Accounting Breakdown
   const handleExportCSV = () => {
     if (daySales.length === 0) {
-      alert('No sales records to export for this date.');
+      alert('No sales records to export for this date range.');
       return;
     }
 
-    const headers = ['Invoice #', 'Date & Time', 'Customer', 'Phone', 'Payment Method', 'Cashier', 'Subtotal', 'Grand Total (INR)'];
-    const rows = daySales.map((s) => [
-      `"${s.invoiceNumber || s.id}"`,
-      `"${s.orderDate || ''} ${s.orderTime || ''}"`,
-      `"${s.customer?.fullName || 'Walk-in'}"`,
-      `"${s.customer?.phone || ''}"`,
-      `"${s.paymentMethod || 'Cash'}"`,
-      `"${s.cashier?.name || 'Counter Staff'}"`,
-      s.subtotal || 0,
-      s.grandTotal || 0,
-    ]);
+    const headers = [
+      'Invoice #',
+      'Date',
+      'Time',
+      'Customer Name',
+      'Customer Phone',
+      'Payment Method',
+      'Cash (INR)',
+      'UPI (INR)',
+      'Card (INR)',
+      'Cashier',
+      'Items Count',
+      'Subtotal (INR)',
+      'Tax (INR)',
+      'Grand Total (INR)',
+    ];
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    let sumCash = 0;
+    let sumUpi = 0;
+    let sumCard = 0;
+    let sumItems = 0;
+    let sumSubtotal = 0;
+    let sumTax = 0;
+    let sumGrandTotal = 0;
+
+    const rows = daySales.map((s) => {
+      const pm = (s.paymentMethod || 'cash').toLowerCase();
+      const grandTotal = s.grandTotal || 0;
+      const subtotal = s.subtotal || 0;
+      const tax = s.taxBreakdown?.totalTax || 0;
+      const itemsCount = (s.items || []).reduce((acc, it) => acc + (Number(it.quantity) || 1), 0);
+
+      let cashAmt = 0;
+      let upiAmt = 0;
+      let cardAmt = 0;
+
+      if (pm === 'cash') cashAmt = grandTotal;
+      else if (pm === 'upi') upiAmt = grandTotal;
+      else if (pm === 'card') cardAmt = grandTotal;
+      else if (pm === 'split') {
+        cashAmt = s.paymentDetails?.cash ?? s.splitCash ?? 0;
+        upiAmt = s.paymentDetails?.upi ?? s.splitUpi ?? 0;
+      } else {
+        cashAmt = grandTotal;
+      }
+
+      sumCash += cashAmt;
+      sumUpi += upiAmt;
+      sumCard += cardAmt;
+      sumItems += itemsCount;
+      sumSubtotal += subtotal;
+      sumTax += tax;
+      sumGrandTotal += grandTotal;
+
+      const dateStr = s.orderDate || (s.createdAt ? toDateKey(s.createdAt) : '');
+      const timeStr = s.orderTime || (s.createdAt ? new Date(s.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+
+      return [
+        `"${s.invoiceNumber || s.id}"`,
+        `"${dateStr}"`,
+        `"${timeStr}"`,
+        `"${(s.customer?.fullName || 'Walk-in Customer').replace(/"/g, '""')}"`,
+        `"${s.customer?.phone || ''}"`,
+        `"${s.paymentMethod || 'Cash'}"`,
+        cashAmt,
+        upiAmt,
+        cardAmt,
+        `"${(s.cashier?.name || 'Counter Staff').replace(/"/g, '""')}"`,
+        itemsCount,
+        subtotal,
+        tax,
+        grandTotal,
+      ];
+    });
+
+    // Summary Totals Row
+    const totalsRow = [
+      '"TOTALS"',
+      '""',
+      '""',
+      '""',
+      '""',
+      '""',
+      sumCash,
+      sumUpi,
+      sumCard,
+      '""',
+      sumItems,
+      sumSubtotal,
+      sumTax,
+      sumGrandTotal,
+    ];
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(',')), totalsRow.join(',')].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Thenisai_Daily_Sales_${activeDateString || 'All'}.csv`);
+
+    let filename = `Thenisai_Daily_Sales_${todayKey}.csv`;
+    if (dateMode === 'this-month') {
+      filename = `Thenisai_Monthly_Report_${fromDate}_to_${toDate}.csv`;
+    } else if (dateMode === 'range') {
+      filename = `Thenisai_Sales_Report_${fromDate}_to_${toDate}.csv`;
+    } else if (dateMode === 'yesterday') {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      filename = `Thenisai_Daily_Sales_${toDateKey(y)}.csv`;
+    } else if (dateMode === 'custom') {
+      filename = `Thenisai_Daily_Sales_${customDate}.csv`;
+    } else if (dateMode === 'all') {
+      filename = `Thenisai_All_Sales_Consolidated.csv`;
+    }
+
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  // Trigger Z-Report Print
+  // Trigger Z-Report / Monthly Report Print
   const handlePrintZReport = () => {
     window.print();
   };
@@ -472,14 +629,30 @@ export default function DailyRevenueReport({
             type="button"
             className="daily-action-btn primary"
             onClick={() => setIsZReportOpen(true)}
-            title="Generate Official Thermal Z-Report"
+            title={
+              dateMode === 'this-month'
+                ? 'Print Monthly Financial Report'
+                : dateMode === 'range'
+                ? 'Print Period Financial Report'
+                : dateMode === 'all'
+                ? 'Print Consolidated Financial Report'
+                : 'Generate Official Thermal Z-Report'
+            }
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="6 9 6 2 18 2 18 9"/>
               <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
               <rect x="6" y="14" width="12" height="8"/>
             </svg>
-            <span>Print Day Z-Report</span>
+            <span>
+              {dateMode === 'this-month'
+                ? 'Print Monthly Report'
+                : dateMode === 'range'
+                ? 'Print Period Report'
+                : dateMode === 'all'
+                ? 'Print Consolidated Report'
+                : 'Print Day Z-Report'}
+            </span>
           </button>
         </div>
       </div>
@@ -517,6 +690,25 @@ export default function DailyRevenueReport({
             </button>
             <button
               type="button"
+              className={`date-pill ${dateMode === 'this-month' ? 'active' : ''}`}
+              onClick={() => {
+                const d = new Date();
+                setFromDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`);
+                setToDate(todayKey);
+                setDateMode('this-month');
+              }}
+            >
+              This Month
+            </button>
+            <button
+              type="button"
+              className={`date-pill ${dateMode === 'range' ? 'active' : ''}`}
+              onClick={() => setDateMode('range')}
+            >
+              Date to Date
+            </button>
+            <button
+              type="button"
               className={`date-pill ${dateMode === 'all' ? 'active' : ''}`}
               onClick={() => setDateMode('all')}
             >
@@ -540,18 +732,41 @@ export default function DailyRevenueReport({
               </select>
             </div>
 
-            <div className="custom-date-picker">
-              <span className="picker-label">Pick Date:</span>
-              <input
-                type="date"
-                className="date-input"
-                value={dateMode === 'custom' ? customDate : activeDateString || todayKey}
-                onChange={(e) => {
-                  setCustomDate(e.target.value);
-                  setDateMode('custom');
-                }}
-              />
-            </div>
+            {dateMode === 'range' || dateMode === 'this-month' ? (
+              <div className="range-date-pickers">
+                <div className="custom-date-picker">
+                  <span className="picker-label">From:</span>
+                  <input
+                    type="date"
+                    className="date-input"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                  />
+                </div>
+                <div className="custom-date-picker">
+                  <span className="picker-label">To:</span>
+                  <input
+                    type="date"
+                    className="date-input"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="custom-date-picker">
+                <span className="picker-label">Pick Date:</span>
+                <input
+                  type="date"
+                  className="date-input"
+                  value={dateMode === 'custom' ? customDate : activeDateString || todayKey}
+                  onChange={(e) => {
+                    setCustomDate(e.target.value);
+                    setDateMode('custom');
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -894,12 +1109,12 @@ export default function DailyRevenueReport({
         )}
       </section>
 
-      {/* Printable Z-Report Modal */}
+      {/* Printable Z-Report / Monthly Report Modal */}
       <AnimatePresence>
         {isZReportOpen && (
           <div className="z-report-overlay" onClick={() => setIsZReportOpen(false)}>
             <motion.div
-              className="z-report-modal"
+              className={`z-report-modal ${dateMode === 'this-month' || dateMode === 'range' || dateMode === 'all' ? 'period-report' : ''}`}
               onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -911,14 +1126,20 @@ export default function DailyRevenueReport({
                   type="button"
                   className="z-print-btn"
                   onClick={handlePrintZReport}
-                  title="Print Thermal Slip"
+                  title="Print Report"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 6 2 18 2 18 9"/>
                     <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
                     <rect x="6" y="14" width="12" height="8"/>
                   </svg>
-                  <span>Print Slip</span>
+                  <span>
+                    {dateMode === 'this-month'
+                      ? 'Print Monthly Report'
+                      : dateMode === 'range'
+                      ? 'Print Period Report'
+                      : 'Print Slip'}
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -934,7 +1155,7 @@ export default function DailyRevenueReport({
                 </button>
               </div>
 
-              {/* Thermal Slip Content */}
+              {/* Thermal Slip / Report Content */}
               <div className="z-slip-paper" id="daily-z-slip">
                 <div className="z-slip-header">
                   <h3 className="z-brand-title">{STORE_DETAILS.brandName || STORE_DETAILS.name || 'Thenisai Palkova & Sweets'}</h3>
@@ -948,11 +1169,23 @@ export default function DailyRevenueReport({
                 <div className="z-slip-meta">
                   <div className="slip-row">
                     <span>REPORT TYPE:</span>
-                    <strong>DAILY Z-REPORT (FINANCIAL CLOSING)</strong>
+                    <strong>
+                      {dateMode === 'this-month'
+                        ? 'MONTHLY FINANCIAL REPORT'
+                        : dateMode === 'range'
+                        ? 'PERIOD SALES & REVENUE REPORT'
+                        : dateMode === 'all'
+                        ? 'ALL-TIME CONSOLIDATED FINANCIAL REPORT'
+                        : 'DAILY Z-REPORT (FINANCIAL CLOSING)'}
+                    </strong>
                   </div>
                   <div className="slip-row">
-                    <span>REPORT DATE:</span>
-                    <strong>{activeDateString || todayKey}</strong>
+                    <span>{dateMode === 'this-month' || dateMode === 'range' ? 'PERIOD:' : 'REPORT DATE:'}</span>
+                    <strong>
+                      {dateMode === 'this-month' || dateMode === 'range'
+                        ? `${formatDateLabel(fromDate)} to ${formatDateLabel(toDate)}`
+                        : (formatDateLabel(activeDateString) || formatDateLabel(todayKey))}
+                    </strong>
                   </div>
                   <div className="slip-row">
                     <span>PRINTED AT:</span>
@@ -962,6 +1195,12 @@ export default function DailyRevenueReport({
                     <span>TERMINAL:</span>
                     <span>{isCashier ? (activeUser?.counter || 'Counter Desk 01') : 'Master Terminal — POS 01'}</span>
                   </div>
+                  {selectedStaffFilter !== 'all' && (
+                    <div className="slip-row">
+                      <span>STAFF FILTER:</span>
+                      <span>{selectedStaffFilter === 'online' ? 'Online Orders' : selectedStaffFilter}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="slip-divider" />
@@ -978,8 +1217,12 @@ export default function DailyRevenueReport({
                     <span>Net Sales:</span>
                     <span>₹{netSales.toLocaleString('en-IN')}</span>
                   </div>
+                  <div className="slip-row">
+                    <span>Tax (GST):</span>
+                    <span>₹{totalTax.toLocaleString('en-IN')}</span>
+                  </div>
                   <div className="slip-row total">
-                    <strong>GROSS DAY REVENUE:</strong>
+                    <strong>{dateMode === 'this-month' ? 'GROSS MONTH REVENUE:' : dateMode === 'range' ? 'GROSS PERIOD REVENUE:' : 'GROSS DAY REVENUE:'}</strong>
                     <strong>₹{grossRevenue.toLocaleString('en-IN')}</strong>
                   </div>
                 </div>
@@ -1004,11 +1247,77 @@ export default function DailyRevenueReport({
                   </div>
                 </div>
 
+                {/* Daily Breakdown for Monthly and Range Reports */}
+                {(dateMode === 'this-month' || dateMode === 'range' || dateMode === 'all') && dailyBreakdown.length > 0 && (
+                  <>
+                    <div className="slip-divider" />
+                    <div className="z-slip-section">
+                      <div className="slip-row title">
+                        <strong>DAILY BREAKDOWN ({dailyBreakdown.length} DAYS)</strong>
+                      </div>
+                      <table className="z-slip-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginTop: '6px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px dashed #94a3b8' }}>
+                            <th style={{ textAlign: 'left', padding: '3px 0' }}>Date</th>
+                            <th style={{ textAlign: 'center', padding: '3px 0' }}>Bills</th>
+                            <th style={{ textAlign: 'right', padding: '3px 0' }}>Cash</th>
+                            <th style={{ textAlign: 'right', padding: '3px 0' }}>UPI</th>
+                            <th style={{ textAlign: 'right', padding: '3px 0' }}>Card</th>
+                            <th style={{ textAlign: 'right', padding: '3px 0' }}>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {dailyBreakdown.map((d) => (
+                            <tr key={d.dateKey} style={{ borderBottom: '1px dotted #e2e8f0' }}>
+                              <td style={{ textAlign: 'left', padding: '3px 0' }}>{formatDateLabel(d.dateKey)}</td>
+                              <td style={{ textAlign: 'center', padding: '3px 0' }}>{d.bills}</td>
+                              <td style={{ textAlign: 'right', padding: '3px 0' }}>₹{d.cash.toLocaleString('en-IN')}</td>
+                              <td style={{ textAlign: 'right', padding: '3px 0' }}>₹{d.upi.toLocaleString('en-IN')}</td>
+                              <td style={{ textAlign: 'right', padding: '3px 0' }}>₹{d.card.toLocaleString('en-IN')}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 'bold', padding: '3px 0' }}>₹{d.total.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
+                {/* Top Sweets Sold in Period */}
+                {topSweets.length > 0 && (
+                  <>
+                    <div className="slip-divider" />
+                    <div className="z-slip-section">
+                      <div className="slip-row title">
+                        <strong>TOP PRODUCTS SOLD ({topSweets.length})</strong>
+                      </div>
+                      <table className="z-slip-table" style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', marginTop: '6px' }}>
+                        <thead>
+                          <tr style={{ borderBottom: '1px dashed #94a3b8' }}>
+                            <th style={{ textAlign: 'left', padding: '3px 0' }}># Item</th>
+                            <th style={{ textAlign: 'center', padding: '3px 0' }}>Qty</th>
+                            <th style={{ textAlign: 'right', padding: '3px 0' }}>Revenue</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {topSweets.slice(0, 8).map((sw, idx) => (
+                            <tr key={sw.id || idx} style={{ borderBottom: '1px dotted #e2e8f0' }}>
+                              <td style={{ textAlign: 'left', padding: '3px 0' }}>{idx + 1}. {sw.name}</td>
+                              <td style={{ textAlign: 'center', padding: '3px 0' }}>{sw.quantity} {sw.unit}</td>
+                              <td style={{ textAlign: 'right', fontWeight: 'bold', padding: '3px 0' }}>₹{sw.revenue.toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+
                 <div className="slip-divider" />
 
                 <div className="z-slip-signatures">
                   <div className="sig-line">
-                    <p>Cashier Signature</p>
+                    <p>Prepared By / Cashier</p>
                   </div>
                   <div className="sig-line">
                     <p>Manager Verification</p>
@@ -1016,7 +1325,7 @@ export default function DailyRevenueReport({
                 </div>
 
                 <div className="z-slip-footer">
-                  <p>*** END OF DAY Z-REPORT ***</p>
+                  <p>*** {dateMode === 'this-month' ? 'END OF MONTHLY REPORT' : dateMode === 'range' ? 'END OF PERIOD REPORT' : 'END OF DAY Z-REPORT'} ***</p>
                   <p>Thenisai Traditional Sweets Since 2006</p>
                 </div>
               </div>

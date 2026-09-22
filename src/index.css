@@ -3533,6 +3533,17 @@ time, .hours {
   gap: 10px;
 }
 
+.range-date-pickers {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.z-report-modal.period-report {
+  max-width: 640px;
+}
+
 .picker-label {
   font-size: 0.82rem;
   color: #64748B;
@@ -4595,22 +4606,18 @@ time, .hours {
 }
 
 /* ==============================================================================
-   12. Dedicated Print Rules for Day Z-Report
+   12. Dedicated Print Rules for Day Z-Report & Monthly / Period Report
    ============================================================================== */
 @media print {
-  /* When Z-report slip is active, hide everything else */
-  .z-report-modal-backdrop,
-  .z-report-modal-header,
-  .z-report-actions,
-  .daily-revenue-container,
-  .daily-revenue-header,
-  .daily-revenue-summary,
-  .daily-breakdown-card,
-  .daily-table-wrapper {
-    display: none !important;
+  /* When Z-report or Monthly report slip is active, hide everything else */
+  .z-report-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
   }
 
-  .z-report-modal-content {
+  .z-report-modal {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
@@ -4619,13 +4626,26 @@ time, .hours {
     max-width: 100% !important;
   }
 
+  .z-report-modal-backdrop,
+  .z-report-modal-header,
+  .z-report-actions,
+  .daily-revenue-wrapper,
+  .daily-revenue-container,
+  .daily-revenue-header,
+  .daily-revenue-summary,
+  .daily-breakdown-card,
+  .daily-table-wrapper {
+    display: none !important;
+  }
+
+  #daily-z-slip,
   #z-report-print-area {
     display: block !important;
     position: static !important;
-    width: 72mm !important;
-    max-width: 72mm !important;
+    width: 80mm !important;
+    max-width: 100% !important;
     margin: 0 auto !important;
-    padding: 3mm 2mm !important;
+    padding: 4mm 2mm !important;
     background: #FFFFFF !important;
     color: #000000 !important;
     border: none !important;
@@ -4635,6 +4655,12 @@ time, .hours {
     print-color-adjust: exact !important;
   }
 
+  .z-report-modal.period-report #daily-z-slip {
+    width: 100% !important;
+    max-width: 180mm !important;
+  }
+
+  #daily-z-slip *,
   #z-report-print-area * {
     color: #000000 !important;
     -webkit-print-color-adjust: exact !important;
