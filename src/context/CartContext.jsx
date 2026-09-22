@@ -922,9 +922,10 @@ export function CartProvider({ children }) {
     }
   }, [inventory]);
 
-  // Multi-tab synchronization for product availability and inventory
+  // Multi-tab synchronization for product availability, inventory, and real-time bills
   useEffect(() => {
     let bc = null;
+    let billsBc = null;
     try {
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         bc = new BroadcastChannel('thenisai_inventory_channel');
@@ -935,6 +936,17 @@ export function CartProvider({ children }) {
             setInventory((prev) =>
               prev.map((item) => (item.id === productId ? { ...item, isInactive } : item))
             );
+          }
+        };
+
+        billsBc = new BroadcastChannel('thenisai_bills_channel');
+        billsBc.onmessage = (event) => {
+          if (event.data?.type === 'NEW_BILL' && event.data?.bill) {
+            const incoming = event.data.bill;
+            setBills((prev) => {
+              const updated = [incoming, ...prev.filter((b) => b.id !== incoming.id && b.invoiceNumber !== incoming.invoiceNumber)];
+              return updated;
+            });
           }
         };
       }
@@ -977,6 +989,7 @@ export function CartProvider({ children }) {
 
     return () => {
       if (bc) bc.close();
+      if (billsBc) billsBc.close();
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
@@ -1460,6 +1473,10 @@ export function CartProvider({ children }) {
       const ledger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
       const updatedLedger = ledger.filter((b) => !matchesTarget(b));
       localStorage.setItem(OFFLINE_LEDGER_KEY, JSON.stringify(updatedLedger));
+
+      const ledger2 = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
+      const updatedLedger2 = ledger2.filter((b) => !matchesTarget(b));
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(updatedLedger2));
     } catch {}
 
     setOrders((prev) => {
@@ -2841,20 +2858,42 @@ export function CartProvider({ children }) {
       const ledger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
       ledger.unshift(fullOrder);
       localStorage.setItem(OFFLINE_LEDGER_KEY, JSON.stringify(ledger.slice(0, 1000)));
+
+      const ledger2 = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
+      ledger2.unshift(fullOrder);
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(ledger2.slice(0, 1000)));
     } catch { /* ignore storage errors */ }
 
     // Persist to backend bills endpoint
     try {
       const res = await api.post('/api/bills', fullOrder);
       if (res && res.success && res.bill) {
+        const finalBill = res.bill;
         setBills((prev) => {
-          const updated = [res.bill, ...prev.filter((b) => b.id !== fullOrder.id && b.id !== res.bill.id)];
+          const updated = [finalBill, ...prev.filter((b) => b.id !== fullOrder.id && b.id !== finalBill.id && b.invoiceNumber !== finalBill.invoiceNumber)];
           try {
             localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(updated.slice(0, 1000)));
           } catch {}
           return updated;
         });
-        return res.bill;
+
+        // Also update offline ledger with confirmed finalBill (especially if invoiceNumber was re-assigned to prevent collision)
+        try {
+          const ledger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
+          const updatedLedger = [finalBill, ...ledger.filter((b) => b.id !== fullOrder.id && b.id !== finalBill.id && b.invoiceNumber !== finalBill.invoiceNumber)];
+          localStorage.setItem(OFFLINE_LEDGER_KEY, JSON.stringify(updatedLedger.slice(0, 1000)));
+        } catch {}
+
+        // Broadcast to other tabs/counters in real-time
+        try {
+          if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            const bc = new BroadcastChannel('thenisai_bills_channel');
+            bc.postMessage({ type: 'NEW_BILL', bill: finalBill });
+            bc.close();
+          }
+        } catch {}
+
+        return finalBill;
       }
     } catch (err) {
       console.warn('Backend bill save failed — queuing for offline sync:', err);

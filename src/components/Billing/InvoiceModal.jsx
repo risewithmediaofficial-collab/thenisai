@@ -129,7 +129,7 @@ export default function InvoiceModal() {
 
   // Determine if this is a Counter/POS bill or an Online Website order
   const isOnlineOrder = activeInvoice.source === 'online';
-  const isPosSale = !isOnlineOrder || String(invoiceNumber).startsWith('POS-') || isTestInvoice;
+  const isPosSale = !isOnlineOrder || /^[A-Z]{2}\d{3}$/i.test(invoiceNumber) || String(invoiceNumber).startsWith('POS-') || isTestInvoice;
 
   // Customer name & phone formatting
   const rawCustomerName = (customer?.fullName || '').trim();

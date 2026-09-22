@@ -11,6 +11,7 @@ import DeleteBillModal from './DeleteBillModal';
 import EditBillModal from './EditBillModal';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
+import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
 // Predefined categories for fast sweets, savouries & beverages POS filtering
 const CATEGORIES = [
   { id: 'all', label: 'All Items' },
@@ -617,8 +618,8 @@ export default function BillingCounter() {
       if (shiftSortBy === 'date-desc') return (b.createdAt || 0) - (a.createdAt || 0);
       if (shiftSortBy === 'date-asc') return (a.createdAt || 0) - (b.createdAt || 0);
       if (shiftSortBy === 'inv-asc' || shiftSortBy === 'inv-desc') {
-        const numA = parseInt(String(a.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
-        const numB = parseInt(String(b.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        const numA = parseInvoiceNumber(a.invoiceNumber);
+        const numB = parseInvoiceNumber(b.invoiceNumber);
         return shiftSortBy === 'inv-asc' ? numA - numB : numB - numA;
       }
       if (shiftSortBy === 'amount-desc') return (b.grandTotal || 0) - (a.grandTotal || 0);
@@ -1317,11 +1318,15 @@ export default function BillingCounter() {
       cachedBills = JSON.parse(localStorage.getItem('thenisai_bills_cache') || '[]');
     } catch {}
     let ledgerBills = [];
+    let offlineLedger = [];
     try {
       ledgerBills = JSON.parse(localStorage.getItem('thenisai_offline_backup_ledger') || '[]');
     } catch {}
+    try {
+      offlineLedger = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
+    } catch {}
 
-    const allCandidateBills = [...(bills || []), ...cachedBills, ...ledgerBills];
+    const allCandidateBills = [...(bills || []), ...cachedBills, ...ledgerBills, ...offlineLedger];
     const candidateMap = new Map();
     allCandidateBills.forEach((b) => {
       const k = b.id || b._id || b.invoiceNumber;
@@ -1333,28 +1338,7 @@ export default function BillingCounter() {
       return !b.isSandbox;
     });
 
-    let nextSeq = 1;
-    const existingNums = activeBills
-      .map((b) => {
-        const invStr = String(b.invoiceNumber || '');
-        const match = isSandbox ? invStr.match(/^TEST-\d+-(\d+)$/i) : (invStr.match(/^POS-(\d+)$/i) || invStr.match(/^(\d+)$/));
-        return match ? parseInt(match[1], 10) : 0;
-      })
-      .filter((n) => n > 0 && n < 100000);
-
-    if (existingNums.length > 0) {
-      nextSeq = Math.max(...existingNums) + 1;
-    } else {
-      nextSeq = 1;
-    }
-
-    // Ensure continuous unique invoice number: never reuse an existing invoice number
-    const existingInvoices = new Set(activeBills.map((b) => b.invoiceNumber).filter(Boolean));
-    while (existingInvoices.has(isSandbox ? `TEST-${year}-${nextSeq}` : `POS-${nextSeq}`)) {
-      nextSeq += 1;
-    }
-
-    const invoiceNumber = isSandbox ? `TEST-${year}-${nextSeq}` : `POS-${nextSeq}`;
+    const invoiceNumber = getNextInvoiceNumber(activeBills, isSandbox);
     const now = new Date();
 
     const saleData = {

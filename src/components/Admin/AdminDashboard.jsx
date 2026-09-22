@@ -11,6 +11,7 @@ import EditBillModal from '../Billing/EditBillModal';
 import StaffManagement from './StaffManagement';
 import CatalogSettingsModal from './CatalogSettingsModal';
 import { translateToTamil } from '../../utils/translateToTamil';
+import { parseInvoiceNumber } from '../../utils/invoiceNumber';
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -394,8 +395,8 @@ export default function AdminDashboard() {
       if (salesSortBy === 'date-desc') return (b.createdAt || 0) - (a.createdAt || 0);
       if (salesSortBy === 'date-asc') return (a.createdAt || 0) - (b.createdAt || 0);
       if (salesSortBy === 'inv-asc' || salesSortBy === 'inv-desc') {
-        const numA = parseInt(String(a.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
-        const numB = parseInt(String(b.invoiceNumber || '').replace(/\D/g, '') || '0', 10);
+        const numA = parseInvoiceNumber(a.invoiceNumber);
+        const numB = parseInvoiceNumber(b.invoiceNumber);
         return salesSortBy === 'inv-asc' ? numA - numB : numB - numA;
       }
       if (salesSortBy === 'amount-desc') return (b.grandTotal || 0) - (a.grandTotal || 0);

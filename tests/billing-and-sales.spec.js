@@ -1,8 +1,34 @@
 import { test, expect } from '@playwright/test';
+import { formatInvoiceNumber, parseInvoiceNumber, getNextInvoiceNumber } from '../src/utils/invoiceNumber';
 
 test.describe('Thenisai POS Billing & Admin Sales', () => {
 
-  test('1. Creates continuous unique sequential invoice numbers (POS-1, POS-2)', async ({ page }) => {
+  test('0. Vehicle Registration format AA001 to AA999 to AB001 unit tests', async () => {
+    expect(formatInvoiceNumber(1)).toBe('AA001');
+    expect(formatInvoiceNumber(2)).toBe('AA002');
+    expect(formatInvoiceNumber(999)).toBe('AA999');
+    expect(formatInvoiceNumber(1000)).toBe('AB001');
+    expect(formatInvoiceNumber(1998)).toBe('AB999');
+    expect(formatInvoiceNumber(1999)).toBe('AC001');
+    expect(formatInvoiceNumber(25974)).toBe('AZ999');
+    expect(formatInvoiceNumber(25975)).toBe('BA001');
+
+    expect(parseInvoiceNumber('AA001')).toBe(1);
+    expect(parseInvoiceNumber('AA999')).toBe(999);
+    expect(parseInvoiceNumber('AB001')).toBe(1000);
+    expect(parseInvoiceNumber('AB999')).toBe(1998);
+    expect(parseInvoiceNumber('AC001')).toBe(1999);
+    expect(parseInvoiceNumber('AZ999')).toBe(25974);
+    expect(parseInvoiceNumber('BA001')).toBe(25975);
+
+    // Test transition from existing bills
+    expect(getNextInvoiceNumber([])).toBe('AA001');
+    expect(getNextInvoiceNumber([{ invoiceNumber: 'AA001' }])).toBe('AA002');
+    expect(getNextInvoiceNumber([{ invoiceNumber: 'AA999' }])).toBe('AB001');
+    expect(getNextInvoiceNumber([{ invoiceNumber: 'AB999' }])).toBe('AC001');
+  });
+
+  test('1. Creates continuous unique sequential invoice numbers in vehicle reg format (AA001, AA002)', async ({ page }) => {
     // Authenticate as cashier and start with a clean state
     await page.addInitScript(() => {
       sessionStorage.setItem('thenisai_auth_user', JSON.stringify({
@@ -17,6 +43,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       sessionStorage.setItem('thenisai_auth_token', 'mock_cashier_token');
       localStorage.setItem('thenisai_bills_cache', '[]');
       localStorage.setItem('thenisai_offline_backup_ledger', '[]');
+      localStorage.setItem('thenisai_offline_ledger_v2', '[]');
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     });
 
@@ -37,10 +64,10 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     const invoiceModal = page.locator('.invoice-modal-wrap').first();
     await invoiceModal.waitFor({ state: 'visible', timeout: 10000 });
     
-    // Check invoice number is POS-1
+    // Check invoice number is AA001
     const invoiceNumberText = await page.locator('.invoice-quick-inv-badge, .pos-slip-document').allInnerTexts();
     const joinedText = invoiceNumberText.join(' ');
-    expect(joinedText).toContain('POS-1');
+    expect(joinedText).toContain('AA001');
 
     // Close invoice modal
     const closeBtn = page.locator('.invoice-top-close-btn');
@@ -56,18 +83,18 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     await settleBtn.click();
     await invoiceModal.waitFor({ state: 'visible', timeout: 10000 });
 
-    // Check invoice number is POS-2
+    // Check invoice number is AA002
     const secondInvoiceText = (await page.locator('.invoice-quick-inv-badge, .pos-slip-document').allInnerTexts()).join(' ');
-    expect(secondInvoiceText).toContain('POS-2');
+    expect(secondInvoiceText).toContain('AA002');
   });
 
-  test('2. Reset bill numbers to start from 1 (POS-1) after deleting all bills', async ({ page }) => {
+  test('2. Reset bill numbers to start from 1 (AA001) after deleting all bills', async ({ page }) => {
     // Authenticate as cashier with existing bills
     await page.addInitScript(() => {
       const existingBills = [
         {
           id: 'pos-test-1',
-          invoiceNumber: 'POS-1',
+          invoiceNumber: 'AA001',
           grandTotal: 100,
           paymentMethod: 'cash',
           orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -80,7 +107,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
         },
         {
           id: 'pos-test-2',
-          invoiceNumber: 'POS-2',
+          invoiceNumber: 'AA002',
           grandTotal: 50,
           paymentMethod: 'upi',
           orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -105,6 +132,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       sessionStorage.setItem('thenisai_auth_token', 'mock_cashier_token');
       localStorage.setItem('thenisai_bills_cache', JSON.stringify(existingBills));
       localStorage.setItem('thenisai_offline_backup_ledger', JSON.stringify(existingBills));
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(existingBills));
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     });
 
@@ -146,16 +174,16 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     const invoiceModal = page.locator('.invoice-modal-wrap').first();
     await invoiceModal.waitFor({ state: 'visible', timeout: 10000 });
 
-    // Bill number should restart from 1 (POS-1)
+    // Bill number should restart from 1 (AA001)
     const newInvoiceText = (await page.locator('.invoice-quick-inv-badge, .pos-slip-document').allInnerTexts()).join(' ');
-    expect(newInvoiceText).toContain('POS-1');
+    expect(newInvoiceText).toContain('AA001');
   });
 
   test('3. Admin Sales & Ledger shows today\'s bills and supports sorting and filtering', async ({ page }) => {
     const todayBills = [
       {
         id: 'bill-today-1',
-        invoiceNumber: 'POS-1',
+        invoiceNumber: 'AA001',
         grandTotal: 120,
         paymentMethod: 'cash',
         orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -169,7 +197,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       },
       {
         id: 'bill-today-2',
-        invoiceNumber: 'POS-2',
+        invoiceNumber: 'AA002',
         grandTotal: 350,
         paymentMethod: 'upi',
         orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -183,7 +211,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       },
       {
         id: 'bill-today-3',
-        invoiceNumber: 'POS-3',
+        invoiceNumber: 'AA003',
         grandTotal: 200,
         paymentMethod: 'split',
         splitCash: 100,
@@ -211,7 +239,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       sessionStorage.setItem('thenisai_admin_session_unlocked', 'true');
       sessionStorage.setItem('thenisai_auth_token', 'mock_admin_token');
       localStorage.setItem('thenisai_bills_cache', JSON.stringify(bills));
-      localStorage.setItem('thenisai_offline_backup_ledger', JSON.stringify(bills));
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(bills));
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     }, todayBills);
 
@@ -221,9 +249,9 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
 
     // Verify all 3 bills are visible
     const tableText = await page.locator('.sales-table').innerText();
-    expect(tableText).toContain('POS-1');
-    expect(tableText).toContain('POS-2');
-    expect(tableText).toContain('POS-3');
+    expect(tableText).toContain('AA001');
+    expect(tableText).toContain('AA002');
+    expect(tableText).toContain('AA003');
     expect(tableText).toContain('Arun Kumar');
     expect(tableText).toContain('Bala Chandran');
     expect(tableText).toContain('Chitra Devi');
@@ -234,8 +262,8 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     await page.waitForTimeout(300);
 
     const filteredUpiText = await page.locator('.sales-table').innerText();
-    expect(filteredUpiText).toContain('POS-2'); // UPI bill
-    expect(filteredUpiText).toContain('POS-3'); // Split bill has UPI
+    expect(filteredUpiText).toContain('AA002'); // UPI bill
+    expect(filteredUpiText).toContain('AA003'); // Split bill has UPI
     expect(filteredUpiText).not.toContain('Arun Kumar'); // Cash-only bill should not appear
 
     // Reset to All Payment Methods
@@ -247,18 +275,18 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     await sortSelect.selectOption('amount-desc');
     await page.waitForTimeout(300);
 
-    // First row should be POS-2 (₹350)
+    // First row should be AA002 (₹350)
     const firstInvoiceInTable = await page.locator('.sales-table tbody tr').first().innerText();
-    expect(firstInvoiceInTable).toContain('POS-2');
+    expect(firstInvoiceInTable).toContain('AA002');
     expect(firstInvoiceInTable).toContain('350');
 
     // Test Sorting: Amount: Low to High
     await sortSelect.selectOption('amount-asc');
     await page.waitForTimeout(300);
 
-    // First row should be POS-1 (₹120)
+    // First row should be AA001 (₹120)
     const lowestInvoiceInTable = await page.locator('.sales-table tbody tr').first().innerText();
-    expect(lowestInvoiceInTable).toContain('POS-1');
+    expect(lowestInvoiceInTable).toContain('AA001');
     expect(lowestInvoiceInTable).toContain('120');
 
     // Test Search Box
@@ -267,8 +295,8 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     await page.waitForTimeout(300);
 
     const searchedTableText = await page.locator('.sales-table').innerText();
-    expect(searchedTableText).toContain('POS-3');
-    expect(searchedTableText).not.toContain('POS-1');
+    expect(searchedTableText).toContain('AA003');
+    expect(searchedTableText).not.toContain('AA001');
   });
 
   test('4. Storefront and Cart flow works properly', async ({ page }) => {
@@ -284,7 +312,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     const todayBills = [
       {
         id: 'bill-shift-1',
-        invoiceNumber: 'POS-1',
+        invoiceNumber: 'AA001',
         grandTotal: 150,
         paymentMethod: 'cash',
         orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -298,7 +326,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       },
       {
         id: 'bill-shift-2',
-        invoiceNumber: 'POS-2',
+        invoiceNumber: 'AA002',
         grandTotal: 250,
         paymentMethod: 'upi',
         orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -337,11 +365,10 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
 
     // Verify bills appear in the daily bills table
     const tableText = await page.locator('.daily-bills-table').innerText();
-    expect(tableText).toContain('POS-1');
-    expect(tableText).toContain('POS-2');
+    expect(tableText).toContain('AA001');
+    expect(tableText).toContain('AA002');
     expect(tableText).toContain('Ramesh');
     expect(tableText).toContain('Suresh');
   });
 
 });
-
