@@ -494,6 +494,11 @@ time, .hours {
    GLOBAL PRINT ENGINE RESET
    Ensures print preview is never clipped or suppressed by layout locks
    ============================================================ */
+@page {
+  size: auto;
+  margin: 0mm !important;
+}
+
 @media print {
   html,
   body {
@@ -15378,20 +15383,25 @@ time, .hours {
   }
 
   .invoice-portal.format-thermal .thermal-receipt-document,
+  .invoice-portal.format-thermal .pos-slip-document,
+  .invoice-portal.format-thermal .pos-slip-document * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .invoice-portal.format-thermal .thermal-receipt-document,
   .invoice-portal.format-thermal .pos-slip-document {
     display: block !important;
     width: 72mm !important;
     max-width: 72mm !important;
     margin: 0 auto !important;
-    padding: 2mm 1.5mm 4mm 1.5mm !important;
+    padding: 2mm 1.5mm 3mm 1.5mm !important;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
     font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
-    font-size: 10px !important;
-    line-height: 1.2 !important;
+    font-size: 9.5px !important;
+    line-height: 1.16 !important;
     font-weight: 600 !important;
     color: #000000 !important;
     background: #FFFFFF !important;
@@ -15404,6 +15414,79 @@ time, .hours {
     font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-header {
+    margin-bottom: 1px !important;
+  }
+
+  .invoice-portal.format-thermal .pos-store-name {
+    font-size: 12px !important;
+    margin-bottom: 1px !important;
+    line-height: 1.15 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-store-sub,
+  .invoice-portal.format-thermal .pos-store-cell {
+    font-size: 8.5px !important;
+    line-height: 1.1 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-title {
+    font-size: 9px !important;
+    margin-top: 1px !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-bill-row,
+  .invoice-portal.format-thermal .pos-slip-table-head {
+    font-size: 9.5px !important;
+    padding: 0.5px 0 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-item-row {
+    font-size: 9.5px !important;
+    line-height: 1.15 !important;
+    padding: 0.5px 0 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-dashed-line {
+    margin: 2px 0 !important;
+    border-top: 1px dashed #000000 !important;
+    height: 0 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-net-row {
+    font-size: 12px !important;
+    padding: 1px 0 !important;
+    font-weight: 900 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-stats-block {
+    font-size: 8.5px !important;
+    gap: 0 !important;
+    padding: 0.5px 0 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-online-note {
+    margin: 1px 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-online-label {
+    font-size: 8.5px !important;
+  }
+
+  .invoice-portal.format-thermal .pos-online-web {
+    font-size: 9.5px !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-thank-you {
+    font-size: 9.5px !important;
+    padding: 1px 0 !important;
+  }
+
+  .invoice-portal.format-thermal .pos-slip-cut-feed {
+    height: 3mm !important;
   }
 
   .invoice-portal.format-thermal .thermal-copy-badge.customer {
@@ -15432,8 +15515,8 @@ time, .hours {
     display: block !important;
     width: 72mm !important;
     max-width: 72mm !important;
-    margin: 6mm auto 8mm auto !important;
-    padding: 2.5mm 0 !important;
+    margin: 4mm auto 6mm auto !important;
+    padding: 2mm 0 !important;
     border-top: 1px dashed #000000 !important;
     border-bottom: 1px dashed #000000 !important;
     border-left: none !important;
@@ -15450,7 +15533,7 @@ time, .hours {
 
   .invoice-portal.format-thermal .thermal-receipt-divider-cut * {
     font-family: 'Consolas', 'Courier New', 'Roboto Mono', monospace !important;
-    font-size: 9.5px !important;
+    font-size: 9px !important;
     font-weight: 700 !important;
     color: #000000 !important;
     letter-spacing: 0.3px !important;
@@ -15460,7 +15543,7 @@ time, .hours {
 
   .invoice-portal.format-thermal .thermal-paper-tear-gap {
     display: block !important;
-    height: 6mm !important;
+    height: 4mm !important;
   }
 
   .invoice-portal.format-thermal .pos-slip-cut-feed,

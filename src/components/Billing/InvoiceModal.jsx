@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -20,9 +20,20 @@ export default function InvoiceModal() {
     return saved === 'a4' ? 'a4' : 'thermal';
   });
 
+  // Copies mode: 'customer' (1 copy), 'both' (2 copies: Customer + Shop Copy)
+  const [copiesMode, setCopiesMode] = useState(() => {
+    const saved = localStorage.getItem('thenisai_invoice_copies_mode');
+    return saved || 'customer';
+  });
+
   const handleSelectFormat = (fmt) => {
     setBillFormat(fmt);
     localStorage.setItem('thenisai_pos_roll_format', fmt);
+  };
+
+  const handleSelectCopies = (mode) => {
+    setCopiesMode(mode);
+    localStorage.setItem('thenisai_invoice_copies_mode', mode);
   };
 
   const handlePrint = () => {
@@ -121,8 +132,12 @@ export default function InvoiceModal() {
   };
 
 
-  // Determine copies to render: Customer Copy + Shop Reference Copy (each on a separate printed page)
-  const copiesToRender = ['customer', 'shop'];
+  // Determine copies to render: 1 Copy (Customer) or 2 Copies (Customer + Shop)
+  const copiesToRender = useMemo(() => {
+    if (copiesMode === 'both') return ['customer', 'shop'];
+    if (copiesMode === 'shop') return ['shop'];
+    return ['customer'];
+  }, [copiesMode]);
 
   // Determine if this is a test invoice or live invoice
   const isTestInvoice = Boolean(activeInvoice.isSandbox || String(invoiceNumber).startsWith('TEST-'));
@@ -705,6 +720,26 @@ export default function InvoiceModal() {
                       <polyline points="10 9 9 9 8 9" />
                     </svg>
                     <span>A4 Invoice</span>
+                  </button>
+                </div>
+
+                {/* Copies Switcher Pills */}
+                <div className="invoice-copies-switcher" title="Select number of printed copies">
+                  <button
+                    type="button"
+                    className={`copies-btn ${copiesMode === 'customer' ? 'active' : ''}`}
+                    onClick={() => handleSelectCopies('customer')}
+                    title="Print 1 copy (Customer Receipt)"
+                  >
+                    <span>1 Copy</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`copies-btn ${copiesMode === 'both' ? 'active' : ''}`}
+                    onClick={() => handleSelectCopies('both')}
+                    title="Print 2 copies (Customer Copy + Shop Copy)"
+                  >
+                    <span>2 Copies</span>
                   </button>
                 </div>
 
