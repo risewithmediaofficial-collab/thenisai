@@ -247,7 +247,7 @@ export default function AdminDashboard() {
   // Lock scroll on background when mobile drawer is open
   useScrollLock(isMobileMenuOpen);
 
-  // Consolidate all sales: counter bills from DB + online orders (excluding items in Recycle Bin)
+  // Consolidate all sales: counter bills from DB + offline ledger + cache + online orders (excluding items in Recycle Bin)
   const allSales = useMemo(() => {
     const deletedIds = new Set();
     (recycleBinBills || []).forEach((rb) => {
@@ -257,8 +257,17 @@ export default function AdminDashboard() {
       if (rb.billData?._id) deletedIds.add(String(rb.billData._id));
     });
 
+    let offlineLedger = [];
+    let cachedBills = [];
+    try {
+      offlineLedger = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
+    } catch {}
+    try {
+      cachedBills = JSON.parse(localStorage.getItem('thenisai_bills_cache') || '[]');
+    } catch {}
+
     const map = new Map();
-    // Add bills from database (/api/bills & cache) - key by unique id
+    // 1. Add bills from context (/api/bills & state) - key by unique id
     (bills || []).forEach((b) => {
       const key = b.id || b._id || b.invoiceNumber;
       const bId = String(b.id || b._id || '');
@@ -266,7 +275,23 @@ export default function AdminDashboard() {
         map.set(key, { ...b, source: b.source || 'counter' });
       }
     });
-    // Add orders (online website orders & fallback) - key by unique id
+    // 2. Add bills from offline ledger if not already present
+    offlineLedger.forEach((b) => {
+      const key = b.id || b._id || b.invoiceNumber;
+      const bId = String(b.id || b._id || '');
+      if (key && !map.has(key) && !deletedIds.has(bId) && !deletedIds.has(String(b._id))) {
+        map.set(key, { ...b, source: b.source || 'counter' });
+      }
+    });
+    // 3. Add bills from cache if not already present
+    cachedBills.forEach((b) => {
+      const key = b.id || b._id || b.invoiceNumber;
+      const bId = String(b.id || b._id || '');
+      if (key && !map.has(key) && !deletedIds.has(bId) && !deletedIds.has(String(b._id))) {
+        map.set(key, { ...b, source: b.source || 'counter' });
+      }
+    });
+    // 4. Add orders (online website orders & fallback) - key by unique id
     (orders || []).forEach((o) => {
       const key = o.id || o._id || o.invoiceNumber;
       const oId = String(o.id || o._id || '');

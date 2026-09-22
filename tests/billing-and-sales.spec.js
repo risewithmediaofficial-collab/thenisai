@@ -280,4 +280,68 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     expect(title).toBeTruthy();
   });
 
+  test('5. Admin Daily Revenue & Shift Bills shows today\'s bills and correct revenue', async ({ page }) => {
+    const todayBills = [
+      {
+        id: 'bill-shift-1',
+        invoiceNumber: 'POS-1',
+        grandTotal: 150,
+        paymentMethod: 'cash',
+        orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        orderTime: '10:00 am',
+        createdAt: Date.now() - 3600000,
+        source: 'counter',
+        status: 'Completed',
+        cashier: { id: 'staff-2', username: 'cashier', name: 'M. Kannan', counter: 'Counter Desk 01' },
+        customer: { fullName: 'Ramesh', phone: '9876500001' },
+        items: [{ name: 'Palkova', quantity: 1, price: 150 }],
+      },
+      {
+        id: 'bill-shift-2',
+        invoiceNumber: 'POS-2',
+        grandTotal: 250,
+        paymentMethod: 'upi',
+        orderDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        orderTime: '11:00 am',
+        createdAt: Date.now() - 1800000,
+        source: 'counter',
+        status: 'Completed',
+        cashier: { id: 'staff-2', username: 'cashier', name: 'M. Kannan', counter: 'Counter Desk 01' },
+        customer: { fullName: 'Suresh', phone: '9876500002' },
+        items: [{ name: 'Mysore Pak', quantity: 1, price: 250 }],
+      },
+    ];
+
+    await page.addInitScript((bills) => {
+      sessionStorage.setItem('thenisai_auth_user', JSON.stringify({
+        id: 'staff-1',
+        username: 'admin',
+        name: 'Thirumal',
+        role: 'admin',
+        title: 'Kitchen Operations Head',
+      }));
+      sessionStorage.setItem('thenisai_admin_session_unlocked', 'true');
+      sessionStorage.setItem('thenisai_auth_token', 'mock_admin_token');
+      localStorage.setItem('thenisai_bills_cache', JSON.stringify(bills));
+      localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(bills));
+      localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
+    }, todayBills);
+
+    // Navigate to shift bills
+    await page.goto('/#admin/shift-bills');
+    await page.waitForSelector('.daily-revenue-wrapper', { timeout: 15000 });
+
+    // Verify revenue KPIs
+    const revValue = await page.locator('.rev-card.gross .rev-value').innerText();
+    expect(revValue).toContain('400'); // 150 + 250 = 400
+
+    // Verify bills appear in the daily bills table
+    const tableText = await page.locator('.daily-bills-table').innerText();
+    expect(tableText).toContain('POS-1');
+    expect(tableText).toContain('POS-2');
+    expect(tableText).toContain('Ramesh');
+    expect(tableText).toContain('Suresh');
+  });
+
 });
+

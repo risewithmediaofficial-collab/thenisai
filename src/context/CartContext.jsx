@@ -719,21 +719,41 @@ export function CartProvider({ children }) {
     });
   }, [customProducts, inventory, masterPrices, deletedProductIds, recycleBinProducts]);
 
+  // Helper to merge incoming bills with offline ledger and local cache without losing data
+  const mergeBillsWithLedger = (incomingBills = []) => {
+    let savedBills = [];
+    let savedLedger = [];
+    try {
+      savedBills = JSON.parse(localStorage.getItem(BILLS_CACHE_KEY) || '[]');
+    } catch {}
+    try {
+      savedLedger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
+    } catch {}
+
+    const map = new Map();
+    // 1. Incoming bills (server response or current batch)
+    (incomingBills || []).forEach((b) => {
+      const k = b.id || b._id || b.invoiceNumber;
+      if (k) map.set(k, b);
+    });
+    // 2. Offline ledger (locally committed sales)
+    (savedLedger || []).forEach((b) => {
+      const k = b.id || b._id || b.invoiceNumber;
+      if (k && !map.has(k)) map.set(k, b);
+    });
+    // 3. Local cache
+    (savedBills || []).forEach((b) => {
+      const k = b.id || b._id || b.invoiceNumber;
+      if (k && !map.has(k)) map.set(k, b);
+    });
+
+    return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  };
+
   // POS Counter Bills state - merge cached bills and offline ledger backup
   const [bills, setBills] = useState(() => {
     try {
-      const savedBills = JSON.parse(localStorage.getItem(BILLS_CACHE_KEY) || '[]');
-      const savedLedger = JSON.parse(localStorage.getItem(OFFLINE_LEDGER_KEY) || '[]');
-      const map = new Map();
-      (savedBills || []).forEach((b) => {
-        const k = b.id || b._id || b.invoiceNumber;
-        if (k) map.set(k, b);
-      });
-      (savedLedger || []).forEach((b) => {
-        const k = b.id || b._id || b.invoiceNumber;
-        if (k && !map.has(k)) map.set(k, b);
-      });
-      return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      return mergeBillsWithLedger();
     } catch {
       return [];
     }
@@ -804,11 +824,14 @@ export function CartProvider({ children }) {
         setHasOfflinePending(remaining.length > 0);
         setOfflinePendingCount(remaining.length);
 
-        // Refresh bills from backend
+        // Refresh bills from backend merged with offline ledger
         const billsRes = await api.get('/api/bills').catch(() => null);
         if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
-          setBills(billsRes.bills);
-          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
+          const merged = mergeBillsWithLedger(billsRes.bills);
+          setBills(merged);
+          try {
+            localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(merged));
+          } catch {}
         }
         return { synced: (res.synced || queue.length - remaining.length), failed: remaining.length };
       }
@@ -934,12 +957,10 @@ export function CartProvider({ children }) {
           }
         } catch {}
       }
-      if (e.key === BILLS_CACHE_KEY && e.newValue) {
+      if ((e.key === BILLS_CACHE_KEY || e.key === OFFLINE_LEDGER_KEY) && e.newValue) {
         try {
-          const parsed = JSON.parse(e.newValue);
-          if (Array.isArray(parsed)) {
-            setBills(parsed);
-          }
+          const merged = mergeBillsWithLedger();
+          setBills(merged);
         } catch {}
       }
       if (e.key === RECYCLE_BIN_STORAGE_KEY && e.newValue) {
@@ -1112,9 +1133,10 @@ export function CartProvider({ children }) {
       }
 
       if (billsRes && billsRes.success && Array.isArray(billsRes.bills)) {
-        setBills(billsRes.bills);
+        const merged = mergeBillsWithLedger(billsRes.bills);
+        setBills(merged);
         try {
-          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(billsRes.bills));
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(merged));
         } catch {}
       }
     } catch (err) {
@@ -1141,7 +1163,7 @@ export function CartProvider({ children }) {
     };
   }, [syncWithBackend]);
 
-  // Fetch bills with optional cashier filter
+  // Fetch bills with optional cashier filter, merged with offline ledger
   const fetchBills = async (cashierId) => {
     try {
       const endpoint = cashierId && cashierId !== 'all'
@@ -1149,16 +1171,19 @@ export function CartProvider({ children }) {
         : '/api/bills';
       const res = await api.get(endpoint);
       if (res.success && Array.isArray(res.bills)) {
-        setBills(res.bills);
+        const merged = mergeBillsWithLedger(res.bills);
+        setBills(merged);
         try {
-          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(res.bills));
+          localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(merged));
         } catch { }
-        return res.bills;
+        return merged;
       }
     } catch (err) {
       console.warn('Failed to fetch bills from backend:', err);
     }
-    return bills;
+    const localMerged = mergeBillsWithLedger([]);
+    setBills(localMerged);
+    return localMerged;
   };
 
   // Deduct inventory helper

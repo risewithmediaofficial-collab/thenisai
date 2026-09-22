@@ -7,8 +7,44 @@ import EditBillModal from '../Billing/EditBillModal';
 /**
  * Format timestamp or date string into YYYY-MM-DD
  */
+/**
+ * Format timestamp or date string into YYYY-MM-DD
+ * Supports ISO strings, millisecond numbers, YYYY-MM-DD, DD-MM-YYYY, DD/MM/YYYY, and "22 Sept 2026" / "22 Sep 2026"
+ */
 function toDateKey(dateVal) {
   if (!dateVal) return '';
+
+  // If already YYYY-MM-DD
+  if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal.trim())) {
+    return dateVal.trim();
+  }
+
+  // If DD-MM-YYYY or DD/MM/YYYY
+  if (typeof dateVal === 'string') {
+    const dmyMatch = dateVal.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+      const day = dmyMatch[1].padStart(2, '0');
+      const month = dmyMatch[2].padStart(2, '0');
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+
+    // If "22 Sep 2026" or "22 Sept 2026" or "22 September 2026"
+    const textMatch = dateVal.trim().match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})/);
+    if (textMatch) {
+      const day = textMatch[1].padStart(2, '0');
+      const monStr = textMatch[2].toLowerCase().slice(0, 3);
+      const year = textMatch[3];
+      const months = {
+        jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+        jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+      };
+      if (months[monStr]) {
+        return `${year}-${months[monStr]}-${day}`;
+      }
+    }
+  }
+
   const d = new Date(dateVal);
   if (isNaN(d.getTime())) return '';
   const year = d.getFullYear();
@@ -95,7 +131,7 @@ export default function DailyRevenueReport({
       yesterday.setDate(yesterday.getDate() - 1);
       return toDateKey(yesterday);
     }
-    if (dateMode === 'custom') return customDate;
+    if (dateMode === 'custom') return toDateKey(customDate);
     return ''; // 'all' mode
   }, [isCashier, dateMode, todayKey, customDate]);
 
@@ -105,15 +141,15 @@ export default function DailyRevenueReport({
       // Check date matching: Cashier strictly matches todayKey
       const targetDateKey = isCashier ? todayKey : activeDateString;
       if (targetDateKey) {
-        const saleDateKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
-        if (saleDateKey !== targetDateKey) {
-          if (sale.orderDate) {
-            const parsed = toDateKey(sale.orderDate);
-            if (parsed !== targetDateKey) return false;
-          } else {
-            return false;
-          }
-        }
+        const createdKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
+        const orderDateKey = sale.orderDate ? toDateKey(sale.orderDate) : '';
+        const rawDateKey = sale.date ? toDateKey(sale.date) : '';
+        const matchesDate = (
+          createdKey === targetDateKey ||
+          orderDateKey === targetDateKey ||
+          rawDateKey === targetDateKey
+        );
+        if (!matchesDate) return false;
       }
 
       // If in cashier mode, exclude online delivery orders from shift report

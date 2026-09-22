@@ -189,6 +189,7 @@ export default function CheckoutModal() {
 
     const invoiceData = {
       invoiceNumber,
+      createdAt: now.getTime(),
       orderDate: now.toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'short',

@@ -1361,6 +1361,7 @@ export default function BillingCounter() {
       source: 'pos',
       invoiceNumber,
       isSandbox,
+      createdAt: now.getTime(),
       orderDate: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
       orderTime: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       cashier: {
