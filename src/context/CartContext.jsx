@@ -25,6 +25,7 @@ const CUSTOM_CATEGORIES_KEY = 'thenisai_custom_categories_v1';
 const CUSTOM_UNITS_KEY = 'thenisai_custom_units_v1';
 const CATEGORY_OVERRIDES_KEY = 'thenisai_category_overrides_v1';
 const UNIT_OVERRIDES_KEY = 'thenisai_unit_overrides_v1';
+const PRE_ORDERS_STORAGE_KEY = 'thenisai_preorders_v1';
 
 // Default categories (built-in, cannot be deleted by admin)
 export const DEFAULT_PRODUCT_CATEGORIES = [
@@ -247,6 +248,9 @@ export function CartProvider({ children }) {
     if (viewParam === 'storefront' || viewParam === 'store') return 'storefront';
 
     // 2. Hash routing has HIGHEST priority in SPA
+    if (hash === '#menu' || hash.startsWith('#menu/')) {
+      return 'menu';
+    }
     if (hash.startsWith('#billing')) {
       return 'billing';
     }
@@ -284,6 +288,16 @@ export function CartProvider({ children }) {
   };
 
   const [currentView, setCurrentView] = useState(resolveViewFromUrl);
+
+  // ── Pre-Orders state (customer website pre-orders) ─────────────────────────
+  const [preOrders, setPreOrders] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PRE_ORDERS_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Orders state — strictly online delivery orders
   const [orders, setOrders] = useState(() => {
@@ -846,8 +860,56 @@ export function CartProvider({ children }) {
     return await syncOfflineBillsInternal();
   };
 
+  // ── Pre-Order CRUD Functions ─────────────────────────────────────────────
+  const addPreOrder = (orderData) => {
+    const newOrder = {
+      ...orderData,
+      id: `preorder-${Date.now()}`,
+      status: 'pending',
+      createdAt: Date.now(),
+    };
+    setPreOrders((prev) => {
+      const updated = [newOrder, ...prev];
+      try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    return newOrder;
+  };
+
+  const acceptPreOrder = (orderId) => {
+    setPreOrders((prev) => {
+      const updated = prev.map((o) => o.id === orderId ? { ...o, status: 'accepted', acceptedAt: Date.now() } : o);
+      try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const markPreOrderBilled = (orderId) => {
+    setPreOrders((prev) => {
+      const updated = prev.map((o) => o.id === orderId ? { ...o, status: 'billed', billedAt: Date.now() } : o);
+      try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  const deletePreOrder = (orderId) => {
+    setPreOrders((prev) => {
+      const updated = prev.filter((o) => o.id !== orderId);
+      try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+  // ─────────────────────────────────────────────────────────────────────────
+
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
+    if (view === 'menu') {
+      if (window.location.hash !== '#menu') {
+        window.location.hash = '#menu';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (view === 'admin') {
       const adminRouteMap = {
         orders: '#admin/dispatch',
@@ -862,6 +924,8 @@ export function CartProvider({ children }) {
         billing: '#admin/billing',
         pos: '#admin/billing',
         register: '#admin/billing',
+        preorders: '#admin/preorders',
+        'pre-orders': '#admin/preorders',
       };
       const targetHash = subTab ? (adminRouteMap[subTab] || `#admin/${subTab}`) : '#admin/inventory';
       if (window.location.hash !== targetHash) {
@@ -876,6 +940,8 @@ export function CartProvider({ children }) {
         orders: '#billing/orders',
         online: '#billing/orders',
         dispatch: '#billing/orders',
+        preorders: '#billing/preorders',
+        'pre-orders': '#billing/preorders',
       };
       const targetHash = subTab ? (billingRouteMap[subTab] || `#billing/${subTab}`) : '#billing';
       if (window.location.hash !== targetHash) {
@@ -3205,6 +3271,9 @@ export function CartProvider({ children }) {
     (o) => o.source === 'online' && (o.status === 'New' || o.status === 'Accepted')
   ).length;
 
+  // Pending pre-orders count (customer website pre-orders awaiting biller action)
+  const pendingPreOrdersCount = preOrders.filter((o) => o.status === 'pending').length;
+
   return (
     <CartContext.Provider
       value={{
@@ -3220,6 +3289,13 @@ export function CartProvider({ children }) {
         orders,
         bills,
         fetchBills,
+        // Pre-Orders (customer website)
+        preOrders,
+        pendingPreOrdersCount,
+        addPreOrder,
+        acceptPreOrder,
+        markPreOrderBilled,
+        deletePreOrder,
         inventory,
         pendingOrdersCount,
         taxSettings,

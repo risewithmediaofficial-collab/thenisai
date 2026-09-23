@@ -52,6 +52,12 @@ export default function BillingCounter() {
     updateProductSkuCode,
     deleteBill,
     deleteBills,
+    // Customer Website Pre-Orders
+    preOrders = [],
+    pendingPreOrdersCount = 0,
+    acceptPreOrder,
+    markPreOrderBilled,
+    deletePreOrder,
   } = useCart();
 
   const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
@@ -66,15 +72,21 @@ export default function BillingCounter() {
   const [bulkDeleteBills, setBulkDeleteBills] = useState(null);
 
 
-  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory'
+  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory' | 'pre-orders'
   const [posTab, setPosTab] = useState(() => {
     const h = window.location.hash.toLowerCase();
+    if (h.includes('preorder') || h.includes('pre-order')) return 'pre-orders';
     if (h.includes('bills')) return 'my-bills';
     if (h.includes('orders') || h.includes('online')) return 'online-orders';
     if (h.includes('daily') || h.includes('revenue')) return 'daily-sales';
     if (h.includes('stock') || h.includes('inventory')) return 'inventory';
     return 'register';
   });
+
+  // Pre-Orders Dedicated Page State
+  const [preOrderFilter, setPreOrderFilter] = useState('all'); // 'all' | 'pending' | 'accepted' | 'billed'
+  const [preOrderSearch, setPreOrderSearch] = useState('');
+  const [activePreOrderId, setActivePreOrderId] = useState(null); // Tracks loaded preorder for billing completion
 
   const [billSearchTerm, setBillSearchTerm] = useState('');
   const [billPaymentFilter, setBillPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card'
@@ -472,7 +484,9 @@ export default function BillingCounter() {
       // Only handle billing routes inside BillingCounter
       if (!h.startsWith('#billing') && !h.startsWith('#admin/billing') && !h.startsWith('#admin/pos')) return;
 
-      if (h.includes('bills')) {
+      if (h.includes('preorder') || h.includes('pre-order')) {
+        setPosTab('pre-orders');
+      } else if (h.includes('bills')) {
         setPosTab('my-bills');
       } else if (h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
         setPosTab('online-orders');
@@ -497,6 +511,7 @@ export default function BillingCounter() {
     let target = hash;
     if (user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin')) {
       if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
+      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/shift-bills';
       else if (hash.startsWith('#billing/orders')) target = '#admin/dispatch';
       else if (hash.startsWith('#billing/inventory')) target = '#admin/inventory';
@@ -512,6 +527,12 @@ export default function BillingCounter() {
     if (newTab === 'register') {
       syncBillingHash(isAdminMode ? '#admin/billing' : '#billing');
       setMobileTab('catalog');
+    } else if (newTab === 'pre-orders') {
+      if (isAdminMode) {
+        navigateTo('admin', 'preorders');
+      } else {
+        syncBillingHash('#billing/preorders');
+      }
     } else if (newTab === 'my-bills' || newTab === 'daily-sales') {
       if (isAdminMode) {
         navigateTo('admin', 'shift-bills');
@@ -789,6 +810,69 @@ export default function BillingCounter() {
   const handleRefreshOnlineOrders = async () => {
     setIsRefreshingOrders(true);
     setTimeout(() => setIsRefreshingOrders(false), 400);
+  };
+
+  // Pre-Orders metrics and handlers
+  const pendingPreOrdersList = useMemo(() => (preOrders || []).filter((o) => o.status === 'pending'), [preOrders]);
+  const acceptedPreOrdersList = useMemo(() => (preOrders || []).filter((o) => o.status === 'accepted'), [preOrders]);
+  const billedPreOrdersList = useMemo(() => (preOrders || []).filter((o) => o.status === 'billed'), [preOrders]);
+
+  const filteredPreOrders = useMemo(() => {
+    if (!preOrders || !Array.isArray(preOrders)) return [];
+    return preOrders.filter((order) => {
+      const matchStatus = preOrderFilter === 'all' || order.status === preOrderFilter;
+      if (!matchStatus) return false;
+      if (!preOrderSearch.trim()) return true;
+      const q = preOrderSearch.toLowerCase().trim();
+      const name = (order.customerName || '').toLowerCase();
+      const phone = (order.customerPhone || '').toLowerCase();
+      const id = (order.id || '').toLowerCase();
+      return name.includes(q) || phone.includes(q) || id.includes(q);
+    });
+  }, [preOrders, preOrderFilter, preOrderSearch]);
+
+  const handleAcceptAndLoadPreOrder = (order) => {
+    if (order.status === 'pending') {
+      acceptPreOrder(order.id);
+    }
+    setActivePreOrderId(order.id);
+
+    // Map order items to POS billItems format
+    const loadedItems = (order.items || []).map((item) => {
+      const foundSweet = (inventory || []).find((s) => s.id === item.id) ||
+                         (allBillingProducts || []).find((s) => s.id === item.id) ||
+                         (ALL_BILLING_ITEMS || []).find((s) => s.id === item.id) ||
+                         {};
+      return {
+        id: item.id,
+        name: item.name || foundSweet.name || 'Sweet Item',
+        itemNumber: foundSweet.itemNumber || '',
+        skuCode: foundSweet.skuCode || (foundSweet.itemNumber ? String(foundSweet.itemNumber) : ''),
+        weight: item.portion || item.weight || foundSweet.unit || '1 Cup',
+        price: Number(item.price || 0),
+        quantity: Number(item.quantity || 1),
+        hsn: foundSweet.hsn || '2106',
+        image: foundSweet.image || '',
+        unit: item.unit || foundSweet.unit || '1 Cup',
+      };
+    });
+
+    setBillItems(loadedItems);
+    setCustomerInfo({
+      fullName: order.customerName || '',
+      phone: order.customerPhone || '',
+    });
+    handleSwitchTab('register');
+  };
+
+  const handleMarkPreOrderDone = (orderId) => {
+    markPreOrderBilled(orderId);
+  };
+
+  const handleDeletePreOrder = (orderId) => {
+    if (window.confirm('Are you sure you want to remove this pre-order from the queue?')) {
+      deletePreOrder(orderId);
+    }
   };
 
   // Dedicated Inventory Page metrics
@@ -1405,6 +1489,10 @@ export default function BillingCounter() {
     };
 
     const savedOrder = await addCounterSale(saleData);
+    if (activePreOrderId) {
+      markPreOrderBilled(activePreOrderId);
+      setActivePreOrderId(null);
+    }
     handleClearBill();
     openInvoice(savedOrder || saleData);
 
@@ -1526,9 +1614,11 @@ export default function BillingCounter() {
       <SideNavbar
         currentSection={
           (user?.role === 'admin' && !window.location.hash.toLowerCase().startsWith('#billing'))
-            ? 'admin-billing'
+            ? (posTab === 'pre-orders' ? 'admin-preorders' : 'admin-billing')
             : (posTab === 'register'
                 ? 'pos-register'
+                : posTab === 'pre-orders'
+                ? 'pos-preorders'
                 : posTab === 'my-bills' || posTab === 'daily-sales'
                 ? 'pos-daily-sales'
                 : posTab === 'online-orders'
@@ -1543,6 +1633,9 @@ export default function BillingCounter() {
             } else {
               handleSwitchTab('register');
             }
+          }
+          else if (sec === 'admin-preorders' || sec === 'pos-preorders') {
+            handleSwitchTab('pre-orders');
           }
           else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue') {
             navigateTo('admin', 'shift-bills');
@@ -1581,6 +1674,7 @@ export default function BillingCounter() {
         }}
         onOpenAddStock={() => setIsAddStockOpen(true)}
         pendingOnlineCount={pendingOnlineOrders.length}
+        pendingPreOrdersCount={pendingPreOrdersCount}
         shiftBillsCount={myShiftBills.length}
         isMobileOpen={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
@@ -1614,6 +1708,8 @@ export default function BillingCounter() {
               <span>
                 {posTab === 'register'
                   ? (user?.counter || 'Terminal 01')
+                  : posTab === 'pre-orders'
+                  ? 'Customer Pre-Orders'
                   : posTab === 'daily-sales' || posTab === 'my-bills'
                   ? 'Shift Ledger'
                   : 'Products & Inventory'}
@@ -3713,6 +3809,328 @@ export default function BillingCounter() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </main>
+        )}
+
+        {/* ===================================================
+            PAGE 3.5: CUSTOMER WEBSITE PRE-ORDERS QUEUE
+           =================================================== */}
+        {posTab === 'pre-orders' && (
+          <main className="pos-online-page" data-lenis-prevent="true">
+            <div className="online-page-header">
+              <div className="online-header-left">
+                <span className="online-eyebrow" style={{ color: '#d97706' }}>WEBSITE PRE-ORDER QUEUE</span>
+                <h2 className="online-title">Customer Pre-Orders</h2>
+                <div className="online-meta-badges">
+                  <span className={`meta-badge ${pendingPreOrdersList.length > 0 ? 'alert' : 'done'}`}>
+                    <span><strong>{pendingPreOrdersList.length} Pending</strong> awaiting biller action</span>
+                  </span>
+                  <span className="meta-badge process">
+                    <span><strong>{acceptedPreOrdersList.length} In Prep / Ready</strong></span>
+                  </span>
+                  <span className="meta-badge done">
+                    <span><strong>{billedPreOrdersList.length} Billed &amp; Completed</strong></span>
+                  </span>
+                </div>
+              </div>
+
+              <div className="online-header-right">
+                <button
+                  type="button"
+                  className="btn-return-pos"
+                  onClick={() => handleSwitchTab('register')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                  <span>Return to POS</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Pre-Orders KPI Strip */}
+            <div className="online-kpis-grid">
+              <div className="online-kpi-card new">
+                <span className="kpi-label">Pending Pre-Orders</span>
+                <div className="kpi-val" style={{ color: '#d97706' }}>{pendingPreOrdersList.length}</div>
+                <span className="kpi-sub">Load into POS register to bill</span>
+              </div>
+              <div className="online-kpi-card packing">
+                <span className="kpi-label">Accepted / In Prep</span>
+                <div className="kpi-val">{acceptedPreOrdersList.length}</div>
+                <span className="kpi-sub">Ready for customer pickup</span>
+              </div>
+              <div className="online-kpi-card dispatched">
+                <span className="kpi-label">Billed &amp; Delivered</span>
+                <div className="kpi-val">{billedPreOrdersList.length}</div>
+                <span className="kpi-sub">Completed customer pickups</span>
+              </div>
+              <div className="online-kpi-card revenue">
+                <span className="kpi-label">Total Pre-Orders</span>
+                <div className="kpi-val">{(preOrders || []).length}</div>
+                <span className="kpi-sub">Total website pre-orders</span>
+              </div>
+            </div>
+
+            {/* Filter Chips & Search Toolbar */}
+            <div className="online-toolbar">
+              <div className="online-filter-chips">
+                {[
+                  { id: 'all', label: `All Orders (${(preOrders || []).length})` },
+                  { id: 'pending', label: `Pending (${pendingPreOrdersList.length})` },
+                  { id: 'accepted', label: `Accepted (${acceptedPreOrdersList.length})` },
+                  { id: 'billed', label: `Billed (${billedPreOrdersList.length})` },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    className={`filter-chip ${preOrderFilter === f.id ? 'active' : ''}`}
+                    onClick={() => setPreOrderFilter(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="online-search-box">
+                <input
+                  type="text"
+                  placeholder="Search customer name, mobile number, or order ID..."
+                  value={preOrderSearch}
+                  onChange={(e) => setPreOrderSearch(e.target.value)}
+                />
+                {preOrderSearch && (
+                  <button
+                    type="button"
+                    className="search-clear-btn"
+                    onClick={() => setPreOrderSearch('')}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Pre-Orders Cards List */}
+            <div className="online-orders-list">
+              {filteredPreOrders.length === 0 ? (
+                <div className="online-empty-state" style={{ background: '#ffffff', borderRadius: '12px', border: '1px dashed #cbd5e1', padding: '48px 24px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '38px', marginBottom: '12px' }}>📋</div>
+                  <h3 style={{ fontSize: '17px', fontWeight: 700, color: '#1e293b', margin: '0 0 6px' }}>
+                    {preOrderSearch ? 'No matching pre-orders' : 'No pre-orders in this filter'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                    {preOrderSearch
+                      ? 'Try another search term or click "All Orders"'
+                      : 'When customers place pre-orders from the website menu, they will appear here in real-time.'}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {filteredPreOrders.map((order) => {
+                    const isPending = order.status === 'pending';
+                    const isAccepted = order.status === 'accepted';
+                    const isBilled = order.status === 'billed';
+                    const formattedDate = order.createdAt
+                      ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                      : 'Just now';
+
+                    return (
+                      <div
+                        key={order.id}
+                        style={{
+                          background: '#ffffff',
+                          border: isPending ? '1.5px solid #d97706' : '1px solid #e2e8f0',
+                          borderRadius: '12px',
+                          padding: '18px 22px',
+                          boxShadow: isPending ? '0 4px 14px rgba(217, 119, 6, 0.12)' : '0 2px 6px rgba(0,0,0,0.04)',
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        {/* Card Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px', marginBottom: '14px' }}>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>
+                                {order.customerName}
+                              </h3>
+                              <a
+                                href={`tel:${order.customerPhone}`}
+                                style={{
+                                  fontSize: '13px',
+                                  fontWeight: 700,
+                                  color: '#0284c7',
+                                  background: '#f0f9ff',
+                                  padding: '3px 9px',
+                                  borderRadius: '6px',
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                }}
+                              >
+                                📞 {order.customerPhone}
+                              </a>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '5px', fontSize: '12px', color: '#64748b' }}>
+                              <span>ID: <strong style={{ color: '#334155' }}>{order.id}</strong></span>
+                              <span>&bull;</span>
+                              <span>Placed: {formattedDate}</span>
+                            </div>
+                          </div>
+
+                          {/* Status Badge */}
+                          <div>
+                            {isPending && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
+                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#d97706', display: 'inline-block' }} />
+                                Pending Biller Action
+                              </span>
+                            )}
+                            {isAccepted && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#e0f2fe', color: '#0369a1', border: '1px solid #bae6fd', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
+                                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#0284c7', display: 'inline-block' }} />
+                                Accepted &amp; In Prep
+                              </span>
+                            )}
+                            {isBilled && (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '5px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
+                                ✓ Billed &amp; Completed
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Customer Note if present */}
+                        {order.note && (
+                          <div style={{ background: '#fffbeb', border: '1px dashed #fde68a', borderRadius: '8px', padding: '8px 12px', marginBottom: '14px', fontSize: '12px', color: '#92400e', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>📝</span>
+                            <span><strong>Customer Note:</strong> {order.note}</span>
+                          </div>
+                        )}
+
+                        {/* Items Table */}
+                        <div style={{ overflowX: 'auto', marginBottom: '14px' }}>
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                            <thead>
+                              <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#64748b', textAlign: 'left' }}>
+                                <th style={{ padding: '8px 10px', fontWeight: 600 }}>Item</th>
+                                <th style={{ padding: '8px 10px', fontWeight: 600 }}>Portion</th>
+                                <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'center' }}>Qty</th>
+                                <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'right' }}>Rate</th>
+                                <th style={{ padding: '8px 10px', fontWeight: 600, textAlign: 'right' }}>Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {(order.items || []).map((it, idx) => (
+                                <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                  <td style={{ padding: '8px 10px', fontWeight: 600, color: '#1e293b' }}>
+                                    {it.name}
+                                    {it.tamilName && <span style={{ color: '#b45309', marginLeft: '6px', fontSize: '11px' }}>({it.tamilName})</span>}
+                                  </td>
+                                  <td style={{ padding: '8px 10px', color: '#64748b' }}>{it.portion || it.weight || it.unit || 'Standard'}</td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 700, color: '#0f172a' }}>{it.quantity}</td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right', color: '#64748b' }}>₹{it.price}</td>
+                                  <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: 700, color: '#0f172a' }}>₹{it.subtotal || it.price * it.quantity}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Card Footer: Total & Actions */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
+                          <div>
+                            <span style={{ fontSize: '12px', color: '#64748b' }}>Estimated Bill:</span>
+                            <span style={{ fontSize: '19px', fontWeight: 800, color: '#0f172a', marginLeft: '8px' }}>
+                              ₹{order.grandTotal}
+                            </span>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            {/* Accept & Load to POS button */}
+                            <button
+                              type="button"
+                              onClick={() => handleAcceptAndLoadPreOrder(order)}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                background: 'linear-gradient(135deg, #d97706, #b45309)',
+                                border: 'none',
+                                color: '#ffffff',
+                                padding: '9px 16px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
+                                transition: 'all 0.15s',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.92')}
+                              onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="9" cy="21" r="1"/>
+                                <circle cx="20" cy="21" r="1"/>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                              </svg>
+                              <span>{isPending ? 'Accept & Load to POS' : 'Load to POS'}</span>
+                            </button>
+
+                            {/* Mark as Done / Billed */}
+                            {!isBilled && (
+                              <button
+                                type="button"
+                                onClick={() => handleMarkPreOrderDone(order.id)}
+                                style={{
+                                  background: '#f8fafc',
+                                  border: '1px solid #cbd5e1',
+                                  color: '#334155',
+                                  padding: '9px 14px',
+                                  borderRadius: '8px',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = '#f8fafc')}
+                              >
+                                ✓ Mark Billed
+                              </button>
+                            )}
+
+                            {/* Delete button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePreOrder(order.id)}
+                              style={{
+                                background: 'transparent',
+                                border: '1px solid #fee2e2',
+                                color: '#ef4444',
+                                padding: '9px 12px',
+                                borderRadius: '8px',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = '#fef2f2')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                              title="Remove Pre-Order"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

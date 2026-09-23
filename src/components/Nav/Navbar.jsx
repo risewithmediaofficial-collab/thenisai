@@ -6,7 +6,7 @@ import { useScrollLock } from '../../hooks/useScrollLock';
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { totalItems, setIsCartOpen } = useCart();
+  const { totalItems, setIsCartOpen, navigateTo } = useCart();
   const { wishlist, setIsWishlistOpen } = useWishlist();
 
   useEffect(() => {
@@ -20,6 +20,7 @@ export default function Navbar() {
 
   const links = [
     { label: 'Home', href: '#hero' },
+    { label: 'Menu & Pre-Order', href: '#menu', isSpecial: true },
     { label: 'Sweets', href: '#collection' },
     { label: 'Our Story', href: '#story' },
     { label: 'Contact', href: '#contact' },
@@ -56,9 +57,33 @@ export default function Navbar() {
                 <a
                   href={link.href}
                   className="navbar__link"
-                  onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (link.href === '#menu') {
+                      window.location.hash = '#menu';
+                      navigateTo('menu');
+                    } else {
+                      scrollTo(link.href);
+                    }
+                  }}
+                  style={link.isSpecial ? {
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    color: '#fbbf24',
+                    fontWeight: 600,
+                    padding: '3px 10px',
+                    borderRadius: '16px',
+                    background: 'rgba(217, 119, 6, 0.15)',
+                    border: '1px solid rgba(217, 119, 6, 0.35)',
+                  } : {}}
                 >
                   {link.label}
+                  {link.isSpecial && (
+                    <span style={{ fontSize: '9px', fontWeight: 700, background: '#d97706', color: '#fff', padding: '1px 5px', borderRadius: '6px', letterSpacing: '0.04em' }}>
+                      NEW
+                    </span>
+                  )}
                 </a>
               </li>
             ))}
@@ -138,13 +163,29 @@ export default function Navbar() {
                     key={link.label}
                     href={link.href}
                     className="mobile-menu__link"
-                    onClick={(e) => { e.preventDefault(); scrollTo(link.href); }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setMenuOpen(false);
+                      if (link.href === '#menu') {
+                        window.location.hash = '#menu';
+                        navigateTo('menu');
+                      } else {
+                        scrollTo(link.href);
+                      }
+                    }}
                     initial={{ opacity: 0, y: 18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.06 + 0.08 }}
                   >
                     <span className="mobile-menu__link-num">0{i + 1}</span>
-                    <span className="mobile-menu__link-text">{link.label}</span>
+                    <span className="mobile-menu__link-text" style={link.isSpecial ? { color: '#fbbf24', fontWeight: 700 } : {}}>
+                      {link.label}
+                    </span>
+                    {link.isSpecial && (
+                      <span style={{ marginLeft: '8px', fontSize: '10px', background: '#d97706', color: '#fff', padding: '2px 7px', borderRadius: '10px', fontWeight: 700 }}>
+                        PRE-ORDER
+                      </span>
+                    )}
                   </motion.a>
                 ))}
 

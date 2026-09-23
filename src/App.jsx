@@ -13,6 +13,7 @@ import { useScrollReveal } from './hooks/useAnimations';
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const BillingCounter = lazy(() => import('./components/Billing/BillingCounter'));
 const StaffLoginModal = lazy(() => import('./components/Auth/StaffLoginModal'));
+const CustomerMenuPage = lazy(() => import('./components/Menu/CustomerMenuPage'));
 
 // Read-only banner shown to demo/viewer accounts
 function SandboxBanner({ onLogout }) {
@@ -141,6 +142,15 @@ function AppContent({ isLoaded, handleLoadComplete }) {
   useEffect(() => {
     if (isAdmin || isTestMode) void import('./components/Billing/BillingCounter');
   }, [isAdmin, isTestMode]);
+
+  // Route to Customer Menu / Pre-Order Page (Public)
+  if (currentView === 'menu') {
+    return (
+      <Suspense fallback={<ModuleLoader label="Loading Menu..." />}>
+        <CustomerMenuPage />
+      </Suspense>
+    );
+  }
 
   // Route to Admin Dashboard UI (Protected - Requires Admin or Test Mode)
   if (currentView === 'admin') {
@@ -274,6 +284,7 @@ function App() {
         hash.startsWith('#orders') ||
         hash.startsWith('#dispatch') ||
         hash.startsWith('#shift-bills') ||
+        hash.startsWith('#menu') ||
         path.endsWith('/admin') ||
         path.endsWith('/billing')
       );
