@@ -281,6 +281,7 @@ export default function CustomerMenuPage() {
         }}
       >
         <div
+          className="menu-header-inner"
           style={{
             maxWidth: '1360px',
             margin: '0 auto',
@@ -288,6 +289,7 @@ export default function CustomerMenuPage() {
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '16px',
+            flexWrap: 'wrap',
           }}
         >
           {/* Brand info */}
@@ -760,7 +762,7 @@ export default function CustomerMenuPage() {
                       </div>
 
                       {/* Right: Portion / Weight selector & Add button */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                      <div className="clean-menu-card-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                         {/* Portions if kg item */}
                         {isKg ? (
                           <div
@@ -1447,6 +1449,54 @@ export default function CustomerMenuPage() {
           .mobile-category-strip::-webkit-scrollbar-thumb {
             background: #cbd5e1;
             border-radius: 4px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .menu-header-inner {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .menu-header-inner > div:last-child {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+          }
+          .clean-menu-card {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+            padding: 14px !important;
+          }
+          .clean-menu-card-controls {
+            width: 100% !important;
+            justify-content: space-between !important;
+          }
+          .preorder-tray-panel {
+            padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .clean-menu-card-controls {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+          }
+          .clean-menu-card-controls > div:first-child {
+            width: 100%;
+            justify-content: center;
+          }
+          .clean-menu-card-controls > div:nth-child(2) {
+            text-align: left !important;
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+          }
+          .clean-menu-card-controls button {
+            width: 100% !important;
+            justify-content: center !important;
           }
         }
       `}</style>

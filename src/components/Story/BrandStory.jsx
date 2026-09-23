@@ -127,7 +127,7 @@ export default function BrandStory() {
   return (
     <section
       id="story"
-      className="relative w-full py-20 md:py-28 lg:py-32 bg-warm-dark text-cream overflow-hidden"
+      className="relative w-full py-14 sm:py-20 md:py-28 lg:py-32 bg-warm-dark text-cream overflow-hidden"
     >
       {/* Background ambient lighting */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -215,7 +215,7 @@ export default function BrandStory() {
           </div>
 
           {/* Main Visual Slide Card */}
-          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-gold/20 bg-deep-brown/40 shadow-2xl backdrop-blur-sm min-h-[460px] sm:min-h-[500px] md:min-h-[540px]">
+          <div className="relative rounded-2xl md:rounded-3xl overflow-hidden border border-gold/20 bg-deep-brown/40 shadow-2xl backdrop-blur-sm min-h-[420px] sm:min-h-[480px] md:min-h-[540px]">
             <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={current}
@@ -227,7 +227,7 @@ export default function BrandStory() {
                 className="grid grid-cols-1 md:grid-cols-12 h-full items-stretch"
               >
                 {/* Image Column */}
-                <div className="relative md:col-span-7 h-[260px] sm:h-[320px] md:h-full min-h-[260px] md:min-h-[500px] overflow-hidden group">
+                <div className="relative md:col-span-7 h-[220px] sm:h-[300px] md:h-full min-h-[220px] md:min-h-[500px] overflow-hidden group">
                   <img
                     src={currentFrame.img}
                     alt={currentFrame.label}
@@ -245,7 +245,7 @@ export default function BrandStory() {
                 </div>
 
                 {/* Content Column */}
-                <div className="md:col-span-5 p-6 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-b from-deep-brown/80 to-warm-dark/95">
+                <div className="md:col-span-5 p-5 sm:p-8 md:p-10 lg:p-12 flex flex-col justify-between bg-gradient-to-b from-deep-brown/80 to-warm-dark/95">
                   <div>
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-gold font-ui text-xs font-semibold tracking-widest uppercase">

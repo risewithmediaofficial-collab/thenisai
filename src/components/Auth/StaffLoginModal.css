@@ -72,8 +72,8 @@
 
 /* Main Neumorphic Circular Disc */
 .neu-circle-card {
-  width: clamp(370px, 86vw, 470px);
-  min-height: clamp(370px, 86vw, 470px);
+  width: clamp(280px, 86vw, 470px);
+  min-height: clamp(280px, 86vw, 470px);
   border-radius: 50%;
   background: #EAEFF5;
   box-shadow: inset 4px 4px 10px rgba(203, 206, 214, 0.6), inset -4px -4px 10px rgba(255, 255, 255, 0.85);
@@ -88,8 +88,10 @@
 
 @media (max-width: 540px) {
   .neu-circle-card {
-    border-radius: 36px;
-    padding: 30px 22px 26px;
+    width: 100%;
+    max-width: 360px;
+    border-radius: 28px;
+    padding: 26px 18px 22px;
     min-height: auto;
   }
 }
