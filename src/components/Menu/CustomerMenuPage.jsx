@@ -42,19 +42,39 @@ export default function CustomerMenuPage() {
     });
   }, [inventory]);
 
-  // Extract categories dynamically
+  // Extract categories dynamically with item counts & icons
   const categories = useMemo(() => {
+    const counts = {};
+    counts['all'] = menuItems.length;
+    menuItems.forEach((item) => {
+      const cat = (item.category || 'other').toLowerCase();
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+
     const set = new Set();
     menuItems.forEach((item) => {
       if (item.category) set.add(item.category.toLowerCase());
     });
     const list = Array.from(set);
+
     return [
-      { id: 'all', label: 'All Items' },
-      ...list.map((cat) => ({
-        id: cat,
-        label: cat.charAt(0).toUpperCase() + cat.slice(1),
-      })),
+      { id: 'all', label: 'All Items', count: counts['all'] || 0, icon: '🍽️' },
+      ...list.map((cat) => {
+        let icon = '🍯';
+        const lower = cat.toLowerCase();
+        if (lower.includes('beverage') || lower.includes('tea') || lower.includes('coffee')) icon = '☕';
+        else if (lower.includes('spice') || lower.includes('kara') || lower.includes('savouries')) icon = '🌶️';
+        else if (lower.includes('snack') || lower.includes('vada')) icon = '🥨';
+        else if (lower.includes('ghee')) icon = '🧈';
+        else if (lower.includes('halwa')) icon = '🍮';
+
+        return {
+          id: cat,
+          label: cat.charAt(0).toUpperCase() + cat.slice(1),
+          count: counts[cat] || 0,
+          icon,
+        };
+      }),
     ];
   }, [menuItems]);
 
@@ -244,23 +264,25 @@ export default function CustomerMenuPage() {
     }
   };
 
+  const activeCategoryObj = categories.find((c) => c.id === selectedCategory) || categories[0];
+
   return (
-    <div style={{ minHeight: '100vh', background: '#0c0a09', color: '#f8fafc', fontFamily: 'inherit' }}>
-      {/* ── Top Header Navigation ────────────────────────────────────────── */}
+    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#0f172a', fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+      {/* ── Top Clean White Header ───────────────────────────────────────── */}
       <header
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 40,
-          background: 'rgba(12, 10, 9, 0.92)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(217, 119, 6, 0.25)',
-          padding: '14px 20px',
+          background: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+          padding: '12px 20px',
         }}
       >
         <div
           style={{
-            maxWidth: '1280px',
+            maxWidth: '1360px',
             margin: '0 auto',
             display: 'flex',
             alignItems: 'center',
@@ -269,11 +291,11 @@ export default function CustomerMenuPage() {
           }}
         >
           {/* Brand info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <img
-              src="/images/branding/logo-light.webp"
+              src="/images/branding/logo.webp"
               alt="Thenisai Logo"
-              style={{ height: '38px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = '/images/branding/logo-icon.webp';
@@ -281,16 +303,16 @@ export default function CustomerMenuPage() {
             />
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ fontSize: '18px', fontWeight: 700, color: '#fef3c7', margin: 0 }}>
+                <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>
                   Thenisai Counter Menu
                 </h1>
                 <span
                   style={{
                     fontSize: '11px',
-                    fontWeight: 600,
-                    background: 'rgba(217, 119, 6, 0.2)',
-                    color: '#fbbf24',
-                    border: '1px solid rgba(217, 119, 6, 0.4)',
+                    fontWeight: 700,
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    border: '1px solid #fde68a',
                     padding: '2px 8px',
                     borderRadius: '12px',
                     letterSpacing: '0.04em',
@@ -299,14 +321,14 @@ export default function CustomerMenuPage() {
                   PRE-ORDER
                 </span>
               </div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#a8a29e' }}>
-                Order from fresh inventory • Quick pickup & counter billing
+              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
+                Fresh counter stock &bull; Quick store pickup &bull; Pay at counter
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {/* Back to Storefront */}
             <button
               type="button"
@@ -320,18 +342,18 @@ export default function CustomerMenuPage() {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                color: '#e2e8f0',
+                background: '#ffffff',
+                border: '1px solid #cbd5e1',
+                color: '#334155',
                 padding: '8px 14px',
                 borderRadius: '8px',
                 fontSize: '13px',
                 fontWeight: 600,
                 cursor: 'pointer',
-                transition: 'all 0.2s',
+                transition: 'all 0.15s',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)')}
+              onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
+              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="19" y1="12" x2="5" y2="12" />
@@ -349,13 +371,14 @@ export default function CustomerMenuPage() {
                 alignItems: 'center',
                 gap: '8px',
                 background: 'linear-gradient(135deg, #d97706, #b45309)',
-                color: '#fff',
+                color: '#ffffff',
                 border: 'none',
                 padding: '8px 14px',
                 borderRadius: '8px',
                 fontSize: '13px',
-                fontWeight: 600,
+                fontWeight: 700,
                 cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
               }}
               className="mobile-cart-toggle-btn"
             >
@@ -370,169 +393,311 @@ export default function CustomerMenuPage() {
         </div>
       </header>
 
-      {/* ── Main Layout: Menu Catalog + Pre-Order Tray ─────────────────────── */}
+      {/* ── Main Clean Layout: Sidebar + Catalog + Tray ──────────────────── */}
       <main
         style={{
-          maxWidth: '1280px',
+          maxWidth: '1360px',
           margin: '0 auto',
           padding: '24px 20px 80px',
         }}
       >
-        {/* Banner Alert */}
+        {/* Clean Warm Info Banner */}
         <div
           style={{
-            background: 'linear-gradient(90deg, rgba(217, 119, 6, 0.12), rgba(180, 83, 9, 0.04))',
-            border: '1px solid rgba(217, 119, 6, 0.3)',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderLeft: '4px solid #d97706',
             borderRadius: '12px',
             padding: '14px 18px',
-            marginBottom: '24px',
+            marginBottom: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
             gap: '12px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ fontSize: '20px' }}>⚡</span>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 600, color: '#fef3c7' }}>
-                How Pre-Ordering Works
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+                Simple &amp; Fast Website Pre-Ordering
               </div>
-              <div style={{ fontSize: '12px', color: '#d6d3d1' }}>
-                1. Select your favorite sweets &amp; savouries below &bull; 2. Add to tray &bull; 3. Confirm with your phone number &bull; 4. Biller prepares your parcel instantly when you arrive!
+              <div style={{ fontSize: '13px', color: '#64748b' }}>
+                Choose your sweets &bull; Add portions to tray &bull; Enter name &amp; phone &bull; Our counter packs your parcel ready for pickup!
               </div>
             </div>
           </div>
-          <div style={{ fontSize: '12px', color: '#fbbf24', fontWeight: 600 }}>
-            No Advance Payment Needed &bull; Pay at Counter
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#92400e',
+              background: '#fef3c7',
+              padding: '4px 10px',
+              borderRadius: '20px',
+              border: '1px solid #fde68a',
+            }}
+          >
+            No Advance Payment &bull; Pay at Counter
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '28px', alignItems: 'start' }} className="menu-grid-container">
-          {/* ── Left Column: Menu Items ────────────────────────────────────── */}
-          <div>
-            {/* Search & Category Filter */}
-            <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Search Bar */}
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  placeholder="Search sweets, savouries, tea, halwa (e.g. Mysore Pak, Gulab Jamun, Kara)..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{
-                    width: '100%',
-                    background: '#1c1917',
-                    border: '1px solid #383531',
-                    borderRadius: '10px',
-                    padding: '12px 16px 12px 42px',
-                    color: '#f8fafc',
-                    fontSize: '14px',
-                    outline: 'none',
-                    boxSizing: 'border-box',
-                    transition: 'border-color 0.2s',
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = '#d97706')}
-                  onBlur={(e) => (e.target.style.borderColor = '#383531')}
-                />
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#78716c"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
-                >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                {searchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchTerm('')}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#a8a29e',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
-              </div>
-
-              {/* Category Pills */}
+        {/* 3-Column Responsive Grid Layout */}
+        <div className="menu-page-grid">
+          {/* ── 1. LEFT SIDEBAR: CATEGORIES ──────────────────────────────── */}
+          <aside className="menu-category-sidebar">
+            <div
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '14px',
+                padding: '14px',
+                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
+                position: 'sticky',
+                top: '84px',
+              }}
+            >
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  overflowX: 'auto',
-                  paddingBottom: '4px',
+                  justifyContent: 'space-between',
+                  padding: '4px 8px 12px',
+                  borderBottom: '1px solid #f1f5f9',
+                  marginBottom: '10px',
                 }}
               >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '14px' }}>📂</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Categories
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    background: '#f1f5f9',
+                    color: '#64748b',
+                    padding: '2px 7px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  {menuItems.length}
+                </span>
+              </div>
+
+              {/* Category Buttons List */}
+              <div className="sidebar-category-list">
                 {categories.map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   return (
                     <button
                       key={cat.id}
                       type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      style={{
-                        padding: '7px 14px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        whiteSpace: 'nowrap',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        border: isSelected ? '1px solid #d97706' : '1px solid #292524',
-                        background: isSelected ? 'linear-gradient(135deg, #d97706, #b45309)' : '#1c1917',
-                        color: isSelected ? '#ffffff' : '#a8a29e',
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        window.scrollTo({ top: 120, behavior: 'smooth' });
                       }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 12px',
+                        borderRadius: '9px',
+                        border: isSelected ? '1px solid #fde68a' : '1px solid transparent',
+                        background: isSelected ? '#fef3c7' : 'transparent',
+                        color: isSelected ? '#92400e' : '#334155',
+                        fontWeight: isSelected ? 700 : 500,
+                        fontSize: '13.5px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        textAlign: 'left',
+                        marginBottom: '4px',
+                      }}
+                      className={`sidebar-cat-btn ${isSelected ? 'active' : ''}`}
                     >
-                      {cat.label}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px' }}>{cat.icon}</span>
+                        <span>{cat.label}</span>
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          background: isSelected ? '#f59e0b' : '#f1f5f9',
+                          color: isSelected ? '#ffffff' : '#64748b',
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          minWidth: '18px',
+                          textAlign: 'center',
+                        }}
+                      >
+                        {cat.count}
+                      </span>
                     </button>
                   );
                 })}
               </div>
             </div>
+          </aside>
 
-            {/* Menu List Header Count */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ fontSize: '13px', color: '#78716c' }}>
-                Showing <strong style={{ color: '#fbbf24' }}>{filteredItems.length}</strong> items in inventory
-              </div>
+          {/* ── 2. CENTER COLUMN: SEARCH + MENU ITEMS ────────────────────── */}
+          <div className="menu-main-content">
+            {/* Search Input Bar */}
+            <div style={{ position: 'relative', marginBottom: '16px' }}>
+              <input
+                type="text"
+                placeholder="Search menu items (e.g. Mysore Pak, Gulab Jamun, Kara, Tea)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{
+                  width: '100%',
+                  background: '#ffffff',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '10px',
+                  padding: '12px 16px 12px 42px',
+                  color: '#0f172a',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
+                  transition: 'border-color 0.2s, box-shadow 0.2s',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#d97706';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(217, 119, 6, 0.12)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#cbd5e1';
+                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.03)';
+                }}
+              />
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#64748b"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '22px',
+                    height: '22px',
+                    color: '#64748b',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ✕
+                </button>
+              )}
             </div>
 
-            {/* Menu Item Cards (Text-Only, No Images) */}
+            {/* Mobile Category Quick Bar (Visible only on mobile/tablet) */}
+            <div className="mobile-category-strip">
+              {categories.map((cat) => {
+                const isSelected = selectedCategory === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      padding: '7px 13px',
+                      borderRadius: '20px',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      cursor: 'pointer',
+                      border: isSelected ? '1px solid #d97706' : '1px solid #e2e8f0',
+                      background: isSelected ? '#d97706' : '#ffffff',
+                      color: isSelected ? '#ffffff' : '#475569',
+                      boxShadow: isSelected ? '0 2px 6px rgba(217, 119, 6, 0.25)' : 'none',
+                    }}
+                  >
+                    <span>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                    <span style={{ fontSize: '11px', opacity: 0.85 }}>({cat.count})</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Category Header Title */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '18px' }}>{activeCategoryObj.icon}</span>
+                <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                  {activeCategoryObj.label}
+                </h2>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  ({filteredItems.length} items available)
+                </span>
+              </div>
+              {selectedCategory !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#d97706',
+                    fontSize: '12.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  View All &rarr;
+                </button>
+              )}
+            </div>
+
+            {/* Menu Items Cards List (Text-Only, No Images, Clean White) */}
             {filteredItems.length === 0 ? (
               <div
                 style={{
-                  background: '#1c1917',
-                  border: '1px dashed #383531',
+                  background: '#ffffff',
+                  border: '1px dashed #cbd5e1',
                   borderRadius: '12px',
-                  padding: '40px 20px',
+                  padding: '48px 20px',
                   textAlign: 'center',
-                  color: '#78716c',
+                  color: '#64748b',
                 }}
               >
-                <div style={{ fontSize: '32px', marginBottom: '10px' }}>🔍</div>
-                <div style={{ fontSize: '15px', fontWeight: 600, color: '#d6d3d1' }}>
+                <div style={{ fontSize: '36px', marginBottom: '10px' }}>🔍</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>
                   No items matched your search
                 </div>
                 <div style={{ fontSize: '13px', marginTop: '4px' }}>
-                  Try another search term or click "All Items"
+                  Try another search term or click &ldquo;All Items&rdquo; in the categories
                 </div>
               </div>
             ) : (
@@ -546,8 +711,8 @@ export default function CustomerMenuPage() {
                     <div
                       key={item.id}
                       style={{
-                        background: '#171412',
-                        border: '1px solid #292524',
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
                         borderRadius: '12px',
                         padding: '16px 20px',
                         display: 'flex',
@@ -555,25 +720,19 @@ export default function CustomerMenuPage() {
                         justifyContent: 'space-between',
                         flexWrap: 'wrap',
                         gap: '16px',
-                        transition: 'border-color 0.2s, background 0.2s',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
+                        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.15s',
                       }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(217, 119, 6, 0.4)';
-                        e.currentTarget.style.background = '#1c1917';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = '#292524';
-                        e.currentTarget.style.background = '#171412';
-                      }}
+                      className="clean-menu-card"
                     >
                       {/* Left: Item Information (Text Only) */}
                       <div style={{ flex: '1 1 240px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#fef3c7' }}>
+                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
                             {item.name || item.englishName}
                           </h3>
                           {item.tamilName && (
-                            <span style={{ fontSize: '13px', color: '#d97706', fontWeight: 500 }}>
+                            <span style={{ fontSize: '13px', color: '#b45309', fontWeight: 600 }}>
                               ({item.tamilName})
                             </span>
                           )}
@@ -583,17 +742,18 @@ export default function CustomerMenuPage() {
                           <span
                             style={{
                               fontSize: '11px',
-                              background: '#292524',
-                              color: '#a8a29e',
+                              background: '#f1f5f9',
+                              color: '#475569',
                               padding: '2px 8px',
                               borderRadius: '4px',
+                              fontWeight: 600,
                               textTransform: 'uppercase',
                               letterSpacing: '0.04em',
                             }}
                           >
                             {item.category || 'Sweet'}
                           </span>
-                          <span style={{ fontSize: '12px', color: '#78716c' }}>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>
                             Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {item.unit || (isKg ? 'kg' : 'pc')}
                           </span>
                         </div>
@@ -606,8 +766,8 @@ export default function CustomerMenuPage() {
                           <div
                             style={{
                               display: 'inline-flex',
-                              background: '#0c0a09',
-                              border: '1px solid #383531',
+                              background: '#f8fafc',
+                              border: '1px solid #e2e8f0',
                               borderRadius: '8px',
                               padding: '3px',
                               gap: '2px',
@@ -628,7 +788,7 @@ export default function CustomerMenuPage() {
                                     fontWeight: isPSelected ? 700 : 500,
                                     cursor: 'pointer',
                                     background: isPSelected ? '#d97706' : 'transparent',
-                                    color: isPSelected ? '#fff' : '#a8a29e',
+                                    color: isPSelected ? '#ffffff' : '#64748b',
                                     transition: 'all 0.15s',
                                   }}
                                 >
@@ -638,17 +798,17 @@ export default function CustomerMenuPage() {
                             })}
                           </div>
                         ) : (
-                          <div style={{ fontSize: '12px', color: '#a8a29e', background: '#292524', padding: '4px 10px', borderRadius: '6px' }}>
+                          <div style={{ fontSize: '12px', color: '#475569', background: '#f1f5f9', padding: '5px 11px', borderRadius: '6px', fontWeight: 600 }}>
                             {item.unit || '1 Unit'}
                           </div>
                         )}
 
                         {/* Price Display */}
                         <div style={{ textAlign: 'right', minWidth: '70px' }}>
-                          <div style={{ fontSize: '17px', fontWeight: 700, color: '#fbbf24' }}>
+                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
                             ₹{currentPrice}
                           </div>
-                          <div style={{ fontSize: '10px', color: '#78716c' }}>
+                          <div style={{ fontSize: '11px', color: '#64748b' }}>
                             for {selectedPortion}
                           </div>
                         </div>
@@ -663,14 +823,14 @@ export default function CustomerMenuPage() {
                             gap: '6px',
                             background: 'linear-gradient(135deg, #d97706, #b45309)',
                             border: 'none',
-                            color: '#fff',
+                            color: '#ffffff',
                             padding: '8px 16px',
                             borderRadius: '8px',
                             fontSize: '13px',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
-                            transition: 'transform 0.1s, filter 0.2s',
+                            boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
+                            transition: 'transform 0.1s, opacity 0.2s',
                           }}
                           onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
                           onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
@@ -689,34 +849,35 @@ export default function CustomerMenuPage() {
             )}
           </div>
 
-          {/* ── Right Column: In-Page Pre-Order Tray ───────────────────────── */}
+          {/* ── 3. RIGHT COLUMN: IN-PAGE PRE-ORDER TRAY ───────────────────── */}
           <div
             style={{
               position: 'sticky',
-              top: '80px',
-              background: '#171412',
-              border: '1px solid rgba(217, 119, 6, 0.25)',
+              top: '84px',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
               borderRadius: '14px',
-              padding: '20px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+              padding: '18px',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
             }}
             className={`preorder-tray-panel ${isMobileCartOpen ? 'mobile-open' : ''}`}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #292524', paddingBottom: '14px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>🛒</span>
-                <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#fef3c7' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: 800, margin: 0, color: '#0f172a' }}>
                   Pre-Order Tray
                 </h2>
               </div>
               <span
                 style={{
-                  background: 'rgba(217, 119, 6, 0.2)',
-                  color: '#fbbf24',
+                  background: '#fef3c7',
+                  color: '#92400e',
                   fontSize: '11px',
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
+                  border: '1px solid #fde68a',
                 }}
               >
                 {totalItemCount} items
@@ -725,21 +886,21 @@ export default function CustomerMenuPage() {
 
             {/* Tray items list */}
             {preCart.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '36px 12px', color: '#78716c' }}>
+              <div style={{ textAlign: 'center', padding: '36px 12px', color: '#64748b' }}>
                 <div style={{ fontSize: '32px', marginBottom: '8px' }}>🍯</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: '#a8a29e' }}>Your tray is empty</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>Your tray is empty</div>
                 <div style={{ fontSize: '12px', marginTop: '4px' }}>
                   Click &ldquo;Add&rdquo; on any sweet or snack from the counter menu
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
                 {preCart.map((item) => (
                   <div
                     key={item.cartItemId}
                     style={{
-                      background: '#1c1917',
-                      border: '1px solid #292524',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
                       borderRadius: '8px',
                       padding: '10px 12px',
                       display: 'flex',
@@ -749,10 +910,10 @@ export default function CustomerMenuPage() {
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
                           {item.name}
                         </div>
-                        <div style={{ fontSize: '11px', color: '#fbbf24', marginTop: '2px' }}>
+                        <div style={{ fontSize: '11px', color: '#d97706', marginTop: '2px', fontWeight: 600 }}>
                           Portion: {item.portion} &bull; ₹{item.price} each
                         </div>
                       </div>
@@ -762,7 +923,7 @@ export default function CustomerMenuPage() {
                         style={{
                           background: 'transparent',
                           border: 'none',
-                          color: '#78716c',
+                          color: '#94a3b8',
                           cursor: 'pointer',
                           padding: '2px',
                           fontSize: '12px',
@@ -773,16 +934,16 @@ export default function CustomerMenuPage() {
                       </button>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #292524', paddingTop: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
                       {/* Qty +/- */}
-                      <div style={{ display: 'inline-flex', alignItems: 'center', background: '#0c0a09', borderRadius: '6px', border: '1px solid #383531' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', background: '#ffffff', borderRadius: '6px', border: '1px solid #cbd5e1' }}>
                         <button
                           type="button"
                           onClick={() => handleUpdateQty(item.cartItemId, -1)}
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#a8a29e',
+                            color: '#475569',
                             width: '24px',
                             height: '24px',
                             cursor: 'pointer',
@@ -791,7 +952,7 @@ export default function CustomerMenuPage() {
                         >
                           -
                         </button>
-                        <span style={{ fontSize: '12px', fontWeight: 600, padding: '0 6px', color: '#f8fafc' }}>
+                        <span style={{ fontSize: '12px', fontWeight: 700, padding: '0 6px', color: '#0f172a' }}>
                           {item.quantity}
                         </span>
                         <button
@@ -800,7 +961,7 @@ export default function CustomerMenuPage() {
                           style={{
                             background: 'transparent',
                             border: 'none',
-                            color: '#a8a29e',
+                            color: '#475569',
                             width: '24px',
                             height: '24px',
                             cursor: 'pointer',
@@ -811,7 +972,7 @@ export default function CustomerMenuPage() {
                         </button>
                       </div>
 
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#fef3c7' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
                         ₹{item.subtotal}
                       </div>
                     </div>
@@ -822,13 +983,13 @@ export default function CustomerMenuPage() {
 
             {/* Tray Footer & Checkout Action */}
             {preCart.length > 0 && (
-              <div style={{ borderTop: '1px solid #292524', paddingTop: '16px', marginTop: '16px' }}>
+              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '16px', marginTop: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '13px', color: '#a8a29e' }}>Counter Total (Est.)</span>
-                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#fbbf24' }}>₹{grandTotal}</span>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Counter Total (Est.)</span>
+                  <span style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>₹{grandTotal}</span>
                 </div>
-                <div style={{ fontSize: '11px', color: '#78716c', marginBottom: '14px', lineHeight: 1.4 }}>
-                  No online payment. Pay when picking up at the counter.
+                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '14px', lineHeight: 1.4 }}>
+                  No advance payment. Pay when picking up at the counter.
                 </div>
 
                 <button
@@ -838,19 +999,19 @@ export default function CustomerMenuPage() {
                     width: '100%',
                     background: 'linear-gradient(135deg, #d97706, #b45309)',
                     border: 'none',
-                    color: '#fff',
+                    color: '#ffffff',
                     padding: '12px',
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 12px rgba(217, 119, 6, 0.3)',
+                    boxShadow: '0 4px 12px rgba(217, 119, 6, 0.25)',
                     transition: 'opacity 0.2s',
                   }}
                   onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.92')}
                   onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                 >
-                  Proceed to Pre-Order →
+                  Proceed to Pre-Order &rarr;
                 </button>
               </div>
             )}
@@ -858,7 +1019,7 @@ export default function CustomerMenuPage() {
         </div>
       </main>
 
-      {/* ── Checkout Details Modal ────────────────────────────────────────── */}
+      {/* ── Clean White Checkout Details Modal ────────────────────────────── */}
       <AnimatePresence>
         {isCheckoutOpen && (
           <div
@@ -866,8 +1027,8 @@ export default function CustomerMenuPage() {
               position: 'fixed',
               inset: 0,
               zIndex: 100,
-              background: 'rgba(0, 0, 0, 0.75)',
-              backdropFilter: 'blur(6px)',
+              background: 'rgba(15, 23, 42, 0.55)',
+              backdropFilter: 'blur(5px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -879,21 +1040,21 @@ export default function CustomerMenuPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               style={{
-                background: '#171412',
-                border: '1px solid rgba(217, 119, 6, 0.4)',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
                 borderRadius: '16px',
                 width: '100%',
                 maxWidth: '460px',
                 padding: '24px',
-                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8)',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#fef3c7' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
                     Customer Pre-Order Details
                   </h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#a8a29e' }}>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
                     Our counter staff will use this to identify your pre-order
                   </p>
                 </div>
@@ -901,11 +1062,17 @@ export default function CustomerMenuPage() {
                   type="button"
                   onClick={() => setIsCheckoutOpen(false)}
                   style={{
-                    background: 'transparent',
+                    background: '#f1f5f9',
                     border: 'none',
-                    color: '#a8a29e',
-                    fontSize: '18px',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    color: '#64748b',
+                    fontSize: '14px',
                     cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                   }}
                 >
                   ✕
@@ -915,12 +1082,13 @@ export default function CustomerMenuPage() {
               {formError && (
                 <div
                   style={{
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid #ef4444',
-                    color: '#fca5a5',
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#b91c1c',
                     padding: '8px 12px',
                     borderRadius: '8px',
                     fontSize: '12px',
+                    fontWeight: 600,
                     marginBottom: '14px',
                   }}
                 >
@@ -931,7 +1099,7 @@ export default function CustomerMenuPage() {
               <form onSubmit={handleSubmitPreOrder} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 {/* Name */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#d6d3d1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                     Your Full Name <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -942,23 +1110,23 @@ export default function CustomerMenuPage() {
                     onChange={(e) => setCustomerName(e.target.value)}
                     style={{
                       width: '100%',
-                      background: '#1c1917',
-                      border: '1px solid #383531',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 14px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '14px',
                       boxSizing: 'border-box',
                       outline: 'none',
                     }}
                     onFocus={(e) => (e.target.style.borderColor = '#d97706')}
-                    onBlur={(e) => (e.target.style.borderColor = '#383531')}
+                    onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
                 </div>
 
                 {/* Mobile Phone */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#d6d3d1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                     Mobile Number <span style={{ color: '#ef4444' }}>*</span>
                   </label>
                   <input
@@ -970,51 +1138,51 @@ export default function CustomerMenuPage() {
                     onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, ''))}
                     style={{
                       width: '100%',
-                      background: '#1c1917',
-                      border: '1px solid #383531',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 14px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '14px',
                       boxSizing: 'border-box',
                       outline: 'none',
                     }}
                     onFocus={(e) => (e.target.style.borderColor = '#d97706')}
-                    onBlur={(e) => (e.target.style.borderColor = '#383531')}
+                    onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
                 </div>
 
                 {/* Optional Note */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#d6d3d1', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
                     Pickup Time / Special Note (Optional)
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Coming by 4 PM, pack in 2 boxes"
+                    placeholder="e.g. Coming by 4 PM, pack in 2 separate boxes"
                     value={orderNote}
                     onChange={(e) => setOrderNote(e.target.value)}
                     style={{
                       width: '100%',
-                      background: '#1c1917',
-                      border: '1px solid #383531',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       padding: '10px 14px',
-                      color: '#f8fafc',
+                      color: '#0f172a',
                       fontSize: '13px',
                       boxSizing: 'border-box',
                       outline: 'none',
                     }}
                     onFocus={(e) => (e.target.style.borderColor = '#d97706')}
-                    onBlur={(e) => (e.target.style.borderColor = '#383531')}
+                    onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
                 </div>
 
                 {/* Summary Box */}
                 <div
                   style={{
-                    background: '#0c0a09',
-                    border: '1px solid #292524',
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
                     borderRadius: '8px',
                     padding: '10px 14px',
                     display: 'flex',
@@ -1022,8 +1190,8 @@ export default function CustomerMenuPage() {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <span style={{ fontSize: '13px', color: '#a8a29e' }}>Items Total ({totalItemCount})</span>
-                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#fbbf24' }}>₹{grandTotal}</span>
+                  <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Items Total ({totalItemCount})</span>
+                  <span style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a' }}>₹{grandTotal}</span>
                 </div>
 
                 {/* Actions */}
@@ -1033,9 +1201,9 @@ export default function CustomerMenuPage() {
                     onClick={() => setIsCheckoutOpen(false)}
                     style={{
                       flex: 1,
-                      background: '#292524',
-                      border: 'none',
-                      color: '#d6d3d1',
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#334155',
                       padding: '11px',
                       borderRadius: '8px',
                       fontSize: '13px',
@@ -1052,13 +1220,14 @@ export default function CustomerMenuPage() {
                       flex: 2,
                       background: 'linear-gradient(135deg, #d97706, #b45309)',
                       border: 'none',
-                      color: '#fff',
+                      color: '#ffffff',
                       padding: '11px',
                       borderRadius: '8px',
                       fontSize: '14px',
                       fontWeight: 700,
                       cursor: 'pointer',
                       opacity: isSubmitting ? 0.7 : 1,
+                      boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
                     }}
                   >
                     {isSubmitting ? 'Submitting...' : 'Confirm Pre-Order'}
@@ -1078,8 +1247,8 @@ export default function CustomerMenuPage() {
               position: 'fixed',
               inset: 0,
               zIndex: 110,
-              background: 'rgba(0, 0, 0, 0.85)',
-              backdropFilter: 'blur(8px)',
+              background: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(6px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1091,14 +1260,14 @@ export default function CustomerMenuPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               style={{
-                background: '#171412',
-                border: '1px solid #d97706',
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
                 borderRadius: '16px',
                 width: '100%',
                 maxWidth: '480px',
                 padding: '28px',
                 textAlign: 'center',
-                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9)',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.2)',
               }}
             >
               <div
@@ -1106,31 +1275,32 @@ export default function CustomerMenuPage() {
                   width: '54px',
                   height: '54px',
                   borderRadius: '50%',
-                  background: 'rgba(16, 185, 129, 0.15)',
-                  border: '2px solid #10b981',
-                  color: '#10b981',
+                  background: '#dcfce7',
+                  border: '2px solid #16a34a',
+                  color: '#16a34a',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   margin: '0 auto 16px',
                   fontSize: '24px',
+                  fontWeight: 800,
                 }}
               >
                 ✓
               </div>
 
-              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#fef3c7' }}>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>
                 Pre-Order Placed Successfully!
               </h3>
-              <p style={{ margin: '6px 0 16px', fontSize: '13px', color: '#a8a29e' }}>
+              <p style={{ margin: '6px 0 16px', fontSize: '13px', color: '#64748b' }}>
                 Your order is sent to the billing counter. Pay &amp; collect when you visit.
               </p>
 
               {/* Order Card Detail */}
               <div
                 style={{
-                  background: '#0c0a09',
-                  border: '1px solid #292524',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
                   borderRadius: '10px',
                   padding: '16px',
                   textAlign: 'left',
@@ -1138,26 +1308,26 @@ export default function CustomerMenuPage() {
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#78716c' }}>Order ID:</span>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#fbbf24' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Order ID:</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#d97706' }}>
                     {placedOrder.id}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#78716c' }}>Customer Name:</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Customer Name:</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
                     {placedOrder.customerName}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: '#78716c' }}>Mobile Number:</span>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Mobile Number:</span>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
                     {placedOrder.customerPhone}
                   </span>
                 </div>
-                <div style={{ borderTop: '1px dashed #292524', margin: '8px 0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '13px', color: '#d6d3d1' }}>Estimated Bill:</span>
-                  <span style={{ fontSize: '16px', fontWeight: 800, color: '#10b981' }}>
+                <div style={{ borderTop: '1px dashed #e2e8f0', margin: '8px 0', paddingTop: '8px', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', color: '#334155', fontWeight: 600 }}>Estimated Bill:</span>
+                  <span style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a' }}>
                     ₹{placedOrder.grandTotal}
                   </span>
                 </div>
@@ -1169,9 +1339,9 @@ export default function CustomerMenuPage() {
                   onClick={() => setPlacedOrder(null)}
                   style={{
                     flex: 1,
-                    background: '#292524',
-                    border: 'none',
-                    color: '#d6d3d1',
+                    background: '#f1f5f9',
+                    border: '1px solid #cbd5e1',
+                    color: '#334155',
                     padding: '12px',
                     borderRadius: '8px',
                     fontSize: '13px',
@@ -1192,7 +1362,7 @@ export default function CustomerMenuPage() {
                     flex: 1,
                     background: 'linear-gradient(135deg, #d97706, #b45309)',
                     border: 'none',
-                    color: '#fff',
+                    color: '#ffffff',
                     padding: '12px',
                     borderRadius: '8px',
                     fontSize: '13px',
@@ -1209,9 +1379,31 @@ export default function CustomerMenuPage() {
       </AnimatePresence>
 
       <style>{`
-        @media (max-width: 900px) {
-          .menu-grid-container {
-            grid-template-columns: 1fr !important;
+        .menu-page-grid {
+          display: grid;
+          grid-template-columns: 240px 1fr 340px;
+          gap: 24px;
+          align-items: start;
+        }
+
+        .mobile-category-strip {
+          display: none;
+        }
+
+        .clean-menu-card:hover {
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+          transform: translateY(-1px);
+        }
+
+        .sidebar-cat-btn:hover:not(.active) {
+          background: #f8fafc !important;
+          color: #0f172a !important;
+        }
+
+        @media (max-width: 1100px) {
+          .menu-page-grid {
+            grid-template-columns: 220px 1fr !important;
           }
           .preorder-tray-panel {
             position: fixed !important;
@@ -1222,6 +1414,7 @@ export default function CustomerMenuPage() {
             border-radius: 16px 16px 0 0 !important;
             z-index: 50 !important;
             max-height: 80vh !important;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
             transform: translateY(calc(100% - 68px));
             transition: transform 0.3s ease;
           }
@@ -1230,6 +1423,30 @@ export default function CustomerMenuPage() {
           }
           .mobile-cart-toggle-btn {
             display: inline-flex !important;
+          }
+        }
+
+        @media (max-width: 800px) {
+          .menu-page-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .menu-category-sidebar {
+            display: none !important;
+          }
+          .mobile-category-strip {
+            display: flex !important;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            -webkit-overflow-scrolling: touch;
+          }
+          .mobile-category-strip::-webkit-scrollbar {
+            height: 4px;
+          }
+          .mobile-category-strip::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
           }
         }
       `}</style>
