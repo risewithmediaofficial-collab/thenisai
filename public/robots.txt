@@ -50,6 +50,7 @@ Allow: /*.ico$
 # Googlebot Favicon Crawler
 User-agent: Googlebot-Favicon
 Allow: /
+Allow: /favicon.ico
 Allow: /images/branding/logo-icon.webp
 Allow: /images/branding/logo-icon.png
 
