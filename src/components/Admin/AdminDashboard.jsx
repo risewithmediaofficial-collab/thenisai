@@ -809,7 +809,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className={`kpi-card pending ${pendingOrders.length > 0 ? 'pulse' : ''}`}>
-                <span className="kpi-label">Pending Online Orders</span>
+                <span className="kpi-label">Pending Pre-Orders</span>
                 <div className="kpi-value">{pendingOrders.length}</div>
                 <span className="kpi-sub">
                   {pendingOrders.length > 0 ? 'Requires immediate packing' : 'All clear'}
@@ -817,7 +817,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="kpi-card online">
-                <span className="kpi-label">Total Online Orders</span>
+                <span className="kpi-label">Total Pre-Orders</span>
                 <div className="kpi-value">{onlineOrders.length}</div>
                 <span className="kpi-sub">Deliveries across TN</span>
               </div>
@@ -1608,10 +1608,10 @@ export default function AdminDashboard() {
                     <line x1="2" y1="12" x2="22" y2="12" />
                     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
-                  Online Web Delivery
+                  Customer Pre-Orders
                 </span>
                 <strong className="stat-val">₹{onlineRevenue.toLocaleString('en-IN')}</strong>
-                <span className="stat-sub">{onlineOrders.length} Online Orders</span>
+                <span className="stat-sub">{onlineOrders.length} Pre-Orders</span>
               </div>
               <div className="sales-stat-card payment">
                 <span className="stat-label">Payment Modes</span>

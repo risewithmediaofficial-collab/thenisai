@@ -1198,7 +1198,7 @@ export default function DailyRevenueReport({
                   {selectedStaffFilter !== 'all' && (
                     <div className="slip-row">
                       <span>STAFF FILTER:</span>
-                      <span>{selectedStaffFilter === 'online' ? 'Online Orders' : selectedStaffFilter}</span>
+                      <span>{selectedStaffFilter === 'online' ? 'Pre-Orders' : selectedStaffFilter}</span>
                     </div>
                   )}
                 </div>

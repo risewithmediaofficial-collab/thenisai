@@ -1753,7 +1753,7 @@ export default function BillingCounter() {
             type="button"
             className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''} ${posTab === 'online-orders' ? 'active' : ''}`}
             onClick={() => handleSwitchTab('online-orders')}
-            aria-label="Online Orders"
+            aria-label="Pre-Orders"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -3552,8 +3552,8 @@ export default function BillingCounter() {
           <main className="pos-online-page" data-lenis-prevent="true">
             <div className="online-page-header">
               <div className="online-header-left">
-                <span className="online-eyebrow">LIVE DISPATCH QUEUE</span>
-                <h2 className="online-title">Online Delivery Orders</h2>
+                <span className="online-eyebrow">LIVE PRE-ORDER QUEUE</span>
+                <h2 className="online-title">Customer Pre-Orders</h2>
                 <div className="online-meta-badges">
                   <span className={`meta-badge ${onlineNewCount > 0 ? 'alert' : 'done'}`}>
                     <span><strong>{onlineNewCount} New</strong> awaiting confirmation</span>
@@ -3562,7 +3562,7 @@ export default function BillingCounter() {
                     <span><strong>{onlineAcceptedCount} In Packing</strong></span>
                   </span>
                   <span className="meta-badge done">
-                    <span><strong>{onlineDispatchedCount} Dispatched</strong></span>
+                    <span><strong>{onlineDispatchedCount} Dispatched / Ready</strong></span>
                   </span>
                 </div>
               </div>
@@ -3595,27 +3595,27 @@ export default function BillingCounter() {
               </div>
             </div>
 
-            {/* Online Orders KPI Strip */}
+            {/* Pre-Orders KPI Strip */}
             <div className="online-kpis-grid">
               <div className="online-kpi-card new">
-                <span className="kpi-label">New Incoming Orders</span>
+                <span className="kpi-label">New Incoming Pre-Orders</span>
                 <div className="kpi-val">{onlineNewCount}</div>
                 <span className="kpi-sub">Accept and print order slip</span>
               </div>
               <div className="online-kpi-card packing">
                 <span className="kpi-label">Packing / Ready</span>
                 <div className="kpi-val">{onlineAcceptedCount}</div>
-                <span className="kpi-sub">Ready for courier handover</span>
+                <span className="kpi-sub">Ready for handover</span>
               </div>
               <div className="online-kpi-card dispatched">
-                <span className="kpi-label">Dispatched Today</span>
+                <span className="kpi-label">Dispatched / Handed Over</span>
                 <div className="kpi-val">{onlineDispatchedCount}</div>
-                <span className="kpi-sub">Sent out for doorstep delivery</span>
+                <span className="kpi-sub">Delivered to customer</span>
               </div>
               <div className="online-kpi-card revenue">
-                <span className="kpi-label">Online Orders Revenue</span>
+                <span className="kpi-label">Pre-Orders Revenue</span>
                 <div className="kpi-val">₹{onlineRevenueTotal.toLocaleString('en-IN')}</div>
-                <span className="kpi-sub">{allOnlineOrders.length} Total Web Orders</span>
+                <span className="kpi-sub">{allOnlineOrders.length} Total Pre-Orders</span>
               </div>
             </div>
 
@@ -3709,7 +3709,7 @@ export default function BillingCounter() {
 
                       <div className="online-cust-info">
                         <div className="cust-primary">
-                          <strong>{ord.customer?.fullName || 'Online Customer'}</strong>
+                          <strong>{ord.customer?.fullName || 'Pre-Order Customer'}</strong>
                           <span className="cust-phone" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />

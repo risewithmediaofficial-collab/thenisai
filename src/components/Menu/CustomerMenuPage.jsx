@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import './CustomerMenuPage.css';
 
 const KG_WEIGHT_PRESETS = [
@@ -156,12 +157,18 @@ export default function CustomerMenuPage() {
     setItemSelections((prev) => ({ ...prev, [itemId]: portion }));
   };
 
-  // Filter available active items using allBillingProducts (with live POS master prices)
+  // Filter available active items using allBillingProducts (with live POS master prices and catalog fallback)
   const menuItems = useMemo(() => {
-    const list = allBillingProducts && allBillingProducts.length > 0 ? allBillingProducts : (inventory || []);
+    const list = (allBillingProducts && allBillingProducts.length > 0)
+      ? allBillingProducts
+      : (inventory && inventory.length > 0 ? inventory : ALL_BILLING_ITEMS);
+
     return list.filter((item) => {
-      if (item.isInactive) return false;
-      if (productAvailabilityMap && productAvailabilityMap[item.id] === false) return false;
+      // In productAvailabilityMap, true explicitly means inactive/hidden by admin
+      const isInactive = productAvailabilityMap && productAvailabilityMap[item.id] !== undefined
+        ? Boolean(productAvailabilityMap[item.id])
+        : Boolean(item.isInactive);
+      if (isInactive) return false;
       return true;
     });
   }, [allBillingProducts, inventory, productAvailabilityMap]);

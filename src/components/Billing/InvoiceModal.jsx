@@ -184,8 +184,8 @@ export default function InvoiceModal() {
   const formattedTotal = Number(grandTotal) % 1 === 0 ? Number(grandTotal).toFixed(0) : Number(grandTotal).toFixed(2);
 
   // Separate message templates:
-  // 1) In-Store POS Bill: Thank the customer, provide bill summary, and promote online order with doorstep delivery
-  // 2) Online Web Order: Order confirmation for delivery
+  // 1) In-Store POS Bill: Thank the customer, provide bill summary, and promote pre-order with store pickup
+  // 2) Pre-Order: Order confirmation for pickup
   const whatsappMessageText = isPosSale
     ? `${greetingName ? `🙏 *Namaste ${greetingName}!*` : `🙏 *Namaste!*`}\n` +
       `Thank you for shopping at *Thenisai Sweets*! 🍯✨\n\n` +
@@ -195,21 +195,21 @@ export default function InvoiceModal() {
       `📦 *Order Items:*\n${itemsText}\n\n` +
       `💰 *Total Amount:* ₹${formattedTotal}\n` +
       `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
-      `🚚 *Order Online & Get Doorstep Delivery!* 📦\n` +
-      `Did you know? You can now order your favorite traditional sweets & savouries online at *www.thenisaisweets.com* and get doorstep delivery right to your home across India!\n\n` +
-      `🌐 *Order Online:* https://www.thenisaisweets.com\n` +
+      `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦\n` +
+      `Did you know? You can now pre-order your favorite traditional sweets & savouries at *www.thenisaisweets.com* and have them packed ready for quick counter pickup!\n\n` +
+      `🌐 *Pre-Order Menu:* https://www.thenisaisweets.com/#menu\n` +
       `📞 *Counter & Orders Helpline:* +91 93448 93547\n\n` +
       `Thank you! Visit us again! 🙏✨`
     : `🙏 *Namaste Thenisai Sweets!*\n` +
-      `I just placed an online order on your website.\n\n` +
+      `I just placed a pre-order on your website.\n\n` +
       `🧾 *Invoice No:* ${invoiceNumber}\n` +
       `👤 *Customer:* ${customerDisplay}\n` +
-      `📍 *Delivery Address:* ${fullAddress}\n\n` +
+      `📍 *Delivery / Pickup Address:* ${fullAddress}\n\n` +
       `📦 *Order Items:*\n${itemsText}\n\n` +
       `💰 *Total Amount:* ₹${formattedTotal}\n` +
       `💳 *Payment Mode:* ${paymentModeLabel}\n` +
       (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
-      `\nPlease confirm order packing and dispatch for delivery. Thank you!`;
+      `\nPlease confirm order packing and readiness. Thank you!`;
 
   const whatsappMessage = encodeURIComponent(whatsappMessageText);
 
@@ -398,10 +398,10 @@ export default function InvoiceModal() {
 
           <div className="pos-slip-dashed-line" />
 
-          {/* Online Order & Doorstep Delivery Note */}
+          {/* Pre-Order & Store Pickup Note */}
           <div className="pos-slip-online-note">
-            <div className="pos-online-label">FOR ONLINE ORDER & DOORSTEP DELIVERY VISIT</div>
-            <div className="pos-online-web">www.thenisaisweets.com</div>
+            <div className="pos-online-label">FOR PRE-ORDER &amp; STORE PICKUP VISIT</div>
+            <div className="pos-online-web">www.thenisaisweets.com/#menu</div>
           </div>
 
           <div className="pos-slip-dashed-line" />
@@ -591,7 +591,7 @@ export default function InvoiceModal() {
             <ol>
               <li>Perishable sweets: Keep in cool place or refrigerate after opening.</li>
               <li>Goods once sold are freshly prepared and dispatched directly from kitchen.</li>
-              <li>For online orders & doorstep delivery across India, visit: <strong>www.thenisaisweets.com</strong></li>
+              <li>For pre-orders &amp; quick store pickup, visit: <strong>www.thenisaisweets.com/#menu</strong></li>
               <li>All disputes subject to Krishnagiri jurisdiction only.</li>
             </ol>
           </div>
