@@ -64,7 +64,7 @@ export default function SideNavbar({
         {/* Brand Header */}
         <div className="pos-sidebar__brand">
           <div className="sidebar-brand-icon">
-            <img src="/images/branding/logo-icon.png" alt="Thenisai" className="sidebar-brand-logo-img" />
+            <img src="/images/branding/logo-icon.webp" alt="Thenisai" className="sidebar-brand-logo-img" />
           </div>
           <div className="sidebar-brand-text">
             <h2 className="sidebar-brand-title">THENISAI</h2>

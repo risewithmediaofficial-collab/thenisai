@@ -12,8 +12,8 @@
         <title>XML Sitemap | Thenisai Palkova &amp; Sweets</title>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png?v=2" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2" />
+        <link rel="icon" type="image/webp" href="/images/branding/logo-icon.webp" />
+        <link rel="icon" type="image/png" href="/images/branding/logo-icon.png" />
         <style type="text/css">
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
@@ -205,7 +205,7 @@
         <div class="container">
           <div class="header">
             <div class="header-brand">
-              <img src="/logo-light.png" alt="Thenisai Palkova &amp; Sweets" class="header-logo" />
+              <img src="/images/branding/logo-light.webp" alt="Thenisai Palkova &amp; Sweets" class="header-logo" />
               <div class="header-title">
                 <h1>Thenisai Palkova &amp; Sweets</h1>
                 <p>Official XML Sitemap for Search Engines (Google, Bing, Yahoo)</p>

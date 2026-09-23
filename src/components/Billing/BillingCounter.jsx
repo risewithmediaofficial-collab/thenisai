@@ -1608,7 +1608,7 @@ export default function BillingCounter() {
             </span>
           </button>
           <div className="mobile-strip-brand">
-            <img src="/images/branding/logo-icon.png" alt="Thenisai" className="mobile-strip-logo" />
+            <img src="/images/branding/logo-icon.webp" alt="Thenisai" className="mobile-strip-logo" />
             <div className="mobile-strip-brand-text">
               <strong>THENISAI POS</strong>
               <span>
