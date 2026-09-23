@@ -6,7 +6,6 @@ function isWorkspaceRoute() {
   const hash = (window.location.hash || '').toLowerCase();
   const path = (window.location.pathname || '').toLowerCase();
   return (
-    hash.startsWith('#menu') ||
     hash.startsWith('#billing') ||
     hash.startsWith('#admin') ||
     hash.startsWith('#inventory') ||
@@ -17,7 +16,6 @@ function isWorkspaceRoute() {
     hash.startsWith('#orders') ||
     hash.startsWith('#dispatch') ||
     hash.startsWith('#shift-bills') ||
-    path.includes('/menu') ||
     path.includes('/billing') ||
     path.includes('/admin')
   );
@@ -30,24 +28,33 @@ function isInsideScrollable(target) {
   if (
     target.classList?.contains('cust-auth-overlay') ||
     target.classList?.contains('cust-auth-backdrop') ||
+    target.classList?.contains('preorder-modal-backdrop') ||
+    target.classList?.contains('preorder-tray-backdrop') ||
+    target.classList?.contains('preorder-success-backdrop') ||
     target.closest(
-      '.cust-auth-backdrop, .cart-backdrop, .cart-drawer__backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-mobile-backdrop, .pos-sidebar-backdrop, .stock-modal-backdrop'
+      '.preorder-modal-backdrop, .preorder-tray-backdrop, .preorder-success-backdrop, .cust-auth-backdrop, .cart-backdrop, .cart-drawer__backdrop, .checkout-backdrop, .invoice-backdrop, .admin-modal-backdrop, .pos-mobile-backdrop, .pos-sidebar-backdrop, .stock-modal-backdrop'
     )
   ) {
-    return false;
+    if (!target.closest('.preorder-modal-card, .preorder-success-card, .preorder-tray-panel, .checkout-modal, .invoice-modal-wrap, .admin-modal-card')) {
+      return false;
+    }
   }
 
-  // Inside workspace (menu/billing/admin), anything inside should scroll freely
+  // When a modal or tray is open, ONLY permit scrolling inside active modal cards or trays
+  if (lockCount > 0) {
+    return Boolean(
+      target.closest(
+        '.preorder-modal-card, .preorder-success-card, .preorder-tray-panel, .cust-auth-modal, .cart-drawer, .cart-drawer__content, .wishlist-drawer, .checkout-modal, .checkout-modal__body, .invoice-modal-wrap, .printable-invoice-container, .admin-modal-card, .stock-modal, .refill-stock-modal, .add-stock-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer, .mobile-menu'
+      )
+    );
+  }
+
+  // Inside workspace (menu/billing/admin), when no modal is open, everything scrolls freely
   if (target.closest('.customer-menu-root, .billing-pos-root, .admin-portal-root, .pos-content-area, .pos-inventory-page, .inventory-table-wrap, .pos-catalog-pane, .pos-bill-pane, .admin-content-area, [data-lenis-prevent]')) {
     return true;
   }
 
-  // Allow internal scroll only for designated modal content cards / drawer bodies
-  return Boolean(
-    target.closest(
-      '.cust-auth-modal, .cart-drawer, .cart-drawer__content, .wishlist-drawer, .checkout-modal, .checkout-modal__body, .invoice-modal-wrap, .printable-invoice-container, .admin-modal-card, .stock-modal, .refill-stock-modal, .add-stock-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer, .mobile-menu, .preorder-tray-panel'
-    )
-  );
+  return true;
 }
 
 function handleWheel(e) {

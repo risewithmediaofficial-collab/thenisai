@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import './CustomerMenuPage.css';
 
 const KG_WEIGHT_PRESETS = [
@@ -40,6 +41,9 @@ export default function CustomerMenuPage() {
 
   // Success state
   const [placedOrder, setPlacedOrder] = useState(null);
+
+  // Strict Background Scroll Lock when any popup, tray drawer, or modal is active
+  useScrollLock(isCheckoutOpen || Boolean(placedOrder) || isMobileCartOpen);
 
   // Helper functions matching POS Billing exactly
   const isLitreItem = (item) => {
@@ -382,7 +386,7 @@ export default function CustomerMenuPage() {
                 }}
               />
               <div className="menu-brand-info">
-                <h1 className="menu-title">Thenisai Counter Menu</h1>
+                <h1 className="menu-title">Thenisai Menu</h1>
                 <span className="menu-preorder-badge">PRE-ORDER</span>
               </div>
             </div>
@@ -405,7 +409,8 @@ export default function CustomerMenuPage() {
                   <line x1="19" y1="12" x2="5" y2="12" />
                   <polyline points="12 19 5 12 12 5" />
                 </svg>
-                <span>Back to Store</span>
+                <span className="desktop-back-text">Back to Store</span>
+                <span className="mobile-back-text">Store</span>
               </button>
 
               {/* Mobile Tray toggle button */}
@@ -967,6 +972,7 @@ export default function CustomerMenuPage() {
       <AnimatePresence>
         {isCheckoutOpen && (
           <div
+            className="preorder-modal-backdrop"
             style={{
               position: 'fixed',
               inset: 0,
@@ -980,6 +986,7 @@ export default function CustomerMenuPage() {
             }}
           >
             <motion.div
+              className="preorder-modal-card"
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -1187,6 +1194,7 @@ export default function CustomerMenuPage() {
       <AnimatePresence>
         {placedOrder && (
           <div
+            className="preorder-success-backdrop"
             style={{
               position: 'fixed',
               inset: 0,
@@ -1200,6 +1208,7 @@ export default function CustomerMenuPage() {
             }}
           >
             <motion.div
+              className="preorder-success-card"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

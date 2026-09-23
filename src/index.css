@@ -12,6 +12,27 @@
   padding: 0;
 }
 
+/* Modal Open Background Scroll Lock */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+}
+
+html.modal-open [data-scrollable],
+body.modal-open .preorder-modal-card,
+body.modal-open .preorder-tray-panel,
+body.modal-open .preorder-success-card,
+body.modal-open .cart-drawer,
+body.modal-open .wishlist-drawer,
+body.modal-open .checkout-modal,
+body.modal-open .invoice-modal-wrap,
+body.modal-open .admin-modal-card {
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+}
+
 :root {
   /* Color Palette */
   --cream: #FFF8EE;
