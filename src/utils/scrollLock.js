@@ -6,6 +6,7 @@ function isWorkspaceRoute() {
   const hash = (window.location.hash || '').toLowerCase();
   const path = (window.location.pathname || '').toLowerCase();
   return (
+    hash.startsWith('#menu') ||
     hash.startsWith('#billing') ||
     hash.startsWith('#admin') ||
     hash.startsWith('#inventory') ||
@@ -16,6 +17,7 @@ function isWorkspaceRoute() {
     hash.startsWith('#orders') ||
     hash.startsWith('#dispatch') ||
     hash.startsWith('#shift-bills') ||
+    path.includes('/menu') ||
     path.includes('/billing') ||
     path.includes('/admin')
   );
@@ -35,15 +37,15 @@ function isInsideScrollable(target) {
     return false;
   }
 
-  // Inside workspace (billing/admin), anything inside the workspace should scroll freely
-  if (target.closest('.billing-pos-root, .admin-portal-root, .pos-content-area, .pos-inventory-page, .inventory-table-wrap, .pos-catalog-pane, .pos-bill-pane, .admin-content-area, [data-lenis-prevent]')) {
+  // Inside workspace (menu/billing/admin), anything inside should scroll freely
+  if (target.closest('.customer-menu-root, .billing-pos-root, .admin-portal-root, .pos-content-area, .pos-inventory-page, .inventory-table-wrap, .pos-catalog-pane, .pos-bill-pane, .admin-content-area, [data-lenis-prevent]')) {
     return true;
   }
 
   // Allow internal scroll only for designated modal content cards / drawer bodies
   return Boolean(
     target.closest(
-      '.cust-auth-modal, .cart-drawer, .cart-drawer__content, .wishlist-drawer, .checkout-modal, .checkout-modal__body, .invoice-modal-wrap, .printable-invoice-container, .admin-modal-card, .stock-modal, .refill-stock-modal, .add-stock-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer, .mobile-menu'
+      '.cust-auth-modal, .cart-drawer, .cart-drawer__content, .wishlist-drawer, .checkout-modal, .checkout-modal__body, .invoice-modal-wrap, .printable-invoice-container, .admin-modal-card, .stock-modal, .refill-stock-modal, .add-stock-modal, .pos-online-drawer, .pos-online-drawer__inner, .pos-online-orders-drawer, .pos-mobile-drawer, .pos-mobile-menu-drawer, .pos-mobile-cart-drawer, .mobile-menu, .preorder-tray-panel'
     )
   );
 }

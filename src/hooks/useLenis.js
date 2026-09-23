@@ -14,6 +14,7 @@ export function useLenis() {
       const hash = (window.location.hash || '').toLowerCase();
       const path = (window.location.pathname || '').toLowerCase();
       return (
+        hash.startsWith('#menu') ||
         hash.startsWith('#admin') ||
         hash.startsWith('#billing') ||
         hash.startsWith('#inventory') ||
@@ -24,6 +25,7 @@ export function useLenis() {
         hash.startsWith('#orders') ||
         hash.startsWith('#dispatch') ||
         hash.startsWith('#shift-bills') ||
+        path.includes('/menu') ||
         path.endsWith('/admin') ||
         path.endsWith('/billing')
       );

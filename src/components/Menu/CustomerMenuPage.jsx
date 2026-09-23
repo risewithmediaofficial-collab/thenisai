@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
+import './CustomerMenuPage.css';
 
 const KG_WEIGHT_PRESETS = [
   { label: '250g', factor: 0.25 },
@@ -8,17 +9,23 @@ const KG_WEIGHT_PRESETS = [
   { label: '1 kg', factor: 1.0 },
 ];
 
+const LITRE_PORTIONS = [
+  { label: '250ml', factor: 0.25 },
+  { label: '500ml', factor: 0.5 },
+  { label: '1 Litre', factor: 1.0 },
+];
+
 export default function CustomerMenuPage() {
-  const { inventory, addPreOrder, navigateTo } = useCart();
+  const { allBillingProducts, inventory, addPreOrder, navigateTo, productAvailabilityMap } = useCart();
 
   // Search & Category
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Portion selection for each item { [itemId]: weightLabel } (default '500g' for kg, '1' for piece)
+  // Portion selection for each item { [itemId]: weightLabel } (default '500g' for kg, '500ml' for litre, unit for single item)
   const [itemSelections, setItemSelections] = useState({});
 
-  // Local cart tray state for pre-order: Array<{ id, itemId, name, tamilName, portion, unit, price, quantity, subtotal }>
+  // Local cart tray state for pre-order: Array<{ cartItemId, id, name, tamilName, portion, unit, price, quantity, subtotal }>
   const [preCart, setPreCart] = useState([]);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
@@ -33,14 +40,131 @@ export default function CustomerMenuPage() {
   // Success state
   const [placedOrder, setPlacedOrder] = useState(null);
 
-  // Filter available active inventory items
+  // Helper functions matching POS Billing exactly
+  const isLitreItem = (item) => {
+    if (!item) return false;
+    const u = (item.unit || '').toLowerCase();
+    const id = (item.id || '').toLowerCase();
+    return u.includes('litre') || u.includes('liter') || id.includes('ghee_bottle') || id.includes('oil');
+  };
+
+  const isKgItem = (item) => {
+    if (!item) return false;
+    const u = (item.unit || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const id = (item.id || '').toLowerCase();
+    const name = (item.name || '').toLowerCase();
+
+    // Check if beverage or cup-based or piece-based fast seller (matching BillingCounter.jsx)
+    if (
+      cat.includes('beverage') ||
+      cat === 'snacks' ||
+      id.includes('tea') ||
+      id.includes('coffee') ||
+      id.includes('milk') ||
+      id.includes('boost') ||
+      id.includes('horlicks') ||
+      id.includes('malt') ||
+      name.includes('tea') ||
+      name.includes('coffee') ||
+      name.includes('milk') ||
+      name.includes('boost') ||
+      name.includes('horlicks') ||
+      name.includes('malt') ||
+      id === 'vada' ||
+      u.includes('cup') ||
+      u.includes('pc') ||
+      u.includes('piece') ||
+      u.includes('pkt') ||
+      u.includes('packet') ||
+      u.includes('bottle') ||
+      u.includes('box') ||
+      u.includes('litre') ||
+      u.includes('liter')
+    ) {
+      return false;
+    }
+    return u === 'kg' || !u || Boolean(item.prices && (item.prices['250g'] || item.prices['500g']));
+  };
+
+  const getItemUnitDisplay = (item) => {
+    if (!item) return '1 Cup';
+    const cat = (item.category || '').toLowerCase();
+    const u = (item.unit || '').trim();
+    const id = (item.id || '').toLowerCase();
+    const name = (item.name || '').toLowerCase();
+
+    if (
+      cat.includes('beverage') ||
+      id.includes('tea') ||
+      id.includes('coffee') ||
+      id.includes('milk') ||
+      id.includes('boost') ||
+      id.includes('horlicks') ||
+      id.includes('malt') ||
+      name.includes('tea') ||
+      name.includes('coffee') ||
+      name.includes('milk') ||
+      name.includes('boost') ||
+      name.includes('horlicks') ||
+      name.includes('malt') ||
+      u.toLowerCase().includes('cup')
+    ) {
+      return '1 Cup';
+    }
+    if (cat === 'snacks' || id === 'vada' || u.toLowerCase().includes('pc') || u.toLowerCase().includes('piece')) {
+      return '1 Pc';
+    }
+    if (u.toLowerCase().includes('litre') || u.toLowerCase().includes('liter')) return '1 Litre';
+    if (u.toLowerCase().includes('pkt') || u.toLowerCase().includes('packet')) return '1 Pkt';
+    if (u.toLowerCase().includes('bottle')) return '1 Bottle';
+    if (u.toLowerCase().includes('box')) return '1 Box';
+    return u || 'kg';
+  };
+
+  const getAvailablePortions = (item) => {
+    if (isLitreItem(item)) return LITRE_PORTIONS;
+    if (isKgItem(item)) return KG_WEIGHT_PRESETS;
+    return null;
+  };
+
+  const getSelectedPortion = (item) => {
+    if (itemSelections[item.id]) return itemSelections[item.id];
+    if (isLitreItem(item)) return '500ml';
+    if (isKgItem(item)) return '500g';
+    return getItemUnitDisplay(item);
+  };
+
+  const computePrice = (item, portion) => {
+    const basePrice = Number(item.price || item.unitPrice || item.pricePerKg || 0);
+    if (isLitreItem(item)) {
+      if (portion === '250ml') return Math.round(basePrice * 0.25);
+      if (portion === '500ml') return Math.round(basePrice * 0.5);
+      if (portion === '1 Litre' || portion === '1L') return Math.round(basePrice * 1.0);
+      return basePrice;
+    }
+    if (isKgItem(item)) {
+      if (portion === '250g') return Math.round(basePrice * 0.25);
+      if (portion === '500g') return Math.round(basePrice * 0.5);
+      if (portion === '1 kg' || portion === '1kg') return Math.round(basePrice * 1.0);
+      return basePrice;
+    }
+    return basePrice;
+  };
+
+  const handleSelectPortion = (itemId, portion) => {
+    setItemSelections((prev) => ({ ...prev, [itemId]: portion }));
+  };
+
+  // Filter available active items using allBillingProducts (with live POS master prices)
   const menuItems = useMemo(() => {
-    if (!inventory || !Array.isArray(inventory)) return [];
-    return inventory.filter((item) => {
+    const list = allBillingProducts && allBillingProducts.length > 0 ? allBillingProducts : (inventory || []);
+    return list.filter((item) => {
       if (item.isInactive) return false;
+      if (productAvailabilityMap && productAvailabilityMap[item.id] === false) return false;
       return true;
     });
-  }, [inventory]);
+  }, [allBillingProducts, inventory, productAvailabilityMap]);
 
   // Extract categories dynamically with item counts & icons
   const categories = useMemo(() => {
@@ -101,44 +225,11 @@ export default function CustomerMenuPage() {
     });
   }, [menuItems, selectedCategory, searchTerm]);
 
-  // Determine if item is sold by weight
-  const isKgItem = (item) => {
-    if (!item) return false;
-    const u = (item.unit || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    if (u.includes('cup') || u.includes('pc') || u.includes('bottle') || u.includes('box')) {
-      return false;
-    }
-    if (cat === 'beverages' || cat === 'snacks') return false;
-    return true;
-  };
-
-  // Get selected portion for an item
-  const getSelectedPortion = (item) => {
-    if (itemSelections[item.id]) return itemSelections[item.id];
-    return isKgItem(item) ? '500g' : (item.unit || '1 Pc');
-  };
-
-  // Compute price for selected portion
-  const computePrice = (item, portion) => {
-    const basePrice = Number(item.price || item.unitPrice || item.pricePerKg || 0);
-    if (isKgItem(item)) {
-      if (portion === '250g') return Math.round(basePrice * 0.25);
-      if (portion === '500g') return Math.round(basePrice * 0.5);
-      if (portion === '1 kg') return Math.round(basePrice * 1.0);
-      return basePrice;
-    }
-    return basePrice;
-  };
-
-  const handleSelectPortion = (itemId, portion) => {
-    setItemSelections((prev) => ({ ...prev, [itemId]: portion }));
-  };
-
   // Add item to pre-order cart
   const handleAddToCart = (item) => {
     const portion = getSelectedPortion(item);
     const unitPrice = computePrice(item, portion);
+    const isWeight = isKgItem(item) || isLitreItem(item);
     const cartItemId = `${item.id}-${portion}`;
 
     setPreCart((prev) => {
@@ -161,7 +252,7 @@ export default function CustomerMenuPage() {
           name: item.name || item.englishName,
           tamilName: item.tamilName || '',
           portion,
-          unit: item.unit || 'kg',
+          unit: isWeight ? portion : getItemUnitDisplay(item),
           price: unitPrice,
           basePrice: item.price,
           quantity: 1,
@@ -267,200 +358,98 @@ export default function CustomerMenuPage() {
   const activeCategoryObj = categories.find((c) => c.id === selectedCategory) || categories[0];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f8fafc', color: '#0f172a', fontFamily: 'Inter, system-ui, -apple-system, sans-serif' }}>
+    <div className="customer-menu-root">
       {/* ── Top Clean White Header ───────────────────────────────────────── */}
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 40,
-          background: '#ffffff',
-          borderBottom: '1px solid #e2e8f0',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
-          padding: '12px 20px',
-        }}
-      >
-        <div
-          className="menu-header-inner"
-          style={{
-            maxWidth: '1360px',
-            margin: '0 auto',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Brand info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <img
-              src="/images/branding/logo.webp"
-              alt="Thenisai Logo"
-              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/images/branding/logo-icon.webp';
-              }}
-            />
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h1 style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.01em' }}>
-                  Thenisai Counter Menu
-                </h1>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    background: '#fef3c7',
-                    color: '#92400e',
-                    border: '1px solid #fde68a',
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  PRE-ORDER
-                </span>
+      <header className="menu-header">
+        <div className="menu-header-inner">
+          <div className="menu-header-row">
+            {/* Brand info */}
+            <div className="menu-brand-wrap">
+              <img
+                src="/images/branding/logo.webp"
+                alt="Thenisai Logo"
+                className="menu-brand-logo"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = '/images/branding/logo-icon.webp';
+                }}
+              />
+              <div className="menu-brand-info">
+                <h1 className="menu-title">Thenisai Counter Menu</h1>
+                <span className="menu-preorder-badge">PRE-ORDER</span>
               </div>
-              <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
-                Fresh counter stock &bull; Quick store pickup &bull; Pay at counter
-              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div className="menu-actions-wrap">
+              {/* Back to Storefront */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.location.hash) {
+                    window.location.hash = '';
+                  }
+                  navigateTo('storefront');
+                }}
+                className="menu-back-btn"
+                title="Back to Storefront"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                <span>Back to Store</span>
+              </button>
+
+              {/* Mobile Tray toggle button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileCartOpen(!isMobileCartOpen)}
+                className="mobile-cart-toggle-btn"
+                title="View Pre-Order Tray"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 01-8 0" />
+                </svg>
+                <span>Tray</span>
+                <span className="mobile-cart-count-badge">{totalItemCount}</span>
+              </button>
             </div>
           </div>
 
-          {/* Action buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {/* Back to Storefront */}
-            <button
-              type="button"
-              onClick={() => {
-                if (window.location.hash) {
-                  window.location.hash = '';
-                }
-                navigateTo('storefront');
-              }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: '#ffffff',
-                border: '1px solid #cbd5e1',
-                color: '#334155',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#f1f5f9')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              <span>Back to Store</span>
-            </button>
-
-            {/* Mobile Tray toggle button */}
-            <button
-              type="button"
-              onClick={() => setIsMobileCartOpen(!isMobileCartOpen)}
-              style={{
-                display: 'none',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'linear-gradient(135deg, #d97706, #b45309)',
-                color: '#ffffff',
-                border: 'none',
-                padding: '8px 14px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
-              }}
-              className="mobile-cart-toggle-btn"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 01-8 0" />
-              </svg>
-              <span>Tray ({totalItemCount})</span>
-            </button>
-          </div>
+          <p className="menu-subtitle">
+            Fresh counter stock &bull; Quick store pickup &bull; Pay at counter
+          </p>
         </div>
       </header>
 
       {/* ── Main Clean Layout: Sidebar + Catalog + Tray ──────────────────── */}
-      <main
-        style={{
-          maxWidth: '1360px',
-          margin: '0 auto',
-          padding: '24px 20px 80px',
-        }}
-      >
+      <main className="menu-main-wrap">
         {/* Clean Warm Info Banner */}
-        <div
-          style={{
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderLeft: '4px solid #d97706',
-            borderRadius: '12px',
-            padding: '14px 18px',
-            marginBottom: '20px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ fontSize: '20px' }}>⚡</span>
+        <div className="menu-info-banner">
+          <div className="menu-info-left">
+            <span className="menu-info-icon">⚡</span>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a' }}>
+              <div className="menu-info-title">
                 Simple &amp; Fast Website Pre-Ordering
               </div>
-              <div style={{ fontSize: '13px', color: '#64748b' }}>
+              <div className="menu-info-desc">
                 Choose your sweets &bull; Add portions to tray &bull; Enter name &amp; phone &bull; Our counter packs your parcel ready for pickup!
               </div>
             </div>
           </div>
-          <div
-            style={{
-              fontSize: '12px',
-              fontWeight: 700,
-              color: '#92400e',
-              background: '#fef3c7',
-              padding: '4px 10px',
-              borderRadius: '20px',
-              border: '1px solid #fde68a',
-            }}
-          >
+          <div className="menu-info-badge">
             No Advance Payment &bull; Pay at Counter
           </div>
         </div>
 
         {/* 3-Column Responsive Grid Layout */}
         <div className="menu-page-grid">
-          {/* ── 1. LEFT SIDEBAR: CATEGORIES ──────────────────────────────── */}
+          {/* ── 1. LEFT SIDEBAR: CATEGORIES (Desktop) ────────────────────── */}
           <aside className="menu-category-sidebar">
-            <div
-              style={{
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '14px',
-                padding: '14px',
-                boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
-                position: 'sticky',
-                top: '84px',
-              }}
-            >
+            <div className="sidebar-category-card">
               <div
                 style={{
                   display: 'flex',
@@ -503,23 +492,6 @@ export default function CustomerMenuPage() {
                         setSelectedCategory(cat.id);
                         window.scrollTo({ top: 120, behavior: 'smooth' });
                       }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '10px 12px',
-                        borderRadius: '9px',
-                        border: isSelected ? '1px solid #fde68a' : '1px solid transparent',
-                        background: isSelected ? '#fef3c7' : 'transparent',
-                        color: isSelected ? '#92400e' : '#334155',
-                        fontWeight: isSelected ? 700 : 500,
-                        fontSize: '13.5px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                        textAlign: 'left',
-                        marginBottom: '4px',
-                      }}
                       className={`sidebar-cat-btn ${isSelected ? 'active' : ''}`}
                     >
                       <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -550,45 +522,24 @@ export default function CustomerMenuPage() {
           {/* ── 2. CENTER COLUMN: SEARCH + MENU ITEMS ────────────────────── */}
           <div className="menu-main-content">
             {/* Search Input Bar */}
-            <div style={{ position: 'relative', marginBottom: '16px' }}>
+            <div className="menu-search-wrap">
               <input
                 type="text"
                 placeholder="Search menu items (e.g. Mysore Pak, Gulab Jamun, Kara, Tea)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: '#ffffff',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: '10px',
-                  padding: '12px 16px 12px 42px',
-                  color: '#0f172a',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
-                  transition: 'border-color 0.2s, box-shadow 0.2s',
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = '#d97706';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(217, 119, 6, 0.12)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = '#cbd5e1';
-                  e.target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.03)';
-                }}
+                className="menu-search-input"
               />
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="#64748b"
+                stroke="currentColor"
                 strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
+                className="menu-search-icon"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -620,7 +571,7 @@ export default function CustomerMenuPage() {
               )}
             </div>
 
-            {/* Mobile Category Quick Bar (Visible only on mobile/tablet) */}
+            {/* Mobile Category Quick Bar (Horizontal scroll on phone/tablet) */}
             <div className="mobile-category-strip">
               {categories.map((cat) => {
                 const isSelected = selectedCategory === cat.id;
@@ -629,21 +580,7 @@ export default function CustomerMenuPage() {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                      padding: '7px 13px',
-                      borderRadius: '20px',
-                      fontSize: '12.5px',
-                      fontWeight: 600,
-                      whiteSpace: 'nowrap',
-                      cursor: 'pointer',
-                      border: isSelected ? '1px solid #d97706' : '1px solid #e2e8f0',
-                      background: isSelected ? '#d97706' : '#ffffff',
-                      color: isSelected ? '#ffffff' : '#475569',
-                      boxShadow: isSelected ? '0 2px 6px rgba(217, 119, 6, 0.25)' : 'none',
-                    }}
+                    className={`mobile-cat-chip ${isSelected ? 'active' : ''}`}
                   >
                     <span>{cat.icon}</span>
                     <span>{cat.label}</span>
@@ -654,10 +591,10 @@ export default function CustomerMenuPage() {
             </div>
 
             {/* Category Header Title */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '10px', borderBottom: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="menu-cat-header">
+              <div className="menu-cat-title-wrap">
                 <span style={{ fontSize: '18px' }}>{activeCategoryObj.icon}</span>
-                <h2 style={{ fontSize: '17px', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+                <h2 className="menu-cat-title">
                   {activeCategoryObj.label}
                 </h2>
                 <span style={{ fontSize: '12px', color: '#64748b' }}>
@@ -682,7 +619,7 @@ export default function CustomerMenuPage() {
               )}
             </div>
 
-            {/* Menu Items Cards List (Text-Only, No Images, Clean White) */}
+            {/* Menu Items Cards List */}
             {filteredItems.length === 0 ? (
               <div
                 style={{
@@ -705,35 +642,20 @@ export default function CustomerMenuPage() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {filteredItems.map((item) => {
-                  const isKg = isKgItem(item);
+                  const availablePortions = getAvailablePortions(item);
                   const selectedPortion = getSelectedPortion(item);
                   const currentPrice = computePrice(item, selectedPortion);
+                  const unitDisplay = getItemUnitDisplay(item);
 
                   return (
-                    <div
-                      key={item.id}
-                      style={{
-                        background: '#ffffff',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '12px',
-                        padding: '16px 20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: '16px',
-                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)',
-                        transition: 'border-color 0.2s, box-shadow 0.2s, transform 0.15s',
-                      }}
-                      className="clean-menu-card"
-                    >
+                    <div key={item.id} className="clean-menu-card">
                       {/* Left: Item Information (Text Only) */}
-                      <div style={{ flex: '1 1 240px' }}>
+                      <div className="clean-menu-card-info">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>
+                          <h3 className="clean-menu-card-title">
                             {item.name || item.englishName}
                           </h3>
-                          {item.tamilName && (
+                          {item.tamilName && !item.name?.includes('—') && (
                             <span style={{ fontSize: '13px', color: '#b45309', fontWeight: 600 }}>
                               ({item.tamilName})
                             </span>
@@ -753,46 +675,27 @@ export default function CustomerMenuPage() {
                               letterSpacing: '0.04em',
                             }}
                           >
-                            {item.category || 'Sweet'}
+                            {item.category || 'Item'}
                           </span>
                           <span style={{ fontSize: '12px', color: '#64748b' }}>
-                            Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {item.unit || (isKg ? 'kg' : 'pc')}
+                            Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {unitDisplay}
                           </span>
                         </div>
                       </div>
 
                       {/* Right: Portion / Weight selector & Add button */}
-                      <div className="clean-menu-card-controls" style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                        {/* Portions if kg item */}
-                        {isKg ? (
-                          <div
-                            style={{
-                              display: 'inline-flex',
-                              background: '#f8fafc',
-                              border: '1px solid #e2e8f0',
-                              borderRadius: '8px',
-                              padding: '3px',
-                              gap: '2px',
-                            }}
-                          >
-                            {KG_WEIGHT_PRESETS.map((preset) => {
+                      <div className="clean-menu-card-controls">
+                        {/* Portions if weight or litre item */}
+                        {availablePortions ? (
+                          <div className="portion-selector-wrap">
+                            {availablePortions.map((preset) => {
                               const isPSelected = selectedPortion === preset.label;
                               return (
                                 <button
                                   key={preset.label}
                                   type="button"
                                   onClick={() => handleSelectPortion(item.id, preset.label)}
-                                  style={{
-                                    border: 'none',
-                                    padding: '5px 9px',
-                                    borderRadius: '5px',
-                                    fontSize: '11px',
-                                    fontWeight: isPSelected ? 700 : 500,
-                                    cursor: 'pointer',
-                                    background: isPSelected ? '#d97706' : 'transparent',
-                                    color: isPSelected ? '#ffffff' : '#64748b',
-                                    transition: 'all 0.15s',
-                                  }}
+                                  className={`portion-btn ${isPSelected ? 'active' : ''}`}
                                 >
                                   {preset.label}
                                 </button>
@@ -801,41 +704,21 @@ export default function CustomerMenuPage() {
                           </div>
                         ) : (
                           <div style={{ fontSize: '12px', color: '#475569', background: '#f1f5f9', padding: '5px 11px', borderRadius: '6px', fontWeight: 600 }}>
-                            {item.unit || '1 Unit'}
+                            {unitDisplay}
                           </div>
                         )}
 
                         {/* Price Display */}
-                        <div style={{ textAlign: 'right', minWidth: '70px' }}>
-                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
-                            ₹{currentPrice}
-                          </div>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>
-                            for {selectedPortion}
-                          </div>
+                        <div className="price-display-wrap">
+                          <div className="price-val">₹{currentPrice}</div>
+                          <div className="price-portion-label">for {selectedPortion}</div>
                         </div>
 
                         {/* Add to Tray Button */}
                         <button
                           type="button"
                           onClick={() => handleAddToCart(item)}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            background: 'linear-gradient(135deg, #d97706, #b45309)',
-                            border: 'none',
-                            color: '#ffffff',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
-                            fontSize: '13px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 6px rgba(217, 119, 6, 0.25)',
-                            transition: 'transform 0.1s, opacity 0.2s',
-                          }}
-                          onMouseDown={(e) => (e.currentTarget.style.transform = 'scale(0.96)')}
-                          onMouseUp={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                          className="btn-add-tray"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -851,19 +734,14 @@ export default function CustomerMenuPage() {
             )}
           </div>
 
-          {/* ── 3. RIGHT COLUMN: IN-PAGE PRE-ORDER TRAY ───────────────────── */}
+          {/* ── Mobile Backdrop when tray open ────────────────────────────── */}
           <div
-            style={{
-              position: 'sticky',
-              top: '84px',
-              background: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '18px',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.04)',
-            }}
-            className={`preorder-tray-panel ${isMobileCartOpen ? 'mobile-open' : ''}`}
-          >
+            className={`preorder-tray-backdrop ${isMobileCartOpen ? 'mobile-open' : ''}`}
+            onClick={() => setIsMobileCartOpen(false)}
+          />
+
+          {/* ── 3. RIGHT COLUMN: IN-PAGE PRE-ORDER TRAY ───────────────────── */}
+          <div className={`preorder-tray-panel ${isMobileCartOpen ? 'mobile-open' : ''}`}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px', marginBottom: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '18px' }}>🛒</span>
@@ -871,19 +749,41 @@ export default function CustomerMenuPage() {
                   Pre-Order Tray
                 </h2>
               </div>
-              <span
-                style={{
-                  background: '#fef3c7',
-                  color: '#92400e',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  border: '1px solid #fde68a',
-                }}
-              >
-                {totalItemCount} items
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    background: '#fef3c7',
+                    color: '#92400e',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    border: '1px solid #fde68a',
+                  }}
+                >
+                  {totalItemCount} items
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileCartOpen(false)}
+                  style={{
+                    display: 'none',
+                    background: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    color: '#64748b',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  className="mobile-tray-close-btn"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Tray items list */}
@@ -892,7 +792,7 @@ export default function CustomerMenuPage() {
                 <div style={{ fontSize: '32px', marginBottom: '8px' }}>🍯</div>
                 <div style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>Your tray is empty</div>
                 <div style={{ fontSize: '12px', marginTop: '4px' }}>
-                  Click &ldquo;Add&rdquo; on any sweet or snack from the counter menu
+                  Click &ldquo;Add&rdquo; on any sweet, beverage, or snack from the counter menu
                 </div>
               </div>
             ) : (
@@ -1020,6 +920,41 @@ export default function CustomerMenuPage() {
           </div>
         </div>
       </main>
+
+      {/* ── Floating Mobile Checkout Bar (Visible on mobile/tablet when items in tray) ── */}
+      {preCart.length > 0 && (
+        <div
+          className="mobile-floating-tray-bar"
+          onClick={() => setIsMobileCartOpen(true)}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '18px' }}>🛒</span>
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 700 }}>
+                {totalItemCount} {totalItemCount === 1 ? 'item' : 'items'} in Tray
+              </div>
+              <div style={{ fontSize: '11px', color: '#fcd34d' }}>
+                ₹{grandTotal} Counter Total
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            style={{
+              background: 'linear-gradient(135deg, #d97706, #b45309)',
+              border: 'none',
+              color: '#ffffff',
+              padding: '7px 14px',
+              borderRadius: '8px',
+              fontSize: '12.5px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            View Tray &rarr;
+          </button>
+        </div>
+      )}
 
       {/* ── Clean White Checkout Details Modal ────────────────────────────── */}
       <AnimatePresence>
@@ -1379,127 +1314,6 @@ export default function CustomerMenuPage() {
           </div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .menu-page-grid {
-          display: grid;
-          grid-template-columns: 240px 1fr 340px;
-          gap: 24px;
-          align-items: start;
-        }
-
-        .mobile-category-strip {
-          display: none;
-        }
-
-        .clean-menu-card:hover {
-          border-color: #cbd5e1 !important;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-          transform: translateY(-1px);
-        }
-
-        .sidebar-cat-btn:hover:not(.active) {
-          background: #f8fafc !important;
-          color: #0f172a !important;
-        }
-
-        @media (max-width: 1100px) {
-          .menu-page-grid {
-            grid-template-columns: 220px 1fr !important;
-          }
-          .preorder-tray-panel {
-            position: fixed !important;
-            bottom: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            top: auto !important;
-            border-radius: 16px 16px 0 0 !important;
-            z-index: 50 !important;
-            max-height: 80vh !important;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
-            transform: translateY(calc(100% - 68px));
-            transition: transform 0.3s ease;
-          }
-          .preorder-tray-panel.mobile-open {
-            transform: translateY(0);
-          }
-          .mobile-cart-toggle-btn {
-            display: inline-flex !important;
-          }
-        }
-
-        @media (max-width: 800px) {
-          .menu-page-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .menu-category-sidebar {
-            display: none !important;
-          }
-          .mobile-category-strip {
-            display: flex !important;
-            gap: 8px;
-            overflow-x: auto;
-            padding-bottom: 12px;
-            margin-bottom: 14px;
-            -webkit-overflow-scrolling: touch;
-          }
-          .mobile-category-strip::-webkit-scrollbar {
-            height: 4px;
-          }
-          .mobile-category-strip::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-          }
-        }
-
-        @media (max-width: 640px) {
-          .menu-header-inner {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 12px !important;
-          }
-          .menu-header-inner > div:last-child {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-          }
-          .clean-menu-card {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 12px !important;
-            padding: 14px !important;
-          }
-          .clean-menu-card-controls {
-            width: 100% !important;
-            justify-content: space-between !important;
-          }
-          .preorder-tray-panel {
-            padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
-          }
-        }
-
-        @media (max-width: 480px) {
-          .clean-menu-card-controls {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 10px !important;
-          }
-          .clean-menu-card-controls > div:first-child {
-            width: 100%;
-            justify-content: center;
-          }
-          .clean-menu-card-controls > div:nth-child(2) {
-            text-align: left !important;
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-          }
-          .clean-menu-card-controls button {
-            width: 100% !important;
-            justify-content: center !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
