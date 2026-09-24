@@ -3,6 +3,8 @@ import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../d
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
 import { getNextPreOrderInvoiceNumber, getNextInvoiceNumber, parseInvoiceNumber } from '../utils/invoiceNumber';
+import { store } from '../store';
+import { setInventoryItems, setStockLogs } from '../store/slices/inventorySlice';
 
 const CartContext = createContext();
 
@@ -3221,6 +3223,15 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Sync inventory and stockLogs into high-performance Redux store
+  useEffect(() => {
+    store.dispatch(setInventoryItems(inventory));
+  }, [inventory]);
+
+  useEffect(() => {
+    store.dispatch(setStockLogs(stockLogs));
+  }, [stockLogs]);
+
   const fetchStockLogs = async () => {
     try {
       const res = await api.get('/api/stock/logs');
@@ -3579,119 +3590,153 @@ export function CartProvider({ children }) {
   // Pending pre-orders count (customer website pre-orders awaiting biller action)
   const pendingPreOrdersCount = preOrders.filter((o) => o.status === 'pending').length;
 
+  const contextValue = useMemo(() => ({
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    activeInvoice,
+    cartNotification,
+    currentView,
+    navigateTo,
+    orders,
+    bills,
+    fetchBills,
+    // Pre-Orders (customer website)
+    preOrders,
+    pendingPreOrdersCount,
+    addPreOrder,
+    acceptPreOrder,
+    markPreOrderBilled,
+    deletePreOrder,
+    fetchPreOrders,
+    inventory,
+    pendingOrdersCount,
+    taxSettings,
+    updateTaxSettings,
+    // Offline resilience
+    isOnline,
+    hasOfflinePending,
+    offlinePendingCount,
+    syncOfflineBills,
+    placeOnlineOrder,
+    addCounterSale,
+    acceptOrder,
+    updateOrderStatus,
+    addInventoryStock,
+    addNewProductStock,
+    adjustInventoryStock,
+    // Godown & Counter Stock Management
+    stockLogs,
+    fetchStockLogs,
+    inwardStock,
+    dispatchStockToCounter,
+    returnStockToGodown,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    resetLocalDataExceptInventory,
+    openCheckout,
+    closeCheckout,
+    openInvoice,
+    closeInvoice,
+    // Dynamic Products & Availability
+    allBillingProducts,
+    customProducts,
+    productAvailabilityMap,
+    toggleProductAvailability,
+    refreshInventory: syncWithBackend,
+    addNewProduct,
+    addNewProductDetails: addNewProduct,
+    getNextAvailableSkuCode,
+    getAvailableSkuCodes,
+    resolveUniqueSkuCode,
+    updateProductDetails,
+    updateProduct: updateProductDetails,
+    deleteProduct,
+    updateProductMasterPrice,
+    updateProductSkuCode,
+    masterPrices,
+    // Admin-managed custom Categories & Units
+    allCategories,
+    allUnits,
+    customCategories,
+    customUnits,
+    addCustomCategory,
+    updateCategory,
+    removeCustomCategory,
+    addCustomUnit,
+    updateUnit,
+    removeCustomUnit,
+    // Price Override Auditing
+    priceOverrideLogs,
+    recordPriceOverrideLog,
+    fetchPriceOverrideLogs,
+    // Bill Deletion & 30-Day Recycle Bin
+    recycleBinBills,
+    deleteBill,
+    deleteBills,
+    editBill,
+    restoreBill,
+    restoreBills,
+    permanentDeleteBill,
+    permanentDeleteBills,
+    fetchRecycleBinBills,
+    // Product Deletion & 30-Day Recycle Bin
+    recycleBinProducts,
+    restoreProduct,
+    restoreProducts,
+    permanentDeleteProduct,
+    permanentDeleteProducts,
+    fetchRecycleBinProducts,
+    // Unified Activity Audit Trail
+    activityLogs,
+    recordActivity,
+    fetchActivityLogs,
+    subtotal,
+    totalItems,
+    freeDeliveryRemaining,
+    isFreeDelivery,
+  }), [
+    cart,
+    isCartOpen,
+    isCheckoutOpen,
+    activeInvoice,
+    cartNotification,
+    currentView,
+    orders,
+    bills,
+    preOrders,
+    pendingPreOrdersCount,
+    inventory,
+    pendingOrdersCount,
+    taxSettings,
+    isOnline,
+    hasOfflinePending,
+    offlinePendingCount,
+    stockLogs,
+    allBillingProducts,
+    customProducts,
+    productAvailabilityMap,
+    masterPrices,
+    allCategories,
+    allUnits,
+    customCategories,
+    customUnits,
+    priceOverrideLogs,
+    recycleBinBills,
+    recycleBinProducts,
+    activityLogs,
+    subtotal,
+    totalItems,
+    freeDeliveryRemaining,
+    isFreeDelivery,
+  ]);
+
   return (
-    <CartContext.Provider
-      value={{
-        cart,
-        isCartOpen,
-        setIsCartOpen,
-        isCheckoutOpen,
-        setIsCheckoutOpen,
-        activeInvoice,
-        cartNotification,
-        currentView,
-        navigateTo,
-        orders,
-        bills,
-        fetchBills,
-        // Pre-Orders (customer website)
-        preOrders,
-        pendingPreOrdersCount,
-        addPreOrder,
-        acceptPreOrder,
-        markPreOrderBilled,
-        deletePreOrder,
-        fetchPreOrders,
-        inventory,
-        pendingOrdersCount,
-        taxSettings,
-        updateTaxSettings,
-        // Offline resilience
-        isOnline,
-        hasOfflinePending,
-        offlinePendingCount,
-        syncOfflineBills,
-        placeOnlineOrder,
-        addCounterSale,
-        acceptOrder,
-        updateOrderStatus,
-        addInventoryStock,
-        addNewProductStock,
-        adjustInventoryStock,
-        // Godown & Counter Stock Management
-        stockLogs,
-        fetchStockLogs,
-        inwardStock,
-        dispatchStockToCounter,
-        returnStockToGodown,
-        addToCart,
-        updateQuantity,
-        removeFromCart,
-        clearCart,
-        resetLocalDataExceptInventory,
-        openCheckout,
-        closeCheckout,
-        openInvoice,
-        closeInvoice,
-        // Dynamic Products & Availability
-        allBillingProducts,
-        customProducts,
-        productAvailabilityMap,
-        toggleProductAvailability,
-        refreshInventory: syncWithBackend,
-        addNewProduct,
-        addNewProductDetails: addNewProduct,
-        getNextAvailableSkuCode,
-        getAvailableSkuCodes,
-        resolveUniqueSkuCode,
-        updateProductDetails,
-        updateProduct: updateProductDetails,
-        deleteProduct,
-        updateProductMasterPrice,
-        updateProductSkuCode,
-        masterPrices,
-        // Admin-managed custom Categories & Units
-        allCategories,
-        allUnits,
-        customCategories,
-        customUnits,
-        addCustomCategory,
-        updateCategory,
-        removeCustomCategory,
-        addCustomUnit,
-        updateUnit,
-        removeCustomUnit,
-        // Price Override Auditing
-        priceOverrideLogs,
-        recordPriceOverrideLog,
-        fetchPriceOverrideLogs,
-        // Bill Deletion & 30-Day Recycle Bin
-        recycleBinBills,
-        deleteBill,
-        deleteBills,
-        editBill,
-        restoreBill,
-        restoreBills,
-        permanentDeleteBill,
-        permanentDeleteBills,
-        fetchRecycleBinBills,
-        // Product Deletion & 30-Day Recycle Bin
-        recycleBinProducts,
-        restoreProduct,
-        restoreProducts,
-        permanentDeleteProduct,
-        permanentDeleteProducts,
-        fetchRecycleBinProducts,
-        // Unified Activity Audit Trail
-        activityLogs,
-        recordActivity,
-        fetchActivityLogs,
-        subtotal,
-        totalItems,
-        freeDeliveryRemaining,
-        isFreeDelivery,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

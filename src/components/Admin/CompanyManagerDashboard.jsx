@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -19,10 +19,33 @@ export default function CompanyManagerDashboard() {
   // Active tab: 'remaining' | 'daily'
   const [activeTab, setActiveTab] = useState('remaining');
 
-  // Search & Filtering for Remaining Stock
+  // Search & Filtering for Remaining Stock with useRef debouncing
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [stockStatusFilter, setStockStatusFilter] = useState('all'); // 'all' | 'low_godown' | 'low_counter' | 'out_of_stock'
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(val);
+    }, 100);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setDebouncedSearch('');
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
 
   // Responsive Layout Mode: 'auto' | 'table' | 'cards'
   const [viewMode, setViewMode] = useState('auto');
@@ -30,7 +53,24 @@ export default function CompanyManagerDashboard() {
   // Filtering for Daily Activity Logs
   const [logTypeFilter, setLogTypeFilter] = useState('all'); // 'all' | 'GODOWN_INWARD' | 'DISPATCH_TO_COUNTER' | 'COUNTER_RETURN' | 'WASTAGE'
   const [logSearchQuery, setLogSearchQuery] = useState('');
+  const [debouncedLogSearch, setDebouncedLogSearch] = useState('');
+  const logSearchDebounceRef = useRef(null);
   const [logDateFilter, setLogDateFilter] = useState('today'); // 'today' | 'all'
+
+  const handleLogSearchChange = (e) => {
+    const val = e.target.value;
+    setLogSearchQuery(val);
+    if (logSearchDebounceRef.current) clearTimeout(logSearchDebounceRef.current);
+    logSearchDebounceRef.current = setTimeout(() => {
+      setDebouncedLogSearch(val);
+    }, 100);
+  };
+
+  const handleClearLogSearch = () => {
+    setLogSearchQuery('');
+    setDebouncedLogSearch('');
+    if (logSearchDebounceRef.current) clearTimeout(logSearchDebounceRef.current);
+  };
 
   // Modals state
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
@@ -55,11 +95,11 @@ export default function CompanyManagerDashboard() {
     return Array.from(set);
   }, [inventory]);
 
-  // Filtered remaining stock
+  // Filtered remaining stock with debounced search
   const filteredInventory = useMemo(() => {
     return inventory.filter((item) => {
       // Search match
-      const query = searchQuery.toLowerCase().trim();
+      const query = debouncedSearch.toLowerCase().trim();
       const nameMatch = !query ||
         (item.name && item.name.toLowerCase().includes(query)) ||
         (item.englishName && item.englishName.toLowerCase().includes(query)) ||
@@ -91,7 +131,7 @@ export default function CompanyManagerDashboard() {
 
       return true;
     });
-  }, [inventory, searchQuery, selectedCategory, stockStatusFilter]);
+  }, [inventory, debouncedSearch, selectedCategory, stockStatusFilter]);
 
   // Aggregate remaining stock metrics
   const stockSummary = useMemo(() => {
@@ -137,8 +177,8 @@ export default function CompanyManagerDashboard() {
         return false;
       }
 
-      if (logSearchQuery.trim()) {
-        const q = logSearchQuery.toLowerCase().trim();
+      if (debouncedLogSearch.trim()) {
+        const q = debouncedLogSearch.toLowerCase().trim();
         const pName = (log.productName || log.productId || '').toLowerCase();
         const pNote = (log.note || '').toLowerCase();
         const pUser = (log.performedBy || '').toLowerCase();
@@ -147,7 +187,7 @@ export default function CompanyManagerDashboard() {
 
       return true;
     });
-  }, [stockLogs, logDateFilter, logTypeFilter, logSearchQuery]);
+  }, [stockLogs, logDateFilter, logTypeFilter, debouncedLogSearch]);
 
   // Daily movement metrics
   const dailyMetrics = useMemo(() => {
@@ -169,31 +209,31 @@ export default function CompanyManagerDashboard() {
     return { inwardCount, dispatchCount, returnCount, wastageCount };
   }, [stockLogs]);
 
-  // Quick actions
-  const handleOpenInward = (sweetId = null, target = 'godown') => {
+  // Quick actions with useCallback
+  const handleOpenInward = useCallback((sweetId = null, target = 'godown') => {
     setModalSelectedSweetId(sweetId);
     setModalTarget(target);
     setIsAddStockOpen(true);
-  };
+  }, []);
 
-  const handleOpenDispatch = (sweetId = null) => {
+  const handleOpenDispatch = useCallback((sweetId = null) => {
     setModalSelectedSweetId(sweetId);
     setIsDispatchOpen(true);
-  };
+  }, []);
 
-  const handleOpenReturn = (sweetId = null) => {
+  const handleOpenReturn = useCallback((sweetId = null) => {
     setModalSelectedSweetId(sweetId);
     setIsReturnOpen(true);
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     if (typeof navigateTo === 'function') {
       navigateTo('storefront');
     } else {
       window.location.hash = '';
     }
-  };
+  }, [logout, navigateTo]);
 
   return (
     <div
@@ -726,7 +766,7 @@ export default function CompanyManagerDashboard() {
                   type="text"
                   placeholder="Search item by name, Tamil or SKU..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   style={{
                     width: '100%',
                     padding: '9px 12px 9px 34px',
@@ -753,7 +793,7 @@ export default function CompanyManagerDashboard() {
                 {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => setSearchQuery('')}
+                    onClick={handleClearSearch}
                     style={{
                       position: 'absolute',
                       right: '10px',
@@ -1390,7 +1430,7 @@ export default function CompanyManagerDashboard() {
                   type="text"
                   placeholder="Search logs by product, note, or staff..."
                   value={logSearchQuery}
-                  onChange={(e) => setLogSearchQuery(e.target.value)}
+                  onChange={handleLogSearchChange}
                   style={{
                     width: '100%',
                     padding: '9px 12px 9px 34px',
@@ -1417,7 +1457,7 @@ export default function CompanyManagerDashboard() {
                 {logSearchQuery && (
                   <button
                     type="button"
-                    onClick={() => setLogSearchQuery('')}
+                    onClick={handleClearLogSearch}
                     style={{
                       position: 'absolute',
                       right: '10px',

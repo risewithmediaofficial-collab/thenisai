@@ -9,6 +9,8 @@ import RefillStockModal from '../Inventory/RefillStockModal';
 import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from './DeleteBillModal';
 import EditBillModal from './EditBillModal';
+import POSReduxStatusBar from './POSReduxStatusBar';
+import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
@@ -958,8 +960,11 @@ export default function BillingCounter() {
     setInventoryPage(1);
   }, [invCategoryFilter, invStatusFilter, inventorySearch]);
 
-  const billSubtotal = billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0);
-  const billGrandTotal = Math.round(billSubtotal);
+  const billSubtotal = useMemo(
+    () => billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0),
+    [billItems]
+  );
+  const billGrandTotal = useMemo(() => Math.round(billSubtotal), [billSubtotal]);
 
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
   const computeItemPrice = (sweet, weight) => {
@@ -1500,98 +1505,98 @@ export default function BillingCounter() {
     }
   };
 
-  // Filtered and orderwise products based on search and category
+  // Filtered and orderwise products based on search and category with high-performance useMemo
   const allProducts = allBillingProducts && allBillingProducts.length > 0 ? allBillingProducts : ALL_BILLING_ITEMS;
 
-  const rawFiltered = allProducts.filter((sw, idx) => {
-    const itemNum = sw.itemNumber || idx + 1;
-    const qRaw = searchQuery.trim();
-    const q = qRaw.toLowerCase();
+  const filteredSweets = useMemo(() => {
+    const rawFiltered = allProducts.filter((sw, idx) => {
+      const itemNum = sw.itemNumber || idx + 1;
+      const qRaw = searchQuery.trim();
+      const q = qRaw.toLowerCase();
 
-    if (!q) {
-      if (selectedCategory === 'all') return true;
-      if (selectedCategory === 'beverages') {
-        return (itemNum >= 1 && itemNum <= 13) || sw.category === 'beverages' || sw.category === 'snacks';
+      if (!q) {
+        if (selectedCategory === 'all') return true;
+        if (selectedCategory === 'beverages') {
+          return (itemNum >= 1 && itemNum <= 13) || sw.category === 'beverages' || sw.category === 'snacks';
+        }
+        if (selectedCategory === 'sweets') {
+          return (itemNum >= 14 && itemNum <= 75) || sw.category === 'sweets';
+        }
+        if (selectedCategory === 'spices') {
+          return (itemNum >= 76 && itemNum <= 125) || sw.category === 'spices' || sw.subcategory === 'Spices (Kara Vagai)';
+        }
+        if (selectedCategory === 'halwa') {
+          return sw.subcategory === 'Halwa' || sw.name.toLowerCase().includes('halwa') || (sw.tamilName && sw.tamilName.includes('அல்வா'));
+        }
+        if (selectedCategory === 'mysore-pak') {
+          return sw.subcategory === 'Mysore Pak & Ghee' || sw.name.toLowerCase().includes('mysore') || sw.id === 'ghee';
+        }
+        if (selectedCategory === 'cashew-rolls') {
+          return sw.subcategory === 'Cashew & Rolls' || sw.name.toLowerCase().includes('roll') || sw.name.toLowerCase().includes('cashew') || sw.name.toLowerCase().includes('kaju') || sw.name.toLowerCase().includes('pista');
+        }
+        if (selectedCategory === 'milk-bengali') {
+          return sw.subcategory === 'Milk & Bengali' || sw.name.toLowerCase().includes('milk') || sw.name.toLowerCase().includes('palkova') || sw.name.toLowerCase().includes('palcova') || sw.name.toLowerCase().includes('khoa') || sw.name.toLowerCase().includes('peda') || sw.name.toLowerCase().includes('bengali') || sw.name.toLowerCase().includes('ras');
+        }
+        if (selectedCategory === 'traditional') {
+          return sw.subcategory === 'Traditional Sweets' || sw.name.toLowerCase().includes('laddu') || sw.name.toLowerCase().includes('jangiri') || sw.name.toLowerCase().includes('poli') || sw.name.toLowerCase().includes('athirasam');
+        }
+        if (selectedCategory === 'pieces-packets') {
+          return sw.unit === 'Pc' || sw.unit === 'Pkt';
+        }
+        return true;
       }
-      if (selectedCategory === 'sweets') {
-        return (itemNum >= 14 && itemNum <= 75) || sw.category === 'sweets';
-      }
-      if (selectedCategory === 'spices') {
-        return (itemNum >= 76 && itemNum <= 125) || sw.category === 'spices' || sw.subcategory === 'Spices (Kara Vagai)';
-      }
-      if (selectedCategory === 'halwa') {
-        return sw.subcategory === 'Halwa' || sw.name.toLowerCase().includes('halwa') || (sw.tamilName && sw.tamilName.includes('அல்வா'));
-      }
-      if (selectedCategory === 'mysore-pak') {
-        return sw.subcategory === 'Mysore Pak & Ghee' || sw.name.toLowerCase().includes('mysore') || sw.id === 'ghee';
-      }
-      if (selectedCategory === 'cashew-rolls') {
-        return sw.subcategory === 'Cashew & Rolls' || sw.name.toLowerCase().includes('roll') || sw.name.toLowerCase().includes('cashew') || sw.name.toLowerCase().includes('kaju') || sw.name.toLowerCase().includes('pista');
-      }
-      if (selectedCategory === 'milk-bengali') {
-        return sw.subcategory === 'Milk & Bengali' || sw.name.toLowerCase().includes('milk') || sw.name.toLowerCase().includes('palkova') || sw.name.toLowerCase().includes('palcova') || sw.name.toLowerCase().includes('khoa') || sw.name.toLowerCase().includes('peda') || sw.name.toLowerCase().includes('bengali') || sw.name.toLowerCase().includes('ras');
-      }
-      if (selectedCategory === 'traditional') {
-        return sw.subcategory === 'Traditional Sweets' || sw.name.toLowerCase().includes('laddu') || sw.name.toLowerCase().includes('jangiri') || sw.name.toLowerCase().includes('poli') || sw.name.toLowerCase().includes('athirasam');
-      }
-      if (selectedCategory === 'pieces-packets') {
-        return sw.unit === 'Pc' || sw.unit === 'Pkt';
-      }
-      return true;
-    }
 
-    // Number/SKU-based search (e.g. "1", "42", "#3", or a custom SKU code)
-    const cleanNumStr = qRaw.replace(/^#/, '').replace(/\.$/, '').trim();
-    // First check exact SKU code match (highest priority for fast lookup by code)
-    if (sw.skuCode && sw.skuCode.toLowerCase() === cleanNumStr.toLowerCase()) return true;
-    const isPureNumber = /^\d+$/.test(cleanNumStr);
-    if (isPureNumber) {
-      const searchNum = parseInt(cleanNumStr, 10);
-      if (itemNum === searchNum) return true;
-      if (String(itemNum).startsWith(cleanNumStr)) return true;
-      if (sw.price === searchNum) return true;
-    }
+      // Number/SKU-based search (e.g. "1", "42", "#3", or a custom SKU code)
+      const cleanNumStr = qRaw.replace(/^#/, '').replace(/\.$/, '').trim();
+      // First check exact SKU code match (highest priority for fast lookup by code)
+      if (sw.skuCode && sw.skuCode.toLowerCase() === cleanNumStr.toLowerCase()) return true;
+      const isPureNumber = /^\d+$/.test(cleanNumStr);
+      if (isPureNumber) {
+        const searchNum = parseInt(cleanNumStr, 10);
+        if (itemNum === searchNum) return true;
+        if (String(itemNum).startsWith(cleanNumStr)) return true;
+        if (sw.price === searchNum) return true;
+      }
 
-    // Text search (English, Tamil, ID, SKU Code, Tagline)
-    const matchesText =
-      sw.name.toLowerCase().includes(q) ||
-      (sw.tamilName && sw.tamilName.includes(qRaw)) ||
-      (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
-      (sw.tagline && sw.tagline.toLowerCase().includes(q)) ||
-      sw.id.toLowerCase().includes(q) ||
-      (sw.skuCode && sw.skuCode.toLowerCase().includes(q));
+      // Text search (English, Tamil, ID, SKU Code, Tagline)
+      const matchesText =
+        sw.name.toLowerCase().includes(q) ||
+        (sw.tamilName && sw.tamilName.includes(qRaw)) ||
+        (sw.englishName && sw.englishName.toLowerCase().includes(q)) ||
+        (sw.tagline && sw.tagline.toLowerCase().includes(q)) ||
+        sw.id.toLowerCase().includes(q) ||
+        (sw.skuCode && sw.skuCode.toLowerCase().includes(q));
 
-    return matchesText;
-  });
+      return matchesText;
+    });
 
-  // Always keep strictly orderwise (sorted by itemNumber 1..13)
-  // If user searches a number/SKU, exact SKU match is prioritized at top
-  const filteredSweets = [...rawFiltered].sort((a, b) => {
-    const getNum = (p) => {
-      const sku = String(p?.skuCode ?? '').trim();
-      const itemNum = String(p?.itemNumber ?? '').trim();
-      const skuMatch = sku.match(/\d+/)?.[0];
-      if (skuMatch) return parseInt(skuMatch, 10);
-      const itemMatch = itemNum.match(/\d+/)?.[0];
-      if (itemMatch) return parseInt(itemMatch, 10);
-      return 999999;
-    };
-    const numA = getNum(a);
-    const numB = getNum(b);
+    return [...rawFiltered].sort((a, b) => {
+      const getNum = (p) => {
+        const sku = String(p?.skuCode ?? '').trim();
+        const itemNum = String(p?.itemNumber ?? '').trim();
+        const skuMatch = sku.match(/\d+/)?.[0];
+        if (skuMatch) return parseInt(skuMatch, 10);
+        const itemMatch = itemNum.match(/\d+/)?.[0];
+        if (itemMatch) return parseInt(itemMatch, 10);
+        return 999999;
+      };
+      const numA = getNum(a);
+      const numB = getNum(b);
 
-    const cleanNum = searchQuery.trim().replace(/^#/, '').replace(/\.$/, '');
-    const cleanNumLower = cleanNum.toLowerCase();
-    // Exact SKU match always sorts to top
-    if (cleanNum && (a.skuCode || '').toLowerCase() === cleanNumLower && (b.skuCode || '').toLowerCase() !== cleanNumLower) return -1;
-    if (cleanNum && (b.skuCode || '').toLowerCase() === cleanNumLower && (a.skuCode || '').toLowerCase() !== cleanNumLower) return 1;
-    if (/^\d+$/.test(cleanNum)) {
-      const targetNum = parseInt(cleanNum, 10);
-      if (numA === targetNum) return -1;
-      if (numB === targetNum) return 1;
-    }
-    if (numA !== numB) return numA - numB;
-    return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
-  });
+      const cleanNum = searchQuery.trim().replace(/^#/, '').replace(/\.$/, '');
+      const cleanNumLower = cleanNum.toLowerCase();
+      // Exact SKU match always sorts to top
+      if (cleanNum && (a.skuCode || '').toLowerCase() === cleanNumLower && (b.skuCode || '').toLowerCase() !== cleanNumLower) return -1;
+      if (cleanNum && (b.skuCode || '').toLowerCase() === cleanNumLower && (a.skuCode || '').toLowerCase() !== cleanNumLower) return 1;
+      if (/^\d+$/.test(cleanNum)) {
+        const targetNum = parseInt(cleanNum, 10);
+        if (numA === targetNum) return -1;
+        if (numB === targetNum) return 1;
+      }
+      if (numA !== numB) return numA - numB;
+      return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
+    });
+  }, [allProducts, searchQuery, selectedCategory]);
 
   // Fast Enter key in search box adds the top matched item directly to bill
   const handleSearchKeyDown = (e) => {
@@ -1759,6 +1764,14 @@ export default function BillingCounter() {
             )}
           </button>
         </header>
+
+        {posTab === 'register' && (
+          <POSReduxStatusBar
+            onOpenInventory={() => setPosTab('inventory')}
+            onOpenPreOrders={() => setPosTab('pre-orders')}
+          />
+        )}
+        <ReduxToast />
 
         {/* PAGE 1: POS BILLING REGISTER */}
         {posTab === 'register' && (

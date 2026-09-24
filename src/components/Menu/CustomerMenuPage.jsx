@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
@@ -22,9 +22,32 @@ const LITRE_PORTIONS = [
 export default function CustomerMenuPage() {
   const { allBillingProducts, inventory, addPreOrder, navigateTo, productAvailabilityMap, preOrders = [], bills = [] } = useCart();
 
-  // Search & Category
+  // Search & Category with useRef debouncing
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounceRef = useRef(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearchTerm(val);
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(val);
+    }, 120);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setDebouncedSearch('');
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, []);
 
   // Portion selection for each item { [itemId]: weightLabel } (default '500g' for kg, '500ml' for litre, unit for single item)
   const [itemSelections, setItemSelections] = useState({});
@@ -189,9 +212,9 @@ export default function CustomerMenuPage() {
     return basePrice;
   };
 
-  const handleSelectPortion = (itemId, portion) => {
+  const handleSelectPortion = useCallback((itemId, portion) => {
     setItemSelections((prev) => ({ ...prev, [itemId]: portion }));
-  };
+  }, []);
 
   // Filter available active items using allBillingProducts (with live POS master prices and catalog fallback)
   const menuItems = useMemo(() => {
@@ -245,9 +268,9 @@ export default function CustomerMenuPage() {
     ];
   }, [menuItems]);
 
-  // Filtered items
+  // Filtered items (memoized with debounced search)
   const filteredItems = useMemo(() => {
-    const term = searchTerm.toLowerCase().trim();
+    const term = debouncedSearch.toLowerCase().trim();
     return menuItems.filter((item) => {
       const matchCat =
         selectedCategory === 'all' ||
@@ -266,10 +289,10 @@ export default function CustomerMenuPage() {
         cat.includes(term)
       );
     });
-  }, [menuItems, selectedCategory, searchTerm]);
+  }, [menuItems, selectedCategory, debouncedSearch]);
 
   // Add item to pre-order cart
-  const handleAddToCart = (item) => {
+  const handleAddToCart = useCallback((item) => {
     const portion = getSelectedPortion(item);
     const unitPrice = computePrice(item, portion);
     const isWeight = isKgItem(item) || isLitreItem(item);
@@ -303,10 +326,10 @@ export default function CustomerMenuPage() {
         },
       ];
     });
-  };
+  }, [itemSelections]);
 
   // Update item quantity in pre-order cart
-  const handleUpdateQty = (cartItemId, delta) => {
+  const handleUpdateQty = useCallback((cartItemId, delta) => {
     setPreCart((prev) => {
       return prev
         .map((item) => {
@@ -323,12 +346,12 @@ export default function CustomerMenuPage() {
         })
         .filter(Boolean);
     });
-  };
+  }, []);
 
   // Remove item
-  const handleRemoveItem = (cartItemId) => {
+  const handleRemoveItem = useCallback((cartItemId) => {
     setPreCart((prev) => prev.filter((i) => i.cartItemId !== cartItemId));
-  };
+  }, []);
 
   // Totals
   const grandTotal = useMemo(() => {
@@ -731,7 +754,7 @@ export default function CustomerMenuPage() {
                 type="text"
                 placeholder="Search menu items (e.g. Mysore Pak, Gulab Jamun, Kara, Tea)..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchChange}
                 className="menu-search-input"
               />
               <svg
@@ -751,7 +774,7 @@ export default function CustomerMenuPage() {
               {searchTerm && (
                 <button
                   type="button"
-                  onClick={() => setSearchTerm('')}
+                  onClick={handleClearSearch}
                   style={{
                     position: 'absolute',
                     right: '12px',
