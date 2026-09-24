@@ -730,6 +730,8 @@ export function CartProvider({ children }) {
         mergedUnit = 'kg';
       }
 
+      const mergedDisplayName = mergedTamilName ? `${mergedName} — ${mergedTamilName}` : mergedName;
+
       return {
         ...item,
         name: mergedDisplayName,

@@ -144,6 +144,15 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     if (isAdmin || isTestMode) void import('./components/Billing/BillingCounter');
   }, [isAdmin, isTestMode]);
 
+  useEffect(() => {
+    // If user is on an admin/billing/manager route, consume the preloaded hero image from memory cache
+    // so Chromium does not emit an "unused preload" console warning
+    if (currentView !== 'storefront') {
+      const img = new Image();
+      img.src = '/images/products/palkova_hero.webp';
+    }
+  }, [currentView]);
+
   // Route to Customer Menu / Pre-Order Page (Public)
   if (currentView === 'menu') {
     return (
