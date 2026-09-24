@@ -35,6 +35,7 @@ export default function EditBillModal({
         quantity: Number(it.quantity || 1),
         hsn: it.hsn || '2106',
         itemNumber: it.itemNumber || null,
+        skuCode: it.skuCode || (it.itemNumber ? String(it.itemNumber) : ''),
       })));
 
       setCustomer({
@@ -124,6 +125,7 @@ export default function EditBillModal({
         quantity: 1,
         hsn: sweet.hsn || '2106',
         itemNumber: sweet.itemNumber || null,
+        skuCode: sweet.skuCode || (sweet.itemNumber ? String(sweet.itemNumber) : ''),
       },
     ]);
     setCatalogSearch('');
@@ -304,7 +306,14 @@ export default function EditBillModal({
                       <tr key={`${it.id}-${idx}`}>
                         <td>{idx + 1}</td>
                         <td>
-                          <strong>{it.name}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                            <strong>{it.name}</strong>
+                            {(it.skuCode || it.itemNumber) && (
+                              <span style={{ fontSize: '0.70rem', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', padding: '1px 5px', borderRadius: '4px', fontFamily: 'JetBrains Mono, monospace', fontWeight: '700' }}>
+                                SKU: {it.skuCode || it.itemNumber}
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td>
                           <span className="weight-tag">{it.weight}</span>

@@ -6075,6 +6075,99 @@ time, .hours {
   box-shadow: 0 0 0 1px #D97706, 0 2px 8px rgba(217, 119, 6, 0.12);
 }
 
+.pos-list-row.is-selected-mode {
+  border-color: #10B981 !important;
+  background: #F0FDF4 !important;
+  box-shadow: 0 0 0 1.5px #10B981, 0 3px 12px rgba(16, 185, 129, 0.16) !important;
+}
+
+.pos-list-row.is-selected-mode::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #10B981, #059669);
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.pos-selected-mode-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #DCFCE7;
+  border: 1px solid #86EFAC;
+  color: #15803D;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(16, 185, 129, 0.12);
+  flex-shrink: 0;
+}
+
+.pos-selected-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16A34A;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);
+  display: inline-block;
+  animation: pulseSelectedDot 1.8s infinite;
+}
+
+@keyframes pulseSelectedDot {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.pos-selected-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #15803D;
+  color: #FFFFFF;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0 5px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  margin-left: 2px;
+}
+
+.category-pill.category-pill-selected-mode {
+  background: #DCFCE7;
+  border-color: #86EFAC;
+  color: #15803D;
+  font-weight: 800;
+}
+
+.category-pill.category-pill-selected-mode:hover,
+.category-pill.category-pill-selected-mode.active {
+  background: #10B981 !important;
+  border-color: #059669 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+.selected-mode-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  display: inline-block;
+  margin-right: 4px;
+}
+
 .pos-list-info {
   flex: 1;
   min-width: 0;
@@ -7145,14 +7238,38 @@ time, .hours {
   min-width: 0;
 }
 
+.pos-line-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .pos-line-name {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   font-weight: 700;
   font-size: 0.88rem;
   color: #0F172A;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.pos-bill-sku-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.70rem;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 5px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
 }
 
 .pos-line-weight {

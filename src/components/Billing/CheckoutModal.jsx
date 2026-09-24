@@ -672,7 +672,14 @@ export default function CheckoutModal() {
                   <div key={`${item.id}-${item.weight}`} className="checkout-item">
                     <img src={item.image} alt={item.name} className="checkout-item__img" />
                     <div className="checkout-item__info">
-                      <span className="checkout-item__name">{item.name}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span className="checkout-item__name">{item.name}</span>
+                        {(item.skuCode || item.itemNumber) && (
+                          <span style={{ fontSize: '0.68rem', background: '#EFF6FF', border: '1px solid #BFDBFE', color: '#1D4ED8', padding: '1px 5px', borderRadius: '4px', fontFamily: 'JetBrains Mono, monospace', fontWeight: '700' }}>
+                            SKU: {item.skuCode || item.itemNumber}
+                          </span>
+                        )}
+                      </div>
                       <span className="checkout-item__meta">
                         {item.weight} × {item.quantity}
                       </span>

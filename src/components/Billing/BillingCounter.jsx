@@ -121,6 +121,13 @@ export default function BillingCounter() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
+  // Reset selected mode filter to 'all' if all items are removed from bill
+  useEffect(() => {
+    if (selectedCategory === 'selected' && billItems.length === 0) {
+      setSelectedCategory('all');
+    }
+  }, [billItems.length, selectedCategory]);
+
   // Inventory Page Search & Category Filter states
   const [inventorySearch, setInventorySearch] = useState('');
   const [invCategoryFilter, setInvCategoryFilter] = useState('all');
@@ -1107,6 +1114,7 @@ export default function BillingCounter() {
             id,
             name: sweetObj?.name || id,
             itemNumber: sweetObj?.itemNumber,
+            skuCode: sweetObj?.skuCode || (sweetObj?.itemNumber ? String(sweetObj.itemNumber) : ''),
             weight: itemWeight,
             price,
             quantity: val,
@@ -1150,6 +1158,7 @@ export default function BillingCounter() {
       {
         id,
         name,
+        skuCode: 'MANUAL',
         weight: '1 Pc',
         price: amount,
         quantity: qty,
@@ -1515,6 +1524,9 @@ export default function BillingCounter() {
       const q = qRaw.toLowerCase();
 
       if (!q) {
+        if (selectedCategory === 'selected') {
+          return billItems.some((it) => it.id === sw.id);
+        }
         if (selectedCategory === 'all') return true;
         if (selectedCategory === 'beverages') {
           return (itemNum >= 1 && itemNum <= 13) || sw.category === 'beverages' || sw.category === 'snacks';
@@ -1544,6 +1556,11 @@ export default function BillingCounter() {
           return sw.unit === 'Pc' || sw.unit === 'Pkt';
         }
         return true;
+      }
+
+      if (selectedCategory === 'selected') {
+        const inBill = billItems.some((it) => it.id === sw.id);
+        if (!inBill) return false;
       }
 
       // Number/SKU-based search (e.g. "1", "42", "#3", or a custom SKU code)
@@ -1596,7 +1613,7 @@ export default function BillingCounter() {
       if (numA !== numB) return numA - numB;
       return String(a.englishName || a.name || '').localeCompare(String(b.englishName || b.name || ''));
     });
-  }, [allProducts, searchQuery, selectedCategory]);
+  }, [allProducts, searchQuery, selectedCategory, billItems]);
 
   // Fast Enter key in search box adds the top matched item directly to bill
   const handleSearchKeyDown = (e) => {
@@ -2054,6 +2071,20 @@ export default function BillingCounter() {
 
               {/* Quick Category Tabs Bar */}
               <div className="pos-category-bar">
+                {billItems.length > 0 && (
+                  <button
+                    type="button"
+                    className={`category-pill category-pill-selected-mode ${selectedCategory === 'selected' ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedCategory((prev) => (prev === 'selected' ? 'all' : 'selected'));
+                      if (searchQuery) setSearchQuery('');
+                    }}
+                    title="Filter to view only items currently selected in the bill"
+                  >
+                    <span className="selected-mode-pulse-dot"></span>
+                    ★ Selected Mode ({billItems.length})
+                  </button>
+                )}
                 {CATEGORIES.map((cat) => (
                   <button
                     key={cat.id}
@@ -2091,6 +2122,7 @@ export default function BillingCounter() {
                     const itemsInBillForSweet = billItems.filter((it) => it.id === sweet.id);
                     const isItemInBill = itemsInBillForSweet.length > 0;
                     const qtyInBill = isItemInBill ? itemsInBillForSweet[0].quantity : 0;
+                    const totalQtyInBill = itemsInBillForSweet.reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
 
                     const isInlineOpen = inlineWeightId === sweet.id;
                     const inlinePrice = isInlineOpen
@@ -2160,7 +2192,7 @@ export default function BillingCounter() {
                       <div
                         key={sweet.id}
                         id={`pos-row-${sweet.id}`}
-                        className={`pos-list-row ${isItemInBill ? 'in-bill' : ''} ${isInlineOpen ? 'weight-open' : ''}`}
+                        className={`pos-list-row ${isItemInBill ? 'in-bill is-selected-mode' : ''} ${isInlineOpen ? 'weight-open' : ''}`}
                         onClick={() => {
                           if (isMeasurable) {
                             openInlineWeight(sweet);
@@ -2168,13 +2200,20 @@ export default function BillingCounter() {
                             handleSelectProductCard(sweet, defaultUnit);
                           }
                         }}
-                        title={isItemInBill ? `${sweet.name} in active bill` : `Click to add ${sweet.name}`}
+                        title={isItemInBill ? `${sweet.name} is in Selected Mode (${totalQtyInBill} in bill)` : `Click to add ${sweet.name}`}
                       >
                         {/* ── Main row info ── */}
                         <div className="pos-list-info">
                           <div className="pos-list-title-wrap">
                             <span className="pos-item-num-badge" title="SKU Code">{sweet.skuCode || itemNum}</span>
                             <h4 className="pos-list-title">{sweet.name}</h4>
+                            {isItemInBill && (
+                              <span className="pos-selected-mode-pill" title={`${sweet.name} is in Selected Mode (${totalQtyInBill} in bill)`}>
+                                <span className="pos-selected-dot"></span>
+                                <span className="pos-selected-label">Selected Mode</span>
+                                <span className="pos-selected-count-badge">{totalQtyInBill}</span>
+                              </span>
+                            )}
                             <button
                               type="button"
                               className="btn-pos-quick-off"
@@ -2605,10 +2644,19 @@ export default function BillingCounter() {
                 ) : (
                   <div className="pos-items-table">
                     {billItems.map((item) => {
+                      const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
+                      const itemSku = item.skuCode || sweetObj?.skuCode || (item.itemNumber ? String(item.itemNumber) : (sweetObj?.itemNumber ? String(sweetObj.itemNumber) : ''));
                       return (
                         <div key={`${item.id}-${item.weight}`} className="pos-bill-line">
                           <div className="pos-line-info">
-                            <span className="pos-line-name">{item.name}</span>
+                            <div className="pos-line-name-wrap">
+                              <span className="pos-line-name">{item.name}</span>
+                              {itemSku && (
+                                <span className="pos-bill-sku-tag" title={`SKU / Item Code: ${itemSku}`}>
+                                  SKU: {itemSku}
+                                </span>
+                              )}
+                            </div>
                             <div className="pos-line-weight">
                               <span
                                 className="line-weight-tag clickable"

@@ -156,7 +156,10 @@ export default function InvoiceModal() {
 
   // Formatted items list for message
   const itemsText = items
-    .map((item) => `• ${item.name} (${item.weight || item.unit || '1 Pc'}) × ${item.quantity} = ₹${(Number(item.price || 0) * Number(item.quantity || 1))}`)
+    .map((item) => {
+      const sku = item.skuCode || item.itemNumber ? ` [SKU: ${item.skuCode || item.itemNumber}]` : '';
+      return `• ${item.name}${sku} (${item.weight || item.unit || '1 Pc'}) × ${item.quantity} = ₹${(Number(item.price || 0) * Number(item.quantity || 1))}`;
+    })
     .join('\n');
 
   const fullAddress = shippingAddress?.doorNo
@@ -563,19 +566,25 @@ export default function InvoiceModal() {
               </tr>
             </thead>
             <tbody>
-              {items.map((item, idx) => (
-                <tr key={`${item.id}-${item.weight}`}>
-                  <td>{idx + 1}</td>
-                  <td>
-                    <strong>{item.name}</strong>
-                    <span className="item-sub-desc">Handmade pure ghee preparation</span>
-                  </td>
-                  <td>{item.hsn}</td>
-                  <td>{item.weight}</td>
-                  <td className="text-right">{item.quantity}</td>
-                  <td className="text-right">{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
-                </tr>
-              ))}
+              {items.map((item, idx) => {
+                const sku = item.skuCode || item.itemNumber || (allBillingProducts || []).find((s) => s.id === item.id)?.skuCode || (allBillingProducts || []).find((s) => s.id === item.id)?.itemNumber;
+                return (
+                  <tr key={`${item.id}-${item.weight}`}>
+                    <td>{idx + 1}</td>
+                    <td>
+                      <div className="inv-item-name-cell">
+                        <strong>{item.name}</strong>
+                        {sku && <span className="inv-sku-tag">SKU: {sku}</span>}
+                      </div>
+                      <span className="item-sub-desc">Handmade pure ghee preparation</span>
+                    </td>
+                    <td>{item.hsn}</td>
+                    <td>{item.weight}</td>
+                    <td className="text-right">{item.quantity}</td>
+                    <td className="text-right">{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
