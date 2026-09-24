@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { getItemStockConfig } from '../../utils/unitConfig';
+import { getItemStockConfig, isProductUnlimitedStock } from '../../utils/unitConfig';
 import AddStockModal from '../Inventory/AddStockModal';
 import ReturnStockModal from './ReturnStockModal';
 
@@ -13,6 +13,7 @@ export default function CompanyManagerDashboard() {
     stockLogs = [],
     fetchStockLogs,
     navigateTo,
+    toggleProductUnlimitedStock,
   } = useCart();
 
   // Active tab: 'remaining' | 'daily'
@@ -113,13 +114,19 @@ export default function CompanyManagerDashboard() {
       }
 
       // Stock status filter (Shop Stored Stock)
+      const isUnlimited = isProductUnlimitedStock(item);
       const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
+      if (stockStatusFilter === 'unlimited') {
+        return isUnlimited;
+      }
       if (stockStatusFilter === 'low_stock' || stockStatusFilter === 'low_counter' || stockStatusFilter === 'low_godown') {
+        if (isUnlimited) return false;
         return stock > 0 && stock <= minThresh;
       }
       if (stockStatusFilter === 'out_of_stock') {
+        if (isUnlimited) return false;
         return stock <= 0;
       }
 
@@ -132,14 +139,18 @@ export default function CompanyManagerDashboard() {
     let totalShopStock = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
+    let unlimitedCount = 0;
 
     inventory.forEach((item) => {
+      const isUnlimited = isProductUnlimitedStock(item);
       const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
       totalShopStock += stock;
 
-      if (stock <= 0) {
+      if (isUnlimited) {
+        unlimitedCount++;
+      } else if (stock <= 0) {
         outOfStockCount++;
       } else if (stock <= minThresh) {
         lowStockCount++;
@@ -154,6 +165,7 @@ export default function CompanyManagerDashboard() {
       lowGodownCount: lowStockCount,
       lowCounterCount: lowStockCount,
       outOfStockCount,
+      unlimitedCount,
     };
   }, [inventory]);
 
@@ -784,6 +796,7 @@ export default function CompanyManagerDashboard() {
                   { id: 'all', label: `All Items (${inventory.length})` },
                   { id: 'low_stock', label: `⚠️ Low Stock (${stockSummary.lowStockCount})` },
                   { id: 'out_of_stock', label: `🚫 Out of Stock (${stockSummary.outOfStockCount})` },
+                  { id: 'unlimited', label: `∞ Unlimited Stock (${stockSummary.unlimitedCount || 0})` },
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -837,18 +850,21 @@ export default function CompanyManagerDashboard() {
                 ) : (
                   filteredInventory.map((item) => {
                     const unitConf = getItemStockConfig(item);
+                    const isUnlimited = isProductUnlimitedStock(item);
                     const stock = item.counterStock ?? item.stockKg ?? 0;
                     const minThresh = item.minThreshold || (unitConf.type === 'pcs' ? 15 : 8);
 
-                    const isLow = stock > 0 && stock <= minThresh;
-                    const isOut = stock <= 0;
+                    const isLow = !isUnlimited && stock > 0 && stock <= minThresh;
+                    const isOut = !isUnlimited && stock <= 0;
 
                     return (
                       <div
                         key={item.id}
                         style={{
                           backgroundColor: '#ffffff',
-                          border: isOut
+                          border: isUnlimited
+                            ? '1px solid #a7f3d0'
+                            : isOut
                             ? '1px solid #fecaca'
                             : isLow
                             ? '1px solid #fed7aa'
@@ -884,17 +900,23 @@ export default function CompanyManagerDashboard() {
 
                             <span
                               style={{
-                                backgroundColor: isOut
+                                backgroundColor: isUnlimited
+                                  ? '#ecfdf5'
+                                  : isOut
                                   ? '#fef2f2'
                                   : isLow
                                   ? '#fffbeb'
                                   : '#ecfdf5',
-                                color: isOut
+                                color: isUnlimited
+                                  ? '#047857'
+                                  : isOut
                                   ? '#b91c1c'
                                   : isLow
                                   ? '#b45309'
                                   : '#047857',
-                                border: isOut
+                                border: isUnlimited
+                                  ? '1px solid #a7f3d0'
+                                  : isOut
                                   ? '1px solid #fecaca'
                                   : isLow
                                   ? '1px solid #fde68a'
@@ -906,11 +928,11 @@ export default function CompanyManagerDashboard() {
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              {isOut ? 'OUT OF STOCK' : isLow ? 'LOW STOCK' : 'IN STOCK'}
+                              {isUnlimited ? '∞ UNLIMITED STOCK' : isOut ? 'OUT OF STOCK' : isLow ? 'LOW STOCK' : 'IN STOCK'}
                             </span>
                           </div>
 
-                          <div style={{ marginTop: '8px' }}>
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '6px', alignItems: 'center' }}>
                             <span
                               style={{
                                 backgroundColor: '#f1f5f9',
@@ -924,6 +946,21 @@ export default function CompanyManagerDashboard() {
                             >
                               Unit: {unitConf.label}
                             </span>
+                            {isUnlimited && (
+                              <span
+                                style={{
+                                  backgroundColor: '#dcfce7',
+                                  color: '#15803d',
+                                  border: '1px solid #bbf7d0',
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                }}
+                              >
+                                Always Available
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -933,24 +970,31 @@ export default function CompanyManagerDashboard() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            backgroundColor: '#f8fafc',
+                            backgroundColor: isUnlimited ? '#f0fdf4' : '#f8fafc',
                             padding: '12px 16px',
                             borderRadius: '10px',
-                            border: '1px solid #e2e8f0',
+                            border: isUnlimited ? '1px solid #bbf7d0' : '1px solid #e2e8f0',
                           }}
                         >
                           <div>
-                            <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+                            <div style={{ fontSize: '11px', color: isUnlimited ? '#047857' : '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
                               🏪 Shop Stored Stock
                             </div>
-                            <div style={{ fontSize: '20px', fontWeight: 800, color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669', marginTop: '2px' }}>
-                              {stock} <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{unitConf.label}</span>
-                            </div>
+                            {isUnlimited ? (
+                              <div style={{ fontSize: '18px', fontWeight: 800, color: '#059669', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span>Unlimited</span>
+                                <span style={{ fontSize: '15px' }}>(∞)</span>
+                              </div>
+                            ) : (
+                              <div style={{ fontSize: '20px', fontWeight: 800, color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669', marginTop: '2px' }}>
+                                {stock} <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{unitConf.label}</span>
+                              </div>
+                            )}
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Min Threshold</div>
-                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginTop: '2px' }}>
-                              {minThresh} {unitConf.label}
+                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>{isUnlimited ? 'Mode' : 'Min Threshold'}</div>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: isUnlimited ? '#059669' : '#475569', marginTop: '2px' }}>
+                              {isUnlimited ? 'On-Demand' : `${minThresh} ${unitConf.label}`}
                             </div>
                           </div>
                         </div>
@@ -981,25 +1025,24 @@ export default function CompanyManagerDashboard() {
 
                           <button
                             type="button"
-                            onClick={() => handleOpenReturn(item.id)}
-                            disabled={stock <= 0}
+                            onClick={() => toggleProductUnlimitedStock(item.id, !isUnlimited, user?.username || 'Manager')}
                             style={{
-                              backgroundColor: stock > 0 ? '#fffbeb' : '#f8fafc',
-                              border: stock > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                              color: stock > 0 ? '#b45309' : '#94a3b8',
+                              backgroundColor: isUnlimited ? '#eff6ff' : '#f8fafc',
+                              border: isUnlimited ? '1px solid #bfdbfe' : '1px solid #cbd5e1',
+                              color: isUnlimited ? '#1d4ed8' : '#475569',
                               borderRadius: '8px',
                               padding: '8px 10px',
-                              fontSize: '12px',
+                              fontSize: '11px',
                               fontWeight: 700,
-                              cursor: stock > 0 ? 'pointer' : 'not-allowed',
+                              cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               gap: '4px',
                             }}
-                            title="Return stock to Company Godown or record wastage"
+                            title={isUnlimited ? 'Switch to tracked inventory count' : 'Enable unlimited stock for this product'}
                           >
-                            ↩️ Return / Waste
+                            {isUnlimited ? 'Set Tracked' : '∞ Unlimited'}
                           </button>
                         </div>
                       </div>
@@ -1050,11 +1093,12 @@ export default function CompanyManagerDashboard() {
                       ) : (
                         filteredInventory.map((item, idx) => {
                           const unitConf = getItemStockConfig(item);
+                          const isUnlimited = isProductUnlimitedStock(item);
                           const stock = item.counterStock ?? item.stockKg ?? 0;
                           const minThresh = item.minThreshold || (unitConf.type === 'pcs' ? 15 : 8);
 
-                          const isLow = stock > 0 && stock <= minThresh;
-                          const isOut = stock <= 0;
+                          const isLow = !isUnlimited && stock > 0 && stock <= minThresh;
+                          const isOut = !isUnlimited && stock <= 0;
 
                           return (
                             <tr
@@ -1103,41 +1147,86 @@ export default function CompanyManagerDashboard() {
 
                               {/* Shop Stored Stock */}
                               <td style={{ padding: '14px 14px' }}>
-                                <div
-                                  style={{
-                                    fontSize: '16px',
-                                    fontWeight: 800,
-                                    color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669',
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                    gap: '5px',
-                                  }}
-                                >
-                                  <span>{stock}</span>
-                                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
-                                    {unitConf.label}
-                                  </span>
-                                </div>
-                                {isLow && (
-                                  <div style={{ fontSize: '10px', color: '#d97706', fontWeight: 600, marginTop: '2px' }}>
-                                    Refill needed from Godown
+                                {isUnlimited ? (
+                                  <div>
+                                    <div
+                                      style={{
+                                        fontSize: '15px',
+                                        fontWeight: 800,
+                                        color: '#059669',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                      }}
+                                    >
+                                      <span>Unlimited</span>
+                                      <span style={{ fontSize: '13px', color: '#047857' }}>(∞)</span>
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: '#059669', fontWeight: 600, marginTop: '2px' }}>
+                                      Always available
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div
+                                      style={{
+                                        fontSize: '16px',
+                                        fontWeight: 800,
+                                        color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669',
+                                        display: 'flex',
+                                        alignItems: 'baseline',
+                                        gap: '5px',
+                                      }}
+                                    >
+                                      <span>{stock}</span>
+                                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
+                                        {unitConf.label}
+                                      </span>
+                                    </div>
+                                    {isLow && (
+                                      <div style={{ fontSize: '10px', color: '#d97706', fontWeight: 600, marginTop: '2px' }}>
+                                        Refill needed from Godown
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </td>
 
                               {/* Min Threshold */}
                               <td style={{ padding: '14px 14px' }}>
-                                <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
-                                  {minThresh}{' '}
-                                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
-                                    {unitConf.label}
-                                  </span>
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: isUnlimited ? '#059669' : '#475569' }}>
+                                  {isUnlimited ? (
+                                    <span>No Limit</span>
+                                  ) : (
+                                    <>
+                                      {minThresh}{' '}
+                                      <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
+                                        {unitConf.label}
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               </td>
 
                               {/* Status Tag */}
                               <td style={{ padding: '14px 14px' }}>
-                                {isOut ? (
+                                {isUnlimited ? (
+                                  <span
+                                    style={{
+                                      backgroundColor: '#ecfdf5',
+                                      color: '#047857',
+                                      border: '1px solid #a7f3d0',
+                                      fontSize: '10px',
+                                      fontWeight: 700,
+                                      padding: '3px 8px',
+                                      borderRadius: '9999px',
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-block',
+                                    }}
+                                  >
+                                    ∞ UNLIMITED
+                                  </span>
+                                ) : isOut ? (
                                   <span
                                     style={{
                                       backgroundColor: '#fef2f2',
@@ -1208,6 +1297,25 @@ export default function CompanyManagerDashboard() {
                                     title={`Add ${unitConf.label} to Shop Stock`}
                                   >
                                     + Add Stock
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleProductUnlimitedStock(item.id, !isUnlimited, user?.username || 'Manager')}
+                                    style={{
+                                      backgroundColor: isUnlimited ? '#eff6ff' : '#f8fafc',
+                                      border: isUnlimited ? '1px solid #bfdbfe' : '1px solid #cbd5e1',
+                                      color: isUnlimited ? '#1d4ed8' : '#475569',
+                                      borderRadius: '6px',
+                                      padding: '6px 10px',
+                                      fontSize: '11px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                    title={isUnlimited ? 'Switch to tracked inventory count' : 'Enable unlimited stock for this product'}
+                                  >
+                                    {isUnlimited ? 'Track' : '∞ Unlimited'}
                                   </button>
 
                                   <button

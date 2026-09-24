@@ -14,6 +14,17 @@ import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
+import {
+  isBeverageDrink,
+  isPieceItem,
+  isPacketItem,
+  isLitreProduct,
+  isKgProduct,
+  resolveProductDefaultUnit,
+  resolveProductUnitDisplay,
+  resolveBillItemUnit,
+  isProductUnlimitedStock,
+} from '../../utils/unitConfig';
 // Predefined categories for fast sweets, savouries & beverages POS filtering
 const CATEGORIES = [
   { id: 'all', label: 'All Items' },
@@ -51,6 +62,7 @@ export default function BillingCounter() {
     deleteProduct,
     updateProductMasterPrice,
     updateProductDetails,
+    toggleProductUnlimitedStock,
     updateProductSkuCode,
     deleteBill,
     deleteBills,
@@ -200,56 +212,19 @@ export default function BillingCounter() {
   };
 
   // Helpers to identify measurable items (weight in kg/g and volume in Litre/ml)
-  const isLitreItem = (sweet) => {
-    if (!sweet) return false;
-    const u = (sweet.unit || '').toLowerCase();
-    return u === 'litre' || u === 'liter' || u === 'l' || u === 'ml';
-  };
-
-  const isKgItem = (sweet) => {
-    if (!sweet) return false;
-    const u = (sweet.unit || '').toLowerCase();
-    const cat = (sweet.category || '').toLowerCase();
-    const id = (sweet.id || '').toLowerCase();
-    if (
-      cat === 'beverages' ||
-      cat === 'snacks' ||
-      id.includes('tea') ||
-      id.includes('coffee') ||
-      id.includes('milk') ||
-      id.includes('boost') ||
-      id.includes('horlicks') ||
-      id === 'vada' ||
-      u.includes('cup') ||
-      u.includes('pc')
-    ) {
-      return false;
-    }
-    return u === 'kg' || Boolean(sweet.prices && (sweet.prices['250g'] || sweet.prices['500g']));
-  };
-
+  const isLitreItem = (sweet) => isLitreProduct(sweet);
+  const isKgItem = (sweet) => isKgProduct(sweet);
   const isMeasurableItem = (sweet) => isKgItem(sweet) || isLitreItem(sweet);
 
   // Dedicated helpers for displaying quantity vs kg across inventory and POS
-  const getItemUnitDisplay = (prod) => {
-    if (!prod) return 'kg';
-    const cat = (prod.category || '').toLowerCase();
-    const u = (prod.unit || '').trim();
-    const id = (prod.id || '').toLowerCase();
-    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.toLowerCase().includes('cup')) {
-      return '1 Cup';
-    }
-    if (cat === 'snacks' || id === 'vada' || u.toLowerCase().includes('pc')) {
-      return '1 Pc';
-    }
-    if (u.toLowerCase() === 'litre' || u.toLowerCase() === '1 litre') return '1 Litre';
-    if (u.toLowerCase() === 'pkt' || u.toLowerCase() === 'packet') return '1 Pkt';
-    return u || 'kg';
-  };
+  const getItemUnitDisplay = (prod) => resolveProductUnitDisplay(prod);
 
   const getItemStockDisplay = (prod, inventoryMap, rawInventory) => {
     if (!prod) return '0';
     const invItem = inventoryMap?.get(prod.id) || rawInventory?.find((i) => i.id === prod.id);
+    if (isProductUnlimitedStock(prod) || isProductUnlimitedStock(invItem)) {
+      return 'Unlimited';
+    }
     const stock = invItem ? invItem.stockKg : (prod.stockKg ?? prod.stock ?? 0);
     const cat = (prod.category || '').toLowerCase();
     const u = (prod.unit || '').toLowerCase();
@@ -1041,9 +1016,12 @@ export default function BillingCounter() {
   // Add product to bill with chosen cup/pc/weight/volume quantity
   const handleAddSweetToBill = (sweet, weight, addQty = 1, overridePrice = null) => {
     const qty = parseInt(addQty, 10) || 1;
-    const isKg = isKgItem(sweet);
-    const isLitre = isLitreItem(sweet);
-    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweet.unit) || '1 Cup';
+    const defUnit = resolveProductDefaultUnit(sweet);
+    let itemWeight = weight;
+    if (!itemWeight || (itemWeight.toLowerCase() === 'kg' && isBeverageDrink(sweet))) {
+      itemWeight = defUnit;
+    }
+    if (!itemWeight) itemWeight = defUnit;
     const computedPrice = computeItemPrice(sweet, itemWeight);
     const price = overridePrice !== null && !isNaN(overridePrice) ? Number(overridePrice) : computedPrice;
 
@@ -1066,7 +1044,7 @@ export default function BillingCounter() {
             quantity: qty,
             hsn: sweet.hsn || '2106',
             image: sweet.image,
-            unit: sweet.unit || '1 Cup',
+            unit: defUnit,
           },
         ];
       }
@@ -1075,9 +1053,12 @@ export default function BillingCounter() {
 
   // Product card click:
   const handleSelectProductCard = (sweet, weight) => {
-    const isKg = isKgItem(sweet);
-    const isLitre = isLitreItem(sweet);
-    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweet.unit) || '1 Cup';
+    const defUnit = resolveProductDefaultUnit(sweet);
+    let itemWeight = weight;
+    if (!itemWeight || (itemWeight.toLowerCase() === 'kg' && isBeverageDrink(sweet))) {
+      itemWeight = defUnit;
+    }
+    if (!itemWeight) itemWeight = defUnit;
     const isSelected = billItems.some((it) => it.id === sweet.id && it.weight === itemWeight);
     if (!isSelected) {
       handleAddSweetToBill(sweet, itemWeight, 1);
@@ -1090,9 +1071,12 @@ export default function BillingCounter() {
     const val = parseInt(qty, 10);
     const id = typeof sweetOrId === 'object' ? sweetOrId.id : sweetOrId;
     const sweetObj = typeof sweetOrId === 'object' ? sweetOrId : (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === id);
-    const isKg = isKgItem(sweetObj);
-    const isLitre = isLitreItem(sweetObj);
-    const itemWeight = weight || (isKg ? '250g' : isLitre ? '500ml' : sweetObj?.unit) || '1 Cup';
+    const defUnit = resolveProductDefaultUnit(sweetObj);
+    let itemWeight = weight;
+    if (!itemWeight || (itemWeight.toLowerCase() === 'kg' && isBeverageDrink(sweetObj))) {
+      itemWeight = defUnit;
+    }
+    if (!itemWeight) itemWeight = defUnit;
 
     if (isNaN(val) || val <= 0) {
       handleRemoveBillItem(id, itemWeight);
@@ -1120,7 +1104,7 @@ export default function BillingCounter() {
             quantity: val,
             hsn: sweetObj?.hsn || '2106',
             image: sweetObj?.image,
-            unit: sweetObj?.unit || '1 Cup',
+            unit: defUnit,
           },
         ];
       }
@@ -1306,6 +1290,7 @@ export default function BillingCounter() {
         category: editingMasterPriceItem.category || 'sweets',
         unit: editingMasterPriceItem.unit || 'kg',
         price: num,
+        isUnlimitedStock: Boolean(editingMasterPriceItem.isUnlimitedStock),
       }, user);
     }
     setEditingMasterPriceItem(null);
@@ -2107,17 +2092,7 @@ export default function BillingCounter() {
                     const isKg = isKgItem(sweet);
                     const isLitre = isLitreItem(sweet);
                     const isMeasurable = isKg || isLitre;
-                    const defaultUnit = isKg
-                      ? '250g'
-                      : isLitre
-                      ? '500ml'
-                      : sweet.unit === 'Pc'
-                      ? '1 Pc'
-                      : sweet.unit === 'Pkt'
-                      ? '1 Pkt'
-                      : sweet.unit === 'Litre'
-                      ? '1 Litre'
-                      : sweet.unit || '1 Pc';
+                    const defaultUnit = resolveProductDefaultUnit(sweet);
                     const itemNum = sweet.itemNumber || idx + 1;
                     const itemsInBillForSweet = billItems.filter((it) => it.id === sweet.id);
                     const isItemInBill = itemsInBillForSweet.length > 0;
@@ -2228,18 +2203,16 @@ export default function BillingCounter() {
                           </div>
                           <span className="pos-list-rate">
                             ₹{sweet.price}
-                            {((sweet.unit || '').toLowerCase().includes('cup') || (sweet.category || '').toLowerCase() === 'beverages' || (sweet.id || '').includes('tea') || (sweet.id || '').includes('coffee') || (sweet.id || '').includes('milk') || (sweet.id || '').includes('boost') || (sweet.id || '').includes('horlicks')) ? (
+                            {isBeverageDrink(sweet) ? (
                               <small className="pos-price-unit"> / cup</small>
-                            ) : ((sweet.unit || '').toLowerCase().includes('pc') || (sweet.category || '').toLowerCase() === 'snacks' || sweet.id === 'vada') ? (
+                            ) : isPieceItem(sweet) ? (
                               <small className="pos-price-unit"> / pc</small>
-                            ) : ((sweet.unit || '').toLowerCase() === 'kg' && (sweet.category || '').toLowerCase() !== 'beverages' && (sweet.category || '').toLowerCase() !== 'snacks') ? (
-                              <small className="pos-price-unit"> / kg</small>
-                            ) : ((sweet.unit || '').toLowerCase() === 'pkt') ? (
+                            ) : isPacketItem(sweet) ? (
                               <small className="pos-price-unit"> / pkt</small>
-                            ) : ((sweet.unit || '').toLowerCase() === 'litre') ? (
-                              <small className="pos-price-unit"> / Litre</small>
+                            ) : isLitreProduct(sweet) ? (
+                              <small className="pos-price-unit"> {String(sweet.unit || '').toLowerCase() === 'bottle' ? '/ bottle' : '/ Litre'}</small>
                             ) : (
-                              <small className="pos-price-unit"> / {sweet.unit || 'cup'}</small>
+                              <small className="pos-price-unit"> / kg</small>
                             )}
                           </span>
                         </div>
@@ -2668,7 +2641,7 @@ export default function BillingCounter() {
                                 }}
                                 title="Click to change or retype weight / volume"
                               >
-                                {item.weight || item.unit || '1 Cup'}
+                                {resolveBillItemUnit(item, sweetObj)}
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.6 }}>
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -4281,9 +4254,16 @@ export default function BillingCounter() {
                             </span>
                           </td>
                           <td>
-                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                              {getItemUnitDisplay(prod)}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                                {getItemUnitDisplay(prod)}
+                              </span>
+                              {isProductUnlimitedStock(prod) && (
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: '#047857', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
+                                  ∞ Unlimited
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           <td>
@@ -4302,7 +4282,8 @@ export default function BillingCounter() {
                                     tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
                                     category: prod.category || 'sweets',
                                     unit: getItemUnitDisplay(prod),
-                                    price: String(prod.price || prod.unitPrice || '')
+                                    price: String(prod.price || prod.unitPrice || ''),
+                                    isUnlimitedStock: isProductUnlimitedStock(prod),
                                   });
                                 }}
                                 title="Edit product details"
@@ -4623,6 +4604,29 @@ export default function BillingCounter() {
                     placeholder="e.g. 380"
                   />
                 </div>
+              </div>
+
+              {/* Unlimited Stock Toggle in Edit Product Modal */}
+              <div style={{ padding: '10px 14px', background: editingMasterPriceItem.isUnlimitedStock ? '#f0fdf4' : '#f8fafc', borderRadius: '10px', border: editingMasterPriceItem.isUnlimitedStock ? '1px solid #bbf7d0' : '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: editingMasterPriceItem.isUnlimitedStock ? '#047857' : '#0f172a' }}>
+                    ∞ Unlimited Stock (முடிவிலா இருப்பு)
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    On-demand availability (tea, coffee, beverages - never runs out)
+                  </div>
+                </div>
+                <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer', gap: '6px' }}>
+                  <input
+                    type="checkbox"
+                    checked={Boolean(editingMasterPriceItem.isUnlimitedStock)}
+                    onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, isUnlimitedStock: e.target.checked })}
+                    style={{ width: '18px', height: '18px', accentColor: '#10b981', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: editingMasterPriceItem.isUnlimitedStock ? '#059669' : '#64748b' }}>
+                    {editingMasterPriceItem.isUnlimitedStock ? 'Unlimited' : 'Tracked'}
+                  </span>
+                </label>
               </div>
             </div>
             <div className="pos-price-modal-footer">

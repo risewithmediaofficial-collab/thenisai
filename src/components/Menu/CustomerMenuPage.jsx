@@ -5,6 +5,15 @@ import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import api from '../../utils/api';
 import { getNextPreOrderInvoiceNumber } from '../../utils/invoiceNumber';
+import {
+  isBeverageDrink,
+  isPieceItem,
+  isPacketItem,
+  isLitreProduct,
+  isKgProduct,
+  resolveProductDefaultUnit,
+  resolveProductUnitDisplay,
+} from '../../utils/unitConfig';
 import './CustomerMenuPage.css';
 
 const KG_WEIGHT_PRESETS = [
@@ -101,86 +110,9 @@ export default function CustomerMenuPage() {
   useScrollLock(isCheckoutOpen || Boolean(placedOrder) || isMobileCartOpen || isCustomerLoginOpen || isMyOrdersOpen);
 
   // Helper functions matching POS Billing exactly
-  const isLitreItem = (item) => {
-    if (!item) return false;
-    const u = (item.unit || '').toLowerCase();
-    const id = (item.id || '').toLowerCase();
-    return u.includes('litre') || u.includes('liter') || id.includes('ghee_bottle') || id.includes('oil');
-  };
-
-  const isKgItem = (item) => {
-    if (!item) return false;
-    const u = (item.unit || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    const id = (item.id || '').toLowerCase();
-    const name = (item.name || '').toLowerCase();
-
-    // Check if beverage or cup-based or piece-based fast seller (matching BillingCounter.jsx)
-    if (
-      cat.includes('beverage') ||
-      cat === 'snacks' ||
-      id.includes('tea') ||
-      id.includes('coffee') ||
-      id.includes('milk') ||
-      id.includes('boost') ||
-      id.includes('horlicks') ||
-      id.includes('malt') ||
-      name.includes('tea') ||
-      name.includes('coffee') ||
-      name.includes('milk') ||
-      name.includes('boost') ||
-      name.includes('horlicks') ||
-      name.includes('malt') ||
-      id === 'vada' ||
-      u.includes('cup') ||
-      u.includes('pc') ||
-      u.includes('piece') ||
-      u.includes('pkt') ||
-      u.includes('packet') ||
-      u.includes('bottle') ||
-      u.includes('box') ||
-      u.includes('litre') ||
-      u.includes('liter')
-    ) {
-      return false;
-    }
-    return u === 'kg' || !u || Boolean(item.prices && (item.prices['250g'] || item.prices['500g']));
-  };
-
-  const getItemUnitDisplay = (item) => {
-    if (!item) return '1 Cup';
-    const cat = (item.category || '').toLowerCase();
-    const u = (item.unit || '').trim();
-    const id = (item.id || '').toLowerCase();
-    const name = (item.name || '').toLowerCase();
-
-    if (
-      cat.includes('beverage') ||
-      id.includes('tea') ||
-      id.includes('coffee') ||
-      id.includes('milk') ||
-      id.includes('boost') ||
-      id.includes('horlicks') ||
-      id.includes('malt') ||
-      name.includes('tea') ||
-      name.includes('coffee') ||
-      name.includes('milk') ||
-      name.includes('boost') ||
-      name.includes('horlicks') ||
-      name.includes('malt') ||
-      u.toLowerCase().includes('cup')
-    ) {
-      return '1 Cup';
-    }
-    if (cat === 'snacks' || id === 'vada' || u.toLowerCase().includes('pc') || u.toLowerCase().includes('piece')) {
-      return '1 Pc';
-    }
-    if (u.toLowerCase().includes('litre') || u.toLowerCase().includes('liter')) return '1 Litre';
-    if (u.toLowerCase().includes('pkt') || u.toLowerCase().includes('packet')) return '1 Pkt';
-    if (u.toLowerCase().includes('bottle')) return '1 Bottle';
-    if (u.toLowerCase().includes('box')) return '1 Box';
-    return u || 'kg';
-  };
+  const isLitreItem = (item) => isLitreProduct(item);
+  const isKgItem = (item) => isKgProduct(item);
+  const getItemUnitDisplay = (item) => resolveProductUnitDisplay(item);
 
   const getAvailablePortions = (item) => {
     if (isLitreItem(item)) return LITRE_PORTIONS;

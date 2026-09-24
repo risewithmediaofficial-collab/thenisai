@@ -1,4 +1,5 @@
 import { createSlice, createSelector } from '@reduxjs/toolkit';
+import { isProductUnlimitedStock } from '../../utils/unitConfig';
 
 const initialState = {
   items: [],
@@ -105,11 +106,19 @@ export const selectFilteredInventory = createSelector(
         return false;
       }
 
+      const isUnlimited = isProductUnlimitedStock(item);
       const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
-      if (status === 'low_stock' || status === 'low_counter') return stock > 0 && stock <= minThresh;
-      if (status === 'out_of_stock') return stock <= 0;
+      if (status === 'unlimited') return isUnlimited;
+      if (status === 'low_stock' || status === 'low_counter') {
+        if (isUnlimited) return false;
+        return stock > 0 && stock <= minThresh;
+      }
+      if (status === 'out_of_stock') {
+        if (isUnlimited) return false;
+        return stock <= 0;
+      }
 
       return true;
     });
@@ -122,13 +131,17 @@ export const selectInventorySummary = createSelector(
     let totalShopStock = 0;
     let lowStockCount = 0;
     let outOfStockCount = 0;
+    let unlimitedCount = 0;
 
     items.forEach((item) => {
+      const isUnlimited = isProductUnlimitedStock(item);
       const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
       totalShopStock += stock;
-      if (stock <= 0) {
+      if (isUnlimited) {
+        unlimitedCount++;
+      } else if (stock <= 0) {
         outOfStockCount++;
       } else if (stock <= minThresh) {
         lowStockCount++;
@@ -142,6 +155,7 @@ export const selectInventorySummary = createSelector(
       lowStock: lowStockCount,
       lowCounter: lowStockCount,
       outOfStock: outOfStockCount,
+      unlimitedCount,
     };
   }
 );

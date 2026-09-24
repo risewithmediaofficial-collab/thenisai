@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { getItemStockConfig } from '../../utils/unitConfig';
+import { getItemStockConfig, isProductUnlimitedStock } from '../../utils/unitConfig';
 
 export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const { inventory, addInventoryStock } = useCart();
@@ -33,6 +33,7 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   }, [initialSweetId, isOpen]);
 
   const currentItem = inventory.find((it) => it.id === selectedSweetId) || inventory[0];
+  const isUnlimited = isProductUnlimitedStock(currentItem);
   const unitConfig = getItemStockConfig(currentItem);
 
   const [refillQty, setRefillQty] = useState('5');
@@ -98,7 +99,11 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               <label>
                 <span>Select Item to Refill</span>
                 <span className="stock-hint">
-                  {currentStock <= (currentItem?.minThreshold || 8) ? (
+                  {isUnlimited ? (
+                    <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      ∞ Unlimited Stock (On-Demand)
+                    </strong>
+                  ) : currentStock <= (currentItem?.minThreshold || 8) ? (
                     <strong style={{ color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -119,10 +124,11 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               >
                 {inventory.map((it) => {
                   const cfg = getItemStockConfig(it);
+                  const unlim = isProductUnlimitedStock(it);
                   const st = it.counterStock ?? it.stockKg ?? 0;
                   return (
                     <option key={it.id} value={it.id}>
-                      {it.name} — {st} {cfg.label} {st <= it.minThreshold ? '[LOW STOCK]' : ''}
+                      {it.name} — {unlim ? 'Unlimited (∞)' : `${st} ${cfg.label} ${st <= it.minThreshold ? '[LOW STOCK]' : ''}`}
                     </option>
                   );
                 })}

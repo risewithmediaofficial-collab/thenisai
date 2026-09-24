@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG } from '../../data/sweetsData';
-import { getItemStockConfig } from '../../utils/unitConfig';
+import { getItemStockConfig, isProductUnlimitedStock } from '../../utils/unitConfig';
 
 export default function AddStockModal({ isOpen, onClose, initialSweetId = null }) {
-  const { inventory, addInventoryStock, addNewProductStock, inwardStock } = useCart();
+  const { inventory, addInventoryStock, addNewProductStock, inwardStock, toggleProductUnlimitedStock } = useCart();
   const [activeTab, setActiveTab] = useState('existing'); // 'existing' | 'new'
 
   // Screen scroll lock when modal is open
@@ -59,12 +59,14 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
     unit: 'kg',
     minThreshold: '8',
     batchNote: 'New sweet variety added to shop',
+    isUnlimitedStock: false,
   });
 
   if (!isOpen) return null;
 
   const currentSweet = inventory.find((i) => i.id === existingForm.sweetId) ||
     SWEETS_CATALOG.find((s) => s.id === existingForm.sweetId);
+  const isUnlimited = isProductUnlimitedStock(currentSweet);
   const unitConfig = getItemStockConfig(currentSweet);
   const currentStock = currentSweet?.counterStock ?? currentSweet?.stockKg ?? 0;
   const targetStock = currentStock + (parseFloat(existingForm.quantity) || 0);
@@ -97,8 +99,10 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
       name: '',
       category: 'Ghee Sweets',
       stockKg: '15',
+      unit: 'kg',
       minThreshold: '8',
       batchNote: 'New recipe introduction from Godown',
+      isUnlimitedStock: false,
     });
   };
 
@@ -165,7 +169,13 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                 <label>
                   <span>Select Sweet / Item Variety</span>
                   <span className="stock-hint">
-                    Current Shop Stock: {currentStock} {unitConfig.label}
+                    Current Shop Stock: {isUnlimited ? (
+                      <strong style={{ color: '#059669', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        Unlimited (∞)
+                      </strong>
+                    ) : (
+                      <span>{currentStock} {unitConfig.label}</span>
+                    )}
                   </span>
                 </label>
                 <select
@@ -177,10 +187,11 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                 >
                   {inventory.map((item) => {
                     const cfg = getItemStockConfig(item);
+                    const unlim = isProductUnlimitedStock(item);
                     const sStock = item.counterStock ?? item.stockKg ?? 0;
                     return (
                       <option key={item.id} value={item.id}>
-                        {item.name} — Shop Stock: {sStock} {cfg.label}
+                        {item.name} — {unlim ? 'Shop Stock: Unlimited (∞)' : `Shop Stock: ${sStock} ${cfg.label}`}
                       </option>
                     );
                   })}
@@ -191,6 +202,35 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                     </option>
                   ))}
                 </select>
+
+                {/* Unlimited Stock Toggle for current item */}
+                <div style={{ marginTop: '10px', padding: '10px 14px', background: isUnlimited ? '#f0fdf4' : '#f8fafc', borderRadius: '10px', border: isUnlimited ? '1px solid #bbf7d0' : '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: isUnlimited ? '#047857' : '#0f172a' }}>
+                      {isUnlimited ? '∞ Unlimited Stock Enabled' : 'Counted Stock Item'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>
+                      {isUnlimited ? 'Never depletes on billing (ideal for freshly brewed tea, coffee, hot beverages)' : 'Stock is decremented when customer bills are completed'}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleProductUnlimitedStock(existingForm.sweetId, !isUnlimited)}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      borderRadius: '6px',
+                      border: isUnlimited ? '1px solid #bbf7d0' : '1px solid #cbd5e1',
+                      backgroundColor: isUnlimited ? '#ecfdf5' : '#ffffff',
+                      color: isUnlimited ? '#047857' : '#334155',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {isUnlimited ? 'Switch to Tracked' : '∞ Make Unlimited'}
+                  </button>
+                </div>
               </div>
 
               <div className="stock-field">
@@ -294,10 +334,17 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                 <select
                   className="stock-select"
                   value={newForm.category}
-                  onChange={(e) =>
-                    setNewForm((prev) => ({ ...prev, category: e.target.value }))
-                  }
+                  onChange={(e) => {
+                    const cat = e.target.value;
+                    setNewForm((prev) => ({
+                      ...prev,
+                      category: cat,
+                      unit: cat === 'Beverages' ? '1 Cup' : prev.unit,
+                      isUnlimitedStock: cat === 'Beverages' ? true : prev.isUnlimitedStock,
+                    }));
+                  }}
                 >
+                  <option value="Beverages">Beverages · பானங்கள் (Tea, Coffee, Hot Milk)</option>
                   <option value="Spices (Kara Vagai)">Spices (Kara Vagai) · கார வகை</option>
                   <option value="Ghee Sweets">Traditional Ghee Sweets</option>
                   <option value="Milk & Khoa">Milk & Khoa Delicacies</option>
@@ -307,42 +354,66 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                 </select>
               </div>
 
-              <div className="stock-field">
-                <label>
-                  <span>Initial Batch Stock (kg)</span>
+              {/* Unlimited Stock Checkbox */}
+              <div className="stock-field" style={{ padding: '12px 14px', background: newForm.isUnlimitedStock ? '#f0fdf4' : '#f8fafc', borderRadius: '10px', border: newForm.isUnlimitedStock ? '1px solid #bbf7d0' : '1px solid #e2e8f0' }}>
+                <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', margin: 0 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, color: newForm.isUnlimitedStock ? '#047857' : '#0f172a', fontSize: '13px' }}>
+                      ∞ Unlimited Stock (முடிவிலா இருப்பு)
+                    </span>
+                    <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 'normal', marginTop: '2px' }}>
+                      Item is served continuously on-demand (e.g. freshly brewed tea, coffee, hot milk)
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={newForm.isUnlimitedStock}
+                    onChange={(e) => setNewForm((prev) => ({ ...prev, isUnlimitedStock: e.target.checked }))}
+                    style={{ width: '18px', height: '18px', accentColor: '#10b981', cursor: 'pointer' }}
+                  />
                 </label>
-                <input
-                  type="number"
-                  step="0.5"
-                  min="1"
-                  className="stock-input"
-                  placeholder="e.g. 20"
-                  value={newForm.stockKg}
-                  onChange={(e) =>
-                    setNewForm((prev) => ({ ...prev, stockKg: e.target.value }))
-                  }
-                  onWheel={(e) => e.target.blur()}
-                  required
-                />
               </div>
 
-              <div className="stock-field">
-                <label>
-                  <span>Low Stock Alert Minimum (kg)</span>
-                </label>
-                <input
-                  type="number"
-                  step="1"
-                  min="1"
-                  className="stock-input"
-                  value={newForm.minThreshold}
-                  onChange={(e) =>
-                    setNewForm((prev) => ({ ...prev, minThreshold: e.target.value }))
-                  }
-                  onWheel={(e) => e.target.blur()}
-                  required
-                />
-              </div>
+              {!newForm.isUnlimitedStock && (
+                <>
+                  <div className="stock-field">
+                    <label>
+                      <span>Initial Batch Stock (kg / items)</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      min="1"
+                      className="stock-input"
+                      placeholder="e.g. 20"
+                      value={newForm.stockKg}
+                      onChange={(e) =>
+                        setNewForm((prev) => ({ ...prev, stockKg: e.target.value }))
+                      }
+                      onWheel={(e) => e.target.blur()}
+                      required={!newForm.isUnlimitedStock}
+                    />
+                  </div>
+
+                  <div className="stock-field">
+                    <label>
+                      <span>Low Stock Alert Minimum</span>
+                    </label>
+                    <input
+                      type="number"
+                      step="1"
+                      min="1"
+                      className="stock-input"
+                      value={newForm.minThreshold}
+                      onChange={(e) =>
+                        setNewForm((prev) => ({ ...prev, minThreshold: e.target.value }))
+                      }
+                      onWheel={(e) => e.target.blur()}
+                      required={!newForm.isUnlimitedStock}
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="stock-field">
                 <label>

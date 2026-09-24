@@ -155,6 +155,26 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
             🚫 {inventorySummary.outOfStock} Out of Stock
           </span>
         )}
+
+        {inventorySummary.unlimitedCount > 0 && (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              backgroundColor: '#e0f2fe',
+              border: '1px solid #bae6fd',
+              borderRadius: '9999px',
+              color: '#0369a1',
+              fontWeight: 600,
+              fontSize: '11px',
+            }}
+            title="Products with unlimited on-demand stock (e.g., freshly prepared beverages)"
+          >
+            ∞ {inventorySummary.unlimitedCount} Unlimited
+          </span>
+        )}
       </div>
 
       {/* Right: Quick Toggles (Scanner, Presets, Fast Payment) */}

@@ -2,6 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
+import {
+  resolveProductDefaultUnit,
+  resolveProductUnitDisplay,
+  resolveBillItemUnit,
+} from '../../utils/unitConfig';
 export default function EditBillModal({
   isOpen,
   bill,
@@ -29,8 +34,8 @@ export default function EditBillModal({
         name: it.name,
         englishName: it.englishName || it.name,
         tamilName: it.tamilName || '',
-        weight: it.weight || '1 Pc',
-        unit: it.unit || 'Pc',
+        weight: resolveBillItemUnit(it),
+        unit: it.unit || resolveProductUnitDisplay(it),
         price: Number(it.price || 0),
         quantity: Number(it.quantity || 1),
         hsn: it.hsn || '2106',
@@ -112,6 +117,8 @@ export default function EditBillModal({
   };
 
   const handleAddCatalogItem = (sweet) => {
+    const defUnit = resolveProductDefaultUnit(sweet);
+    const dispUnit = resolveProductUnitDisplay(sweet);
     setItems((prev) => [
       ...prev,
       {
@@ -119,8 +126,8 @@ export default function EditBillModal({
         name: sweet.name,
         englishName: sweet.englishName || sweet.name,
         tamilName: sweet.tamilName || '',
-        weight: sweet.unit === 'kg' ? '500g' : sweet.unit === 'Litre' ? '1 Litre' : sweet.unit === 'Cup' ? '1 Cup' : '1 Pc',
-        unit: sweet.unit || 'kg',
+        weight: defUnit,
+        unit: dispUnit,
         price: Number(sweet.price || 0),
         quantity: 1,
         hsn: sweet.hsn || '2106',

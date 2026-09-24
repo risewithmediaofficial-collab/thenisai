@@ -23,7 +23,36 @@
     "subcategory": "",
     "skuCode": "1",
     "tamilName": "டீ",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
+  },
+  {
+    "_id": "6aa3d7fc8ef5b9dbec7c881c",
+    "id": "coffee",
+    "itemNumber": 2,
+    "skuCode": "2",
+    "name": "Coffee — காபி",
+    "englishName": "Coffee",
+    "nameTa": "காபி",
+    "tamilName": "காபி",
+    "tagline": "Fresh Brewed Coffee · மணக்கும் காபி",
+    "image": "/images/products/coffee.svg",
+    "category": "beverages",
+    "subcategory": "",
+    "price": 20,
+    "unitPrice": 20,
+    "pricePerKg": 20,
+    "unit": "1 Cup",
+    "hsn": "0901",
+    "description": "Hot, rich roasted coffee blended with fresh milk.",
+    "batchDate": "Today",
+    "batchNote": "Fresh coffee brew counter",
+    "minThreshold": 15,
+    "stockKg": 100,
+    "counterStock": 100,
+    "isCustom": false,
+    "isInactive": false,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c881e",
@@ -48,7 +77,8 @@
     "nameTa": "ஃபில்டர் காபி",
     "subcategory": "",
     "skuCode": "13",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c881f",
@@ -73,7 +103,8 @@
     "nameTa": "பால்",
     "subcategory": "",
     "skuCode": "3",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8820",
@@ -96,7 +127,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "4",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8821",
@@ -119,7 +151,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "5",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8822",
@@ -142,7 +175,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "6",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8823",
@@ -165,7 +199,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "7",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8824",
@@ -188,7 +223,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "8",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8825",
@@ -211,7 +247,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "9",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8826",
@@ -234,7 +271,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "10",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8827",
@@ -257,7 +295,8 @@
     "subcategory": "",
     "unit": "1 Cup",
     "skuCode": "11",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8828",
@@ -282,7 +321,8 @@
     "nameTa": "வடை",
     "subcategory": "",
     "skuCode": "12",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aabd4ba50bac33928a6f59e",
@@ -305,7 +345,8 @@
     "nameTa": "பால்கோவா",
     "subcategory": "Milk & Bengali",
     "skuCode": "15",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae56ad697643ffe83eb37b",
@@ -328,7 +369,8 @@
     "nameTa": "பர்பி",
     "subcategory": "Milk & Bengali",
     "skuCode": "14",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae57cd697643ffe83eb385",
@@ -351,7 +393,8 @@
     "nameTa": "நெய் மைசூர்பாகு",
     "subcategory": "Mysore Pak & Ghee",
     "skuCode": "28",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811a5",
@@ -375,10 +418,11 @@
     "stockKg": 40,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Pure Desi Cow Ghee · சுத்தமான நெய்",
-    "unit": "Litre",
+    "unit": "1 Litre",
     "unitPrice": 650,
     "skuCode": "16",
-    "counterStock": 40
+    "counterStock": 40,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811a6",
@@ -405,7 +449,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "17",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811a7",
@@ -432,7 +477,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "18",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811a8",
@@ -456,10 +502,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Sun-Shaped Stuffed Pastry · சூரியகலா",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 25,
     "skuCode": "19",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811a9",
@@ -483,10 +530,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Soft Rose Scented Dumpling · குலாப் ஜாமூன்",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 20,
     "skuCode": "20",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811aa",
@@ -513,7 +561,8 @@
     "unit": "kg",
     "unitPrice": 1200,
     "skuCode": "21",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ab",
@@ -540,7 +589,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "22",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ac",
@@ -567,7 +617,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "23",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ad",
@@ -594,7 +645,8 @@
     "unit": "kg",
     "unitPrice": 350,
     "skuCode": "24",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ae",
@@ -621,7 +673,8 @@
     "unit": "kg",
     "unitPrice": 350,
     "skuCode": "25",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811af",
@@ -649,7 +702,8 @@
     "unitPrice": 450,
     "skuCode": "26",
     "tamilName": "மோதி லட்டு",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b0",
@@ -676,7 +730,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "27",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b1",
@@ -703,7 +758,8 @@
     "unit": "kg",
     "unitPrice": 350,
     "skuCode": "29",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b2",
@@ -727,10 +783,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Moong Dal & Khoya Blend · அசோகா மக்கன் பேடா",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 25,
     "skuCode": "30",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b3",
@@ -757,7 +814,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "31",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b4",
@@ -784,7 +842,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "32",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b5",
@@ -808,10 +867,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Layered Mawa & Chenna · சாண்ட்விச் ஸ்வீட்",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 30,
     "skuCode": "33",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b6",
@@ -838,7 +898,8 @@
     "unit": "kg",
     "unitPrice": 300,
     "skuCode": "34",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b7",
@@ -865,7 +926,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "35",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b8",
@@ -889,10 +951,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Thick Rabri Dessert Cup · பாசுந்தி",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 40,
     "skuCode": "36",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811b9",
@@ -916,10 +979,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Saffron Cream Chenna Disc · ரசமலாய்",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 35,
     "skuCode": "37",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ba",
@@ -946,7 +1010,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "38",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811bb",
@@ -973,7 +1038,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "39",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811bc",
@@ -1000,7 +1066,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "40",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811bd",
@@ -1024,10 +1091,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Sweet Chana Dal Stuffed Bread · பருப்பு போளி",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 20,
     "skuCode": "41",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811be",
@@ -1051,10 +1119,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Fresh Coconut & Jaggery Poli · தேங்காய் போளி",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 25,
     "skuCode": "42",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811bf",
@@ -1078,10 +1147,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Heritage Jaggery Rice Sweet · பாரம்பரிய அதிரசம்",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 20,
     "skuCode": "43",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c0",
@@ -1105,10 +1175,11 @@
     "stockKg": 50,
     "subcategory": "Pieces & Packets",
     "tagline": "Crispy Puffed Rice Ball Packet · பொரி உருண்டை",
-    "unit": "Pkt",
+    "unit": "1 Pkt",
     "unitPrice": 50,
     "skuCode": "44",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c1",
@@ -1132,10 +1203,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Healthy Black Sesame & Jaggery · எள் அடை",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 25,
     "skuCode": "45",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c2",
@@ -1159,10 +1231,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Traditional Sesame Laddoo · எள் உருண்டை",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 25,
     "skuCode": "46",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c3",
@@ -1189,7 +1262,8 @@
     "unit": "kg",
     "unitPrice": 300,
     "skuCode": "47",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c4",
@@ -1216,7 +1290,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "48",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c5",
@@ -1244,7 +1319,8 @@
     "unitPrice": 450,
     "skuCode": "49",
     "tamilName": "மோதி லட்டு",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c6",
@@ -1271,7 +1347,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "50",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c7",
@@ -1298,7 +1375,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "51",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c8",
@@ -1325,7 +1403,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "52",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811c9",
@@ -1352,7 +1431,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "53",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ca",
@@ -1380,7 +1460,8 @@
     "unitPrice": 1000,
     "skuCode": "54",
     "tamilName": "பியூர் பாதாம் அல்வா",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811cb",
@@ -1404,10 +1485,11 @@
     "stockKg": 80,
     "subcategory": "Pieces & Packets",
     "tagline": "Damask Rose Petal Stuffed Laddu · குல்கந்து லட்டு",
-    "unit": "Pc",
+    "unit": "1 Pc",
     "unitPrice": 60,
     "skuCode": "55",
-    "counterStock": 80
+    "counterStock": 80,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811cc",
@@ -1434,7 +1516,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "56",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811cd",
@@ -1461,7 +1544,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "57",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ce",
@@ -1488,7 +1572,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "58",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811cf",
@@ -1515,7 +1600,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "59",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d0",
@@ -1542,7 +1628,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "60",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d1",
@@ -1569,7 +1656,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "61",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d2",
@@ -1596,7 +1684,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "62",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d3",
@@ -1623,7 +1712,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "63",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d4",
@@ -1651,7 +1741,8 @@
     "unitPrice": 700,
     "skuCode": "64",
     "tamilName": "பேரிச்சை மைசூர்பாகு",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d5",
@@ -1678,7 +1769,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "65",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d6",
@@ -1705,7 +1797,8 @@
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "66",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d7",
@@ -1732,7 +1825,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "67",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d8",
@@ -1759,7 +1853,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "68",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811d9",
@@ -1786,7 +1881,8 @@
     "unit": "kg",
     "unitPrice": 800,
     "skuCode": "69",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811da",
@@ -1813,7 +1909,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "70",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811db",
@@ -1840,7 +1937,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "71",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811dc",
@@ -1867,7 +1965,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "72",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811dd",
@@ -1894,7 +1993,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "73",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811de",
@@ -1921,7 +2021,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "74",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811df",
@@ -1948,7 +2049,8 @@
     "unit": "kg",
     "unitPrice": 1100,
     "skuCode": "75",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e0",
@@ -1975,7 +2077,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "76",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e1",
@@ -2002,7 +2105,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "77",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e2",
@@ -2029,7 +2133,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "78",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e3",
@@ -2056,7 +2161,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "79",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e4",
@@ -2083,7 +2189,8 @@
     "unit": "kg",
     "unitPrice": 450,
     "skuCode": "80",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e5",
@@ -2110,7 +2217,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "81",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e6",
@@ -2137,7 +2245,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "82",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e7",
@@ -2164,7 +2273,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "83",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e8",
@@ -2191,7 +2301,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "84",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811e9",
@@ -2218,7 +2329,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "85",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ea",
@@ -2245,7 +2357,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "86",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811eb",
@@ -2272,7 +2385,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "87",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ec",
@@ -2299,7 +2413,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "88",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ed",
@@ -2326,7 +2441,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "89",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ee",
@@ -2353,7 +2469,8 @@
     "unit": "kg",
     "unitPrice": 1200,
     "skuCode": "90",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ef",
@@ -2380,7 +2497,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "91",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f0",
@@ -2407,7 +2525,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "92",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f1",
@@ -2434,7 +2553,8 @@
     "unit": "kg",
     "unitPrice": 1000,
     "skuCode": "93",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f2",
@@ -2461,7 +2581,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "94",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f3",
@@ -2488,7 +2609,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "95",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f4",
@@ -2515,7 +2637,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "96",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f5",
@@ -2542,7 +2665,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "97",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f6",
@@ -2569,7 +2693,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "98",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f7",
@@ -2596,7 +2721,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "99",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f8",
@@ -2623,7 +2749,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "100",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811f9",
@@ -2650,7 +2777,8 @@
     "unit": "kg",
     "unitPrice": 1000,
     "skuCode": "101",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811fa",
@@ -2677,7 +2805,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "102",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811fb",
@@ -2704,7 +2833,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "103",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811fc",
@@ -2731,7 +2861,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "104",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811fd",
@@ -2755,10 +2886,11 @@
     "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Spicy Puffed Rice Packet · காரப்பொரி",
-    "unit": "Pkt",
+    "unit": "1 Pkt",
     "unitPrice": 30,
     "skuCode": "105",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811fe",
@@ -2782,10 +2914,11 @@
     "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Fresh Farm Curd · தயிர் பாக்கெட்",
-    "unit": "Pkt",
+    "unit": "1 Pkt",
     "unitPrice": 20,
     "skuCode": "106",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc5776811ff",
@@ -2793,7 +2926,7 @@
     "__v": 0,
     "batchDate": "Today 06:30 AM",
     "batchNote": "Traditional spiced buttermilk churned with ginger, green chilli, and asafoetida.",
-    "category": "spices",
+    "category": "beverages",
     "description": "Traditional spiced buttermilk churned with ginger, green chilli, and asafoetida.",
     "englishName": "Buttermilk",
     "hsn": "0403",
@@ -2809,10 +2942,11 @@
     "stockKg": 100,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Refreshing Neer Mor · மோர்",
-    "unit": "Cup",
+    "unit": "1 Cup",
     "unitPrice": 20,
     "skuCode": "107",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aae595e60582bc577681200",
@@ -2820,7 +2954,7 @@
     "__v": 0,
     "batchDate": "Today 06:30 AM",
     "batchNote": "Refreshing cold milk enriched with crushed almonds and saffron.",
-    "category": "spices",
+    "category": "beverages",
     "description": "Refreshing cold milk enriched with crushed almonds and saffron.",
     "englishName": "Badam [Milk]",
     "hsn": "0401",
@@ -2836,10 +2970,11 @@
     "stockKg": 100,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Chilled Almond Delight · பாதாம் பால்",
-    "unit": "Cup",
+    "unit": "1 Cup",
     "unitPrice": 30,
     "skuCode": "108",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aae595e60582bc577681201",
@@ -2847,7 +2982,7 @@
     "__v": 0,
     "batchDate": "Today 06:30 AM",
     "batchNote": "Classic chilled sweetened milk infused with fragrant Damascus rose syrup.",
-    "category": "spices",
+    "category": "beverages",
     "description": "Classic chilled sweetened milk infused with fragrant Damascus rose syrup.",
     "englishName": "Rose Milk",
     "hsn": "0401",
@@ -2863,10 +2998,11 @@
     "stockKg": 100,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Fragrant Chilled Rose Milk · ரோஸ் மில்க்",
-    "unit": "Cup",
+    "unit": "1 Cup",
     "unitPrice": 30,
     "skuCode": "109",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": true
   },
   {
     "_id": "6aae595e60582bc577681202",
@@ -2893,7 +3029,8 @@
     "unit": "Bottle",
     "unitPrice": 10,
     "skuCode": "110",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681203",
@@ -2920,7 +3057,8 @@
     "unit": "Bottle",
     "unitPrice": 20,
     "skuCode": "111",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681204",
@@ -2947,7 +3085,8 @@
     "unit": "Bottle",
     "unitPrice": 30,
     "skuCode": "112",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681205",
@@ -2974,7 +3113,8 @@
     "unit": "Bottle",
     "unitPrice": 35,
     "skuCode": "113",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681206",
@@ -3001,7 +3141,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "114",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681207",
@@ -3028,7 +3169,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "115",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681208",
@@ -3055,7 +3197,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "116",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681209",
@@ -3082,7 +3225,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "117",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120a",
@@ -3109,7 +3253,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "118",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120b",
@@ -3136,7 +3281,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "119",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120c",
@@ -3163,7 +3309,8 @@
     "unit": "kg",
     "unitPrice": 600,
     "skuCode": "120",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120d",
@@ -3190,7 +3337,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "121",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120e",
@@ -3217,7 +3365,8 @@
     "unit": "kg",
     "unitPrice": 500,
     "skuCode": "122",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc57768120f",
@@ -3244,7 +3393,8 @@
     "unit": "kg",
     "unitPrice": 380,
     "skuCode": "123",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681210",
@@ -3271,7 +3421,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "124",
-    "counterStock": 100
+    "counterStock": 100,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae595e60582bc577681211",
@@ -3298,7 +3449,8 @@
     "unit": "kg",
     "unitPrice": 400,
     "skuCode": "125",
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae664f60582bc577681217",
@@ -3319,7 +3471,8 @@
     "tamilName": "சோள மிக்சர்",
     "unit": "kg",
     "unitPrice": 380,
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae664f60582bc577681218",
@@ -3340,7 +3493,8 @@
     "tamilName": "முந்திரி மிக்சர்",
     "unit": "kg",
     "unitPrice": 800,
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   },
   {
     "_id": "6aae664f60582bc577681219",
@@ -3361,6 +3515,7 @@
     "tamilName": "அத்திப்பழம் ரோல்",
     "unit": "kg",
     "unitPrice": 0,
-    "counterStock": 50
+    "counterStock": 50,
+    "isUnlimitedStock": false
   }
 ]

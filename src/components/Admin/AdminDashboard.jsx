@@ -13,6 +13,7 @@ import CompanyManagerDashboard from './CompanyManagerDashboard';
 import CatalogSettingsModal from './CatalogSettingsModal';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
+import { isProductUnlimitedStock } from '../../utils/unitConfig';
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -577,6 +578,9 @@ export default function AdminDashboard() {
   const getItemStockDisplay = (prod) => {
     if (!prod) return '0';
     const invItem = (inventory || []).find((i) => i.id === prod.id);
+    if (isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem))) {
+      return 'Unlimited (∞)';
+    }
     const stock = invItem ? invItem.stockKg : (prod.stockKg ?? prod.stock ?? 0);
     const cat = (prod.category || '').toLowerCase();
     const u = (prod.unit || '').toLowerCase();
@@ -1479,9 +1483,25 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td>
-                            <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                              {getItemUnitDisplay(prod)}
-                            </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                                {getItemUnitDisplay(prod)}
+                              </span>
+                              {isProductUnlimitedStock(prod) && (
+                                <span style={{
+                                  display: 'inline-block',
+                                  fontSize: '10.5px',
+                                  fontWeight: 700,
+                                  color: '#0284c7',
+                                  background: '#e0f2fe',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #bae6fd',
+                                }}>
+                                  ∞ Unlimited
+                                </span>
+                              )}
+                            </div>
                           </td>
 
                           <td>
@@ -1495,6 +1515,8 @@ export default function AdminDashboard() {
                                 onClick={() => {
                                   const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
                                   const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
+                                  const invItem = (inventory || []).find((i) => i.id === prod.id);
+                                  const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
                                   setEditingPriceProduct(prod);
                                   setNewPriceInput(String(prod.price || prod.unitPrice || ''));
                                   setProductEditForm({
@@ -1503,6 +1525,7 @@ export default function AdminDashboard() {
                                     category: prod.category || 'sweets',
                                     unit: prod.unit || 'kg',
                                     price: String(prod.price || prod.unitPrice || ''),
+                                    isUnlimitedStock: Boolean(isUnlim),
                                   });
                                 }}
                                 title="Edit product details"
@@ -3246,6 +3269,7 @@ export default function AdminDashboard() {
                     category: productEditForm.category,
                     unit: productEditForm.unit,
                     price: productEditForm.price,
+                    isUnlimitedStock: Boolean(productEditForm.isUnlimitedStock),
                   }, user);
                   setEditingPriceProduct(null);
                 }}
@@ -3347,6 +3371,27 @@ export default function AdminDashboard() {
                       onChange={(e) => setProductEditForm((prev) => ({ ...prev, price: e.target.value }))}
                       style={{ width: '100%', padding: '10px 12px', fontSize: '16px', fontWeight: 800, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
                     />
+                  </div>
+
+                  <div style={{
+                    padding: '10px 14px',
+                    background: productEditForm.isUnlimitedStock ? '#f0f9ff' : '#f8fafc',
+                    borderRadius: '8px',
+                    border: `1.5px solid ${productEditForm.isUnlimitedStock ? '#0284c7' : '#cbd5e1'}`,
+                    transition: 'all 0.2s ease',
+                  }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(productEditForm.isUnlimitedStock)}
+                        onChange={(e) => setProductEditForm((prev) => ({ ...prev, isUnlimitedStock: e.target.checked }))}
+                        style={{ width: '16px', height: '16px', accentColor: '#0284c7', cursor: 'pointer' }}
+                      />
+                      <span>∞ Unlimited Stock (Continuous Preparation / On-Demand)</span>
+                    </label>
+                    <p style={{ margin: '4px 0 0 24px', fontSize: '11px', color: '#64748b' }}>
+                      Recommended for freshly brewed beverages (Tea, Coffee, etc.). Stock never runs out or triggers low-stock alerts.
+                    </p>
                   </div>
                 </div>
 

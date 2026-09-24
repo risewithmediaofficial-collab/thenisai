@@ -17,6 +17,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
     unit: 'kg',
     price: '',
     skuCode: '',
+    isUnlimitedStock: false,
   });
 
   const [availableSkus, setAvailableSkus] = useState([]);
@@ -40,6 +41,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         unit: 'kg',
         price: '',
         skuCode: nextCode,
+        isUnlimitedStock: false,
       });
       setErrorMsg('');
       setSuccessMsg('');
@@ -94,8 +96,11 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === 'category') {
-        if (value === 'beverages' && (prev.unit === 'kg' || prev.unit === 'g')) {
-          updated.unit = '1 Cup';
+        if (value === 'beverages') {
+          if (prev.unit === 'kg' || prev.unit === 'g') {
+            updated.unit = '1 Cup';
+          }
+          updated.isUnlimitedStock = true;
         } else if ((value === 'sweets' || value === 'karam') && (prev.unit === '1 Cup' || prev.unit === 'Cup')) {
           updated.unit = 'kg';
         }
@@ -149,6 +154,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         skuCode: form.skuCode.trim() || undefined,
         hsn: form.skuCode.trim() || undefined,
         inStock: true,
+        isUnlimitedStock: Boolean(form.isUnlimitedStock),
       };
 
       if (onAddProduct) {
@@ -336,6 +342,36 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                 onChange={handleChange}
                 className="panel-input"
               />
+            </div>
+
+            {/* Unlimited Stock Option */}
+            <div style={{
+              gridColumn: '1 / -1',
+              padding: '10px 14px',
+              backgroundColor: form.isUnlimitedStock ? '#f0f9ff' : '#f8fafc',
+              border: `1.5px solid ${form.isUnlimitedStock ? '#0284c7' : '#e2e8f0'}`,
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '10px',
+              transition: 'all 0.2s ease',
+            }}>
+              <input
+                id="inline-unlimited-stock"
+                type="checkbox"
+                name="isUnlimitedStock"
+                checked={Boolean(form.isUnlimitedStock)}
+                onChange={(e) => setForm((prev) => ({ ...prev, isUnlimitedStock: e.target.checked }))}
+                style={{ width: '18px', height: '18px', accentColor: '#0284c7', marginTop: '2px', cursor: 'pointer' }}
+              />
+              <label htmlFor="inline-unlimited-stock" style={{ cursor: 'pointer', margin: 0 }}>
+                <span style={{ display: 'block', fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                  ∞ Unlimited Stock (Continuous Preparation / On-Demand)
+                </span>
+                <span style={{ display: 'block', fontSize: '11.5px', color: '#64748b', marginTop: '2px' }}>
+                  Ideal for freshly brewed beverages (Tea, Coffee, Milk, Fresh Juices) that do not deplete physical inventory units or trigger low-stock alerts.
+                </span>
+              </label>
             </div>
           </div>
 

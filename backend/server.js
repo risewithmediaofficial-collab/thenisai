@@ -84,6 +84,7 @@ const inventorySchema = new mongoose.Schema({
   image: { type: String, default: '/images/products/palkova_card.jpg' },
   category: { type: String, default: 'Ghee Sweets' },
   hsn: { type: String, default: '2106' },
+  isUnlimitedStock: { type: Boolean, default: false },
 });
 
 const stockTransferLogSchema = new mongoose.Schema({
@@ -312,31 +313,7 @@ async function seedIfEmpty() {
     );
   }
 
-  const defaultItems = [
-    { id: 'tea', name: 'Tea — டீ', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh tea brew counter', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/tea.svg' },
-    { id: 'coffee', name: 'Coffee — காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Fresh coffee brew counter', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0901', category: 'Hot Beverages', image: '/images/products/coffee.svg' },
-    { id: 'filter-coffee', name: 'Filter Coffee — ஃபில்டர் காபி', stockKg: 100, minThreshold: 15, batchDate: 'Today', batchNote: 'Degree filter coffee decoction', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0901', category: 'Hot Beverages', image: '/images/products/filter-coffee.svg' },
-    { id: 'milk', name: 'Milk — பால்', stockKg: 80, minThreshold: 10, batchDate: 'Today', batchNote: 'Boiled fresh farm milk', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0401', category: 'Hot Beverages', image: '/images/products/milk.svg' },
-    { id: 'horlicks', name: 'Horlicks — ஹார்லிக்ஸ்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Malt beverage counter', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1901', category: 'Hot Beverages', image: '/images/products/horlicks.svg' },
-    { id: 'boost', name: 'Boost — பூஸ்ட்', stockKg: 60, minThreshold: 10, batchDate: 'Today', batchNote: 'Chocolate energy malt', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1901', category: 'Hot Beverages', image: '/images/products/boost.svg' },
-    { id: 'badam-milk', name: 'Badam Milk — பாதாம் பால்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Saffron almond milk', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '0401', category: 'Hot Beverages', image: '/images/products/badam-milk.svg' },
-    { id: 'ragi-malt', name: 'Ragi Malt — கேழ்வரகு கூழ்', stockKg: 50, minThreshold: 10, batchDate: 'Today', batchNote: 'Traditional ragi brew', pricePerKg: 25, unitPrice: 25, unit: '1 Cup', hsn: '1904', category: 'Hot Beverages', image: '/images/products/ragi-malt.svg' },
-    { id: 'lemon-tea', name: 'Lemon Tea — எலுமிச்சை டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh lemon tea brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/lemon-tea.svg' },
-    { id: 'sugu-tea', name: 'Sugu Tea — சுக்கு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Dry ginger medicinal brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/sugu-tea.svg' },
-    { id: 'magu-tea', name: 'Magu Tea — மிளகு டீ', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Black pepper herbal brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '0902', category: 'Hot Beverages', image: '/images/products/magu-tea.svg' },
-    { id: 'ginger-lemon', name: 'Ginger Lemon — இஞ்சி எலுமிச்சை', stockKg: 70, minThreshold: 10, batchDate: 'Today', batchNote: 'Fresh ginger & lemon brew', pricePerKg: 20, unitPrice: 20, unit: '1 Cup', hsn: '2202', category: 'Hot Beverages', image: '/images/products/ginger-lemon.svg' },
-    { id: 'vada', name: 'Vada — வடை', stockKg: 80, minThreshold: 15, batchDate: 'Today 07:00 AM', batchNote: 'Hot crispy medu vada', pricePerKg: 20, unitPrice: 20, unit: '1 Pc', hsn: '1905', category: 'Snacks & Savories', image: '/images/products/vada.svg' },
-  ];
-
-  for (const it of defaultItems) {
-    const isPurged = await PurgedProduct.findOne({ id: it.id });
-    const isDeleted = await DeletedProduct.findOne({ id: it.id });
-    if (!isPurged && !isDeleted) {
-      await Inventory.updateOne({ id: it.id }, { $setOnInsert: it }, { upsert: true });
-    }
-  }
-
-  // Load from catalog.json if available to keep MongoDB up to date
+  // Load catalog exclusively from catalog.json if available to keep MongoDB up to date
   try {
     if (fs.existsSync(CATALOG_FILE_PATH)) {
       const raw = fs.readFileSync(CATALOG_FILE_PATH, 'utf8');
@@ -353,10 +330,14 @@ async function seedIfEmpty() {
             unitPrice: cItem.unitPrice || cItem.price,
             pricePerKg: cItem.pricePerKg || cItem.price,
             unit: cItem.unit || 'kg',
+            category: cItem.category || 'sweets',
+            ...(cItem.isUnlimitedStock !== undefined ? { isUnlimitedStock: Boolean(cItem.isUnlimitedStock) } : {}),
             ...(cItem.isInactive !== undefined ? { isInactive: cItem.isInactive } : {}),
             ...(cItem.name ? { name: cItem.name } : {}),
             ...(cItem.englishName ? { englishName: cItem.englishName } : {}),
             ...(cItem.tamilName ? { tamilName: cItem.tamilName } : {}),
+            ...(cItem.image ? { image: cItem.image } : {}),
+            ...(cItem.hsn ? { hsn: cItem.hsn } : {}),
           };
           const insertFields = { ...cItem };
           for (const k of Object.keys(setFields)) {
@@ -990,6 +971,7 @@ app.post('/api/inventory/products', async (req, res) => {
       image: image || '/images/products/palkova_card.jpg',
       category: category || 'Ghee Sweets',
       hsn: finalHsn,
+      isUnlimitedStock: Boolean(req.body.isUnlimitedStock),
     });
 
     updateCatalogFile(id, (p) => ({
@@ -1004,6 +986,7 @@ app.post('/api/inventory/products', async (req, res) => {
       pricePerKg: finalPrice,
       unit: unit || 'kg',
       category: category || 'sweets',
+      isUnlimitedStock: Boolean(req.body.isUnlimitedStock),
     }));
 
     const inventory = await Inventory.find({});
@@ -1042,11 +1025,11 @@ app.patch('/api/inventory/:id/availability', async (req, res) => {
   }
 });
 
-// Update product master details (name, englishName, tamilName, category, unit, price)
+// Update product master details (name, englishName, tamilName, category, unit, price, isUnlimitedStock)
 app.patch('/api/inventory/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, englishName, tamilName, category, unit, price } = req.body;
+    const { name, englishName, tamilName, category, unit, price, isUnlimitedStock } = req.body;
     const numPrice = price !== undefined ? parseFloat(price) : undefined;
 
     const normalizedEnglish = typeof englishName === 'string' ? englishName.trim() : (typeof name === 'string' && name.includes('—') ? name.split('—')[0].trim() : undefined);
@@ -1067,6 +1050,7 @@ app.patch('/api/inventory/:id', async (req, res) => {
         price: !isNaN(numPrice) ? numPrice : 0,
         pricePerKg: !isNaN(numPrice) ? numPrice : 0,
         unitPrice: !isNaN(numPrice) ? numPrice : 0,
+        isUnlimitedStock: typeof isUnlimitedStock === 'boolean' ? isUnlimitedStock : false,
       });
     } else {
       if (normalizedName !== undefined) item.name = normalizedName;
@@ -1074,6 +1058,7 @@ app.patch('/api/inventory/:id', async (req, res) => {
       if (normalizedTamil !== undefined) item.tamilName = normalizedTamil;
       if (category !== undefined) item.category = category;
       if (unit !== undefined) item.unit = unit;
+      if (typeof isUnlimitedStock === 'boolean') item.isUnlimitedStock = isUnlimitedStock;
       if (!isNaN(numPrice)) {
         item.price = numPrice;
         item.pricePerKg = numPrice;
@@ -1089,6 +1074,7 @@ app.patch('/api/inventory/:id', async (req, res) => {
       if (normalizedTamil !== undefined) updated.tamilName = normalizedTamil;
       if (category !== undefined) updated.category = category;
       if (unit !== undefined) updated.unit = unit;
+      if (typeof isUnlimitedStock === 'boolean') updated.isUnlimitedStock = isUnlimitedStock;
       if (!isNaN(numPrice)) {
         updated.price = numPrice;
         updated.unitPrice = numPrice;
@@ -1102,6 +1088,32 @@ app.patch('/api/inventory/:id', async (req, res) => {
   } catch (err) {
     console.error('[Inventory] Error updating product details:', err);
     res.status(500).json({ success: false, message: 'Failed to update product details: ' + err.message });
+  }
+});
+
+// Toggle or set unlimited stock status for a product (e.g. Tea, Coffee, etc.)
+app.patch('/api/inventory/:id/unlimited-stock', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isUnlimitedStock } = req.body;
+    let item = await Inventory.findOne({ id });
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+    const nextVal = typeof isUnlimitedStock === 'boolean' ? isUnlimitedStock : !item.isUnlimitedStock;
+    item.isUnlimitedStock = nextVal;
+    await item.save();
+
+    updateCatalogFile(id, (p) => ({
+      ...p,
+      isUnlimitedStock: nextVal,
+    }));
+
+    console.log(`[Inventory] Product ${item.name || id} unlimited stock set to: ${nextVal}`);
+    res.json({ success: true, message: `Product ${item.name} unlimited stock set to ${nextVal}`, item });
+  } catch (err) {
+    console.error('[Inventory] Error setting unlimited stock:', err);
+    res.status(500).json({ success: false, message: 'Failed to update unlimited stock: ' + err.message });
   }
 });
 

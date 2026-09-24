@@ -5,6 +5,16 @@ import api from '../utils/api';
 import { getNextPreOrderInvoiceNumber, getNextInvoiceNumber, parseInvoiceNumber } from '../utils/invoiceNumber';
 import { store } from '../store';
 import { setInventoryItems, setStockLogs as setReduxStockLogs } from '../store/slices/inventorySlice';
+import {
+  isBeverageDrink,
+  isPieceItem,
+  isPacketItem,
+  isLitreProduct,
+  isKgProduct,
+  resolveProductDefaultUnit,
+  resolveProductUnitDisplay,
+  isProductUnlimitedStock,
+} from '../utils/unitConfig';
 
 const CartContext = createContext();
 
@@ -66,12 +76,13 @@ export const DEFAULT_TAX_SETTINGS = {
 };
 
 const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
-  const isCup = item.unit === 'Cup' || item.unit === '1 Cup' || item.category === 'beverages' || item.id?.includes('tea') || item.id?.includes('coffee') || item.id?.includes('milk') || item.id?.includes('boost') || item.id?.includes('horlicks');
-  const isPc = item.unit === 'Pc' || item.unit === '1 Pc' || item.category === 'snacks' || item.id === 'vada';
-  const isLitre = item.unit === 'Litre' || item.unit === '1 Litre' || item.unit === 'Bottle';
-  const isKg = !isCup && !isPc && !isLitre && (item.unit === 'kg' || !item.unit);
+  const isCup = isBeverageDrink(item);
+  const isPc = isPieceItem(item);
+  const isPkt = isPacketItem(item);
+  const isLitre = isLitreProduct(item);
+  const isKg = isKgProduct(item);
 
-  const defaultUnit = isCup ? '1 Cup' : isPc ? '1 Pc' : isLitre ? (item.unit || '1 Litre') : (item.unit || 'kg');
+  const defaultUnit = resolveProductDefaultUnit(item);
 
   return {
     id: item.id,
@@ -91,9 +102,10 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
     price: item.price,
     unitPrice: item.price,
     pricePerKg: item.price,
-    category: item.category || 'sweets',
-    subcategory: item.subcategory || (item.category === 'spices' ? 'Spices (Kara Vagai)' : item.category === 'beverages' ? 'Beverages' : 'Traditional Sweets'),
-    hsn: item.hsn || '2106',
+    category: isCup ? 'beverages' : (item.category || 'sweets'),
+    subcategory: item.subcategory || (item.category === 'spices' ? 'Spices (Kara Vagai)' : isCup ? 'Beverages' : 'Traditional Sweets'),
+    hsn: item.hsn || (isCup ? (item.id === 'milk' ? '0401' : '0902') : '2106'),
+    isUnlimitedStock: Boolean(item.isUnlimitedStock || isCup),
   };
 });
 
@@ -469,16 +481,25 @@ export function CartProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const filtered = parsed.filter((i) => !deletedIds.has(i.id));
-          if (filtered.length < DEFAULT_INVENTORY.length) {
-            const existingIds = new Set(filtered.map((i) => i.id));
+          const sanitized = filtered.map((item) => {
+            if (isBeverageDrink(item) && item.unit !== '1 Cup') {
+              return { ...item, unit: '1 Cup', category: 'beverages' };
+            }
+            if ((item.id === 'baby-milk' || item.id === 'milk-cake' || item.id === 'thenisai-milk-murukku') && item.unit !== 'kg') {
+              return { ...item, unit: 'kg' };
+            }
+            return item;
+          });
+          if (sanitized.length < DEFAULT_INVENTORY.length) {
+            const existingIds = new Set(sanitized.map((i) => i.id));
             const missing = DEFAULT_INVENTORY.filter((i) => !existingIds.has(i.id) && !deletedIds.has(i.id));
-            const combined = [...filtered, ...missing];
+            const combined = [...sanitized, ...missing];
             try {
               localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(combined));
             } catch {}
             return combined;
           }
-          return filtered;
+          return sanitized;
         }
       }
       return DEFAULT_INVENTORY.filter((i) => !deletedIds.has(i.id));
@@ -700,9 +721,14 @@ export function CartProvider({ children }) {
       const backendTamil = invRecord?.tamilName || (typeof invRecord?.name === 'string' && invRecord.name.includes('—') ? invRecord.name.split('—')[1].trim() : '') || item.tamilName || '';
       const mergedName = backendEnglish || item.englishName || item.name;
       const mergedTamilName = backendTamil || '';
-      const mergedDisplayName = mergedTamilName ? `${mergedName} — ${mergedTamilName}` : mergedName;
-      const mergedCategory = invRecord?.category || item.category || 'sweets';
-      const mergedUnit = invRecord?.unit || item.unit || 'kg';
+      const isDrink = isBeverageDrink(item);
+      const canonicalUnit = resolveProductUnitDisplay(item);
+      const mergedCategory = isDrink ? 'beverages' : (invRecord?.category || item.category || 'sweets');
+      let mergedUnit = isDrink ? '1 Cup' : (invRecord?.unit || item.unit || canonicalUnit);
+      if (isDrink) mergedUnit = '1 Cup';
+      if ((item.id === 'baby-milk' || item.id === 'milk-cake' || item.id === 'thenisai-milk-murukku') && mergedUnit !== 'kg') {
+        mergedUnit = 'kg';
+      }
 
       return {
         ...item,
@@ -721,7 +747,7 @@ export function CartProvider({ children }) {
           '500g': Math.round(livePrice * 0.5),
           '1kg': livePrice,
           '2kg': livePrice * 2,
-        } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : undefined),
+        } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : { [mergedUnit]: livePrice }),
       };
     });
 
@@ -1229,19 +1255,30 @@ export function CartProvider({ children }) {
               ? item.stockKg
               : 50;
 
+            const isDrink = isBeverageDrink(item);
+            const canonicalUnit = resolveProductUnitDisplay(item);
+            let finalUnit = isDrink ? '1 Cup' : (bItem.unit || item.unit || canonicalUnit);
+            if (isDrink) finalUnit = '1 Cup';
+            if ((item.id === 'baby-milk' || item.id === 'milk-cake' || item.id === 'thenisai-milk-murukku') && finalUnit !== 'kg') {
+              finalUnit = 'kg';
+            }
+
             return {
               ...item,
               ...bItem,
               name: normalizedName,
               englishName: backendEnglish,
               tamilName: backendTamil,
+              unit: finalUnit,
+              category: isDrink ? 'beverages' : (bItem.category || item.category || 'sweets'),
               price: finalPrice,
               unitPrice: finalPrice,
-              pricePerKg: item.unit === 'kg' ? finalPrice : item.pricePerKg || finalPrice,
+              pricePerKg: finalUnit === 'kg' ? finalPrice : item.pricePerKg || finalPrice,
               skuCode: bItem.skuCode || item.skuCode || (item.itemNumber ? String(item.itemNumber) : ''),
               stockKg: bStock,
               counterStock: bStock,
               isInactive: bItem.isInactive !== undefined ? bItem.isInactive : item.isInactive,
+              isUnlimitedStock: typeof bItem.isUnlimitedStock === 'boolean' ? bItem.isUnlimitedStock : (typeof item.isUnlimitedStock === 'boolean' ? item.isUnlimitedStock : isDrink),
             };
           });
 
@@ -1273,6 +1310,7 @@ export function CartProvider({ children }) {
                 skuCode: bItem.skuCode || (bItem.itemNumber ? String(bItem.itemNumber) : ''),
                 stockKg: bStock,
                 counterStock: bStock,
+                isUnlimitedStock: typeof bItem.isUnlimitedStock === 'boolean' ? bItem.isUnlimitedStock : isBeverageDrink(bItem),
               });
             }
           });
@@ -1384,6 +1422,9 @@ export function CartProvider({ children }) {
       itemsList.forEach((item) => {
         const targetIdx = updated.findIndex((inv) => inv.id === item.id);
         if (targetIdx > -1) {
+          if (isProductUnlimitedStock(updated[targetIdx]) || isProductUnlimitedStock(item)) {
+            return; // Unlimited stock items (e.g. freshly brewed tea, coffee, hot beverages) never deplete!
+          }
           const weightKg = getWeightInKg(item.weight);
           const totalDeduction = weightKg * item.quantity;
           const newStock = Math.max(0, Math.round((updated[targetIdx].stockKg - totalDeduction) * 100) / 100);
@@ -2825,6 +2866,7 @@ export function CartProvider({ children }) {
     const nextCategory = updates.category || 'sweets';
     const nextUnit = updates.unit || 'kg';
     const nextPrice = parseFloat(updates.price ?? updates.unitPrice ?? 0);
+    const isUnlimited = typeof updates.isUnlimitedStock === 'boolean' ? updates.isUnlimitedStock : undefined;
 
     if (!nameEn || Number.isNaN(nextPrice) || nextPrice <= 0) {
       return { success: false, message: 'Please enter a valid product name and price.' };
@@ -2847,6 +2889,7 @@ export function CartProvider({ children }) {
         price: nextPrice,
         unitPrice: nextPrice,
         pricePerKg: nextPrice,
+        ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
         description: updates.description || p.description || 'Updated product details',
       } : p));
       try {
@@ -2870,6 +2913,7 @@ export function CartProvider({ children }) {
             price: nextPrice,
             unitPrice: nextPrice,
             pricePerKg: nextPrice,
+            ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
             description: updates.description || p.description || 'Updated product details',
           } : p))
         : [
@@ -2886,6 +2930,7 @@ export function CartProvider({ children }) {
               pricePerKg: nextPrice,
               stockKg: 0,
               minThreshold: 0,
+              ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
               description: updates.description || 'Updated product details',
               isCustom: true,
             },
@@ -2920,6 +2965,7 @@ export function CartProvider({ children }) {
         newPrice: nextPrice,
         category: nextCategory,
         unit: nextUnit,
+        ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
       },
       reason: 'Product details updated from admin inventory',
     });
@@ -2936,11 +2982,67 @@ export function CartProvider({ children }) {
         category: nextCategory,
         unit: nextUnit,
         price: nextPrice,
+        ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
       });
       return { success: true };
     } catch (err) {
       console.warn('Backend product update failed:', err);
       return { success: true, warning: true };
+    }
+  };
+
+  const toggleProductUnlimitedStock = async (productId, nextVal = null, performedBy = null) => {
+    const activePerformer = resolveActiveUser(performedBy);
+    let resolvedNext = nextVal;
+    let targetName = productId;
+
+    setInventory((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === productId) {
+          targetName = item.name || item.englishName || productId;
+          const currentVal = typeof item.isUnlimitedStock === 'boolean' ? item.isUnlimitedStock : isProductUnlimitedStock(item);
+          resolvedNext = typeof nextVal === 'boolean' ? nextVal : !currentVal;
+          return { ...item, isUnlimitedStock: resolvedNext };
+        }
+        return item;
+      });
+      try {
+        if (!isSandboxActive()) {
+          localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
+        }
+      } catch {}
+      return updated;
+    });
+
+    setCustomProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, isUnlimitedStock: resolvedNext } : p));
+      try {
+        if (!isSandboxActive()) {
+          localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        }
+      } catch {}
+      return updated;
+    });
+
+    recordActivity({
+      actionType: 'PRODUCT_UPDATED',
+      performedBy: activePerformer,
+      targetId: productId,
+      targetName,
+      details: { isUnlimitedStock: resolvedNext },
+      reason: `Unlimited stock status set to ${resolvedNext ? 'Enabled' : 'Disabled'}`,
+    });
+
+    if (isSandboxActive()) {
+      return { success: true, isUnlimitedStock: resolvedNext };
+    }
+
+    try {
+      await api.patch(`/api/inventory/${productId}/unlimited-stock`, { isUnlimitedStock: resolvedNext });
+      return { success: true, isUnlimitedStock: resolvedNext };
+    } catch (err) {
+      console.warn('Backend unlimited stock update failed:', err);
+      return { success: true, warning: true, isUnlimitedStock: resolvedNext };
     }
   };
 
@@ -3210,6 +3312,7 @@ export function CartProvider({ children }) {
           minThreshold: parseFloat(newProduct.minThreshold) || 8,
           batchDate: timeStr,
           batchNote: newProduct.batchNote || 'New item arrival',
+          isUnlimitedStock: Boolean(newProduct.isUnlimitedStock),
         },
       ];
     });
@@ -3223,6 +3326,7 @@ export function CartProvider({ children }) {
         ...newProduct,
         id: newId,
         stockKg: initialKg,
+        isUnlimitedStock: Boolean(newProduct.isUnlimitedStock),
       });
     } catch (err) {
       console.warn('Backend new product stock creation failed:', err);
@@ -3610,6 +3714,7 @@ export function CartProvider({ children }) {
     resolveUniqueSkuCode,
     updateProductDetails,
     updateProduct: updateProductDetails,
+    toggleProductUnlimitedStock,
     deleteProduct,
     updateProductMasterPrice,
     updateProductSkuCode,
