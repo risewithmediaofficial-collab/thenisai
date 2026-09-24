@@ -4,7 +4,7 @@ import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
 import { getNextPreOrderInvoiceNumber, getNextInvoiceNumber, parseInvoiceNumber } from '../utils/invoiceNumber';
 import { store } from '../store';
-import { setInventoryItems, setStockLogs } from '../store/slices/inventorySlice';
+import { setInventoryItems, setStockLogs as setReduxStockLogs } from '../store/slices/inventorySlice';
 
 const CartContext = createContext();
 
@@ -3225,11 +3225,15 @@ export function CartProvider({ children }) {
 
   // Sync inventory and stockLogs into high-performance Redux store
   useEffect(() => {
-    store.dispatch(setInventoryItems(inventory));
+    if (inventory && Array.isArray(inventory)) {
+      store.dispatch(setInventoryItems(inventory));
+    }
   }, [inventory]);
 
   useEffect(() => {
-    store.dispatch(setStockLogs(stockLogs));
+    if (stockLogs && Array.isArray(stockLogs)) {
+      store.dispatch(setReduxStockLogs(stockLogs));
+    }
   }, [stockLogs]);
 
   const fetchStockLogs = async () => {
