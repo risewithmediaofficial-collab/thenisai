@@ -5,25 +5,21 @@ import { useScrollLock } from '../../hooks/useScrollLock';
 import { SWEETS_CATALOG } from '../../data/sweetsData';
 import { getItemStockConfig } from '../../utils/unitConfig';
 
-export default function AddStockModal({ isOpen, onClose, initialSweetId = null, initialTarget = 'godown' }) {
+export default function AddStockModal({ isOpen, onClose, initialSweetId = null }) {
   const { inventory, addInventoryStock, addNewProductStock, inwardStock } = useCart();
   const [activeTab, setActiveTab] = useState('existing'); // 'existing' | 'new'
-  const [inwardTarget, setInwardTarget] = useState(initialTarget || 'godown'); // 'godown' | 'counter'
 
   // Screen scroll lock when modal is open
   useScrollLock(isOpen);
 
-  // Sync initial sweet id and target when modal opens
+  // Sync initial sweet id when modal opens
   useEffect(() => {
     if (isOpen) {
       if (initialSweetId) {
         setExistingForm((prev) => ({ ...prev, sweetId: initialSweetId, quantity: '' }));
       }
-      if (initialTarget) {
-        setInwardTarget(initialTarget);
-      }
     }
-  }, [isOpen, initialSweetId, initialTarget]);
+  }, [isOpen, initialSweetId]);
 
   // Close on Escape key
   useEffect(() => {
@@ -52,7 +48,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
   const [existingForm, setExistingForm] = useState({
     sweetId: initialSweetId || inventory[0]?.id || SWEETS_CATALOG[0]?.id || 'palkova',
     quantity: '',
-    batchNote: 'Fresh kitchen batch inward',
+    batchNote: 'Received from Company Godown',
   });
 
   // New sweet form
@@ -62,7 +58,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
     stockKg: '15',
     unit: 'kg',
     minThreshold: '8',
-    batchNote: 'New kitchen recipe introduction',
+    batchNote: 'New recipe introduction from Godown',
   });
 
   if (!isOpen) return null;
@@ -70,10 +66,8 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
   const currentSweet = inventory.find((i) => i.id === existingForm.sweetId) ||
     SWEETS_CATALOG.find((s) => s.id === existingForm.sweetId);
   const unitConfig = getItemStockConfig(currentSweet);
-  const currentCounter = currentSweet?.counterStock ?? currentSweet?.stockKg ?? 0;
-  const currentGodown = currentSweet?.godownStock ?? Math.round(currentCounter * 1.5);
-  const activeCurrentStock = inwardTarget === 'godown' ? currentGodown : currentCounter;
-  const targetStock = activeCurrentStock + (parseFloat(existingForm.quantity) || 0);
+  const currentStock = currentSweet?.counterStock ?? currentSweet?.stockKg ?? 0;
+  const targetStock = currentStock + (parseFloat(existingForm.quantity) || 0);
 
   const handleExistingSubmit = (e) => {
     e.preventDefault();
@@ -85,7 +79,6 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
         productId: existingForm.sweetId,
         quantity: qty,
         unit: unitConfig.label,
-        target: inwardTarget,
         note: existingForm.batchNote,
       });
     } else {
@@ -105,7 +98,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
       category: 'Ghee Sweets',
       stockKg: '15',
       minThreshold: '8',
-      batchNote: 'New kitchen recipe introduction',
+      batchNote: 'New recipe introduction from Godown',
     });
   };
 
@@ -134,10 +127,10 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
                 <path d="m3.3 7 8.7 5 8.7-5" />
                 <path d="M12 22V12" />
               </svg>
-              Kitchen Stock Inward
+              🏢 Company Godown Inward
             </span>
-            <h3 className="stock-modal__title">Add Stock to Inventory</h3>
-            <p className="stock-modal__sub">Record new production batches or introduce new sweet varieties</p>
+            <h3 className="stock-modal__title">Receive Stock into Shop</h3>
+            <p className="stock-modal__sub">Record incoming stock batches arriving from company godown to shop stored stock</p>
           </div>
           <button type="button" className="stock-modal__close" onClick={onClose} aria-label="Close modal">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -154,7 +147,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
             className={`stock-tab-btn ${activeTab === 'existing' ? 'active' : ''}`}
             onClick={() => setActiveTab('existing')}
           >
-            <span>Inward Existing Sweet</span>
+            <span>Receive Existing Sweet</span>
           </button>
           <button
             type="button"
@@ -168,63 +161,11 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
         {activeTab === 'existing' ? (
           <form onSubmit={handleExistingSubmit}>
             <div className="stock-modal__body">
-              {/* Destination selector: Godown or Counter */}
-              <div className="stock-field">
-                <label>
-                  <span>Inward Destination</span>
-                  <span className="stock-hint">Select where stock will be stored</span>
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
-                  <button
-                    type="button"
-                    onClick={() => setInwardTarget('godown')}
-                    style={{
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: inwardTarget === 'godown' ? '2px solid #d97706' : '1px solid #cbd5e1',
-                      background: inwardTarget === 'godown' ? '#fffbeb' : '#ffffff',
-                      color: inwardTarget === 'godown' ? '#92400e' : '#475569',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span>🏢</span>
-                    <span>Godown (Warehouse)</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setInwardTarget('counter')}
-                    style={{
-                      padding: '9px 12px',
-                      borderRadius: '8px',
-                      border: inwardTarget === 'counter' ? '2px solid #059669' : '1px solid #cbd5e1',
-                      background: inwardTarget === 'counter' ? '#ecfdf5' : '#ffffff',
-                      color: inwardTarget === 'counter' ? '#065f46' : '#475569',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    <span>🏪</span>
-                    <span>Counter (Shop Tray)</span>
-                  </button>
-                </div>
-              </div>
-
               <div className="stock-field">
                 <label>
                   <span>Select Sweet / Item Variety</span>
                   <span className="stock-hint">
-                    Current {inwardTarget === 'godown' ? 'Godown' : 'Counter'}: {activeCurrentStock} {unitConfig.label}
+                    Current Shop Stock: {currentStock} {unitConfig.label}
                   </span>
                 </label>
                 <select
@@ -236,18 +177,17 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
                 >
                   {inventory.map((item) => {
                     const cfg = getItemStockConfig(item);
-                    const gStock = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-                    const cStock = item.counterStock ?? item.stockKg ?? 0;
+                    const sStock = item.counterStock ?? item.stockKg ?? 0;
                     return (
                       <option key={item.id} value={item.id}>
-                        {item.name} — Godown: {gStock} {cfg.label} | Counter: {cStock} {cfg.label}
+                        {item.name} — Shop Stock: {sStock} {cfg.label}
                       </option>
                     );
                   })}
                   {/* Any catalog item not yet in inventory */}
                   {SWEETS_CATALOG.filter((s) => !inventory.some((i) => i.id === s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
-                      {s.name} (Not in tray)
+                      {s.name} (Not in shop stock)
                     </option>
                   ))}
                 </select>
@@ -290,21 +230,21 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
 
               {existingForm.quantity && (
                 <div className="stock-preview-box">
-                  <span>{inwardTarget === 'godown' ? 'Godown Level' : 'Counter Tray Level'} after Inward:</span>
+                  <span>Shop Stored Stock after Receipt:</span>
                   <span className="stock-preview-val">
-                    {activeCurrentStock} {unitConfig.label} &rarr; <strong>{targetStock} {unitConfig.label}</strong>
+                    {currentStock} {unitConfig.label} &rarr; <strong>{targetStock} {unitConfig.label}</strong>
                   </span>
                 </div>
               )}
 
               <div className="stock-field">
                 <label>
-                  <span>Kitchen Production / Batch Note</span>
+                  <span>Company Godown Transfer / Batch Note</span>
                 </label>
                 <input
                   type="text"
                   className="stock-input"
-                  placeholder="e.g. Morning 6 AM Brass Uruli Batch"
+                  placeholder="e.g. Received from Company Godown Dispatch #104"
                   value={existingForm.batchNote}
                   onChange={(e) =>
                     setExistingForm((prev) => ({ ...prev, batchNote: e.target.value }))
@@ -323,7 +263,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null, 
                   <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                   <line x1="12" y1="22.08" x2="12" y2="12" />
                 </svg>
-                <span>Confirm Add Stock</span>
+                <span>Confirm Receipt to Shop</span>
               </button>
             </div>
           </form>

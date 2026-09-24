@@ -133,7 +133,7 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
               cursor: 'pointer',
             }}
           >
-            ⚠️ {inventorySummary.lowCounter} Low Counter
+            ⚠️ {inventorySummary.lowStock || inventorySummary.lowCounter} Low Stock
           </button>
         )}
 

@@ -4,7 +4,6 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { getItemStockConfig } from '../../utils/unitConfig';
 import AddStockModal from '../Inventory/AddStockModal';
-import DispatchStockModal from './DispatchStockModal';
 import ReturnStockModal from './ReturnStockModal';
 
 export default function CompanyManagerDashboard() {
@@ -74,10 +73,9 @@ export default function CompanyManagerDashboard() {
 
   // Modals state
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
-  const [isDispatchOpen, setIsDispatchOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [modalSelectedSweetId, setModalSelectedSweetId] = useState(null);
-  const [modalTarget, setModalTarget] = useState('godown');
+  const [modalTarget, setModalTarget] = useState('counter');
 
   // Refresh logs on mount
   useEffect(() => {
@@ -114,19 +112,15 @@ export default function CompanyManagerDashboard() {
         return false;
       }
 
-      // Stock status filter
-      const counter = item.counterStock ?? item.stockKg ?? 0;
-      const godown = item.godownStock ?? Math.round(counter * 1.5);
+      // Stock status filter (Shop Stored Stock)
+      const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
-      if (stockStatusFilter === 'low_godown') {
-        return godown <= minThresh;
-      }
-      if (stockStatusFilter === 'low_counter') {
-        return counter <= minThresh;
+      if (stockStatusFilter === 'low_stock' || stockStatusFilter === 'low_counter' || stockStatusFilter === 'low_godown') {
+        return stock > 0 && stock <= minThresh;
       }
       if (stockStatusFilter === 'out_of_stock') {
-        return counter <= 0 && godown <= 0;
+        return stock <= 0;
       }
 
       return true;
@@ -135,31 +129,30 @@ export default function CompanyManagerDashboard() {
 
   // Aggregate remaining stock metrics
   const stockSummary = useMemo(() => {
-    let totalGodownItems = 0;
-    let totalCounterItems = 0;
-    let lowGodownCount = 0;
-    let lowCounterCount = 0;
+    let totalShopStock = 0;
+    let lowStockCount = 0;
     let outOfStockCount = 0;
 
     inventory.forEach((item) => {
-      const counter = item.counterStock ?? item.stockKg ?? 0;
-      const godown = item.godownStock ?? Math.round(counter * 1.5);
-      const minThresh = item.minThreshold || 8;
+      const stock = item.counterStock ?? item.stockKg ?? 0;
+      const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
-      totalGodownItems += godown;
-      totalCounterItems += counter;
+      totalShopStock += stock;
 
-      if (godown <= minThresh) lowGodownCount++;
-      if (counter <= minThresh) lowCounterCount++;
-      if (godown <= 0 && counter <= 0) outOfStockCount++;
+      if (stock <= 0) {
+        outOfStockCount++;
+      } else if (stock <= minThresh) {
+        lowStockCount++;
+      }
     });
 
     return {
       totalProducts: inventory.length,
-      totalGodownItems: Math.round(totalGodownItems * 10) / 10,
-      totalCounterItems: Math.round(totalCounterItems * 10) / 10,
-      lowGodownCount,
-      lowCounterCount,
+      totalShopStock: Math.round(totalShopStock * 10) / 10,
+      totalCounterItems: Math.round(totalShopStock * 10) / 10,
+      lowStockCount,
+      lowGodownCount: lowStockCount,
+      lowCounterCount: lowStockCount,
       outOfStockCount,
     };
   }, [inventory]);
@@ -193,32 +186,25 @@ export default function CompanyManagerDashboard() {
   const dailyMetrics = useMemo(() => {
     const todayStr = new Date().toLocaleDateString('en-IN');
     let inwardCount = 0;
-    let dispatchCount = 0;
     let returnCount = 0;
     let wastageCount = 0;
 
     stockLogs.forEach((log) => {
       if (log.date === todayStr || !log.date) {
         if (log.type === 'GODOWN_INWARD') inwardCount += 1;
-        else if (log.type === 'DISPATCH_TO_COUNTER') dispatchCount += 1;
         else if (log.type === 'COUNTER_RETURN') returnCount += 1;
         else if (log.type === 'WASTAGE') wastageCount += 1;
       }
     });
 
-    return { inwardCount, dispatchCount, returnCount, wastageCount };
+    return { inwardCount, returnCount, wastageCount };
   }, [stockLogs]);
 
   // Quick actions with useCallback
-  const handleOpenInward = useCallback((sweetId = null, target = 'godown') => {
+  const handleOpenInward = useCallback((sweetId = null, target = 'counter') => {
     setModalSelectedSweetId(sweetId);
     setModalTarget(target);
     setIsAddStockOpen(true);
-  }, []);
-
-  const handleOpenDispatch = useCallback((sweetId = null) => {
-    setModalSelectedSweetId(sweetId);
-    setIsDispatchOpen(true);
   }, []);
 
   const handleOpenReturn = useCallback((sweetId = null) => {
@@ -310,7 +296,7 @@ export default function CompanyManagerDashboard() {
               </span>
             </div>
             <p style={{ margin: 0, fontSize: '12px', color: '#64748b' }}>
-              Godown Warehouse &amp; Daily Stock Control System (கோடவுன் மேலாளர் போர்ட்டல்)
+              Shop Stored Stock &amp; Company Inward Control System (சரக்கு வரவு &amp; இருப்பு மேலாண்மை)
             </p>
           </div>
         </div>
@@ -319,7 +305,7 @@ export default function CompanyManagerDashboard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={() => handleOpenInward(null, 'godown')}
+            onClick={() => handleOpenInward(null, 'counter')}
             style={{
               backgroundColor: '#10b981',
               color: '#ffffff',
@@ -336,30 +322,8 @@ export default function CompanyManagerDashboard() {
               transition: 'background-color 0.15s ease',
             }}
           >
-            <span>+ Inward Stock</span>
+            <span>📥 Receive from Godown</span>
             <span style={{ fontSize: '11px', opacity: 0.9 }}>(சரக்கு வரவு)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleOpenDispatch(null)}
-            style={{
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '8px 14px',
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
-            }}
-          >
-            <span>🚚 Dispatch to Counter</span>
-            <span style={{ fontSize: '11px', opacity: 0.9 }}>(கவுண்டருக்கு)</span>
           </button>
 
           <button
@@ -397,7 +361,7 @@ export default function CompanyManagerDashboard() {
               <div style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a' }}>
                 {user?.name || 'Company Manager'}
               </div>
-              <div style={{ fontSize: '10px', color: '#059669', fontWeight: 600 }}>● Online (Godown Dept)</div>
+              <div style={{ fontSize: '10px', color: '#059669', fontWeight: 600 }}>● Online (Store &amp; Inward)</div>
             </div>
 
             <button
@@ -432,7 +396,7 @@ export default function CompanyManagerDashboard() {
             marginBottom: '24px',
           }}
         >
-          {/* Godown Total Items */}
+          {/* Total Products in Catalog */}
           <div
             style={{
               backgroundColor: '#ffffff',
@@ -444,43 +408,19 @@ export default function CompanyManagerDashboard() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.04em' }}>
-                🏭 Total Godown Stock
+                📋 Total Products
               </span>
-              <span style={{ fontSize: '18px' }}>📦</span>
+              <span style={{ fontSize: '18px' }}>🏷️</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#2563eb', marginTop: '6px' }}>
-              {stockSummary.totalGodownItems}
+            <div style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginTop: '6px' }}>
+              {stockSummary.totalProducts}
             </div>
             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-              Across {stockSummary.totalProducts} active products in warehouse
+              Active sweet, savoury & beverage varieties
             </div>
           </div>
 
-          {/* Counter Tray Stock */}
-          <div
-            style={{
-              backgroundColor: '#ffffff',
-              border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '16px 20px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.04em' }}>
-                🛒 Shop Counter Trays
-              </span>
-              <span style={{ fontSize: '18px' }}>🧁</span>
-            </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669', marginTop: '6px' }}>
-              {stockSummary.totalCounterItems}
-            </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-              Active retail tray stock available for selling
-            </div>
-          </div>
-
-          {/* Today's Inwards */}
+          {/* Shop Stored Stock */}
           <div
             style={{
               backgroundColor: '#ffffff',
@@ -492,20 +432,19 @@ export default function CompanyManagerDashboard() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#047857', fontWeight: 600, letterSpacing: '0.04em' }}>
-                📥 Today's Inwards
+                🏪 Shop Stored Stock
               </span>
-              <span style={{ fontSize: '18px' }}>✨</span>
+              <span style={{ fontSize: '18px' }}>🧁</span>
             </div>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669', marginTop: '6px' }}>
-              {dailyMetrics.inwardCount}{' '}
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>batches</span>
+              {stockSummary.totalShopStock}
             </div>
             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-              Kitchen arrivals loaded into Godown today
+              Total units stored in shop ready for selling
             </div>
           </div>
 
-          {/* Today's Dispatches to Counter */}
+          {/* Today's Receipts from Company Godown */}
           <div
             style={{
               backgroundColor: '#ffffff',
@@ -516,25 +455,25 @@ export default function CompanyManagerDashboard() {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#1d4ed8', fontWeight: 600, letterSpacing: '0.04em' }}>
-                🚚 Today's Dispatches
+              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#b45309', fontWeight: 600, letterSpacing: '0.04em' }}>
+                📥 Received from Godown Today
               </span>
-              <span style={{ fontSize: '18px' }}>⚡</span>
+              <span style={{ fontSize: '18px' }}>🚚</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#2563eb', marginTop: '6px' }}>
-              {dailyMetrics.dispatchCount}{' '}
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>transfers</span>
+            <div style={{ fontSize: '28px', fontWeight: 800, color: '#b45309', marginTop: '6px' }}>
+              {dailyMetrics.inwardCount}{' '}
+              <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>batches</span>
             </div>
             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-              Replenished to shop counter trays
+              Stock arrivals received from company godown
             </div>
           </div>
 
           {/* Low Stock Alerts */}
           <div
             style={{
-              backgroundColor: stockSummary.lowGodownCount > 0 ? '#fef2f2' : '#ffffff',
-              border: stockSummary.lowGodownCount > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0',
+              backgroundColor: stockSummary.lowStockCount > 0 ? '#fef2f2' : '#ffffff',
+              border: stockSummary.lowStockCount > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0',
               borderRadius: '14px',
               padding: '16px 20px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
@@ -545,12 +484,12 @@ export default function CompanyManagerDashboard() {
                 style={{
                   fontSize: '12px',
                   textTransform: 'uppercase',
-                  color: stockSummary.lowGodownCount > 0 ? '#b91c1c' : '#64748b',
+                  color: stockSummary.lowStockCount > 0 ? '#b91c1c' : '#64748b',
                   fontWeight: 600,
                   letterSpacing: '0.04em',
                 }}
               >
-                ⚠️ Low Godown Stock
+                ⚠️ Low Stock in Shop
               </span>
               <span style={{ fontSize: '18px' }}>🚨</span>
             </div>
@@ -558,21 +497,21 @@ export default function CompanyManagerDashboard() {
               style={{
                 fontSize: '28px',
                 fontWeight: 800,
-                color: stockSummary.lowGodownCount > 0 ? '#dc2626' : '#059669',
+                color: stockSummary.lowStockCount > 0 ? '#dc2626' : '#059669',
                 marginTop: '6px',
               }}
             >
-              {stockSummary.lowGodownCount}{' '}
+              {stockSummary.lowStockCount}{' '}
               <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>items</span>
             </div>
             <div
               style={{
                 fontSize: '11px',
-                color: stockSummary.lowGodownCount > 0 ? '#b91c1c' : '#64748b',
+                color: stockSummary.lowStockCount > 0 ? '#b91c1c' : '#64748b',
                 marginTop: '4px',
               }}
             >
-              {stockSummary.lowGodownCount > 0 ? 'Requires kitchen replenishment' : 'All godown balances healthy'}
+              {stockSummary.lowStockCount > 0 ? 'Order refill from company godown' : 'All shop stock levels healthy'}
             </div>
           </div>
         </section>
@@ -842,10 +781,9 @@ export default function CompanyManagerDashboard() {
               {/* Stock Status Filter Pills */}
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
-                  { id: 'all', label: 'All Items' },
-                  { id: 'low_godown', label: `Low Godown (${stockSummary.lowGodownCount})` },
-                  { id: 'low_counter', label: `Low Counter (${stockSummary.lowCounterCount})` },
-                  { id: 'out_of_stock', label: `Out of Stock (${stockSummary.outOfStockCount})` },
+                  { id: 'all', label: `All Items (${inventory.length})` },
+                  { id: 'low_stock', label: `⚠️ Low Stock (${stockSummary.lowStockCount})` },
+                  { id: 'out_of_stock', label: `🚫 Out of Stock (${stockSummary.outOfStockCount})` },
                 ].map((f) => (
                   <button
                     key={f.id}
@@ -899,14 +837,11 @@ export default function CompanyManagerDashboard() {
                 ) : (
                   filteredInventory.map((item) => {
                     const unitConf = getItemStockConfig(item);
-                    const counter = item.counterStock ?? item.stockKg ?? 0;
-                    const godown = item.godownStock ?? Math.round(counter * 1.5);
-                    const total = Math.round((godown + counter) * 100) / 100;
+                    const stock = item.counterStock ?? item.stockKg ?? 0;
                     const minThresh = item.minThreshold || (unitConf.type === 'pcs' ? 15 : 8);
 
-                    const isGodownLow = godown <= minThresh;
-                    const isCounterLow = counter <= minThresh;
-                    const isOut = godown <= 0 && counter <= 0;
+                    const isLow = stock > 0 && stock <= minThresh;
+                    const isOut = stock <= 0;
 
                     return (
                       <div
@@ -915,7 +850,7 @@ export default function CompanyManagerDashboard() {
                           backgroundColor: '#ffffff',
                           border: isOut
                             ? '1px solid #fecaca'
-                            : isGodownLow
+                            : isLow
                             ? '1px solid #fed7aa'
                             : '1px solid #e2e8f0',
                           borderRadius: '14px',
@@ -951,23 +886,17 @@ export default function CompanyManagerDashboard() {
                               style={{
                                 backgroundColor: isOut
                                   ? '#fef2f2'
-                                  : isGodownLow
-                                  ? '#fff7ed'
-                                  : isCounterLow
+                                  : isLow
                                   ? '#fffbeb'
                                   : '#ecfdf5',
                                 color: isOut
                                   ? '#b91c1c'
-                                  : isGodownLow
-                                  ? '#c2410c'
-                                  : isCounterLow
+                                  : isLow
                                   ? '#b45309'
                                   : '#047857',
                                 border: isOut
                                   ? '1px solid #fecaca'
-                                  : isGodownLow
-                                  ? '1px solid #ffedd5'
-                                  : isCounterLow
+                                  : isLow
                                   ? '1px solid #fde68a'
                                   : '1px solid #a7f3d0',
                                 fontSize: '10px',
@@ -977,7 +906,7 @@ export default function CompanyManagerDashboard() {
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              {isOut ? 'OUT OF STOCK' : isGodownLow ? 'LOW GODOWN' : isCounterLow ? 'LOW COUNTER' : 'HEALTHY'}
+                              {isOut ? 'OUT OF STOCK' : isLow ? 'LOW STOCK' : 'IN STOCK'}
                             </span>
                           </div>
 
@@ -998,103 +927,79 @@ export default function CompanyManagerDashboard() {
                           </div>
                         </div>
 
-                        {/* Stock Balance Comparison */}
+                        {/* Shop Stored Stock Balance */}
                         <div
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr 1fr',
-                            gap: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                             backgroundColor: '#f8fafc',
-                            padding: '12px',
+                            padding: '12px 16px',
                             borderRadius: '10px',
                             border: '1px solid #e2e8f0',
-                            textAlign: 'center',
                           }}
                         >
                           <div>
-                            <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                              🏭 Godown
+                            <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
+                              🏪 Shop Stored Stock
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: 800, color: isGodownLow ? '#dc2626' : '#2563eb', marginTop: '2px' }}>
-                              {godown}
+                            <div style={{ fontSize: '20px', fontWeight: 800, color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669', marginTop: '2px' }}>
+                              {stock} <span style={{ fontSize: '13px', fontWeight: 600, color: '#64748b' }}>{unitConf.label}</span>
                             </div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{unitConf.label}</div>
                           </div>
-
-                          <div style={{ borderLeft: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0' }}>
-                            <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                              🛒 Counter
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', color: '#64748b', fontWeight: 500 }}>Min Threshold</div>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#475569', marginTop: '2px' }}>
+                              {minThresh} {unitConf.label}
                             </div>
-                            <div style={{ fontSize: '16px', fontWeight: 800, color: isCounterLow ? '#d97706' : '#059669', marginTop: '2px' }}>
-                              {counter}
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{unitConf.label}</div>
-                          </div>
-
-                          <div>
-                            <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                              📦 Total
-                            </div>
-                            <div style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
-                              {total}
-                            </div>
-                            <div style={{ fontSize: '10px', color: '#64748b' }}>{unitConf.label}</div>
                           </div>
                         </div>
 
                         {/* Actions */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           <button
                             type="button"
-                            onClick={() => handleOpenInward(item.id, 'godown')}
+                            onClick={() => handleOpenInward(item.id)}
                             style={{
                               backgroundColor: '#ecfdf5',
                               border: '1px solid #a7f3d0',
                               color: '#047857',
-                              borderRadius: '6px',
-                              padding: '6px 8px',
-                              fontSize: '11px',
+                              borderRadius: '8px',
+                              padding: '8px 10px',
+                              fontSize: '12px',
                               fontWeight: 700,
                               cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
                             }}
+                            title={`Receive ${unitConf.label} from Company Godown`}
                           >
-                            + Inward
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDispatch(item.id)}
-                            disabled={godown <= 0}
-                            style={{
-                              backgroundColor: godown > 0 ? '#eff6ff' : '#f8fafc',
-                              border: godown > 0 ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-                              color: godown > 0 ? '#1d4ed8' : '#94a3b8',
-                              borderRadius: '6px',
-                              padding: '6px 8px',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: godown > 0 ? 'pointer' : 'not-allowed',
-                            }}
-                          >
-                            🚚 Dispatch
+                            📥 Receive Stock
                           </button>
 
                           <button
                             type="button"
                             onClick={() => handleOpenReturn(item.id)}
-                            disabled={counter <= 0}
+                            disabled={stock <= 0}
                             style={{
-                              backgroundColor: counter > 0 ? '#fffbeb' : '#f8fafc',
-                              border: counter > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                              color: counter > 0 ? '#b45309' : '#94a3b8',
-                              borderRadius: '6px',
-                              padding: '6px 8px',
-                              fontSize: '11px',
+                              backgroundColor: stock > 0 ? '#fffbeb' : '#f8fafc',
+                              border: stock > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
+                              color: stock > 0 ? '#b45309' : '#94a3b8',
+                              borderRadius: '8px',
+                              padding: '8px 10px',
+                              fontSize: '12px',
                               fontWeight: 700,
-                              cursor: counter > 0 ? 'pointer' : 'not-allowed',
+                              cursor: stock > 0 ? 'pointer' : 'not-allowed',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '4px',
                             }}
+                            title="Return stock to Company Godown or record wastage"
                           >
-                            ↩️ Return
+                            ↩️ Return / Waste
                           </button>
                         </div>
                       </div>
@@ -1129,9 +1034,8 @@ export default function CompanyManagerDashboard() {
                       >
                         <th style={{ padding: '14px 18px' }}>Product &amp; SKU</th>
                         <th style={{ padding: '14px 14px' }}>Unit</th>
-                        <th style={{ padding: '14px 14px' }}>🏭 Godown Stock</th>
-                        <th style={{ padding: '14px 14px' }}>🛒 Counter Tray</th>
-                        <th style={{ padding: '14px 14px' }}>📦 Total Balance</th>
+                        <th style={{ padding: '14px 14px' }}>🏪 Shop Stored Stock</th>
+                        <th style={{ padding: '14px 14px' }}>Min Threshold</th>
                         <th style={{ padding: '14px 14px' }}>Status</th>
                         <th style={{ padding: '14px 18px', textAlign: 'right' }}>Quick Actions</th>
                       </tr>
@@ -1139,21 +1043,18 @@ export default function CompanyManagerDashboard() {
                     <tbody>
                       {filteredInventory.length === 0 ? (
                         <tr>
-                          <td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+                          <td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
                             No products match the selected filters.
                           </td>
                         </tr>
                       ) : (
                         filteredInventory.map((item, idx) => {
                           const unitConf = getItemStockConfig(item);
-                          const counter = item.counterStock ?? item.stockKg ?? 0;
-                          const godown = item.godownStock ?? Math.round(counter * 1.5);
-                          const total = Math.round((godown + counter) * 100) / 100;
+                          const stock = item.counterStock ?? item.stockKg ?? 0;
                           const minThresh = item.minThreshold || (unitConf.type === 'pcs' ? 15 : 8);
 
-                          const isGodownLow = godown <= minThresh;
-                          const isCounterLow = counter <= minThresh;
-                          const isOut = godown <= 0 && counter <= 0;
+                          const isLow = stock > 0 && stock <= minThresh;
+                          const isOut = stock <= 0;
 
                           return (
                             <tr
@@ -1164,7 +1065,7 @@ export default function CompanyManagerDashboard() {
                                 transition: 'background-color 0.12s ease',
                               }}
                             >
-                              {/* Product & Details - Crisp typography, NO duplicate Tamil text */}
+                              {/* Product & Details - Crisp typography */}
                               <td style={{ padding: '14px 18px' }}>
                                 <div style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>
                                   {item.name || item.englishName}
@@ -1182,7 +1083,7 @@ export default function CompanyManagerDashboard() {
                                 </div>
                               </td>
 
-                              {/* Native Unit Pill - Clean badge without duplication */}
+                              {/* Native Unit Pill */}
                               <td style={{ padding: '14px 14px' }}>
                                 <span
                                   style={{
@@ -1200,65 +1101,41 @@ export default function CompanyManagerDashboard() {
                                 </span>
                               </td>
 
-                              {/* Godown Warehouse Stock */}
+                              {/* Shop Stored Stock */}
                               <td style={{ padding: '14px 14px' }}>
                                 <div
                                   style={{
-                                    fontSize: '15px',
-                                    fontWeight: 700,
-                                    color: isGodownLow ? '#dc2626' : '#2563eb',
+                                    fontSize: '16px',
+                                    fontWeight: 800,
+                                    color: isOut ? '#dc2626' : isLow ? '#d97706' : '#059669',
                                     display: 'flex',
                                     alignItems: 'baseline',
-                                    gap: '4px',
+                                    gap: '5px',
                                   }}
                                 >
-                                  <span>{godown}</span>
-                                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
+                                  <span>{stock}</span>
+                                  <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>
                                     {unitConf.label}
                                   </span>
                                 </div>
-                                {isGodownLow && (
-                                  <div style={{ fontSize: '10px', color: '#dc2626', fontWeight: 600, marginTop: '2px' }}>
-                                    Below min ({minThresh})
-                                  </div>
-                                )}
-                              </td>
-
-                              {/* Counter Tray Stock */}
-                              <td style={{ padding: '14px 14px' }}>
-                                <div
-                                  style={{
-                                    fontSize: '15px',
-                                    fontWeight: 700,
-                                    color: isCounterLow ? '#d97706' : '#059669',
-                                    display: 'flex',
-                                    alignItems: 'baseline',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <span>{counter}</span>
-                                  <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
-                                    {unitConf.label}
-                                  </span>
-                                </div>
-                                {isCounterLow && (
+                                {isLow && (
                                   <div style={{ fontSize: '10px', color: '#d97706', fontWeight: 600, marginTop: '2px' }}>
-                                    Refill needed
+                                    Refill needed from Godown
                                   </div>
                                 )}
                               </td>
 
-                              {/* Total Combined Remaining */}
+                              {/* Min Threshold */}
                               <td style={{ padding: '14px 14px' }}>
-                                <div style={{ fontSize: '15px', fontWeight: 800, color: '#0f172a' }}>
-                                  {total}{' '}
+                                <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                                  {minThresh}{' '}
                                   <span style={{ fontSize: '11px', fontWeight: 500, color: '#64748b' }}>
                                     {unitConf.label}
                                   </span>
                                 </div>
                               </td>
 
-                              {/* Status Tag - nowrap so it never breaks awkwardly */}
+                              {/* Status Tag */}
                               <td style={{ padding: '14px 14px' }}>
                                 {isOut ? (
                                   <span
@@ -1276,23 +1153,7 @@ export default function CompanyManagerDashboard() {
                                   >
                                     OUT OF STOCK
                                   </span>
-                                ) : isGodownLow ? (
-                                  <span
-                                    style={{
-                                      backgroundColor: '#fff7ed',
-                                      color: '#c2410c',
-                                      border: '1px solid #ffedd5',
-                                      fontSize: '10px',
-                                      fontWeight: 700,
-                                      padding: '3px 8px',
-                                      borderRadius: '9999px',
-                                      whiteSpace: 'nowrap',
-                                      display: 'inline-block',
-                                    }}
-                                  >
-                                    LOW GODOWN
-                                  </span>
-                                ) : isCounterLow ? (
+                                ) : isLow ? (
                                   <span
                                     style={{
                                       backgroundColor: '#fffbeb',
@@ -1306,7 +1167,7 @@ export default function CompanyManagerDashboard() {
                                       display: 'inline-block',
                                     }}
                                   >
-                                    LOW COUNTER
+                                    LOW STOCK
                                   </span>
                                 ) : (
                                   <span
@@ -1322,7 +1183,7 @@ export default function CompanyManagerDashboard() {
                                       display: 'inline-block',
                                     }}
                                   >
-                                    HEALTHY
+                                    IN STOCK
                                   </span>
                                 )}
                               </td>
@@ -1330,64 +1191,41 @@ export default function CompanyManagerDashboard() {
                               {/* Row Action Buttons */}
                               <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                                 <div style={{ display: 'inline-flex', gap: '6px' }}>
-                                  {/* Inward button */}
                                   <button
                                     type="button"
-                                    onClick={() => handleOpenInward(item.id, 'godown')}
+                                    onClick={() => handleOpenInward(item.id)}
                                     style={{
                                       backgroundColor: '#ecfdf5',
                                       border: '1px solid #a7f3d0',
                                       color: '#047857',
                                       borderRadius: '6px',
-                                      padding: '5px 10px',
+                                      padding: '6px 12px',
                                       fontSize: '11px',
-                                      fontWeight: 600,
+                                      fontWeight: 700,
                                       cursor: 'pointer',
                                       whiteSpace: 'nowrap',
                                     }}
-                                    title={`Inward ${unitConf.label} to Godown`}
+                                    title={`Receive ${unitConf.label} from Company Godown`}
                                   >
-                                    + Inward
+                                    📥 Receive Stock
                                   </button>
 
-                                  {/* Dispatch to counter button */}
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenDispatch(item.id)}
-                                    disabled={godown <= 0}
-                                    style={{
-                                      backgroundColor: godown > 0 ? '#eff6ff' : '#f8fafc',
-                                      border: godown > 0 ? '1px solid #bfdbfe' : '1px solid #e2e8f0',
-                                      color: godown > 0 ? '#1d4ed8' : '#94a3b8',
-                                      borderRadius: '6px',
-                                      padding: '5px 10px',
-                                      fontSize: '11px',
-                                      fontWeight: 600,
-                                      cursor: godown > 0 ? 'pointer' : 'not-allowed',
-                                      whiteSpace: 'nowrap',
-                                    }}
-                                    title={`Dispatch from Godown to Counter Tray`}
-                                  >
-                                    🚚 Dispatch
-                                  </button>
-
-                                  {/* Return / wastage button */}
                                   <button
                                     type="button"
                                     onClick={() => handleOpenReturn(item.id)}
-                                    disabled={counter <= 0}
+                                    disabled={stock <= 0}
                                     style={{
-                                      backgroundColor: counter > 0 ? '#fffbeb' : '#f8fafc',
-                                      border: counter > 0 ? '1px solid #fde68a' : '1px solid #e2e8f0',
-                                      color: counter > 0 ? '#b45309' : '#94a3b8',
+                                      backgroundColor: stock > 0 ? '#fffbeb' : '#f8fafc',
+                                      border: stock > 0 ? '1px solid #fed7aa' : '1px solid #e2e8f0',
+                                      color: stock > 0 ? '#9a3412' : '#94a3b8',
                                       borderRadius: '6px',
-                                      padding: '5px 10px',
+                                      padding: '6px 10px',
                                       fontSize: '11px',
-                                      fontWeight: 600,
-                                      cursor: counter > 0 ? 'pointer' : 'not-allowed',
+                                      fontWeight: 700,
+                                      cursor: stock > 0 ? 'pointer' : 'not-allowed',
                                       whiteSpace: 'nowrap',
                                     }}
-                                    title={`Return or Wastage for ${item.name}`}
+                                    title={`Return stock to Company Godown or record wastage`}
                                   >
                                     ↩️ Return
                                   </button>
@@ -1479,9 +1317,8 @@ export default function CompanyManagerDashboard() {
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
                   { id: 'all', label: 'All Movements' },
-                  { id: 'GODOWN_INWARD', label: '📥 Inwards' },
-                  { id: 'DISPATCH_TO_COUNTER', label: '🚚 Dispatches' },
-                  { id: 'COUNTER_RETURN', label: '↩️ Returns' },
+                  { id: 'GODOWN_INWARD', label: '📥 Received from Godown' },
+                  { id: 'COUNTER_RETURN', label: '↩️ Returned to Godown' },
                   { id: 'WASTAGE', label: '🗑️ Wastages' },
                 ].map((type) => (
                   <button
@@ -1713,14 +1550,6 @@ export default function CompanyManagerDashboard() {
         initialTarget={modalTarget}
       />
 
-      <DispatchStockModal
-        isOpen={isDispatchOpen}
-        onClose={() => {
-          setIsDispatchOpen(false);
-          setModalSelectedSweetId(null);
-        }}
-        initialSweetId={modalSelectedSweetId}
-      />
 
       <ReturnStockModal
         isOpen={isReturnOpen}

@@ -3250,7 +3250,7 @@ export function CartProvider({ children }) {
     return stockLogs;
   };
 
-  const inwardStock = async ({ productId, quantity, unit, target = 'godown', note = '', managerName = 'Company Manager' }) => {
+  const inwardStock = async ({ productId, quantity, unit, note = '', managerName = 'Company Manager' }) => {
     const qty = parseFloat(quantity);
     if (!productId || isNaN(qty) || qty <= 0) return;
 
@@ -3262,16 +3262,9 @@ export function CartProvider({ children }) {
         if (item.id === productId) {
           targetItemName = item.name || item.englishName || productId;
           targetItemUnit = unit || item.unit || 'kg';
-          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
-
-          if (target === 'godown') {
-            const nextG = Math.round((prevGodown + qty) * 100) / 100;
-            return { ...item, godownStock: nextG };
-          } else {
-            const nextC = Math.round((prevCounter + qty) * 100) / 100;
-            return { ...item, counterStock: nextC, stockKg: nextC };
-          }
+          const prevStock = item.counterStock ?? item.stockKg ?? 0;
+          const nextStock = Math.round((prevStock + qty) * 100) / 100;
+          return { ...item, counterStock: nextStock, stockKg: nextStock };
         }
         return item;
       });
@@ -3284,9 +3277,8 @@ export function CartProvider({ children }) {
       type: 'GODOWN_INWARD',
       quantity: qty,
       unit: targetItemUnit,
-      target,
       performedBy: managerName,
-      note: note || `Inward to ${target}`,
+      note: note || `Received from Company Godown`,
       date: new Date().toLocaleDateString('en-IN'),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       createdAt: Date.now(),
@@ -3303,7 +3295,7 @@ export function CartProvider({ children }) {
         productId,
         quantity: qty,
         unit: targetItemUnit,
-        target,
+        target: 'shop',
         note,
         managerName,
       });
@@ -3313,63 +3305,8 @@ export function CartProvider({ children }) {
   };
 
   const dispatchStockToCounter = async ({ productId, quantity, note = '', managerName = 'Company Manager' }) => {
-    const qty = parseFloat(quantity);
-    if (!productId || isNaN(qty) || qty <= 0) return;
-
-    let targetItemName = productId;
-    let targetItemUnit = 'kg';
-
-    setInventory((prev) => {
-      return prev.map((item) => {
-        if (item.id === productId) {
-          targetItemName = item.name || item.englishName || productId;
-          targetItemUnit = item.unit || 'kg';
-          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
-
-          const nextG = Math.max(0, Math.round((prevGodown - qty) * 100) / 100);
-          const nextC = Math.round((prevCounter + qty) * 100) / 100;
-          return {
-            ...item,
-            godownStock: nextG,
-            counterStock: nextC,
-            stockKg: nextC,
-          };
-        }
-        return item;
-      });
-    });
-
-    const newLog = {
-      id: `stock-log-${Date.now()}`,
-      productId,
-      productName: targetItemName,
-      type: 'DISPATCH_TO_COUNTER',
-      quantity: qty,
-      unit: targetItemUnit,
-      performedBy: managerName,
-      note: note || 'Dispatched from Godown to Counter',
-      date: new Date().toLocaleDateString('en-IN'),
-      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
-      createdAt: Date.now(),
-    };
-
-    setStockLogs((prev) => {
-      const updated = [newLog, ...prev.slice(0, 99)];
-      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
-      return updated;
-    });
-
-    try {
-      await api.post('/api/stock/dispatch', {
-        productId,
-        quantity: qty,
-        note,
-        managerName,
-      });
-    } catch (err) {
-      console.warn('[Stock] Dispatch offline save:', err);
-    }
+    // Retained for backward-compatibility: increases shop stored stock directly
+    return inwardStock({ productId, quantity, note: note || 'Added to Shop Stock', managerName });
   };
 
   const returnStockToGodown = async ({ productId, quantity, reason = 'return', note = '', performedBy = 'Counter Staff' }) => {
@@ -3385,16 +3322,12 @@ export function CartProvider({ children }) {
         if (item.id === productId) {
           targetItemName = item.name || item.englishName || productId;
           targetItemUnit = item.unit || 'kg';
-          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
-
-          const nextC = Math.max(0, Math.round((prevCounter - qty) * 100) / 100);
-          const nextG = isWastage ? prevGodown : Math.round((prevGodown + qty) * 100) / 100;
+          const prevStock = item.counterStock ?? item.stockKg ?? 0;
+          const nextStock = Math.max(0, Math.round((prevStock - qty) * 100) / 100);
           return {
             ...item,
-            counterStock: nextC,
-            stockKg: nextC,
-            godownStock: nextG,
+            counterStock: nextStock,
+            stockKg: nextStock,
           };
         }
         return item;
@@ -3409,7 +3342,7 @@ export function CartProvider({ children }) {
       quantity: qty,
       unit: targetItemUnit,
       performedBy,
-      note: note || (isWastage ? 'Counter Spoilage / Wastage' : 'Returned from Counter to Godown'),
+      note: note || (isWastage ? 'Shop Spoilage / Wastage Write-Off' : 'Returned from Shop to Company Godown'),
       date: new Date().toLocaleDateString('en-IN'),
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       createdAt: Date.now(),

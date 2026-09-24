@@ -57,7 +57,7 @@ export default function ReturnStockModal({ isOpen, onClose, initialSweetId = nul
       return;
     }
     if (returnQty > currentCounter) {
-      setErrorMsg(`Cannot return more than available Counter stock (${currentCounter} ${unitConfig.label})`);
+      setErrorMsg(`Cannot return more than available Shop stock (${currentCounter} ${unitConfig.label})`);
       return;
     }
 
@@ -65,7 +65,7 @@ export default function ReturnStockModal({ isOpen, onClose, initialSweetId = nul
       productId: currentSweet.id,
       quantity: returnQty,
       reason: returnType,
-      note: note.trim() || (returnType === 'wastage' ? 'Counter spoilage write-off' : 'Returned to Godown storage'),
+      note: note.trim() || (returnType === 'wastage' ? 'Shop spoilage write-off' : 'Returned to Company Godown'),
       performedBy: 'Company Manager',
     });
 
@@ -272,13 +272,13 @@ export default function ReturnStockModal({ isOpen, onClose, initialSweetId = nul
           >
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                🛒 Counter Remaining
+                🏪 Shop Stock Remaining
               </div>
               <div
                 style={{
                   fontSize: '20px',
                   fontWeight: 800,
-                  color: isOverCounter ? '#dc2626' : '#d97706',
+                  color: isOverCounter ? '#dc2626' : '#059669',
                   marginTop: '4px',
                 }}
               >
@@ -293,24 +293,22 @@ export default function ReturnStockModal({ isOpen, onClose, initialSweetId = nul
 
             <div style={{ textAlign: 'center', borderLeft: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase', fontWeight: 600 }}>
-                {returnType === 'wastage' ? '⚠️ Total Written Off' : '🏭 Godown Projected'}
+                {returnType === 'wastage' ? '⚠️ Written Off' : '📦 Returning to Godown'}
               </div>
               <div
                 style={{
                   fontSize: '20px',
                   fontWeight: 800,
-                  color: returnType === 'wastage' ? '#dc2626' : '#2563eb',
+                  color: returnType === 'wastage' ? '#dc2626' : '#d97706',
                   marginTop: '4px',
                 }}
               >
-                {returnType === 'wastage' ? returnQty : projectedGodown}{' '}
+                {returnQty}{' '}
                 <span style={{ fontSize: '12px', fontWeight: 600 }}>{unitConfig.label}</span>
               </div>
-              {returnType !== 'wastage' && returnQty > 0 && (
-                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                  Was: {currentGodown} {unitConfig.label}
-                </div>
-              )}
+              <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
+                {returnType === 'wastage' ? 'Removed from stock' : 'Sent back to Godown'}
+              </div>
             </div>
           </div>
 

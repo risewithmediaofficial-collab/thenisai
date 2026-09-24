@@ -1790,10 +1790,10 @@ app.get('/api/stock/logs', async (req, res) => {
   }
 });
 
-// Record inward to Godown (or directly to Counter)
+// Record inward from Company Godown directly into Shop Stored Stock
 app.post('/api/stock/inward', async (req, res) => {
   try {
-    const { productId, quantity, unit, target = 'godown', note = '', managerName = 'Company Manager' } = req.body;
+    const { productId, quantity, unit, note = '', managerName = 'Company Manager' } = req.body;
     const qty = parseFloat(quantity);
     if (!productId || isNaN(qty) || qty <= 0) {
       return res.status(400).json({ success: false, message: 'Valid productId and positive quantity required' });
@@ -1802,12 +1802,8 @@ app.post('/api/stock/inward', async (req, res) => {
     const item = await Inventory.findOne({ id: productId });
     const productName = item?.name || productId;
 
-    let update = {};
-    if (target === 'godown') {
-      update = { $inc: { godownStock: qty } };
-    } else {
-      update = { $inc: { counterStock: qty, stockKg: qty } };
-    }
+    // All inward stock arriving from external company godown increments shop stock directly
+    const update = { $inc: { counterStock: qty, stockKg: qty } };
 
     const updatedItem = await Inventory.findOneAndUpdate({ id: productId }, update, { new: true, upsert: true });
 
@@ -1818,10 +1814,10 @@ app.post('/api/stock/inward', async (req, res) => {
       type: 'GODOWN_INWARD',
       quantity: qty,
       unit: unit || updatedItem.unit || 'kg',
-      godownRemaining: updatedItem.godownStock || 0,
+      godownRemaining: 0,
       counterRemaining: updatedItem.counterStock || updatedItem.stockKg || 0,
       performedBy: managerName,
-      note: note || `Inward to ${target}`,
+      note: note || `Received from Company Godown`,
       date: new Date().toLocaleDateString('en-IN'),
       createdAt: Date.now(),
     });
@@ -1879,7 +1875,7 @@ app.post('/api/stock/dispatch', async (req, res) => {
   }
 });
 
-// Return from Counter to Godown (or Wastage)
+// Return from Shop to Company Godown (or Wastage)
 app.post('/api/stock/return', async (req, res) => {
   try {
     const { productId, quantity, reason = 'return', note = '', performedBy = 'Counter Staff' } = req.body;
@@ -1892,9 +1888,8 @@ app.post('/api/stock/return', async (req, res) => {
     const productName = item?.name || productId;
 
     const isWastage = reason === 'wastage' || reason === 'spoilage';
-    const update = isWastage
-      ? { $inc: { counterStock: -qty, stockKg: -qty } }
-      : { $inc: { counterStock: -qty, stockKg: -qty, godownStock: qty } };
+    // Both returns and wastages deduct directly from shop stored stock
+    const update = { $inc: { counterStock: -qty, stockKg: -qty } };
 
     const updatedItem = await Inventory.findOneAndUpdate({ id: productId }, update, { new: true });
 
@@ -1905,10 +1900,10 @@ app.post('/api/stock/return', async (req, res) => {
       type: isWastage ? 'WASTAGE' : 'COUNTER_RETURN',
       quantity: qty,
       unit: updatedItem?.unit || 'kg',
-      godownRemaining: updatedItem?.godownStock || 0,
+      godownRemaining: 0,
       counterRemaining: updatedItem?.counterStock || updatedItem?.stockKg || 0,
       performedBy,
-      note: note || (isWastage ? 'Counter Spoilage / Wastage Write-Off' : 'Returned from Counter to Godown'),
+      note: note || (isWastage ? 'Shop Spoilage / Wastage Write-Off' : 'Returned from Shop to Company Godown'),
       date: new Date().toLocaleDateString('en-IN'),
       createdAt: Date.now(),
     });

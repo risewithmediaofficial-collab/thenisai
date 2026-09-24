@@ -26,46 +26,25 @@ const inventorySlice = createSlice({
       }
     },
     inwardStockLocal: (state, action) => {
-      const { productId, quantity, target = 'godown' } = action.payload;
-      const item = state.items.find((i) => i.id === productId);
-      if (item) {
-        const qty = parseFloat(quantity) || 0;
-        if (target === 'godown') {
-          const current = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-          item.godownStock = Math.round((current + qty) * 100) / 100;
-        } else {
-          const current = item.counterStock ?? item.stockKg ?? 0;
-          const next = Math.round((current + qty) * 100) / 100;
-          item.counterStock = next;
-          item.stockKg = next;
-        }
-      }
-    },
-    dispatchToCounterLocal: (state, action) => {
       const { productId, quantity } = action.payload;
       const item = state.items.find((i) => i.id === productId);
       if (item) {
         const qty = parseFloat(quantity) || 0;
-        const currentGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-        const currentCounter = item.counterStock ?? item.stockKg ?? 0;
-        item.godownStock = Math.max(0, Math.round((currentGodown - qty) * 100) / 100);
-        const nextC = Math.round((currentCounter + qty) * 100) / 100;
-        item.counterStock = nextC;
-        item.stockKg = nextC;
+        const current = item.counterStock ?? item.stockKg ?? 0;
+        const next = Math.round((current + qty) * 100) / 100;
+        item.counterStock = next;
+        item.stockKg = next;
       }
     },
     returnToGodownLocal: (state, action) => {
-      const { productId, quantity, reason } = action.payload;
+      const { productId, quantity } = action.payload;
       const item = state.items.find((i) => i.id === productId);
       if (item) {
         const qty = parseFloat(quantity) || 0;
-        const currentGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
-        const currentCounter = item.counterStock ?? item.stockKg ?? 0;
-        item.counterStock = Math.max(0, Math.round((currentCounter - qty) * 100) / 100);
-        item.stockKg = item.counterStock;
-        if (reason !== 'wastage' && reason !== 'spoilage') {
-          item.godownStock = Math.round((currentGodown + qty) * 100) / 100;
-        }
+        const current = item.counterStock ?? item.stockKg ?? 0;
+        const next = Math.max(0, Math.round((current - qty) * 100) / 100);
+        item.counterStock = next;
+        item.stockKg = next;
       }
     },
     setStockLogs: (state, action) => {
@@ -91,7 +70,6 @@ export const {
   setInventoryItems,
   updateSingleItemStock,
   inwardStockLocal,
-  dispatchToCounterLocal,
   returnToGodownLocal,
   setStockLogs,
   addStockLog,
@@ -127,13 +105,11 @@ export const selectFilteredInventory = createSelector(
         return false;
       }
 
-      const counter = item.counterStock ?? item.stockKg ?? 0;
-      const godown = item.godownStock ?? Math.round(counter * 1.5);
+      const stock = item.counterStock ?? item.stockKg ?? 0;
       const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
-      if (status === 'low_godown') return godown <= minThresh;
-      if (status === 'low_counter') return counter <= minThresh;
-      if (status === 'out_of_stock') return counter <= 0 && godown <= 0;
+      if (status === 'low_stock' || status === 'low_counter') return stock > 0 && stock <= minThresh;
+      if (status === 'out_of_stock') return stock <= 0;
 
       return true;
     });
@@ -143,32 +119,29 @@ export const selectFilteredInventory = createSelector(
 export const selectInventorySummary = createSelector(
   [selectAllInventory],
   (items) => {
-    let totalGodown = 0;
-    let totalCounter = 0;
-    let lowGodown = 0;
-    let lowCounter = 0;
-    let outOfStock = 0;
+    let totalShopStock = 0;
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
 
     items.forEach((item) => {
-      const counter = item.counterStock ?? item.stockKg ?? 0;
-      const godown = item.godownStock ?? Math.round(counter * 1.5);
-      const minThresh = item.minThreshold || 8;
+      const stock = item.counterStock ?? item.stockKg ?? 0;
+      const minThresh = item.minThreshold || (item.unit === '1 Pc' ? 15 : 8);
 
-      totalGodown += godown;
-      totalCounter += counter;
-
-      if (godown <= minThresh) lowGodown++;
-      if (counter <= minThresh) lowCounter++;
-      if (godown <= 0 && counter <= 0) outOfStock++;
+      totalShopStock += stock;
+      if (stock <= 0) {
+        outOfStockCount++;
+      } else if (stock <= minThresh) {
+        lowStockCount++;
+      }
     });
 
     return {
       totalProducts: items.length,
-      totalGodown: Math.round(totalGodown * 10) / 10,
-      totalCounter: Math.round(totalCounter * 10) / 10,
-      lowGodown,
-      lowCounter,
-      outOfStock,
+      totalShopStock: Math.round(totalShopStock * 10) / 10,
+      totalCounter: Math.round(totalShopStock * 10) / 10,
+      lowStock: lowStockCount,
+      lowCounter: lowStockCount,
+      outOfStock: outOfStockCount,
     };
   }
 );

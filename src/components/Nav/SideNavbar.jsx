@@ -182,7 +182,7 @@ export default function SideNavbar({
                   <span className="nav-text">Products &amp; Inventory</span>
                 </button>
 
-                {/* 4b. Company Manager / Godown Stock Portal */}
+                {/* 4b. Company Manager / Company Stock Inward */}
                 <button
                   type="button"
                   className="sidebar-nav-item"
@@ -196,7 +196,7 @@ export default function SideNavbar({
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
                     <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
-                  <span className="nav-text">Godown Stock Portal</span>
+                  <span className="nav-text">Company Stock Inward</span>
                 </button>
 
                 {/* 5. Sales & Ledger */}

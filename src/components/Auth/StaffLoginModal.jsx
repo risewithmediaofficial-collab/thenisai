@@ -166,7 +166,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
             aria-selected={selectedRole === 'company_manager'}
             className={`minimal-role-tab ${selectedRole === 'company_manager' ? 'active' : ''}`}
             onClick={() => selectRolePreset('company_manager')}
-            title="Godown & Stock Manager"
+            title="Stock Inward & Inventory Manager"
           >
             <span className="role-icon">🏢</span>
             <span>Manager</span>
@@ -188,7 +188,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
         {/* Role Helper Banner */}
         {selectedRole === 'company_manager' && (
           <div className="minimal-role-banner manager-banner">
-            <strong>Company Manager:</strong> Direct access to Godown Warehouse Stock &amp; Daily Movement Logs.
+            <strong>Company Manager:</strong> Direct access to Shop Stored Stock, Company Inwards &amp; Daily Movement Logs.
           </div>
         )}
         {selectedRole === 'cashier' && (
