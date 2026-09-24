@@ -72,12 +72,11 @@ export default function BillingCounter() {
   const [bulkDeleteBills, setBulkDeleteBills] = useState(null);
 
 
-  // POS Page Navigation: 'register' | 'my-bills' | 'online-orders' | 'daily-sales' | 'inventory' | 'pre-orders'
+  // POS Page Navigation: 'register' | 'my-bills' | 'daily-sales' | 'inventory' | 'pre-orders'
   const [posTab, setPosTab] = useState(() => {
     const h = window.location.hash.toLowerCase();
-    if (h.includes('preorder') || h.includes('pre-order')) return 'pre-orders';
+    if (h.includes('preorder') || h.includes('pre-order') || h.includes('orders') || h.includes('dispatch') || h.includes('online')) return 'pre-orders';
     if (h.includes('bills')) return 'my-bills';
-    if (h.includes('orders') || h.includes('online')) return 'online-orders';
     if (h.includes('daily') || h.includes('revenue')) return 'daily-sales';
     if (h.includes('stock') || h.includes('inventory')) return 'inventory';
     return 'register';
@@ -484,12 +483,10 @@ export default function BillingCounter() {
       // Only handle billing routes inside BillingCounter
       if (!h.startsWith('#billing') && !h.startsWith('#admin/billing') && !h.startsWith('#admin/pos')) return;
 
-      if (h.includes('preorder') || h.includes('pre-order')) {
+      if (h.includes('preorder') || h.includes('pre-order') || h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
         setPosTab('pre-orders');
       } else if (h.includes('bills')) {
         setPosTab('my-bills');
-      } else if (h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
-        setPosTab('online-orders');
       } else if (h.includes('daily') || h.includes('revenue') || h.includes('sales')) {
         setPosTab('daily-sales');
       } else if (h.includes('inventory') || h.includes('stock') || h.includes('products')) {
@@ -513,7 +510,7 @@ export default function BillingCounter() {
       if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
       else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/shift-bills';
-      else if (hash.startsWith('#billing/orders')) target = '#admin/dispatch';
+      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/inventory')) target = '#admin/inventory';
     }
     if (window.location.hash !== target) {
@@ -542,9 +539,9 @@ export default function BillingCounter() {
       }
     } else if (newTab === 'online-orders') {
       if (isAdminMode) {
-        navigateTo('admin', 'dispatch');
+        navigateTo('admin', 'preorders');
       } else {
-        syncBillingHash('#billing/orders');
+        syncBillingHash('#billing/preorders');
       }
     } else if (newTab === 'inventory') {
       if (isAdminMode) {
@@ -1410,7 +1407,7 @@ export default function BillingCounter() {
       offlineLedger = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
     } catch {}
 
-    const allCandidateBills = [...(bills || []), ...cachedBills, ...ledgerBills, ...offlineLedger];
+    const allCandidateBills = [...(bills || []), ...(preOrders || []), ...cachedBills, ...ledgerBills, ...offlineLedger];
     const candidateMap = new Map();
     allCandidateBills.forEach((b) => {
       const k = b.id || b._id || b.invoiceNumber;
@@ -1621,8 +1618,6 @@ export default function BillingCounter() {
                 ? 'pos-preorders'
                 : posTab === 'my-bills' || posTab === 'daily-sales'
                 ? 'pos-daily-sales'
-                : posTab === 'online-orders'
-                ? 'pos-online'
                 : 'pos-inventory')
         }
         onSelectSection={(sec) => {
@@ -1641,7 +1636,7 @@ export default function BillingCounter() {
             navigateTo('admin', 'shift-bills');
           }
           else if (sec === 'admin-dispatch' || sec === 'admin-orders') {
-            navigateTo('admin', 'dispatch');
+            handleSwitchTab('pre-orders');
           }
           else if (sec === 'admin-inventory') {
             navigateTo('admin', 'inventory');
@@ -1751,16 +1746,16 @@ export default function BillingCounter() {
 
           <button
             type="button"
-            className={`pos-mobile-bell-btn ${pendingOnlineOrders.length > 0 ? 'has-pending' : ''} ${posTab === 'online-orders' ? 'active' : ''}`}
-            onClick={() => handleSwitchTab('online-orders')}
+            className={`pos-mobile-bell-btn ${pendingPreOrdersList.length > 0 ? 'has-pending' : ''} ${posTab === 'pre-orders' ? 'active' : ''}`}
+            onClick={() => handleSwitchTab('pre-orders')}
             aria-label="Pre-Orders"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            {pendingOnlineOrders.length > 0 && (
-              <span className="mobile-bell-badge">{pendingOnlineOrders.length}</span>
+            {pendingPreOrdersList.length > 0 && (
+              <span className="mobile-bell-badge">{pendingPreOrdersList.length}</span>
             )}
           </button>
         </header>
@@ -3539,276 +3534,6 @@ export default function BillingCounter() {
                       ))}
                     </tbody>
                   </table>
-                </div>
-              )}
-            </div>
-          </main>
-        )}
-
-        {/* ===================================================
-            PAGE 3: DEDICATED LIVE ONLINE ORDERS DISPATCH QUEUE
-           =================================================== */}
-        {posTab === 'online-orders' && (
-          <main className="pos-online-page" data-lenis-prevent="true">
-            <div className="online-page-header">
-              <div className="online-header-left">
-                <span className="online-eyebrow">LIVE PRE-ORDER QUEUE</span>
-                <h2 className="online-title">Customer Pre-Orders</h2>
-                <div className="online-meta-badges">
-                  <span className={`meta-badge ${onlineNewCount > 0 ? 'alert' : 'done'}`}>
-                    <span><strong>{onlineNewCount} New</strong> awaiting confirmation</span>
-                  </span>
-                  <span className="meta-badge process">
-                    <span><strong>{onlineAcceptedCount} In Packing</strong></span>
-                  </span>
-                  <span className="meta-badge done">
-                    <span><strong>{onlineDispatchedCount} Dispatched / Ready</strong></span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="online-header-right">
-                <button
-                  type="button"
-                  className="btn-online-refresh"
-                  onClick={handleRefreshOnlineOrders}
-                  disabled={isRefreshingOrders}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="23 4 23 10 17 10"/>
-                    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                  </svg>
-                  <span>{isRefreshingOrders ? 'Syncing...' : 'Refresh Queue'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn-return-pos"
-                  onClick={() => handleSwitchTab('register')}
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="9" cy="21" r="1"/>
-                    <circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                  </svg>
-                  <span>Return to POS</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Pre-Orders KPI Strip */}
-            <div className="online-kpis-grid">
-              <div className="online-kpi-card new">
-                <span className="kpi-label">New Incoming Pre-Orders</span>
-                <div className="kpi-val">{onlineNewCount}</div>
-                <span className="kpi-sub">Accept and print order slip</span>
-              </div>
-              <div className="online-kpi-card packing">
-                <span className="kpi-label">Packing / Ready</span>
-                <div className="kpi-val">{onlineAcceptedCount}</div>
-                <span className="kpi-sub">Ready for handover</span>
-              </div>
-              <div className="online-kpi-card dispatched">
-                <span className="kpi-label">Dispatched / Handed Over</span>
-                <div className="kpi-val">{onlineDispatchedCount}</div>
-                <span className="kpi-sub">Delivered to customer</span>
-              </div>
-              <div className="online-kpi-card revenue">
-                <span className="kpi-label">Pre-Orders Revenue</span>
-                <div className="kpi-val">₹{onlineRevenueTotal.toLocaleString('en-IN')}</div>
-                <span className="kpi-sub">{allOnlineOrders.length} Total Pre-Orders</span>
-              </div>
-            </div>
-
-            {/* Filter Chips & Search Toolbar */}
-            <div className="online-toolbar">
-              <div className="online-filter-chips">
-                {[
-                  { id: 'all', label: `All Orders (${allOnlineOrders.length})` },
-                  { id: 'New', label: `New (${onlineNewCount})` },
-                  { id: 'Accepted', label: `Accepted (${onlineAcceptedCount})` },
-                  { id: 'Dispatched', label: `Dispatched (${onlineDispatchedCount})` },
-                ].map((f) => (
-                  <button
-                    key={f.id}
-                    type="button"
-                    className={`filter-chip ${onlineFilter === f.id ? 'active' : ''}`}
-                    onClick={() => setOnlineFilter(f.id)}
-                  >
-                    {f.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="online-search-box">
-                <input
-                  type="text"
-                  placeholder="Search invoice no, customer name, phone, or city..."
-                  value={onlineSearch}
-                  onChange={(e) => setOnlineSearch(e.target.value)}
-                />
-                {onlineSearch && (
-                  <button type="button" className="clear-btn" onClick={() => setOnlineSearch('')} aria-label="Clear search">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Orders Cards Grid */}
-            <div className="online-cards-container">
-              {filteredOnlineOrders.length === 0 ? (
-                <div className="online-empty-page-state">
-                  <div className="empty-online-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                      <line x1="12" y1="22.08" x2="12" y2="12" />
-                    </svg>
-                  </div>
-                  <h3>No Orders Found in this View</h3>
-                  <p>
-                    {allOnlineOrders.length === 0
-                      ? 'No incoming customer orders right now. New orders will appear here automatically.'
-                      : 'No orders match your selected filter or search query.'}
-                  </p>
-                  <button
-                    type="button"
-                    className="btn-empty-return-pos"
-                    onClick={() => handleSwitchTab('register')}
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '6px' }}>
-                      <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                      <line x1="3" y1="6" x2="21" y2="6" />
-                      <path d="M16 10a4 4 0 0 1-8 0" />
-                    </svg>
-                    Go to POS Billing Counter
-                  </button>
-                </div>
-              ) : (
-                <div className="online-orders-cards-grid">
-                  {filteredOnlineOrders.map((ord) => (
-                    <div key={ord.id} className={`online-full-card status-${ord.status?.toLowerCase()}`}>
-                      <div className="online-card-top">
-                        <div className="online-id-time">
-                          <span className="online-inv-code">{ord.invoiceNumber}</span>
-                          <span className="online-time-stamp" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10" />
-                              <polyline points="12 6 12 12 16 14" />
-                            </svg>
-                            {ord.orderTime || ord.orderDate}
-                          </span>
-                        </div>
-                        <span className={`online-status-pill ${ord.status?.toLowerCase()}`}>
-                          {ord.status}
-                        </span>
-                      </div>
-
-                      <div className="online-cust-info">
-                        <div className="cust-primary">
-                          <strong>{ord.customer?.fullName || 'Pre-Order Customer'}</strong>
-                          <span className="cust-phone" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                            </svg>
-                            +91 {ord.customer?.phone}
-                          </span>
-                        </div>
-                        <div className="cust-address-line" style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
-                          <span>
-                            {ord.shippingAddress?.doorNo ? `${ord.shippingAddress.doorNo}, ` : ''}
-                            {ord.shippingAddress?.street ? `${ord.shippingAddress.street}, ` : ''}
-                            {ord.shippingAddress?.city}, {ord.shippingAddress?.state}
-                            {ord.shippingAddress?.pincode ? ` - ${ord.shippingAddress.pincode}` : ''}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="online-order-items-box">
-                        <span className="items-title">Ordered Items:</span>
-                        <div className="items-tags">
-                          {ord.items?.map((it, idx) => (
-                            <span key={idx} className="online-item-tag">
-                              {it.name} ({it.weight || '1 Cup'}) × <strong>{it.quantity}</strong>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="online-card-bottom">
-                        <div className="price-details">
-                          <span className="total-amount">₹{ord.grandTotal}</span>
-                          <span className="pay-method" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {ord.paymentMethod === 'upi' ? (
-                              <>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                                </svg>
-                                UPI Paid
-                              </>
-                            ) : (
-                              <>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <rect x="2" y="6" width="20" height="12" rx="2" />
-                                  <circle cx="12" cy="12" r="2" />
-                                </svg>
-                                Cash on Delivery
-                              </>
-                            )}
-                          </span>
-                        </div>
-
-                        <div className="online-action-buttons">
-                          {ord.status === 'New' && (
-                            <button
-                              type="button"
-                              className="btn-action-accept"
-                              onClick={() => acceptOrder(ord.id)}
-                            >
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
-                                <polyline points="20 6 9 17 4 12" />
-                              </svg>
-                              Accept Order
-                            </button>
-                          )}
-                          {ord.status === 'Accepted' && (
-                            <button
-                              type="button"
-                              className="btn-action-dispatch"
-                              onClick={() => updateOrderStatus(ord.id, 'Dispatched')}
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
-                                <rect x="1" y="3" width="15" height="13" />
-                                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                                <circle cx="5.5" cy="18.5" r="2.5" />
-                                <circle cx="18.5" cy="18.5" r="2.5" />
-                              </svg>
-                              Mark Dispatched
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="btn-action-print"
-                            onClick={() => openInvoice(ord)}
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
-                              <polyline points="6 9 6 2 18 2 18 9" />
-                              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                              <rect x="6" y="14" width="12" height="8" />
-                            </svg>
-                            Print Bill
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

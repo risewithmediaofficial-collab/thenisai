@@ -14,6 +14,7 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const BillingCounter = lazy(() => import('./components/Billing/BillingCounter'));
 const StaffLoginModal = lazy(() => import('./components/Auth/StaffLoginModal'));
 const CustomerMenuPage = lazy(() => import('./components/Menu/CustomerMenuPage'));
+const CompanyManagerDashboard = lazy(() => import('./components/Admin/CompanyManagerDashboard'));
 
 // Read-only banner shown to demo/viewer accounts
 function SandboxBanner({ onLogout }) {
@@ -123,7 +124,7 @@ function DeferredSection({ children, minHeight = 320 }) {
 
 function AppContent({ isLoaded, handleLoadComplete }) {
   const { currentView, navigateTo } = useCart();
-  const { isAdmin, isCashier, isViewer, isTester, logout } = useAuth();
+  const { isAdmin, isCashier, isCompanyManager, isViewer, isTester, logout } = useAuth();
   const isTestMode = Boolean(isTester || isViewer);
   const [currentHash, setCurrentHash] = useState(() => (typeof window !== 'undefined' ? window.location.hash.toLowerCase() : ''));
 
@@ -152,6 +153,25 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     );
   }
 
+  // Route to Company Manager (Godown Stock Management) UI (Protected - Requires Company Manager, Admin, or Test Mode)
+  if (currentView === 'manager') {
+    if (!isCompanyManager && !isAdmin && !isTestMode) {
+      return (
+        <Suspense fallback={<ModuleLoader label="Loading Login..." />}>
+          <StaffLoginModal initialRole="company_manager" onCancel={() => navigateTo('storefront')} />
+        </Suspense>
+      );
+    }
+    return (
+      <Suspense fallback={<ModuleLoader label="Loading Company Manager Portal..." />}>
+        {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+        <div style={isTestMode ? { marginTop: 36 } : undefined}>
+          <CompanyManagerDashboard />
+        </div>
+      </Suspense>
+    );
+  }
+
   // Route to Admin Dashboard UI (Protected - Requires Admin or Test Mode)
   if (currentView === 'admin') {
     if (!isAdmin && !isTestMode) {
@@ -165,6 +185,8 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     const isAdminBilling =
       currentHash === '#admin/billing' ||
       currentHash.startsWith('#admin/billing') ||
+      currentHash === '#admin/preorders' ||
+      currentHash.startsWith('#admin/preorders') ||
       currentHash === '#admin/pos' ||
       currentHash.startsWith('#admin/pos');
 

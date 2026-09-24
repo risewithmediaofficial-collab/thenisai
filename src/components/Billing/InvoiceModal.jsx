@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -133,11 +133,7 @@ export default function InvoiceModal() {
 
 
   // Determine copies to render: 1 Copy (Customer) or 2 Copies (Customer + Shop)
-  const copiesToRender = useMemo(() => {
-    if (copiesMode === 'both') return ['customer', 'shop'];
-    if (copiesMode === 'shop') return ['shop'];
-    return ['customer'];
-  }, [copiesMode]);
+  const copiesToRender = copiesMode === 'both' ? ['customer', 'shop'] : (copiesMode === 'shop' ? ['shop'] : ['customer']);
 
   // Determine if this is a test invoice or live invoice
   const isTestInvoice = Boolean(activeInvoice.isSandbox || String(invoiceNumber).startsWith('TEST-'));

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo, useCallback } 
 import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../data/sweetsData';
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
+import { getNextPreOrderInvoiceNumber, getNextInvoiceNumber, parseInvoiceNumber } from '../utils/invoiceNumber';
 
 const CartContext = createContext();
 
@@ -79,6 +80,8 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
     englishName: item.englishName,
     tamilName: item.tamilName,
     stockKg: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
+    counterStock: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
+    godownStock: isKg ? 80 : isLitre ? 60 : isCup ? 250 : isPc ? 200 : 120,
     minThreshold: isKg ? 8 : isCup ? 20 : isPc ? 15 : 10,
     batchDate: 'Today 06:30 AM',
     batchNote: item.description || 'Fresh counter stock',
@@ -245,9 +248,13 @@ export function CartProvider({ children }) {
     // 1. Query parameter override
     if (viewParam === 'admin') return 'admin';
     if (viewParam === 'billing') return 'billing';
+    if (viewParam === 'manager' || viewParam === 'godown') return 'manager';
     if (viewParam === 'storefront' || viewParam === 'store') return 'storefront';
 
     // 2. Hash routing has HIGHEST priority in SPA
+    if (hash === '#manager' || hash.startsWith('#manager') || hash === '#godown' || hash.startsWith('#godown')) {
+      return 'manager';
+    }
     if (hash === '#menu' || hash.startsWith('#menu/')) {
       return 'menu';
     }
@@ -261,8 +268,9 @@ export function CartProvider({ children }) {
     }
 
     const adminShortcuts = {
-      '#orders': '#admin/dispatch',
-      '#dispatch': '#admin/dispatch',
+      '#orders': '#admin/preorders',
+      '#dispatch': '#admin/preorders',
+      '#preorders': '#admin/preorders',
       '#inventory': '#admin/inventory',
       '#sales': '#admin/sales',
       '#daily-revenue': '#admin/shift-bills',
@@ -861,48 +869,132 @@ export function CartProvider({ children }) {
   };
 
   // ── Pre-Order CRUD Functions ─────────────────────────────────────────────
-  const addPreOrder = (orderData) => {
+  const fetchPreOrders = async () => {
+    try {
+      const res = await api.get('/api/preorders');
+      if (res && res.success && Array.isArray(res.preOrders)) {
+        setPreOrders(res.preOrders);
+        try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(res.preOrders)); } catch {}
+        return res.preOrders;
+      }
+    } catch (err) {
+      console.warn('[Pre-Order] Failed to fetch preorders:', err);
+    }
+    return preOrders;
+  };
+
+  const addPreOrder = async (orderData) => {
+    // Synchronize sequence number across bills and pre-orders (PRE - ORD AA001...)
+    let invoiceNumber = orderData.invoiceNumber;
+    if (!invoiceNumber || !invoiceNumber.includes('PRE - ORD')) {
+      const combined = [...(bills || []), ...(preOrders || [])];
+      invoiceNumber = getNextPreOrderInvoiceNumber(combined);
+    }
+
+    const cleanPhone = String(orderData.customerPhone || '').replace(/\D/g, '').slice(-10);
     const newOrder = {
       ...orderData,
-      id: `preorder-${Date.now()}`,
+      id: orderData.id || invoiceNumber || `preorder-${Date.now()}`,
+      invoiceNumber,
+      customerPhone: cleanPhone,
       status: 'pending',
       createdAt: Date.now(),
     };
+
     setPreOrders((prev) => {
-      const updated = [newOrder, ...prev];
+      const updated = [newOrder, ...prev.filter((o) => (o.id || o.invoiceNumber) !== (newOrder.id || newOrder.invoiceNumber))];
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    // Auto-save customer login data in localStorage (mobile number as password)
+    if (cleanPhone.length === 10) {
+      try {
+        const custInfo = {
+          phone: cleanPhone,
+          name: orderData.customerName || 'Valued Customer',
+          password: cleanPhone,
+          token: `cust_${cleanPhone}_${Date.now()}`,
+        };
+        localStorage.setItem('thenisai_customer_user', JSON.stringify(custInfo));
+      } catch {}
+    }
+
+    // Persist to backend for synchronized numbering and cashier real-time visibility
+    try {
+      const res = await api.post('/api/preorders', newOrder);
+      if (res && res.success && res.preOrder) {
+        const finalOrder = res.preOrder;
+        setPreOrders((prev) => {
+          const updated = [finalOrder, ...prev.filter((o) => o.id !== newOrder.id && o.invoiceNumber !== finalOrder.invoiceNumber)];
+          try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+          return updated;
+        });
+        return finalOrder;
+      }
+    } catch (err) {
+      console.warn('[Pre-Order] Backend save error, saved locally:', err);
+    }
+
     return newOrder;
   };
 
-  const acceptPreOrder = (orderId) => {
+  const acceptPreOrder = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.map((o) => o.id === orderId ? { ...o, status: 'accepted', acceptedAt: Date.now() } : o);
+      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId) ? { ...o, status: 'accepted', acceptedAt: Date.now() } : o);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      await api.patch(`/api/preorders/${encodeURIComponent(orderId)}/status`, { status: 'accepted' });
+    } catch (err) {
+      console.warn('[Pre-Order] Status sync error:', err);
+    }
   };
 
-  const markPreOrderBilled = (orderId) => {
+  const markPreOrderBilled = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.map((o) => o.id === orderId ? { ...o, status: 'billed', billedAt: Date.now() } : o);
+      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId) ? { ...o, status: 'billed', billedAt: Date.now() } : o);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      await api.patch(`/api/preorders/${encodeURIComponent(orderId)}/status`, { status: 'billed' });
+    } catch (err) {
+      console.warn('[Pre-Order] Status sync error:', err);
+    }
   };
 
-  const deletePreOrder = (orderId) => {
+  const deletePreOrder = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.filter((o) => o.id !== orderId);
+      const updated = prev.filter((o) => o.id !== orderId && o.invoiceNumber !== orderId);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      await api.delete(`/api/preorders/${encodeURIComponent(orderId)}`);
+    } catch (err) {
+      console.warn('[Pre-Order] Delete sync error:', err);
+    }
   };
+
+  useEffect(() => {
+    fetchPreOrders();
+  }, []);
   // ─────────────────────────────────────────────────────────────────────────
 
   const navigateTo = (view, subTab = '') => {
     setCurrentView(view);
+    if (view === 'manager') {
+      if (window.location.hash !== '#manager') {
+        window.location.hash = '#manager';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (view === 'menu') {
       if (window.location.hash !== '#menu') {
         window.location.hash = '#menu';
@@ -912,8 +1004,8 @@ export function CartProvider({ children }) {
     }
     if (view === 'admin') {
       const adminRouteMap = {
-        orders: '#admin/dispatch',
-        dispatch: '#admin/dispatch',
+        orders: '#admin/preorders',
+        dispatch: '#admin/preorders',
         inventory: '#admin/inventory',
         sales: '#admin/sales',
         'daily-revenue': '#admin/shift-bills',
@@ -937,9 +1029,9 @@ export function CartProvider({ children }) {
         inventory: '#billing/inventory',
         'daily-sales': '#billing/daily-sales',
         bills: '#billing/daily-sales',
-        orders: '#billing/orders',
-        online: '#billing/orders',
-        dispatch: '#billing/orders',
+        orders: '#billing/preorders',
+        online: '#billing/preorders',
+        dispatch: '#billing/preorders',
         preorders: '#billing/preorders',
         'pre-orders': '#billing/preorders',
       };
@@ -1275,9 +1367,12 @@ export function CartProvider({ children }) {
           const weightKg = getWeightInKg(item.weight);
           const totalDeduction = weightKg * item.quantity;
           const newStock = Math.max(0, Math.round((updated[targetIdx].stockKg - totalDeduction) * 100) / 100);
+          const currentC = updated[targetIdx].counterStock ?? updated[targetIdx].stockKg ?? 0;
+          const newCounter = Math.max(0, Math.round((currentC - totalDeduction) * 100) / 100);
           updated[targetIdx] = {
             ...updated[targetIdx],
             stockKg: newStock,
+            counterStock: newCounter,
           };
         }
       });
@@ -3114,6 +3209,216 @@ export function CartProvider({ children }) {
     }
   };
 
+  // ── Two-Tier Stock Management (Godown & Counter) ──────────────────────────
+  const STOCK_LOGS_KEY = 'thenisai_stock_transfer_logs';
+
+  const [stockLogs, setStockLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STOCK_LOGS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const fetchStockLogs = async () => {
+    try {
+      const res = await api.get('/api/stock/logs');
+      if (res && res.success && Array.isArray(res.logs)) {
+        setStockLogs(res.logs);
+        try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(res.logs)); } catch {}
+        return res.logs;
+      }
+    } catch {
+      // offline fallback
+    }
+    return stockLogs;
+  };
+
+  const inwardStock = async ({ productId, quantity, unit, target = 'godown', note = '', managerName = 'Company Manager' }) => {
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) return;
+
+    let targetItemName = productId;
+    let targetItemUnit = unit || 'kg';
+
+    setInventory((prev) => {
+      return prev.map((item) => {
+        if (item.id === productId) {
+          targetItemName = item.name || item.englishName || productId;
+          targetItemUnit = unit || item.unit || 'kg';
+          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
+          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
+
+          if (target === 'godown') {
+            const nextG = Math.round((prevGodown + qty) * 100) / 100;
+            return { ...item, godownStock: nextG };
+          } else {
+            const nextC = Math.round((prevCounter + qty) * 100) / 100;
+            return { ...item, counterStock: nextC, stockKg: nextC };
+          }
+        }
+        return item;
+      });
+    });
+
+    const newLog = {
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName: targetItemName,
+      type: 'GODOWN_INWARD',
+      quantity: qty,
+      unit: targetItemUnit,
+      target,
+      performedBy: managerName,
+      note: note || `Inward to ${target}`,
+      date: new Date().toLocaleDateString('en-IN'),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      createdAt: Date.now(),
+    };
+
+    setStockLogs((prev) => {
+      const updated = [newLog, ...prev.slice(0, 99)];
+      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    try {
+      await api.post('/api/stock/inward', {
+        productId,
+        quantity: qty,
+        unit: targetItemUnit,
+        target,
+        note,
+        managerName,
+      });
+    } catch (err) {
+      console.warn('[Stock] Inward offline save:', err);
+    }
+  };
+
+  const dispatchStockToCounter = async ({ productId, quantity, note = '', managerName = 'Company Manager' }) => {
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) return;
+
+    let targetItemName = productId;
+    let targetItemUnit = 'kg';
+
+    setInventory((prev) => {
+      return prev.map((item) => {
+        if (item.id === productId) {
+          targetItemName = item.name || item.englishName || productId;
+          targetItemUnit = item.unit || 'kg';
+          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
+          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
+
+          const nextG = Math.max(0, Math.round((prevGodown - qty) * 100) / 100);
+          const nextC = Math.round((prevCounter + qty) * 100) / 100;
+          return {
+            ...item,
+            godownStock: nextG,
+            counterStock: nextC,
+            stockKg: nextC,
+          };
+        }
+        return item;
+      });
+    });
+
+    const newLog = {
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName: targetItemName,
+      type: 'DISPATCH_TO_COUNTER',
+      quantity: qty,
+      unit: targetItemUnit,
+      performedBy: managerName,
+      note: note || 'Dispatched from Godown to Counter',
+      date: new Date().toLocaleDateString('en-IN'),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      createdAt: Date.now(),
+    };
+
+    setStockLogs((prev) => {
+      const updated = [newLog, ...prev.slice(0, 99)];
+      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    try {
+      await api.post('/api/stock/dispatch', {
+        productId,
+        quantity: qty,
+        note,
+        managerName,
+      });
+    } catch (err) {
+      console.warn('[Stock] Dispatch offline save:', err);
+    }
+  };
+
+  const returnStockToGodown = async ({ productId, quantity, reason = 'return', note = '', performedBy = 'Counter Staff' }) => {
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) return;
+
+    const isWastage = reason === 'wastage' || reason === 'spoilage';
+    let targetItemName = productId;
+    let targetItemUnit = 'kg';
+
+    setInventory((prev) => {
+      return prev.map((item) => {
+        if (item.id === productId) {
+          targetItemName = item.name || item.englishName || productId;
+          targetItemUnit = item.unit || 'kg';
+          const prevGodown = item.godownStock ?? Math.round((item.stockKg || 25) * 1.5);
+          const prevCounter = item.counterStock ?? item.stockKg ?? 0;
+
+          const nextC = Math.max(0, Math.round((prevCounter - qty) * 100) / 100);
+          const nextG = isWastage ? prevGodown : Math.round((prevGodown + qty) * 100) / 100;
+          return {
+            ...item,
+            counterStock: nextC,
+            stockKg: nextC,
+            godownStock: nextG,
+          };
+        }
+        return item;
+      });
+    });
+
+    const newLog = {
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName: targetItemName,
+      type: isWastage ? 'WASTAGE' : 'COUNTER_RETURN',
+      quantity: qty,
+      unit: targetItemUnit,
+      performedBy,
+      note: note || (isWastage ? 'Counter Spoilage / Wastage' : 'Returned from Counter to Godown'),
+      date: new Date().toLocaleDateString('en-IN'),
+      time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      createdAt: Date.now(),
+    };
+
+    setStockLogs((prev) => {
+      const updated = [newLog, ...prev.slice(0, 99)];
+      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+
+    try {
+      await api.post('/api/stock/return', {
+        productId,
+        quantity: qty,
+        reason,
+        note,
+        performedBy,
+      });
+    } catch (err) {
+      console.warn('[Stock] Return offline save:', err);
+    }
+  };
+
   // Cart actions
   const addToCart = (product, weight = '500g', price = null, quantity = 1) => {
     const itemPrice = price ?? (product.prices ? product.prices[weight] : product.price);
@@ -3296,6 +3601,7 @@ export function CartProvider({ children }) {
         acceptPreOrder,
         markPreOrderBilled,
         deletePreOrder,
+        fetchPreOrders,
         inventory,
         pendingOrdersCount,
         taxSettings,
@@ -3312,6 +3618,12 @@ export function CartProvider({ children }) {
         addInventoryStock,
         addNewProductStock,
         adjustInventoryStock,
+        // Godown & Counter Stock Management
+        stockLogs,
+        fetchStockLogs,
+        inwardStock,
+        dispatchStockToCounter,
+        returnStockToGodown,
         addToCart,
         updateQuantity,
         removeFromCart,

@@ -162,7 +162,7 @@ export default function Navbar() {
                   <motion.a
                     key={link.label}
                     href={link.href}
-                    className="mobile-menu__link"
+                    className={`mobile-menu__link ${link.isSpecial ? 'mobile-menu__link--special' : ''}`}
                     onClick={(e) => {
                       e.preventDefault();
                       setMenuOpen(false);
@@ -178,11 +178,11 @@ export default function Navbar() {
                     transition={{ delay: i * 0.06 + 0.08 }}
                   >
                     <span className="mobile-menu__link-num">0{i + 1}</span>
-                    <span className="mobile-menu__link-text" style={link.isSpecial ? { color: '#fbbf24', fontWeight: 700 } : {}}>
+                    <span className="mobile-menu__link-text">
                       {link.label}
                     </span>
                     {link.isSpecial && (
-                      <span style={{ marginLeft: '8px', fontSize: '10px', background: '#d97706', color: '#fff', padding: '2px 7px', borderRadius: '10px', fontWeight: 700 }}>
+                      <span className="mobile-menu__badge">
                         PRE-ORDER
                       </span>
                     )}

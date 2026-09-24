@@ -79,6 +79,8 @@ export default function Footer() {
             <a href="#admin">Admin</a>
             <span>·</span>
             <a href="#billing">POS Billing</a>
+            <span>·</span>
+            <a href="#manager">Company Manager (Stock)</a>
           </div>
         </div>
       </div>

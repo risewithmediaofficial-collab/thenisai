@@ -31,8 +31,8 @@ export function parseInvoiceNumber(str) {
   if (!str) return 0;
   const s = String(str).trim().toUpperCase();
 
-  // 1. Vehicle reg style: AA001 to ZZ999
-  const vMatch = s.match(/^([A-Z]{2})(\d{3})$/);
+  // 1. Vehicle reg style: AA001 to ZZ999, optionally with PRE - ORD prefix
+  const vMatch = s.match(/^(?:PRE\s*-\s*ORD\s*[- ]*\s*)?([A-Z]{2})(\d{3})$/);
   if (vMatch) {
     const l1 = vMatch[1].charCodeAt(0) - 65;
     const l2 = vMatch[1].charCodeAt(1) - 65;
@@ -56,19 +56,29 @@ export function parseInvoiceNumber(str) {
 }
 
 /**
+ * Format a 1-based sequence integer into PRE - ORD AA001 pre-order format
+ * @param {number} n - 1-based sequence number
+ * @returns {string} - Formatted pre-order invoice number (e.g. "PRE - ORD AA001")
+ */
+export function formatPreOrderInvoiceNumber(n) {
+  return `PRE - ORD ${formatInvoiceNumber(n)}`;
+}
+
+/**
  * Calculate the next continuous unique sequential invoice number.
  * Starts at AA001 (or 1) if all bills are deleted.
- * Never repeats or reuses an existing active invoice number.
+ * Never repeats or reuses an existing active invoice number across POS and Pre-Orders.
  *
- * @param {Array} activeBills - List of existing active bill objects
+ * @param {Array} activeBills - List of existing active bill/preorder objects
  * @param {boolean} isSandbox - Whether sandbox/test mode is active
+ * @param {boolean} isPreOrder - Whether to format with "PRE - ORD " prefix
  * @returns {string} - Next unique invoice number
  */
-export function getNextInvoiceNumber(activeBills = [], isSandbox = false) {
+export function getNextInvoiceNumber(activeBills = [], isSandbox = false, isPreOrder = false) {
   const year = new Date().getFullYear();
 
   const existingNums = (activeBills || [])
-    .map((b) => parseInvoiceNumber(b?.invoiceNumber || b?.invoiceNo))
+    .map((b) => parseInvoiceNumber(b?.invoiceNumber || b?.invoiceNo || b?.id))
     .filter((n) => n > 0);
 
   let nextSeq = existingNums.length > 0 ? Math.max(...existingNums) + 1 : 1;
@@ -79,11 +89,30 @@ export function getNextInvoiceNumber(activeBills = [], isSandbox = false) {
       .filter(Boolean)
   );
 
-  let candidate = isSandbox ? `TEST-${year}-${nextSeq}` : formatInvoiceNumber(nextSeq);
-  while (existingInvoices.has(candidate.toUpperCase())) {
+  const makeCandidate = (seq) => {
+    if (isSandbox) return `TEST-${year}-${seq}`;
+    return isPreOrder ? formatPreOrderInvoiceNumber(seq) : formatInvoiceNumber(seq);
+  };
+
+  let candidate = makeCandidate(nextSeq);
+  while (
+    existingInvoices.has(candidate.toUpperCase()) ||
+    existingInvoices.has(formatInvoiceNumber(nextSeq).toUpperCase()) ||
+    existingInvoices.has(formatPreOrderInvoiceNumber(nextSeq).toUpperCase())
+  ) {
     nextSeq += 1;
-    candidate = isSandbox ? `TEST-${year}-${nextSeq}` : formatInvoiceNumber(nextSeq);
+    candidate = makeCandidate(nextSeq);
   }
 
   return candidate;
+}
+
+/**
+ * Calculate the next sequential pre-order invoice number (e.g. "PRE - ORD AA001")
+ * @param {Array} activeBills - List of existing bills and pre-orders
+ * @param {boolean} isSandbox - Whether sandbox mode is active
+ * @returns {string}
+ */
+export function getNextPreOrderInvoiceNumber(activeBills = [], isSandbox = false) {
+  return getNextInvoiceNumber(activeBills, isSandbox, true);
 }

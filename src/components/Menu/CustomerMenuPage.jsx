@@ -1,8 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { ALL_BILLING_ITEMS } from '../../data/sweetsData';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import api from '../../utils/api';
+import { getNextPreOrderInvoiceNumber } from '../../utils/invoiceNumber';
 import './CustomerMenuPage.css';
 
 const KG_WEIGHT_PRESETS = [
@@ -18,7 +20,7 @@ const LITRE_PORTIONS = [
 ];
 
 export default function CustomerMenuPage() {
-  const { allBillingProducts, inventory, addPreOrder, navigateTo, productAvailabilityMap } = useCart();
+  const { allBillingProducts, inventory, addPreOrder, navigateTo, productAvailabilityMap, preOrders = [], bills = [] } = useCart();
 
   // Search & Category
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,10 +33,32 @@ export default function CustomerMenuPage() {
   const [preCart, setPreCart] = useState([]);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
 
+  // Customer Account Session (Mobile number acts as username and password)
+  const [customerUser, setCustomerUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('thenisai_customer_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  // Customer Login Modal State
+  const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Customer Orders Tracking Modal State
+  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [customerPreOrders, setCustomerPreOrders] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
   // Checkout modal
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerName, setCustomerName] = useState(() => customerUser?.name || '');
+  const [customerPhone, setCustomerPhone] = useState(() => customerUser?.phone || '');
   const [orderNote, setOrderNote] = useState('');
   const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,8 +66,16 @@ export default function CustomerMenuPage() {
   // Success state
   const [placedOrder, setPlacedOrder] = useState(null);
 
+  // Synchronize customer name & phone if logged in
+  useEffect(() => {
+    if (customerUser) {
+      if (customerUser.name && !customerName) setCustomerName(customerUser.name);
+      if (customerUser.phone && !customerPhone) setCustomerPhone(customerUser.phone);
+    }
+  }, [customerUser]);
+
   // Strict Background Scroll Lock when any popup, tray drawer, or modal is active
-  useScrollLock(isCheckoutOpen || Boolean(placedOrder) || isMobileCartOpen);
+  useScrollLock(isCheckoutOpen || Boolean(placedOrder) || isMobileCartOpen || isCustomerLoginOpen || isMyOrdersOpen);
 
   // Helper functions matching POS Billing exactly
   const isLitreItem = (item) => {
@@ -307,13 +339,54 @@ export default function CustomerMenuPage() {
     return preCart.reduce((sum, i) => sum + i.quantity, 0);
   }, [preCart]);
 
-  // Handle Submit Pre-Order
-  const handleSubmitPreOrder = (e) => {
+  // Fetch customer orders by phone
+  const fetchCustomerOrders = async (phone) => {
+    const p = phone || customerUser?.phone;
+    if (!p) return;
+    const cleanPhone = String(p).replace(/\D/g, '').slice(-10);
+    setIsLoadingOrders(true);
+    try {
+      const res = await api.get(`/api/preorders/customer/${cleanPhone}`);
+      if (res && res.success && Array.isArray(res.preOrders)) {
+        setCustomerPreOrders(res.preOrders);
+      } else {
+        const local = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone);
+        setCustomerPreOrders(local);
+      }
+    } catch {
+      const local = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone);
+      setCustomerPreOrders(local);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  // Live auto-polling when My Orders modal is open so customer sees live status updates (e.g. Accepted)
+  useEffect(() => {
+    if (!isMyOrdersOpen || !customerUser?.phone) return;
+    fetchCustomerOrders(customerUser.phone);
+    const interval = setInterval(() => {
+      fetchCustomerOrders(customerUser.phone);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [isMyOrdersOpen, customerUser]);
+
+  // Count active preorders for logged in customer
+  const customerOrdersCount = useMemo(() => {
+    if (!customerUser?.phone) return 0;
+    const cleanPhone = String(customerUser.phone).replace(/\D/g, '').slice(-10);
+    const countServer = (customerPreOrders || []).length;
+    const countLocal = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone).length;
+    return Math.max(countServer, countLocal);
+  }, [customerUser, customerPreOrders, preOrders]);
+
+  // Handle Submit Pre-Order (starts AA001 with PRE - ORD prefix, mobile as password)
+  const handleSubmitPreOrder = async (e) => {
     e.preventDefault();
     setFormError('');
 
     const trimmedName = customerName.trim();
-    const cleanPhone = customerPhone.replace(/\D/g, '');
+    const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
 
     if (!trimmedName || trimmedName.length < 2) {
       setFormError('Please enter your full name.');
@@ -333,7 +406,12 @@ export default function CustomerMenuPage() {
     setIsSubmitting(true);
 
     try {
+      // Calculate next sequential invoice number synchronized with POS billing (PRE - ORD AA001...)
+      const combined = [...(bills || []), ...(preOrders || [])];
+      const nextPreOrderNumber = getNextPreOrderInvoiceNumber(combined);
+
       const orderPayload = {
+        invoiceNumber: nextPreOrderNumber,
         customerName: trimmedName,
         customerPhone: cleanPhone,
         items: preCart.map((item) => ({
@@ -352,18 +430,87 @@ export default function CustomerMenuPage() {
         totalItems: totalItemCount,
       };
 
-      const created = addPreOrder(orderPayload);
+      const created = await addPreOrder(orderPayload);
+
+      // Auto-assign mobile number itself as password for logging in!
+      const userSession = {
+        phone: cleanPhone,
+        name: trimmedName,
+        password: cleanPhone,
+        token: `cust_${cleanPhone}_${Date.now()}`,
+      };
+      setCustomerUser(userSession);
+      try {
+        localStorage.setItem('thenisai_customer_user', JSON.stringify(userSession));
+      } catch {}
+
       setPlacedOrder(created);
       setPreCart([]);
       setIsCheckoutOpen(false);
-      setCustomerName('');
-      setCustomerPhone('');
       setOrderNote('');
     } catch {
       setFormError('Could not save your pre-order. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Customer Login Handler
+  const handleCustomerLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    const cleanPhone = loginPhone.replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      setLoginError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+
+    setIsLoggingIn(true);
+    try {
+      const res = await api.post('/api/customer/login', {
+        phone: cleanPhone,
+        password: loginPassword.trim() || cleanPhone,
+      });
+
+      if (res && res.success && res.customer) {
+        const userObj = {
+          phone: res.customer.phone || cleanPhone,
+          name: res.customer.name || `Customer ${cleanPhone.slice(-4)}`,
+          password: cleanPhone,
+          token: res.token,
+        };
+        setCustomerUser(userObj);
+        try { localStorage.setItem('thenisai_customer_user', JSON.stringify(userObj)); } catch {}
+        if (Array.isArray(res.preOrders)) {
+          setCustomerPreOrders(res.preOrders);
+        }
+        setIsCustomerLoginOpen(false);
+        setIsMyOrdersOpen(true);
+      } else {
+        setLoginError(res?.message || 'Login failed. Please check your mobile number.');
+      }
+    } catch {
+      // Offline fallback
+      const matched = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone);
+      const userObj = {
+        phone: cleanPhone,
+        name: matched[0]?.customerName || `Customer ${cleanPhone.slice(-4)}`,
+        password: cleanPhone,
+      };
+      setCustomerUser(userObj);
+      try { localStorage.setItem('thenisai_customer_user', JSON.stringify(userObj)); } catch {}
+      setCustomerPreOrders(matched);
+      setIsCustomerLoginOpen(false);
+      setIsMyOrdersOpen(true);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleCustomerLogout = () => {
+    setCustomerUser(null);
+    try { localStorage.removeItem('thenisai_customer_user'); } catch {}
+    setIsMyOrdersOpen(false);
   };
 
   const activeCategoryObj = categories.find((c) => c.id === selectedCategory) || categories[0];
@@ -393,6 +540,51 @@ export default function CustomerMenuPage() {
 
             {/* Action buttons */}
             <div className="menu-actions-wrap">
+              {/* Customer Account & Orders */}
+              {customerUser ? (
+                <div className="menu-auth-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      fetchCustomerOrders(customerUser.phone);
+                      setIsMyOrdersOpen(true);
+                    }}
+                    className="menu-auth-orders-btn"
+                    title="Track Your Pre-Orders"
+                  >
+                    <span>📋 My Orders</span>
+                    {customerOrdersCount > 0 && (
+                      <span className="menu-auth-count-badge">{customerOrdersCount}</span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCustomerLogout}
+                    className="menu-auth-logout-btn"
+                    title="Sign Out"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerLoginOpen(true)}
+                  className="menu-auth-login-btn"
+                  title="Log In using your mobile number"
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span>My Orders</span>
+                </button>
+              )}
+
               {/* Back to Storefront */}
               <button
                 type="button"
@@ -652,7 +844,7 @@ export default function CustomerMenuPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div className="menu-list-container">
                 {filteredItems.map((item) => {
                   const availablePortions = getAvailablePortions(item);
                   const selectedPortion = getSelectedPortion(item);
@@ -660,43 +852,32 @@ export default function CustomerMenuPage() {
                   const unitDisplay = getItemUnitDisplay(item);
 
                   return (
-                    <div key={item.id} className="clean-menu-card">
+                    <div key={item.id} className="menu-list-row">
                       {/* Left: Item Information (Text Only) */}
-                      <div className="clean-menu-card-info">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <h3 className="clean-menu-card-title">
+                      <div className="menu-list-info">
+                        <div className="menu-list-title-wrap">
+                          <h3 className="menu-list-title">
                             {item.name || item.englishName}
                           </h3>
                           {item.tamilName && !item.name?.includes('—') && (
-                            <span style={{ fontSize: '13px', color: '#b45309', fontWeight: 600 }}>
+                            <span className="menu-list-tamil">
                               ({item.tamilName})
                             </span>
                           )}
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px', flexWrap: 'wrap' }}>
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              background: '#f1f5f9',
-                              color: '#475569',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontWeight: 600,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.04em',
-                            }}
-                          >
+                        <div className="menu-list-meta-row">
+                          <span className="menu-list-cat-badge">
                             {item.category || 'Item'}
                           </span>
-                          <span style={{ fontSize: '12px', color: '#64748b' }}>
+                          <span className="menu-list-rate">
                             Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {unitDisplay}
                           </span>
                         </div>
                       </div>
 
-                      {/* Right: Portion / Weight selector & Add button */}
-                      <div className="clean-menu-card-controls">
+                      {/* Right: Portion / Weight selector & Add button placed on right side */}
+                      <div className="menu-list-action">
                         {/* Portions if weight or litre item */}
                         {availablePortions ? (
                           <div className="portion-selector-wrap">
@@ -715,22 +896,25 @@ export default function CustomerMenuPage() {
                             })}
                           </div>
                         ) : (
-                          <div style={{ fontSize: '12px', color: '#475569', background: '#f1f5f9', padding: '5px 11px', borderRadius: '6px', fontWeight: 600 }}>
+                          <div className="menu-list-unit-pill">
                             {unitDisplay}
                           </div>
                         )}
 
                         {/* Price Display */}
-                        <div className="price-display-wrap">
-                          <div className="price-val">₹{currentPrice}</div>
-                          <div className="price-portion-label">for {selectedPortion}</div>
+                        <div className="menu-list-price-wrap">
+                          <div className="menu-list-price">₹{currentPrice}</div>
+                          {availablePortions && (
+                            <div className="menu-list-price-label">{selectedPortion}</div>
+                          )}
                         </div>
 
-                        {/* Add to Tray Button */}
+                        {/* Add to Tray Button - ALWAYS ON RIGHT SIDE */}
                         <button
                           type="button"
                           onClick={() => handleAddToCart(item)}
                           className="btn-add-tray"
+                          title={`Add ${item.name || item.englishName} to pre-order tray`}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -1101,6 +1285,25 @@ export default function CustomerMenuPage() {
                     onFocus={(e) => (e.target.style.borderColor = '#d97706')}
                     onBlur={(e) => (e.target.style.borderColor = '#cbd5e1')}
                   />
+                  <div
+                    style={{
+                      background: '#fffbeb',
+                      border: '1px solid #fde68a',
+                      borderRadius: '8px',
+                      padding: '7px 10px',
+                      marginTop: '6px',
+                      fontSize: '11.5px',
+                      color: '#92400e',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span>🔑</span>
+                    <span>
+                      <strong>Account Access:</strong> Your 10-digit mobile number will be your login ID and password. You can log in anytime to view your orders and check live status!
+                    </span>
+                  </div>
                 </div>
 
                 {/* Optional Note */}
@@ -1266,6 +1469,19 @@ export default function CustomerMenuPage() {
                     {placedOrder.id}
                   </span>
                 </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Bill Number:</span>
+                  <span className="bill-number-badge">
+                    🏷️ {placedOrder.invoiceNumber || placedOrder.id}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', color: '#64748b' }}>Order Status:</span>
+                  <span className="cust-status-badge pending">
+                    <span className="pulsing-dot pending" />
+                    Pending Biller Action
+                  </span>
+                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ fontSize: '12px', color: '#64748b' }}>Customer Name:</span>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
@@ -1283,6 +1499,28 @@ export default function CustomerMenuPage() {
                   <span style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a' }}>
                     ₹{placedOrder.grandTotal}
                   </span>
+                </div>
+              </div>
+
+              {/* Account Credentials Reminder */}
+              <div
+                style={{
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: '10px',
+                  padding: '10px 14px',
+                  marginBottom: '18px',
+                  fontSize: '12px',
+                  color: '#065f46',
+                  textAlign: 'left',
+                  lineHeight: 1.4,
+                }}
+              >
+                <div style={{ fontWeight: 700, marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <span>🔑</span> Customer Account Activated
+                </div>
+                <div>
+                  Your mobile number <strong>{placedOrder.customerPhone}</strong> is assigned as your password. You can track this order anytime and see when the counter staff accepts it!
                 </div>
               </div>
 
@@ -1307,12 +1545,13 @@ export default function CustomerMenuPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    const phone = placedOrder.customerPhone;
                     setPlacedOrder(null);
-                    if (window.location.hash) window.location.hash = '';
-                    navigateTo('storefront');
+                    fetchCustomerOrders(phone);
+                    setIsMyOrdersOpen(true);
                   }}
                   style={{
-                    flex: 1,
+                    flex: 1.5,
                     background: 'linear-gradient(135deg, #d97706, #b45309)',
                     border: 'none',
                     color: '#ffffff',
@@ -1321,15 +1560,486 @@ export default function CustomerMenuPage() {
                     fontSize: '13px',
                     fontWeight: 700,
                     cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
                   }}
                 >
-                  Back to Store
+                  Track Order Status &rarr;
                 </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── Customer Login Modal ─────────────────────────────────────────── */}
+      <AnimatePresence>
+        {isCustomerLoginOpen && (
+          <div
+            className="preorder-modal-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 120,
+              background: 'rgba(15, 23, 42, 0.6)',
+              backdropFilter: 'blur(5px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+          >
+            <motion.div
+              className="preorder-modal-card"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '420px',
+                padding: '24px',
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.15)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
+                    Customer Login
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>
+                    Track your pre-orders and live acceptance status
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerLoginOpen(false)}
+                  style={{
+                    background: '#f1f5f9',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    color: '#64748b',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {loginError && (
+                <div
+                  style={{
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#b91c1c',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    marginBottom: '14px',
+                  }}
+                >
+                  {loginError}
+                </div>
+              )}
+
+              <form onSubmit={handleCustomerLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    Mobile Number <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    maxLength={10}
+                    placeholder="Enter your 10-digit mobile number"
+                    value={loginPhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setLoginPhone(val);
+                      if (!loginPassword || loginPassword === loginPhone) {
+                        setLoginPassword(val);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      color: '#0f172a',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    Password (Mobile Number) <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Your 10-digit mobile number is password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    style={{
+                      width: '100%',
+                      background: '#f8fafc',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      padding: '10px 14px',
+                      color: '#0f172a',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      outline: 'none',
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    💡 Tip: For all pre-orders, your mobile number itself is your password.
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomerLoginOpen(false)}
+                    style={{
+                      flex: 1,
+                      background: '#f1f5f9',
+                      border: '1px solid #cbd5e1',
+                      color: '#334155',
+                      padding: '11px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoggingIn}
+                    style={{
+                      flex: 2,
+                      background: 'linear-gradient(135deg, #d97706, #b45309)',
+                      border: 'none',
+                      color: '#ffffff',
+                      padding: '11px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      opacity: isLoggingIn ? 0.7 : 1,
+                      boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
+                    }}
+                  >
+                    {isLoggingIn ? 'Logging in...' : 'Log In & View Orders'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── My Pre-Orders Status Modal ────────────────────────────────────── */}
+      <AnimatePresence>
+        {isMyOrdersOpen && (
+          <div
+            className="preorder-modal-backdrop"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 130,
+              background: 'rgba(15, 23, 42, 0.65)',
+              backdropFilter: 'blur(6px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '16px',
+            }}
+          >
+            <motion.div
+              className="preorder-modal-card"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '16px',
+                width: '100%',
+                maxWidth: '560px',
+                maxHeight: '90vh',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.2)',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Modal Header */}
+              <div
+                style={{
+                  padding: '20px 22px 16px',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  background: '#fafbfc',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
+                      My Pre-Orders
+                    </h3>
+                    <span
+                      style={{
+                        background: '#e0f2fe',
+                        color: '#0369a1',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                      }}
+                    >
+                      {customerUser?.phone ? `+91 ${customerUser.phone}` : ''}
+                    </span>
+                  </div>
+                  <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#64748b' }}>
+                    Live order queue &bull; Track acceptance and billing status
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => fetchCustomerOrders(customerUser?.phone)}
+                    disabled={isLoadingOrders}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      padding: '6px 10px',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      color: '#475569',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                    title="Refresh live status"
+                  >
+                    <span>↻</span>
+                    <span>{isLoadingOrders ? 'Checking...' : 'Refresh'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMyOrdersOpen(false)}
+                    style={{
+                      background: '#f1f5f9',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '30px',
+                      height: '30px',
+                      color: '#64748b',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Orders List Container */}
+              <div
+                style={{
+                  padding: '16px 20px',
+                  overflowY: 'auto',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '12px',
+                }}
+              >
+                {customerPreOrders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px 16px', color: '#64748b' }}>
+                    <div style={{ fontSize: '36px', marginBottom: '8px' }}>📋</div>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: '#1e293b' }}>No Pre-Orders Placed Yet</div>
+                    <div style={{ fontSize: '12.5px', marginTop: '4px' }}>
+                      Add sweets &amp; beverages to the tray and confirm pre-order to view them here.
+                    </div>
+                  </div>
+                ) : (
+                  customerPreOrders.map((order) => {
+                    const isPending = order.status === 'pending';
+                    const isAccepted = order.status === 'accepted';
+                    const isBilled = order.status === 'billed';
+                    const formattedDate = order.createdAt
+                      ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+                      : 'Recently';
+
+                    return (
+                      <div
+                        key={order.id || order.invoiceNumber}
+                        style={{
+                          background: '#ffffff',
+                          border: isPending ? '1.5px solid #fde68a' : (isAccepted ? '1.5px solid #bae6fd' : '1px solid #e2e8f0'),
+                          borderRadius: '12px',
+                          padding: '14px 16px',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        }}
+                      >
+                        {/* Order Card Top: Bill No & Status */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                          <div>
+                            <span className="bill-number-badge">
+                              🏷️ {order.invoiceNumber || order.id}
+                            </span>
+                            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                              Placed: {formattedDate}
+                            </div>
+                          </div>
+
+                          <div>
+                            {isPending && (
+                              <span className="cust-status-badge pending">
+                                <span className="pulsing-dot pending" />
+                                ⏳ Pending Acceptance
+                              </span>
+                            )}
+                            {isAccepted && (
+                              <span className="cust-status-badge accepted">
+                                <span className="pulsing-dot accepted" />
+                                🔵 Accepted &amp; Preparing
+                              </span>
+                            )}
+                            {isBilled && (
+                              <span className="cust-status-badge billed">
+                                ✓ Ready for Pickup
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Description Callout */}
+                        <div
+                          style={{
+                            background: isPending ? '#fffbeb' : (isAccepted ? '#f0f9ff' : '#f0fdf4'),
+                            border: `1px solid ${isPending ? '#fde68a' : (isAccepted ? '#bae6fd' : '#bbf7d0')}`,
+                            borderRadius: '8px',
+                            padding: '8px 12px',
+                            fontSize: '12px',
+                            color: isPending ? '#92400e' : (isAccepted ? '#0369a1' : '#15803d'),
+                            marginBottom: '10px',
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {isPending && (
+                            <span>
+                              ⏳ <strong>Order Pending:</strong> Your pre-order is in the counter queue. Staff will accept it shortly.
+                            </span>
+                          )}
+                          {isAccepted && (
+                            <span>
+                              ✓ <strong>Accepted by Counter:</strong> Your pre-order has been accepted and is being packed.
+                            </span>
+                          )}
+                          {isBilled && (
+                            <span>
+                              🎉 <strong>Billed &amp; Ready:</strong> Your pre-order is billed! Pay and pick up at the billing counter.
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Items list */}
+                        <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '8px 12px', fontSize: '12px' }}>
+                          {(order.items || []).map((it, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                padding: '4px 0',
+                                borderBottom: idx < (order.items || []).length - 1 ? '1px dashed #e2e8f0' : 'none',
+                              }}
+                            >
+                              <span style={{ color: '#1e293b', fontWeight: 600 }}>
+                                {it.name} &times; {it.quantity} {it.portion ? `(${it.portion})` : ''}
+                              </span>
+                              <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                                ₹{it.subtotal || (it.price * (it.quantity || 1))}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Total Amount */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f1f5f9' }}>
+                          <span style={{ fontSize: '12px', color: '#64748b' }}>Estimated Total:</span>
+                          <span style={{ fontSize: '16px', fontWeight: 800, color: '#0f172a' }}>
+                            ₹{order.grandTotal}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Modal Footer */}
+              <div
+                style={{
+                  padding: '12px 20px',
+                  borderTop: '1px solid #f1f5f9',
+                  background: '#fafbfc',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span style={{ fontSize: '11px', color: '#64748b' }}>
+                  Live auto-refresh enabled
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsMyOrdersOpen(false)}
+                  style={{
+                    background: 'linear-gradient(135deg, #d97706, #b45309)',
+                    border: 'none',
+                    color: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

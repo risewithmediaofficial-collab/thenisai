@@ -360,44 +360,100 @@
   margin: 0;
 }
 
-/* ── Clean Menu Item Cards ───────────────────────────────────────────────── */
+/* ── Modern Menu List Rows (List Layout with Button on Right Side) ────────── */
+.menu-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.menu-list-row,
 .clean-menu-card {
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 14px;
+  border-radius: 10px;
+  padding: 11px 16px;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
 }
 
+.menu-list-row:hover,
 .clean-menu-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  background-color: #fafbfc;
 }
 
+.menu-list-info,
 .clean-menu-card-info {
-  flex: 1 1 220px;
-  min-width: 0;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
+.menu-list-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.menu-list-title,
 .clean-menu-card-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.3;
 }
 
-.clean-menu-card-controls {
+.menu-list-tamil {
+  font-size: 12.5px;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.menu-list-meta-row {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.menu-list-cat-badge {
+  font-size: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid #e2e8f0;
+}
+
+.menu-list-rate {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.menu-list-action,
+.clean-menu-card-controls {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px;
+  flex-shrink: 0 !important;
 }
 
 .portion-selector-wrap {
@@ -411,7 +467,7 @@
 
 .portion-btn {
   border: none;
-  padding: 5px 8px;
+  padding: 4px 7px;
   border-radius: 5px;
   font-size: 11px;
   font-weight: 500;
@@ -427,42 +483,135 @@
   font-weight: 700;
 }
 
+.menu-list-unit-pill {
+  font-size: 11.5px;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.menu-list-price-wrap,
 .price-display-wrap {
   text-align: right;
-  min-width: 65px;
+  min-width: 50px;
 }
 
+.menu-list-price,
 .price-val {
-  font-size: 17px;
+  font-size: 15.5px;
   font-weight: 800;
   color: #0f172a;
+  line-height: 1.2;
 }
 
+.menu-list-price-label,
 .price-portion-label {
-  font-size: 11px;
+  font-size: 10px;
   color: #64748b;
 }
 
 .btn-add-tray {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  background: linear-gradient(135deg, #d97706, #b45309);
-  border: none;
-  color: #ffffff;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12.5px;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
-  transition: transform 0.1s, opacity 0.2s;
-  white-space: nowrap;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+  border: none !important;
+  color: #ffffff !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.22) !important;
+  transition: transform 0.1s, opacity 0.2s !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.btn-add-tray:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
 }
 
 .btn-add-tray:active {
-  transform: scale(0.96);
+  transform: scale(0.96) !important;
+}
+
+/* ── Customer Auth Header Buttons ────────────────────────────────────────── */
+.menu-auth-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menu-auth-login-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.menu-auth-login-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.menu-auth-orders-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  padding: 6px 11px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.menu-auth-orders-btn:hover {
+  background: #fde68a;
+}
+
+.menu-auth-count-badge {
+  background: #d97706;
+  color: #ffffff;
+  font-size: 10.5px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+
+.menu-auth-logout-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.menu-auth-logout-btn:hover {
+  color: #ef4444;
 }
 
 /* ── Pre-Order Tray (Desktop) ────────────────────────────────────────────── */
@@ -686,47 +835,73 @@
     border-radius: 12px !important;
   }
 
+  /* Responsive List Row on Mobile — Strictly Horizontal with Add Button on Right */
+  .menu-list-row,
   .clean-menu-card {
-    padding: 11px 12px !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-
-  .clean-menu-card-controls {
-    width: 100% !important;
+    padding: 9px 12px !important;
     display: flex !important;
+    flex-direction: row !important;
     align-items: center !important;
     justify-content: space-between !important;
+    gap: 10px !important;
+    border-radius: 9px !important;
+  }
+
+  .menu-list-info,
+  .clean-menu-card-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .menu-list-title,
+  .clean-menu-card-title {
+    font-size: 13.5px !important;
+  }
+
+  .menu-list-action,
+  .clean-menu-card-controls {
+    width: auto !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
     gap: 8px !important;
-    border-top: 1px solid #f1f5f9 !important;
-    padding-top: 7px !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    flex-shrink: 0 !important;
   }
 
   .portion-selector-wrap {
-    gap: 4px !important;
+    gap: 2px !important;
+    padding: 1.5px !important;
   }
 
   .portion-btn {
-    padding: 4px 7px !important;
-    font-size: 11px !important;
+    padding: 3px 6px !important;
+    font-size: 10px !important;
   }
 
+  .menu-list-price-wrap,
   .price-display-wrap {
     text-align: right !important;
+    min-width: 44px !important;
   }
 
+  .menu-list-price,
   .price-val {
     font-size: 14.5px !important;
   }
 
+  .menu-list-price-label,
   .price-portion-label {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
   }
 
   .btn-add-tray {
+    width: auto !important;
     padding: 6px 12px !important;
     font-size: 12px !important;
+    margin-top: 0 !important;
   }
 
   /* Modals on Mobile */
@@ -751,37 +926,153 @@
   }
 }
 
+@media (max-width: 440px) {
+  .menu-header-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .menu-brand-wrap {
+    flex: 1 1 auto;
+  }
+
+  .menu-actions-wrap {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+  }
+
+  .menu-list-row,
+  .clean-menu-card {
+    padding: 8px 10px !important;
+    gap: 6px !important;
+  }
+
+  .menu-list-title,
+  .clean-menu-card-title {
+    font-size: 13px !important;
+  }
+
+  .menu-list-rate {
+    font-size: 10.5px !important;
+  }
+
+  .menu-list-cat-badge {
+    font-size: 9px !important;
+    padding: 1px 5px !important;
+  }
+
+  .portion-btn {
+    padding: 2.5px 5px !important;
+    font-size: 9.5px !important;
+  }
+
+  .menu-list-price,
+  .price-val {
+    font-size: 13.5px !important;
+  }
+
+  .btn-add-tray {
+    padding: 5px 10px !important;
+    font-size: 11.5px !important;
+  }
+}
+
 @media (max-width: 380px) {
   .menu-title {
-    font-size: 12.5px;
-    max-width: 90px;
+    font-size: 12px;
+    max-width: 85px;
   }
 
   .menu-preorder-badge {
     display: none;
   }
 
+  .menu-list-action,
   .clean-menu-card-controls {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 6px !important;
-  }
-
-  .portion-selector-wrap {
-    order: 1;
-  }
-
-  .price-display-wrap {
-    order: 2;
+    gap: 5px !important;
   }
 
   .btn-add-tray {
-    order: 3;
-    width: 100% !important;
-    justify-content: center !important;
-    padding: 7px !important;
-    margin-top: 3px !important;
+    width: auto !important;
+    padding: 5px 9px !important;
+    font-size: 11px !important;
   }
+}
+
+/* ── Customer Orders Status Modal & Login Modal ──────────────────────────── */
+.cust-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+
+.cust-status-badge.pending {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.cust-status-badge.accepted {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.cust-status-badge.billed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.cust-status-badge.cancelled {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.pulsing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: pulse-dot 1.5s infinite ease-in-out;
+}
+
+.pulsing-dot.pending {
+  background: #d97706;
+}
+
+.pulsing-dot.accepted {
+  background: #0284c7;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.6;
+  }
+}
+
+.bill-number-badge {
+  font-family: 'JetBrains Mono', monospace, monospace;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fbbf24;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #334155;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }

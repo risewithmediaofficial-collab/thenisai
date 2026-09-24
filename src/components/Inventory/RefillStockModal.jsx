@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { getItemStockConfig } from '../../utils/unitConfig';
+
 export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
   const { inventory, addInventoryStock } = useCart();
 
@@ -29,32 +31,28 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
       setSelectedSweetId(initialSweetId);
     }
   }, [initialSweetId, isOpen]);
-  const [refillKg, setRefillKg] = useState('5');
+
+  const currentItem = inventory.find((it) => it.id === selectedSweetId) || inventory[0];
+  const unitConfig = getItemStockConfig(currentItem);
+
+  const [refillQty, setRefillQty] = useState('5');
   const [refillNote, setRefillNote] = useState('Counter tray refill from kitchen');
 
-  const getUnitLabel = (item) => {
-    if (!item) return 'kg';
-    const u = (item.unit || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    const id = (item.id || '').toLowerCase();
-    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) return 'Cups';
-    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) return 'Pcs';
-    if (u.includes('pkt')) return 'pkts';
-    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') return 'bottles';
-    return 'kg';
-  };
+  useEffect(() => {
+    if (unitConfig?.presets?.[1]) {
+      setRefillQty(unitConfig.presets[1]);
+    }
+  }, [selectedSweetId]);
 
   if (!isOpen) return null;
 
-  const currentItem = inventory.find((it) => it.id === selectedSweetId) || inventory[0];
-  const currentKg = currentItem ? currentItem.stockKg : 0;
-  const targetKg = currentKg + (parseFloat(refillKg) || 0);
-  const activeUnitLabel = getUnitLabel(currentItem);
+  const currentStock = currentItem ? (currentItem.counterStock ?? currentItem.stockKg ?? 0) : 0;
+  const targetStock = currentStock + (parseFloat(refillQty) || 0);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!refillKg || parseFloat(refillKg) <= 0) return;
-    addInventoryStock(selectedSweetId, refillKg, refillNote);
+    if (!refillQty || parseFloat(refillQty) <= 0) return;
+    addInventoryStock(selectedSweetId, refillQty, refillNote);
     onClose();
   };
 
@@ -100,17 +98,17 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
               <label>
                 <span>Select Item to Refill</span>
                 <span className="stock-hint">
-                  {currentKg <= (currentItem?.minThreshold || 8) ? (
+                  {currentStock <= (currentItem?.minThreshold || 8) ? (
                     <strong style={{ color: '#DC2626', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                         <line x1="12" y1="9" x2="12" y2="13" />
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
-                      Low ({currentKg} {activeUnitLabel})
+                      Low ({currentStock} {unitConfig.label})
                     </strong>
                   ) : (
-                    <span>Available: {currentKg} {activeUnitLabel}</span>
+                    <span>Available: {currentStock} {unitConfig.label}</span>
                   )}
                 </span>
               </label>
@@ -119,54 +117,58 @@ export default function RefillStockModal({ isOpen, onClose, initialSweetId }) {
                 value={selectedSweetId}
                 onChange={(e) => setSelectedSweetId(e.target.value)}
               >
-                {inventory.map((it) => (
-                  <option key={it.id} value={it.id}>
-                    {it.name} — {it.stockKg} {getUnitLabel(it)} {it.stockKg <= it.minThreshold ? '[LOW STOCK]' : ''}
-                  </option>
-                ))}
+                {inventory.map((it) => {
+                  const cfg = getItemStockConfig(it);
+                  const st = it.counterStock ?? it.stockKg ?? 0;
+                  return (
+                    <option key={it.id} value={it.id}>
+                      {it.name} — {st} {cfg.label} {st <= it.minThreshold ? '[LOW STOCK]' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
 
             <div className="stock-field">
               <label>
-                <span>Refill Amount ({activeUnitLabel})</span>
+                <span>Refill Amount in {unitConfig.label} ({unitConfig.singular})</span>
                 <span className="stock-hint">Select quick preset or enter custom</span>
               </label>
               <input
                 type="number"
-                step="0.5"
-                min="0.5"
+                step={unitConfig.step}
+                min={unitConfig.min}
                 className="stock-input"
-                value={refillKg}
-                onChange={(e) => setRefillKg(e.target.value)}
+                value={refillQty}
+                onChange={(e) => setRefillQty(e.target.value)}
                 onWheel={(e) => e.target.blur()}
                 required
                 autoFocus
               />
               <div className="stock-chips-row">
-                {['2', '5', '8', '10', '15', '20', '25'].map((kg) => (
+                {unitConfig.presets.map((val) => (
                   <button
-                    key={kg}
+                    key={val}
                     type="button"
-                    className={`stock-chip-btn ${refillKg === kg ? 'active' : ''}`}
-                    onClick={() => setRefillKg(kg)}
+                    className={`stock-chip-btn ${refillQty === val ? 'active' : ''}`}
+                    onClick={() => setRefillQty(val)}
                   >
-                    +{kg} kg
+                    +{val} {unitConfig.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {refillKg && (
+            {refillQty && (
               <div className="stock-preview-box" style={{ background: '#ECFDF5', borderColor: '#A7F3D0', color: '#065F46' }}>
                 <span>Tray level after refill:</span>
                 <span className="stock-preview-val" style={{ color: '#047857', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <span>{currentKg} kg</span>
+                  <span>{currentStock} {unitConfig.label}</span>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                   </svg>
-                  <span>{targetKg} kg</span>
+                  <span>{targetStock} {unitConfig.label}</span>
                 </span>
               </div>
             )}

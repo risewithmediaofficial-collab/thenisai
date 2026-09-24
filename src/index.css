@@ -18941,16 +18941,26 @@ select.stock-form__input {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 18px;
-  background: rgba(212, 168, 67, 0.08);
-  border: 1px solid rgba(212, 168, 67, 0.25);
-  border-radius: 8px;
+  padding: 12px 16px;
+  background: rgba(212, 168, 67, 0.06);
+  border: 1px solid rgba(212, 168, 67, 0.22);
+  border-radius: 12px;
   color: var(--cream);
-  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 8px;
   text-align: left;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu__wishlist-btn:hover,
+.mobile-menu__wishlist-btn:active {
+  background: rgba(212, 168, 67, 0.12);
+  border-color: rgba(212, 168, 67, 0.4);
+  color: var(--gold-light);
 }
 
 .mobile-wishlist-count {
@@ -19047,8 +19057,8 @@ select.stock-form__input {
 .mobile-menu__links {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
+  align-items: stretch;
+  gap: 8px;
   width: 100%;
   max-width: 320px;
   margin: auto 0;
@@ -19057,28 +19067,67 @@ select.stock-form__input {
 .mobile-menu__link {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   font-family: var(--font-display);
-  font-size: clamp(20px, 5.5vw, 30px);
+  font-size: clamp(19px, 4.8vw, 24px);
   font-weight: 400;
   color: var(--cream);
   text-decoration: none;
-  transition: all 0.3s ease;
-  padding: 6px 14px;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  white-space: nowrap;
 }
 
 .mobile-menu__link-num {
   font-family: var(--font-ui);
   font-size: 11px;
-  letter-spacing: 0.2em;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   color: var(--gold);
   opacity: 0.75;
+  min-width: 26px;
+  text-align: left;
+  flex-shrink: 0;
+}
+
+.mobile-menu__link-text {
+  flex: 1;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .mobile-menu__link:hover,
 .mobile-menu__link:active {
   color: var(--gold-light);
+  background: rgba(212, 168, 67, 0.08);
+  border-color: rgba(212, 168, 67, 0.2);
   transform: translateX(4px);
+}
+
+.mobile-menu__link--special {
+  color: #F6D075;
+}
+
+.mobile-menu__link--special .mobile-menu__link-text {
+  font-weight: 600;
+  color: #F6D075;
+}
+
+.mobile-menu__badge {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #FFFFFF;
+  padding: 3px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
 }
 
 .mobile-menu__divider {

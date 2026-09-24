@@ -9,6 +9,7 @@ const ADMIN_SESSION_KEY = 'thenisai_admin_session_unlocked';
 const BILLING_SESSION_KEY = 'thenisai_billing_session_unlocked';
 const VIEWER_SESSION_KEY = 'thenisai_viewer_session_unlocked';
 const TESTER_SESSION_KEY = 'thenisai_tester_session_unlocked';
+const COMPANY_MANAGER_SESSION_KEY = 'thenisai_manager_session_unlocked';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -21,12 +22,15 @@ export function AuthProvider({ children }) {
       const parsed = saved ? JSON.parse(saved) : null;
       if (!parsed) return null;
 
-      // Both Admin and Billing counter require active session unlock in the current tab
+      // Admin, Billing counter, and Company Manager require active session unlock in current tab
       if (parsed.role === 'admin') {
         return sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true' ? parsed : null;
       }
       if (parsed.role === 'cashier') {
         return sessionStorage.getItem(BILLING_SESSION_KEY) === 'true' ? parsed : null;
+      }
+      if (parsed.role === 'company_manager' || parsed.role === 'manager') {
+        return sessionStorage.getItem(COMPANY_MANAGER_SESSION_KEY) === 'true' ? parsed : null;
       }
       if (parsed.role === 'tester' || parsed.role === 'viewer') {
         return (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true') ? parsed : null;
@@ -44,6 +48,7 @@ export function AuthProvider({ children }) {
         const parsed = JSON.parse(savedUser);
         if (parsed?.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) !== 'true') return null;
         if (parsed?.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) !== 'true') return null;
+        if ((parsed?.role === 'company_manager' || parsed?.role === 'manager') && sessionStorage.getItem(COMPANY_MANAGER_SESSION_KEY) !== 'true') return null;
         if ((parsed?.role === 'tester' || parsed?.role === 'viewer') && sessionStorage.getItem(TESTER_SESSION_KEY) !== 'true' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') return null;
       }
       return sessionStorage.getItem(AUTH_TOKEN_KEY) || null;
@@ -86,6 +91,13 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      if ((parsedUser.role === 'company_manager' || parsedUser.role === 'manager') && sessionStorage.getItem(COMPANY_MANAGER_SESSION_KEY) !== 'true') {
+        setUser(null);
+        setToken(null);
+        setLoading(false);
+        return;
+      }
+
       if ((parsedUser.role === 'tester' || parsedUser.role === 'viewer') && sessionStorage.getItem(TESTER_SESSION_KEY) !== 'true' && sessionStorage.getItem(VIEWER_SESSION_KEY) !== 'true') {
         setUser(null);
         setToken(null);
@@ -108,6 +120,8 @@ export function AuthProvider({ children }) {
             sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
           } else if (res.user.role === 'cashier') {
             sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
+          } else if (res.user.role === 'company_manager' || res.user.role === 'manager') {
+            sessionStorage.setItem(COMPANY_MANAGER_SESSION_KEY, 'true');
           } else if (res.user.role === 'tester' || res.user.role === 'viewer') {
             sessionStorage.setItem(TESTER_SESSION_KEY, 'true');
           }
@@ -116,6 +130,7 @@ export function AuthProvider({ children }) {
           setUser(null);
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
           sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
           sessionStorage.removeItem(AUTH_TOKEN_KEY);
           sessionStorage.removeItem(AUTH_USER_KEY);
         }
@@ -125,6 +140,7 @@ export function AuthProvider({ children }) {
           setUser(null);
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
           sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
           sessionStorage.removeItem(AUTH_TOKEN_KEY);
           sessionStorage.removeItem(AUTH_USER_KEY);
         } else {
@@ -152,15 +168,23 @@ export function AuthProvider({ children }) {
         if (res.user?.role === 'admin') {
           sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
           sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
           sessionStorage.removeItem(VIEWER_SESSION_KEY);
         } else if (res.user?.role === 'cashier') {
           sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
+          sessionStorage.removeItem(VIEWER_SESSION_KEY);
+        } else if (res.user?.role === 'company_manager' || res.user?.role === 'manager') {
+          sessionStorage.setItem(COMPANY_MANAGER_SESSION_KEY, 'true');
+          sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          sessionStorage.removeItem(BILLING_SESSION_KEY);
           sessionStorage.removeItem(VIEWER_SESSION_KEY);
         } else if (res.user?.role === 'viewer') {
           sessionStorage.setItem(VIEWER_SESSION_KEY, 'true');
           sessionStorage.removeItem(ADMIN_SESSION_KEY);
           sessionStorage.removeItem(BILLING_SESSION_KEY);
+          sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
         }
 
         // Clean out legacy persistent storage
@@ -173,11 +197,11 @@ export function AuthProvider({ children }) {
       // Fallback for sample credentials if backend is unreachable
       const u = String(credentials.username || '').trim().toLowerCase();
       const p = String(credentials.password || '').trim();
-      const requestedRole = credentials.role || (u.includes('admin') ? 'admin' : 'cashier');
+      const requestedRole = credentials.role || (u.includes('admin') ? 'admin' : (u.includes('manager') ? 'company_manager' : 'cashier'));
 
       if ((u === 'admin' || u === 'staff-1') && p === 'admin123') {
         if (requestedRole && requestedRole !== 'admin') {
-          const msg = 'Role mismatch: admin credentials cannot be used as cashier.';
+          const msg = 'Role mismatch: admin credentials cannot be used as cashier or manager.';
           setError(msg);
           return { success: false, error: msg };
         }
@@ -194,6 +218,7 @@ export function AuthProvider({ children }) {
         setUser(fallbackAdmin);
         sessionStorage.setItem(ADMIN_SESSION_KEY, 'true');
         sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
         sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
         sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackAdmin));
         localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -203,7 +228,7 @@ export function AuthProvider({ children }) {
 
       if ((u === 'cashier' || u === 'staff-2') && p === 'cashier123') {
         if (requestedRole && requestedRole !== 'cashier') {
-          const msg = 'Role mismatch: cashier credentials cannot be used as admin.';
+          const msg = 'Role mismatch: cashier credentials cannot be used as admin or manager.';
           setError(msg);
           return { success: false, error: msg };
         }
@@ -220,12 +245,37 @@ export function AuthProvider({ children }) {
         setUser(fallbackCashier);
         sessionStorage.setItem(BILLING_SESSION_KEY, 'true');
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
         sessionStorage.removeItem(VIEWER_SESSION_KEY);
         sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
         sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackCashier));
         localStorage.removeItem(AUTH_TOKEN_KEY);
         localStorage.removeItem(AUTH_USER_KEY);
         return { success: true, user: fallbackCashier };
+      }
+
+      // ── Company Manager / Godown Lead Instant Login ──────────────────────────
+      if ((u === 'manager' || u === 'companymanager' || u === 'godown') && (p === 'manager123' || p === 'manager')) {
+        const fallbackManager = {
+          id: 'staff-manager',
+          username: 'manager',
+          name: 'Company Manager',
+          title: 'Central Godown & Stock Head',
+          role: 'company_manager',
+          counter: 'Central Godown',
+        };
+        const tokenVal = `thenisai_session_staff-manager_${Date.now()}`;
+        setToken(tokenVal);
+        setUser(fallbackManager);
+        sessionStorage.setItem(COMPANY_MANAGER_SESSION_KEY, 'true');
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.removeItem(VIEWER_SESSION_KEY);
+        sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
+        sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(fallbackManager));
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+        return { success: true, user: fallbackManager };
       }
 
       // ── Tester Sandbox login (No data impact) ─────────────────────────────
@@ -245,6 +295,7 @@ export function AuthProvider({ children }) {
         sessionStorage.setItem(TESTER_SESSION_KEY, 'true');
         sessionStorage.removeItem(ADMIN_SESSION_KEY);
         sessionStorage.removeItem(BILLING_SESSION_KEY);
+        sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
         sessionStorage.removeItem(VIEWER_SESSION_KEY);
         sessionStorage.setItem(AUTH_TOKEN_KEY, tokenVal);
         sessionStorage.setItem(AUTH_USER_KEY, JSON.stringify(testerUser));
@@ -270,6 +321,7 @@ export function AuthProvider({ children }) {
       setError(null);
       sessionStorage.removeItem(ADMIN_SESSION_KEY);
       sessionStorage.removeItem(BILLING_SESSION_KEY);
+      sessionStorage.removeItem(COMPANY_MANAGER_SESSION_KEY);
       sessionStorage.removeItem(TESTER_SESSION_KEY);
       sessionStorage.removeItem(VIEWER_SESSION_KEY);
       sessionStorage.removeItem(AUTH_TOKEN_KEY);
@@ -289,6 +341,7 @@ export function AuthProvider({ children }) {
     isAuthenticated: Boolean(user && token),
     isAdmin: Boolean(user && user.role === 'admin' && sessionStorage.getItem(ADMIN_SESSION_KEY) === 'true'),
     isCashier: Boolean(user && user.role === 'cashier' && sessionStorage.getItem(BILLING_SESSION_KEY) === 'true'),
+    isCompanyManager: Boolean(user && (user.role === 'company_manager' || user.role === 'manager') && sessionStorage.getItem(COMPANY_MANAGER_SESSION_KEY) === 'true'),
     isTester: Boolean(user && (user.role === 'tester' || user.role === 'viewer') && (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true')),
     isViewer: Boolean(user && (user.role === 'tester' || user.role === 'viewer') && (sessionStorage.getItem(TESTER_SESSION_KEY) === 'true' || sessionStorage.getItem(VIEWER_SESSION_KEY) === 'true')),
   };

@@ -54,7 +54,7 @@ const staffSchema = new mongoose.Schema({
   password: { type: String, required: true },
   name: { type: String, required: true },
   title: String,
-  role: { type: String, enum: ['admin', 'cashier'], required: true },
+  role: { type: String, enum: ['admin', 'cashier', 'company_manager', 'manager', 'tester'], required: true },
   counter: String,
 });
 
@@ -73,6 +73,8 @@ const inventorySchema = new mongoose.Schema({
   itemNumber: Number,
   skuCode: { type: String, default: '' },
   stockKg: { type: Number, default: 0 },
+  godownStock: { type: Number, default: 0 },
+  counterStock: { type: Number, default: 0 },
   minThreshold: { type: Number, default: 8 },
   isInactive: { type: Boolean, default: false },
   isCustom: { type: Boolean, default: false },
@@ -83,6 +85,22 @@ const inventorySchema = new mongoose.Schema({
   category: { type: String, default: 'Ghee Sweets' },
   hsn: { type: String, default: '2106' },
 });
+
+const stockTransferLogSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  productId: { type: String, required: true },
+  productName: { type: String, required: true },
+  type: { type: String, enum: ['GODOWN_INWARD', 'DISPATCH_TO_COUNTER', 'COUNTER_RETURN', 'WASTAGE'], required: true },
+  quantity: { type: Number, required: true },
+  unit: { type: String, default: 'kg' },
+  godownRemaining: { type: Number, default: 0 },
+  counterRemaining: { type: Number, default: 0 },
+  performedBy: { type: String, default: 'Company Manager' },
+  note: { type: String, default: '' },
+  date: { type: String, default: () => new Date().toLocaleDateString('en-IN') },
+  createdAt: { type: Number, default: () => Date.now() },
+});
+const StockTransferLog = mongoose.model('StockTransferLog', stockTransferLogSchema);
 
 const priceOverrideLogSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
@@ -173,12 +191,28 @@ const billSchema = new mongoose.Schema({
 
 const customerSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
+  password: { type: String }, // Mobile number itself is the password
   name: { type: String, default: 'Valued Customer' },
   email: String,
   wishlist: [{ type: String }],
   token: String,
   createdAt: { type: Number, default: Date.now },
   lastLogin: { type: Number, default: Date.now },
+});
+
+const preOrderSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  invoiceNumber: { type: String, required: true },
+  customerName: { type: String, required: true },
+  customerPhone: { type: String, required: true },
+  items: [mongoose.Schema.Types.Mixed],
+  grandTotal: { type: Number, required: true },
+  note: { type: String, default: '' },
+  totalItems: { type: Number, default: 0 },
+  status: { type: String, enum: ['pending', 'accepted', 'billed', 'cancelled'], default: 'pending' },
+  acceptedAt: Number,
+  billedAt: Number,
+  createdAt: { type: Number, default: Date.now },
 });
 
 const deletedBillSchema = new mongoose.Schema({
@@ -241,6 +275,7 @@ const Inventory = mongoose.model('Inventory', inventorySchema);
 const Otp = mongoose.model('Otp', otpSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Bill = mongoose.model('Bill', billSchema);
+const PreOrder = mongoose.model('PreOrder', preOrderSchema);
 const Customer = mongoose.model('Customer', customerSchema);
 const PriceOverrideLog = mongoose.model('PriceOverrideLog', priceOverrideLogSchema);
 const DeletedBill = mongoose.model('DeletedBill', deletedBillSchema);
@@ -260,10 +295,16 @@ async function seedIfEmpty() {
     await Staff.insertMany([
       { id: 'staff-1', username: 'admin', password: 'admin123', name: 'S. Ramanathan', title: 'Kitchen Operations Head', role: 'admin', counter: 'Operations Central' },
       { id: 'staff-2', username: 'cashier', password: 'cashier123', name: 'M. Kannan', title: 'Counter Cashier', role: 'cashier', counter: 'Counter Desk 01' },
+      { id: 'staff-manager', username: 'manager', password: 'manager123', name: 'Company Manager', title: 'Central Godown & Stock Head', role: 'company_manager', counter: 'Central Godown' },
       { id: 'staff-3', username: 'tester', password: 'test123', name: 'Demo Tester', title: 'Sandbox Testing (No Data Impact)', role: 'tester', counter: 'Sandbox Terminal' },
     ]);
     console.log('[Seed] Staff accounts created');
   } else {
+    await Staff.updateOne(
+      { username: 'manager' },
+      { $setOnInsert: { id: 'staff-manager', username: 'manager', password: 'manager123', name: 'Company Manager', title: 'Central Godown & Stock Head', role: 'company_manager', counter: 'Central Godown' } },
+      { upsert: true }
+    );
     await Staff.updateOne(
       { username: 'tester' },
       { $setOnInsert: { id: 'staff-3', username: 'tester', password: 'test123', name: 'Demo Tester', title: 'Sandbox Testing (No Data Impact)', role: 'tester', counter: 'Sandbox Terminal' } },
@@ -396,6 +437,22 @@ app.post('/api/auth/login', async (req, res) => {
       activeSessions.set(token, userProfile);
       console.log('[Auth] User Demo Tester logged in as TESTER (Sandbox Mode)');
       return res.json({ success: true, message: 'Welcome to Sandbox Testing Mode', token, user: userProfile });
+    }
+
+    // Company Manager Instant Login
+    if ((inputUname === 'manager' || inputUname === 'companymanager' || inputUname === 'godown') && (inputPass === 'manager123' || inputPass === 'manager')) {
+      const token = `thenisai_session_staff-manager_${Date.now()}`;
+      const userProfile = {
+        id: 'staff-manager',
+        username: 'manager',
+        name: 'Company Manager',
+        title: 'Central Godown & Stock Head',
+        role: 'company_manager',
+        counter: 'Central Godown',
+      };
+      activeSessions.set(token, userProfile);
+      console.log('[Auth] User Company Manager logged in as COMPANY_MANAGER');
+      return res.json({ success: true, message: 'Welcome, Company Manager', token, user: userProfile });
     }
 
     matchedStaff = await Staff.findOne({
@@ -1351,10 +1408,14 @@ function formatInvoiceNumber(n) {
   return `${l1}${l2}${String(numInSeries).padStart(3, '0')}`;
 }
 
+function formatPreOrderInvoiceNumber(n) {
+  return `PRE - ORD ${formatInvoiceNumber(n)}`;
+}
+
 function parseInvoiceNumber(str) {
   if (!str) return 0;
   const s = String(str).trim().toUpperCase();
-  const vMatch = s.match(/^([A-Z]{2})(\d{3})$/);
+  const vMatch = s.match(/^(?:PRE\s*-\s*ORD\s*[- ]*\s*)?([A-Z]{2})(\d{3})$/);
   if (vMatch) {
     const l1 = vMatch[1].charCodeAt(0) - 65;
     const l2 = vMatch[1].charCodeAt(1) - 65;
@@ -1368,29 +1429,59 @@ function parseInvoiceNumber(str) {
   return 0;
 }
 
-async function getNextServerInvoiceNumber() {
-  const allBills = await Bill.find({}, 'invoiceNumber').lean();
-  let maxSeq = 0;
-  const taken = new Set();
-  for (const b of allBills) {
-    if (b.invoiceNumber) {
-      taken.add(b.invoiceNumber.toUpperCase());
-      const seq = parseInvoiceNumber(b.invoiceNumber);
-      if (seq > maxSeq) maxSeq = seq;
-    }
-  }
-  let nextSeq = maxSeq + 1;
-  let candidate = formatInvoiceNumber(nextSeq);
-  while (taken.has(candidate)) {
-    nextSeq += 1;
-    candidate = formatInvoiceNumber(nextSeq);
-  }
-  return candidate;
+let serverInvoiceMutex = Promise.resolve();
+
+async function getNextServerInvoiceNumber(isPreOrder = false) {
+  return new Promise((resolve) => {
+    serverInvoiceMutex = serverInvoiceMutex.then(async () => {
+      try {
+        const allBills = await Bill.find({}, 'invoiceNumber').lean();
+        let allPreOrders = [];
+        try {
+          allPreOrders = await PreOrder.find({}, 'invoiceNumber').lean();
+        } catch {}
+
+        const allRecords = [...allBills, ...allPreOrders];
+        let maxSeq = 0;
+        const taken = new Set();
+        for (const b of allRecords) {
+          if (b.invoiceNumber) {
+            taken.add(b.invoiceNumber.trim().toUpperCase());
+            const seq = parseInvoiceNumber(b.invoiceNumber);
+            if (seq > maxSeq) maxSeq = seq;
+          }
+        }
+
+        let nextSeq = maxSeq + 1;
+        let rawCandidate = formatInvoiceNumber(nextSeq);
+        let candidate = isPreOrder ? `PRE - ORD ${rawCandidate}` : rawCandidate;
+
+        while (
+          taken.has(candidate.toUpperCase()) ||
+          taken.has(rawCandidate.toUpperCase()) ||
+          taken.has(`PRE - ORD ${rawCandidate}`.toUpperCase()) ||
+          taken.has(`PRE-ORD ${rawCandidate}`.toUpperCase())
+        ) {
+          nextSeq += 1;
+          rawCandidate = formatInvoiceNumber(nextSeq);
+          candidate = isPreOrder ? `PRE - ORD ${rawCandidate}` : rawCandidate;
+        }
+
+        resolve(candidate);
+      } catch (err) {
+        console.error('[Invoice Gen] Error generating server invoice number:', err);
+        // Fallback
+        const fb = isPreOrder ? 'PRE - ORD AA001' : 'AA001';
+        resolve(fb);
+      }
+    });
+  });
 }
 
 app.get('/api/bills/next-invoice-number', async (req, res) => {
   try {
-    const nextInvoice = await getNextServerInvoiceNumber();
+    const isPreOrder = req.query.isPreOrder === 'true' || req.query.preorder === 'true';
+    const nextInvoice = await getNextServerInvoiceNumber(isPreOrder);
     res.json({ success: true, nextInvoiceNumber: nextInvoice });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -1402,11 +1493,13 @@ app.post('/api/bills', async (req, res) => {
     const now = new Date();
     const billData = req.body;
     let invoiceNumber = billData.invoiceNumber;
-    const existingBillWithNumber = invoiceNumber ? await Bill.findOne({ invoiceNumber }) : null;
+    const existingBillWithNumber = invoiceNumber
+      ? (await Bill.findOne({ invoiceNumber }) || await PreOrder.findOne({ invoiceNumber }))
+      : null;
 
     if (!invoiceNumber || existingBillWithNumber) {
       // Re-assign next available unique invoice number to avoid collisions when two systems bill simultaneously
-      invoiceNumber = await getNextServerInvoiceNumber();
+      invoiceNumber = await getNextServerInvoiceNumber(false);
     }
 
     const finalBill = await Bill.create({
@@ -1469,6 +1562,361 @@ app.get('/api/bills', async (req, res) => {
   } catch (err) {
     console.error('[POS Billing] Error fetching bills:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch bills' });
+  }
+});
+
+// ============================================================
+// PRE-ORDERS API (Synchronized with POS Billing & Customer Login)
+// ============================================================
+
+// Create new Pre-Order with synchronized vehicle registration style number (PRE - ORD AA001)
+app.post('/api/preorders', async (req, res) => {
+  try {
+    const orderData = req.body;
+    let invoiceNumber = orderData.invoiceNumber;
+
+    // Check if invoiceNumber needs sequential generation
+    const isAutoOrMissing = !invoiceNumber ||
+      invoiceNumber.startsWith('preorder-') ||
+      !invoiceNumber.includes('PRE - ORD') && !invoiceNumber.match(/^[A-Z]{2}\d{3}$/);
+
+    if (isAutoOrMissing) {
+      invoiceNumber = await getNextServerInvoiceNumber(true);
+    } else {
+      const exists = (await PreOrder.findOne({ invoiceNumber })) || (await Bill.findOne({ invoiceNumber }));
+      if (exists) {
+        invoiceNumber = await getNextServerInvoiceNumber(true);
+      }
+    }
+
+    const cleanPhone = String(orderData.customerPhone || '').replace(/\D/g, '').slice(-10);
+    const customerName = String(orderData.customerName || 'Valued Customer').trim();
+
+    // Auto-create or update Customer account with mobile number itself as password!
+    let customerUser = null;
+    if (cleanPhone.length === 10) {
+      const token = `cust_${cleanPhone}_${Date.now()}`;
+      customerUser = await Customer.findOneAndUpdate(
+        { phone: cleanPhone },
+        {
+          $set: {
+            name: customerName,
+            password: cleanPhone, // Mobile number is the password
+            lastLogin: Date.now(),
+            token,
+          },
+          $setOnInsert: {
+            phone: cleanPhone,
+            wishlist: [],
+            createdAt: Date.now(),
+          },
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    const preOrder = await PreOrder.create({
+      id: orderData.id || `preorder-${Date.now()}`,
+      invoiceNumber,
+      customerName,
+      customerPhone: cleanPhone,
+      items: orderData.items || [],
+      grandTotal: Number(orderData.grandTotal || 0),
+      note: orderData.note || '',
+      totalItems: Number(orderData.totalItems || 0),
+      status: 'pending',
+      createdAt: Date.now(),
+    });
+
+    console.log(`[Pre-Order] Created: ${invoiceNumber} for ${customerName} (${cleanPhone}) Total: ₹${preOrder.grandTotal}`);
+    res.json({
+      success: true,
+      preOrder,
+      invoiceNumber,
+      customer: customerUser ? {
+        phone: customerUser.phone,
+        name: customerUser.name,
+      } : null,
+    });
+  } catch (err) {
+    console.error('[Pre-Order] Error creating pre-order:', err);
+    res.status(500).json({ success: false, message: 'Failed to create pre-order: ' + err.message });
+  }
+});
+
+// Get all Pre-Orders (for POS Billing Counter queue)
+app.get('/api/preorders', async (req, res) => {
+  try {
+    const { phone, status } = req.query;
+    const filter = {};
+    if (phone) {
+      filter.customerPhone = String(phone).replace(/\D/g, '').slice(-10);
+    }
+    if (status && status !== 'all') {
+      filter.status = status;
+    }
+    const preOrders = await PreOrder.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, preOrders });
+  } catch (err) {
+    console.error('[Pre-Order] Error fetching preorders:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Get Pre-Orders for specific customer phone (order tracking)
+app.get('/api/preorders/customer/:phone', async (req, res) => {
+  try {
+    const cleanPhone = String(req.params.phone).replace(/\D/g, '').slice(-10);
+    const preOrders = await PreOrder.find({ customerPhone: cleanPhone }).sort({ createdAt: -1 });
+    res.json({ success: true, preOrders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Update Pre-Order status (Accept or Mark as Billed)
+app.patch('/api/preorders/:id/status', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const update = { status };
+    if (status === 'accepted') update.acceptedAt = Date.now();
+    if (status === 'billed') update.billedAt = Date.now();
+
+    const queryOr = [{ id }, { invoiceNumber: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      queryOr.push({ _id: id });
+    }
+
+    const order = await PreOrder.findOneAndUpdate(
+      { $or: queryOr },
+      { $set: update },
+      { new: true }
+    );
+    if (!order) return res.status(404).json({ success: false, message: 'Pre-order not found' });
+    console.log(`[Pre-Order] Status updated: ${order.invoiceNumber} -> ${status}`);
+    res.json({ success: true, preOrder: order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Delete Pre-Order
+app.delete('/api/preorders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const queryOr = [{ id }, { invoiceNumber: id }];
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      queryOr.push({ _id: id });
+    }
+    await PreOrder.findOneAndDelete({ $or: queryOr });
+    res.json({ success: true, message: 'Pre-order removed' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// Customer Direct Login: Mobile number as username and password
+app.post('/api/customer/login', async (req, res) => {
+  try {
+    const { phone, password, name } = req.body;
+    if (!phone) return res.status(400).json({ success: false, message: 'Mobile number is required.' });
+
+    const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid 10-digit mobile number.' });
+    }
+
+    const enteredPass = String(password || '').trim();
+    let customer = await Customer.findOne({ phone: cleanPhone });
+    const token = `cust_${cleanPhone}_${Date.now()}`;
+
+    if (!customer) {
+      // Auto-register customer with mobile number as password
+      customer = await Customer.create({
+        phone: cleanPhone,
+        password: cleanPhone,
+        name: name?.trim() || `Customer ${cleanPhone.slice(-4)}`,
+        wishlist: [],
+        token,
+        lastLogin: Date.now(),
+      });
+      console.log(`[Customer Login] 👤 New account created for +91 ${cleanPhone}`);
+    } else {
+      // Check password: user phone itself or stored password
+      const validPass = customer.password || cleanPhone;
+      if (enteredPass && enteredPass !== cleanPhone && enteredPass !== validPass) {
+        return res.status(400).json({ success: false, message: 'Incorrect password. Your 10-digit mobile number is your password.' });
+      }
+      customer.password = cleanPhone;
+      customer.token = token;
+      customer.lastLogin = Date.now();
+      if (name?.trim()) customer.name = name.trim();
+      await customer.save();
+    }
+
+    const preOrders = await PreOrder.find({ customerPhone: cleanPhone }).sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      customer: {
+        phone: customer.phone,
+        name: customer.name,
+        email: customer.email,
+        wishlist: customer.wishlist || [],
+      },
+      token,
+      preOrders,
+    });
+  } catch (err) {
+    console.error('[Customer Login] Error:', err);
+    res.status(500).json({ success: false, message: 'Login failed: ' + err.message });
+  }
+});
+
+// ============================================================
+// STOCK MANAGEMENT & GODOWN DISPATCH API
+// ============================================================
+
+// Get stock transfer and inward logs
+app.get('/api/stock/logs', async (req, res) => {
+  try {
+    const logs = await StockTransferLog.find().sort({ createdAt: -1 }).limit(100);
+    res.json({ success: true, logs });
+  } catch (err) {
+    console.error('[Stock] Error fetching logs:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch stock logs' });
+  }
+});
+
+// Record inward to Godown (or directly to Counter)
+app.post('/api/stock/inward', async (req, res) => {
+  try {
+    const { productId, quantity, unit, target = 'godown', note = '', managerName = 'Company Manager' } = req.body;
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid productId and positive quantity required' });
+    }
+
+    const item = await Inventory.findOne({ id: productId });
+    const productName = item?.name || productId;
+
+    let update = {};
+    if (target === 'godown') {
+      update = { $inc: { godownStock: qty } };
+    } else {
+      update = { $inc: { counterStock: qty, stockKg: qty } };
+    }
+
+    const updatedItem = await Inventory.findOneAndUpdate({ id: productId }, update, { new: true, upsert: true });
+
+    const log = await StockTransferLog.create({
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName,
+      type: 'GODOWN_INWARD',
+      quantity: qty,
+      unit: unit || updatedItem.unit || 'kg',
+      godownRemaining: updatedItem.godownStock || 0,
+      counterRemaining: updatedItem.counterStock || updatedItem.stockKg || 0,
+      performedBy: managerName,
+      note: note || `Inward to ${target}`,
+      date: new Date().toLocaleDateString('en-IN'),
+      createdAt: Date.now(),
+    });
+
+    res.json({ success: true, item: updatedItem, log });
+  } catch (err) {
+    console.error('[Stock] Inward error:', err);
+    res.status(500).json({ success: false, message: 'Stock inward failed: ' + err.message });
+  }
+});
+
+// Dispatch from Godown to Counter
+app.post('/api/stock/dispatch', async (req, res) => {
+  try {
+    const { productId, quantity, note = '', managerName = 'Company Manager' } = req.body;
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid productId and positive quantity required' });
+    }
+
+    const item = await Inventory.findOne({ id: productId });
+    const productName = item?.name || productId;
+
+    const updatedItem = await Inventory.findOneAndUpdate(
+      { id: productId },
+      {
+        $inc: {
+          godownStock: -qty,
+          counterStock: qty,
+          stockKg: qty,
+        },
+      },
+      { new: true }
+    );
+
+    const log = await StockTransferLog.create({
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName,
+      type: 'DISPATCH_TO_COUNTER',
+      quantity: qty,
+      unit: updatedItem?.unit || 'kg',
+      godownRemaining: updatedItem?.godownStock || 0,
+      counterRemaining: updatedItem?.counterStock || updatedItem?.stockKg || 0,
+      performedBy: managerName,
+      note: note || 'Dispatched from Godown to Counter',
+      date: new Date().toLocaleDateString('en-IN'),
+      createdAt: Date.now(),
+    });
+
+    res.json({ success: true, item: updatedItem, log });
+  } catch (err) {
+    console.error('[Stock] Dispatch error:', err);
+    res.status(500).json({ success: false, message: 'Stock dispatch failed: ' + err.message });
+  }
+});
+
+// Return from Counter to Godown (or Wastage)
+app.post('/api/stock/return', async (req, res) => {
+  try {
+    const { productId, quantity, reason = 'return', note = '', performedBy = 'Counter Staff' } = req.body;
+    const qty = parseFloat(quantity);
+    if (!productId || isNaN(qty) || qty <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid productId and positive quantity required' });
+    }
+
+    const item = await Inventory.findOne({ id: productId });
+    const productName = item?.name || productId;
+
+    const isWastage = reason === 'wastage' || reason === 'spoilage';
+    const update = isWastage
+      ? { $inc: { counterStock: -qty, stockKg: -qty } }
+      : { $inc: { counterStock: -qty, stockKg: -qty, godownStock: qty } };
+
+    const updatedItem = await Inventory.findOneAndUpdate({ id: productId }, update, { new: true });
+
+    const log = await StockTransferLog.create({
+      id: `stock-log-${Date.now()}`,
+      productId,
+      productName,
+      type: isWastage ? 'WASTAGE' : 'COUNTER_RETURN',
+      quantity: qty,
+      unit: updatedItem?.unit || 'kg',
+      godownRemaining: updatedItem?.godownStock || 0,
+      counterRemaining: updatedItem?.counterStock || updatedItem?.stockKg || 0,
+      performedBy,
+      note: note || (isWastage ? 'Counter Spoilage / Wastage Write-Off' : 'Returned from Counter to Godown'),
+      date: new Date().toLocaleDateString('en-IN'),
+      createdAt: Date.now(),
+    });
+
+    res.json({ success: true, item: updatedItem, log });
+  } catch (err) {
+    console.error('[Stock] Return error:', err);
+    res.status(500).json({ success: false, message: 'Stock return failed: ' + err.message });
   }
 });
 
