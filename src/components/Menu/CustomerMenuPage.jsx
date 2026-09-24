@@ -917,19 +917,6 @@ export default function CustomerMenuPage() {
                 <button
                   type="button"
                   onClick={() => setIsMobileCartOpen(false)}
-                  style={{
-                    display: 'none',
-                    background: '#f1f5f9',
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '28px',
-                    height: '28px',
-                    color: '#64748b',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
                   className="mobile-tray-close-btn"
                 >
                   ✕
@@ -947,7 +934,7 @@ export default function CustomerMenuPage() {
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '340px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div className="tray-items-scroll" style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', paddingRight: '4px' }}>
                 {preCart.map((item) => (
                   <div
                     key={item.cartItemId}

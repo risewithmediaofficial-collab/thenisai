@@ -217,6 +217,14 @@
   align-items: start;
 }
 
+/* ── Center column: menu items list ──────────────────────────────────────── */
+.menu-main-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
 /* ── Sidebar Categories (Desktop) ────────────────────────────────────────── */
 .menu-category-sidebar {
   display: block;
@@ -629,6 +637,34 @@
   display: none;
 }
 
+/* ── Mobile Tray Close Button (hidden on desktop, shown as bottom-sheet on tablet/phone) ── */
+.mobile-tray-close-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.mobile-tray-close-btn:hover {
+  background: #e2e8f0;
+}
+
+/* ── Tray Items Scroll Area ──────────────────────────────────────────────── */
+.tray-items-scroll {
+  max-height: 340px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
 /* ── Mobile Floating Tray Trigger Bar ────────────────────────────────────── */
 .mobile-floating-tray-bar {
   display: none;
@@ -644,6 +680,11 @@
 
   .mobile-cart-toggle-btn {
     display: inline-flex;
+  }
+
+  /* Show close X button inside tray bottom sheet */
+  .mobile-tray-close-btn {
+    display: inline-flex !important;
   }
 
   /* Desktop right tray hidden from column, converted to modal bottom sheet */
@@ -662,6 +703,15 @@
     display: flex;
     flex-direction: column;
     padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  /* Tray items scroll area: fills the sheet flexibly */
+  .tray-items-scroll {
+    max-height: none;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .preorder-tray-panel.mobile-open {
