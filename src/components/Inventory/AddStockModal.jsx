@@ -48,7 +48,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
   const [existingForm, setExistingForm] = useState({
     sweetId: initialSweetId || inventory[0]?.id || SWEETS_CATALOG[0]?.id || 'palkova',
     quantity: '',
-    batchNote: 'Received from Company Godown',
+    batchNote: 'Shop stock verified and added',
   });
 
   // New sweet form
@@ -58,7 +58,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
     stockKg: '15',
     unit: 'kg',
     minThreshold: '8',
-    batchNote: 'New recipe introduction from Godown',
+    batchNote: 'New sweet variety added to shop',
   });
 
   if (!isOpen) return null;
@@ -127,10 +127,10 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                 <path d="m3.3 7 8.7 5 8.7-5" />
                 <path d="M12 22V12" />
               </svg>
-              🏢 Company Godown Inward
+              🏪 Shop Inventory Addition
             </span>
-            <h3 className="stock-modal__title">Receive Stock into Shop</h3>
-            <p className="stock-modal__sub">Record incoming stock batches arriving from company godown to shop stored stock</p>
+            <h3 className="stock-modal__title">+ Add Stock to Shop</h3>
+            <p className="stock-modal__sub">Check current shop stock and add new stock balance ready for selling</p>
           </div>
           <button type="button" className="stock-modal__close" onClick={onClose} aria-label="Close modal">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -147,7 +147,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
             className={`stock-tab-btn ${activeTab === 'existing' ? 'active' : ''}`}
             onClick={() => setActiveTab('existing')}
           >
-            <span>Receive Existing Sweet</span>
+            <span>+ Add to Existing Item</span>
           </button>
           <button
             type="button"
@@ -195,7 +195,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
 
               <div className="stock-field">
                 <label>
-                  <span>Quantity to Inward in {unitConfig.label} ({unitConfig.singular})</span>
+                  <span>Quantity to Add in {unitConfig.label} ({unitConfig.singular})</span>
                   <span className="stock-hint">
                     {unitConfig.type === 'pcs' ? 'Enter exact piece count' : unitConfig.type === 'litre' ? 'Enter volume in litres' : unitConfig.type === 'cup' ? 'Enter cup count' : 'Enter weight in kg'}
                   </span>
@@ -230,7 +230,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
 
               {existingForm.quantity && (
                 <div className="stock-preview-box">
-                  <span>Shop Stored Stock after Receipt:</span>
+                  <span>Shop Stored Stock after Adding:</span>
                   <span className="stock-preview-val">
                     {currentStock} {unitConfig.label} &rarr; <strong>{targetStock} {unitConfig.label}</strong>
                   </span>
@@ -239,12 +239,12 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
 
               <div className="stock-field">
                 <label>
-                  <span>Company Godown Transfer / Batch Note</span>
+                  <span>Verification / Batch Note</span>
                 </label>
                 <input
                   type="text"
                   className="stock-input"
-                  placeholder="e.g. Received from Company Godown Dispatch #104"
+                  placeholder="e.g. Shop stock verified and added"
                   value={existingForm.batchNote}
                   onChange={(e) =>
                     setExistingForm((prev) => ({ ...prev, batchNote: e.target.value }))
@@ -263,7 +263,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                   <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                   <line x1="12" y1="22.08" x2="12" y2="12" />
                 </svg>
-                <span>Confirm Receipt to Shop</span>
+                <span>Confirm &amp; Add Stock to Shop</span>
               </button>
             </div>
           </form>
@@ -369,7 +369,7 @@ export default function AddStockModal({ isOpen, onClose, initialSweetId = null }
                   <line x1="12" y1="5" x2="12" y2="19" />
                   <line x1="5" y1="12" x2="19" y2="12" />
                 </svg>
-                <span>Create &amp; Inward Item</span>
+                <span>Create &amp; Add to Shop</span>
               </button>
             </div>
           </form>

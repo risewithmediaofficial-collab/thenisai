@@ -322,8 +322,8 @@ export default function CompanyManagerDashboard() {
               transition: 'background-color 0.15s ease',
             }}
           >
-            <span>📥 Receive from Godown</span>
-            <span style={{ fontSize: '11px', opacity: 0.9 }}>(சரக்கு வரவு)</span>
+            <span>+ Add Stock</span>
+            <span style={{ fontSize: '11px', opacity: 0.9 }}>(சரக்கு சேர்த்தல்)</span>
           </button>
 
           <button
@@ -444,7 +444,7 @@ export default function CompanyManagerDashboard() {
             </div>
           </div>
 
-          {/* Today's Receipts from Company Godown */}
+          {/* Stock Added Today */}
           <div
             style={{
               backgroundColor: '#ffffff',
@@ -456,16 +456,16 @@ export default function CompanyManagerDashboard() {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#b45309', fontWeight: 600, letterSpacing: '0.04em' }}>
-                📥 Received from Godown Today
+                📦 Added to Shop Today
               </span>
-              <span style={{ fontSize: '18px' }}>🚚</span>
+              <span style={{ fontSize: '18px' }}>🧁</span>
             </div>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#b45309', marginTop: '6px' }}>
               {dailyMetrics.inwardCount}{' '}
               <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>batches</span>
             </div>
             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-              Stock arrivals received from company godown
+              Stock verified and added to shop storage today
             </div>
           </div>
 
@@ -974,9 +974,9 @@ export default function CompanyManagerDashboard() {
                               justifyContent: 'center',
                               gap: '4px',
                             }}
-                            title={`Receive ${unitConf.label} from Company Godown`}
+                            title={`Add ${unitConf.label} to Shop Stock`}
                           >
-                            📥 Receive Stock
+                            + Add Stock
                           </button>
 
                           <button
@@ -1205,9 +1205,9 @@ export default function CompanyManagerDashboard() {
                                       cursor: 'pointer',
                                       whiteSpace: 'nowrap',
                                     }}
-                                    title={`Receive ${unitConf.label} from Company Godown`}
+                                    title={`Add ${unitConf.label} to Shop Stock`}
                                   >
-                                    📥 Receive Stock
+                                    + Add Stock
                                   </button>
 
                                   <button
@@ -1317,7 +1317,7 @@ export default function CompanyManagerDashboard() {
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 {[
                   { id: 'all', label: 'All Movements' },
-                  { id: 'GODOWN_INWARD', label: '📥 Received from Godown' },
+                  { id: 'GODOWN_INWARD', label: '📦 Stock Added' },
                   { id: 'COUNTER_RETURN', label: '↩️ Returned to Godown' },
                   { id: 'WASTAGE', label: '🗑️ Wastages' },
                 ].map((type) => (

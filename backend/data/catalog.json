@@ -11,7 +11,7 @@
     "minThreshold": 15,
     "name": "Tea — டீ",
     "pricePerKg": 20,
-    "stockKg": 92.5,
+    "stockKg": 100,
     "isCustom": false,
     "isInactive": false,
     "unit": "1 Cup",
@@ -22,7 +22,8 @@
     "nameTa": "டீ",
     "subcategory": "",
     "skuCode": "1",
-    "tamilName": "டீ"
+    "tamilName": "டீ",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c881e",
@@ -36,7 +37,7 @@
     "minThreshold": 15,
     "name": "Filter Coffee — ஃபில்டர் காபி",
     "pricePerKg": 20,
-    "stockKg": 98,
+    "stockKg": 100,
     "isCustom": false,
     "isInactive": false,
     "unit": "1 Cup",
@@ -46,7 +47,8 @@
     "itemNumber": 13,
     "nameTa": "ஃபில்டர் காபி",
     "subcategory": "",
-    "skuCode": "13"
+    "skuCode": "13",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c881f",
@@ -57,10 +59,10 @@
     "category": "beverages",
     "hsn": "0401",
     "image": "/products/milk.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Milk — பால்",
     "pricePerKg": 20,
-    "stockKg": 78.5,
+    "stockKg": 100,
     "isCustom": false,
     "isInactive": false,
     "unit": "1 Cup",
@@ -70,7 +72,8 @@
     "itemNumber": 3,
     "nameTa": "பால்",
     "subcategory": "",
-    "skuCode": "3"
+    "skuCode": "3",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8820",
@@ -81,10 +84,10 @@
     "category": "beverages",
     "hsn": "1901",
     "image": "/products/horlicks.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Horlicks — ஹார்லிக்ஸ்",
     "pricePerKg": 25,
-    "stockKg": 60,
+    "stockKg": 100,
     "price": 25,
     "unitPrice": 25,
     "englishName": "Horlicks",
@@ -92,7 +95,8 @@
     "nameTa": "ஹார்லிக்ஸ்",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "4"
+    "skuCode": "4",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8821",
@@ -103,10 +107,10 @@
     "category": "beverages",
     "hsn": "1901",
     "image": "/products/boost.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Boost — பூஸ்ட்",
     "pricePerKg": 25,
-    "stockKg": 60,
+    "stockKg": 100,
     "price": 25,
     "unitPrice": 25,
     "englishName": "Boost",
@@ -114,7 +118,8 @@
     "nameTa": "பூஸ்ட்",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "5"
+    "skuCode": "5",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8822",
@@ -125,10 +130,10 @@
     "category": "beverages",
     "hsn": "0401",
     "image": "/products/badam-milk.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Badam Milk — பாதாம் பால்",
     "pricePerKg": 25,
-    "stockKg": 49.5,
+    "stockKg": 100,
     "price": 25,
     "unitPrice": 25,
     "englishName": "Badam Milk",
@@ -136,7 +141,8 @@
     "nameTa": "பாதாம் பால்",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "6"
+    "skuCode": "6",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8823",
@@ -147,10 +153,10 @@
     "category": "beverages",
     "hsn": "1904",
     "image": "/products/ragi-malt.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Ragi Malt — கேழ்வரகு கூழ்",
     "pricePerKg": 25,
-    "stockKg": 49.5,
+    "stockKg": 100,
     "price": 25,
     "unitPrice": 25,
     "englishName": "Ragi Malt",
@@ -158,7 +164,8 @@
     "nameTa": "கேழ்வரகு கூழ்",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "7"
+    "skuCode": "7",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8824",
@@ -169,10 +176,10 @@
     "category": "beverages",
     "hsn": "0902",
     "image": "/products/lemon-tea.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Lemon Tea — எலுமிச்சை டீ",
     "pricePerKg": 20,
-    "stockKg": 69,
+    "stockKg": 100,
     "price": 20,
     "unitPrice": 20,
     "englishName": "Lemon Tea",
@@ -180,7 +187,8 @@
     "nameTa": "எலுமிச்சை டீ",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "8"
+    "skuCode": "8",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8825",
@@ -191,10 +199,10 @@
     "category": "beverages",
     "hsn": "0902",
     "image": "/products/sugu-tea.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Sugu Tea — சுக்கு டீ",
     "pricePerKg": 20,
-    "stockKg": 68.5,
+    "stockKg": 100,
     "price": 20,
     "unitPrice": 20,
     "englishName": "Sugu Tea",
@@ -202,7 +210,8 @@
     "nameTa": "சுக்கு டீ",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "9"
+    "skuCode": "9",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8826",
@@ -213,10 +222,10 @@
     "category": "beverages",
     "hsn": "0902",
     "image": "/products/magu-tea.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Magu Tea — மிளகு டீ",
     "pricePerKg": 20,
-    "stockKg": 70,
+    "stockKg": 100,
     "price": 20,
     "unitPrice": 20,
     "englishName": "Magu Tea",
@@ -224,7 +233,8 @@
     "nameTa": "மிளகு டீ",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "10"
+    "skuCode": "10",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8827",
@@ -235,10 +245,10 @@
     "category": "beverages",
     "hsn": "2202",
     "image": "/products/ginger-lemon.svg",
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Ginger Lemon — இஞ்சி எலுமிச்சை",
     "pricePerKg": 20,
-    "stockKg": 70,
+    "stockKg": 100,
     "price": 20,
     "unitPrice": 20,
     "englishName": "Ginger Lemon",
@@ -246,7 +256,8 @@
     "nameTa": "இஞ்சி எலுமிச்சை",
     "subcategory": "",
     "unit": "1 Cup",
-    "skuCode": "11"
+    "skuCode": "11",
+    "counterStock": 100
   },
   {
     "_id": "6aa3d7fc8ef5b9dbec7c8828",
@@ -260,7 +271,7 @@
     "minThreshold": 15,
     "name": "Vada — வடை",
     "pricePerKg": 20,
-    "stockKg": 79,
+    "stockKg": 80,
     "isCustom": false,
     "isInactive": true,
     "unit": "1 Pc",
@@ -270,7 +281,8 @@
     "itemNumber": 12,
     "nameTa": "வடை",
     "subcategory": "",
-    "skuCode": "12"
+    "skuCode": "12",
+    "counterStock": 80
   },
   {
     "_id": "6aabd4ba50bac33928a6f59e",
@@ -279,8 +291,8 @@
     "pricePerKg": 300,
     "unitPrice": 300,
     "unit": "kg",
-    "stockKg": 0,
-    "minThreshold": 8,
+    "stockKg": 50,
+    "minThreshold": 10,
     "isInactive": false,
     "isCustom": false,
     "image": "/images/products/palkova_card.jpg",
@@ -292,7 +304,8 @@
     "itemNumber": 15,
     "nameTa": "பால்கோவா",
     "subcategory": "Milk & Bengali",
-    "skuCode": "15"
+    "skuCode": "15",
+    "counterStock": 50
   },
   {
     "_id": "6aae56ad697643ffe83eb37b",
@@ -302,8 +315,8 @@
     "pricePerKg": 320,
     "unitPrice": 320,
     "unit": "kg",
-    "stockKg": 0,
-    "minThreshold": 8,
+    "stockKg": 50,
+    "minThreshold": 10,
     "isInactive": false,
     "isCustom": false,
     "image": "/images/products/palkova_card.jpg",
@@ -314,7 +327,8 @@
     "itemNumber": 14,
     "nameTa": "பர்பி",
     "subcategory": "Milk & Bengali",
-    "skuCode": "14"
+    "skuCode": "14",
+    "counterStock": 50
   },
   {
     "_id": "6aae57cd697643ffe83eb385",
@@ -324,8 +338,8 @@
     "pricePerKg": 350,
     "unitPrice": 350,
     "unit": "kg",
-    "stockKg": 0,
-    "minThreshold": 8,
+    "stockKg": 50,
+    "minThreshold": 10,
     "isInactive": false,
     "isCustom": false,
     "image": "/images/products/palkova_card.jpg",
@@ -336,7 +350,8 @@
     "itemNumber": 28,
     "nameTa": "நெய் மைசூர்பாகு",
     "subcategory": "Mysore Pak & Ghee",
-    "skuCode": "28"
+    "skuCode": "28",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811a5",
@@ -357,12 +372,13 @@
     "nameTa": "நெய்",
     "price": 650,
     "pricePerKg": 650,
-    "stockKg": 25,
+    "stockKg": 40,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Pure Desi Cow Ghee · சுத்தமான நெய்",
     "unit": "Litre",
     "unitPrice": 650,
-    "skuCode": "16"
+    "skuCode": "16",
+    "counterStock": 40
   },
   {
     "_id": "6aae595e60582bc5776811a6",
@@ -378,17 +394,18 @@
     "isCustom": false,
     "isInactive": true,
     "itemNumber": 17,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Arcot Makkan Peda — ஆற்காடு மக்கன் பேடா",
     "nameTa": "ஆற்காடு மக்கன் பேடா",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Stuffed Khoya Sweet · ஆற்காடு மக்கன் பேடா",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "17"
+    "skuCode": "17",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811a7",
@@ -404,17 +421,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 18,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Bengali — பெங்காலி",
     "nameTa": "பெங்காலி",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Milk & Bengali",
     "tagline": "Delicate Chenna Confection · பெங்காலி ஸ்வீட்",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "18"
+    "skuCode": "18",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811a8",
@@ -430,7 +448,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 19,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Suryakala — சூரியகலா",
     "nameTa": "சூரியகலா",
     "price": 25,
@@ -440,7 +458,8 @@
     "tagline": "Sun-Shaped Stuffed Pastry · சூரியகலா",
     "unit": "Pc",
     "unitPrice": 25,
-    "skuCode": "19"
+    "skuCode": "19",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811a9",
@@ -456,7 +475,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 20,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Jamun — ஜாமூன்",
     "nameTa": "ஜாமூன்",
     "price": 20,
@@ -466,7 +485,8 @@
     "tagline": "Soft Rose Scented Dumpling · குலாப் ஜாமூன்",
     "unit": "Pc",
     "unitPrice": 20,
-    "skuCode": "20"
+    "skuCode": "20",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811aa",
@@ -482,17 +502,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 21,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Cashew Cake (Kaju Katli) — முந்திரி கேக்",
     "nameTa": "முந்திரி கேக்",
     "price": 1200,
     "pricePerKg": 1200,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "100% Premium Roasted Cashew · முந்திரி கேக்",
     "unit": "kg",
     "unitPrice": 1200,
-    "skuCode": "21"
+    "skuCode": "21",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ab",
@@ -508,17 +529,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 22,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Cashew Halwa — முந்திரி அல்வா",
     "nameTa": "முந்திரி அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Rich Ghee Cashew Halwa · முந்திரி அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "22"
+    "skuCode": "22",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ac",
@@ -534,17 +556,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 23,
-    "minThreshold": 8,
+    "minThreshold": 15,
     "name": "Horlicks Burfi — ஆர்லக்ஸ் பர்பி",
     "nameTa": "ஆர்லக்ஸ் பர்பி",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 100,
     "subcategory": "Milk & Bengali",
     "tagline": "Malted Milk Fudge · ஹார்லிக்ஸ் பர்பி",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "23"
+    "skuCode": "23",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc5776811ad",
@@ -560,17 +583,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 24,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mini Jangiri — மினி ஜாங்கிரி",
     "nameTa": "மினி ஜாங்கிரி",
     "price": 350,
     "pricePerKg": 350,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Bite-Sized Golden Spirals · மினி ஜாங்கிரி",
     "unit": "kg",
     "unitPrice": 350,
-    "skuCode": "24"
+    "skuCode": "24",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ae",
@@ -586,17 +610,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 25,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Jangiri — ஜாங்கிரி",
     "nameTa": "ஜாங்கிரி",
     "price": 350,
     "pricePerKg": 350,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Traditional Festive Delight · ஜாங்கிரி",
     "unit": "kg",
     "unitPrice": 350,
-    "skuCode": "25"
+    "skuCode": "25",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811af",
@@ -623,7 +648,8 @@
     "unit": "kg",
     "unitPrice": 450,
     "skuCode": "26",
-    "tamilName": "மோதி லட்டு"
+    "tamilName": "மோதி லட்டு",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811b0",
@@ -639,17 +665,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 27,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "S.P. Soan Papdi — S.P. சோன பட்டி",
     "nameTa": "S.P. சோன பட்டி",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Flaky Cardamom Strands · சோன பட்டி",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "27"
+    "skuCode": "27",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811b1",
@@ -665,17 +692,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 29,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Sada Mysore Pak — சாதா மைசூர்பாகு",
     "nameTa": "சாதா மைசூர்பாகு",
     "price": 350,
     "pricePerKg": 350,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Crispy Traditional Texture · சாதா மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 350,
-    "skuCode": "29"
+    "skuCode": "29",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811b2",
@@ -691,7 +719,7 @@
     "isCustom": false,
     "isInactive": true,
     "itemNumber": 30,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Ashoka Makkan Peda — அசோகா மக்கன் பேடா",
     "nameTa": "அசோகா மக்கன் பேடா",
     "price": 25,
@@ -701,7 +729,8 @@
     "tagline": "Moong Dal & Khoya Blend · அசோகா மக்கன் பேடா",
     "unit": "Pc",
     "unitPrice": 25,
-    "skuCode": "30"
+    "skuCode": "30",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811b3",
@@ -717,17 +746,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 31,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Dry Fruit Halwa — ட்ரை ஃப்ரூட் அல்வா",
     "nameTa": "ட்ரை ஃப்ரூட் அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Loaded Nuts & Dates · ட்ரை ஃப்ரூட் அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "31"
+    "skuCode": "31",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811b4",
@@ -743,17 +773,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 32,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Baby Milk — பேபி மில்க்",
     "nameTa": "பேபி மில்க்",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 80,
+    "stockKg": 100,
     "subcategory": "Pieces & Packets",
     "tagline": "Tender Sweet Milk Round · பேபி மில்க்",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "32"
+    "skuCode": "32",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc5776811b5",
@@ -769,7 +800,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 33,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Sandwich — சாண்ட்விச்",
     "nameTa": "சாண்ட்விச்",
     "price": 30,
@@ -779,7 +810,8 @@
     "tagline": "Layered Mawa & Chenna · சாண்ட்விச் ஸ்வீட்",
     "unit": "Pc",
     "unitPrice": 30,
-    "skuCode": "33"
+    "skuCode": "33",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811b6",
@@ -795,17 +827,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 34,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Badusha — பாதுஷா",
     "nameTa": "பாதுஷா",
     "price": 300,
     "pricePerKg": 300,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Flaky Golden Glazed Round · பாதுஷா",
     "unit": "kg",
     "unitPrice": 300,
-    "skuCode": "34"
+    "skuCode": "34",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811b7",
@@ -821,17 +854,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 35,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Rasbhari — ரசபரி",
     "nameTa": "ரசபரி",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Milk & Bengali",
     "tagline": "Mini Rasgulla in Sugar Syrup · ரசபரி",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "35"
+    "skuCode": "35",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811b8",
@@ -847,7 +881,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 36,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Basundi — பாசுந்தி",
     "nameTa": "பாசுந்தி",
     "price": 40,
@@ -857,7 +891,8 @@
     "tagline": "Thick Rabri Dessert Cup · பாசுந்தி",
     "unit": "Pc",
     "unitPrice": 40,
-    "skuCode": "36"
+    "skuCode": "36",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811b9",
@@ -873,7 +908,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 37,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Rasmalai — ரசமலாய்",
     "nameTa": "ரசமலாய்",
     "price": 35,
@@ -883,7 +918,8 @@
     "tagline": "Saffron Cream Chenna Disc · ரசமலாய்",
     "unit": "Pc",
     "unitPrice": 35,
-    "skuCode": "37"
+    "skuCode": "37",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811ba",
@@ -899,17 +935,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 38,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Carrot Halwa — கேரட் அல்வா",
     "nameTa": "கேரட் அல்வா",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Grated Red Carrot & Mawa · கேரட் அல்வா",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "38"
+    "skuCode": "38",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811bb",
@@ -925,17 +962,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 39,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mini Jamun — மினி ஜாமூன்",
     "nameTa": "மினி ஜாமூன்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Bite-Sized Golden Jamuns · மினி ஜாமூன்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "39"
+    "skuCode": "39",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811bc",
@@ -951,17 +989,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 40,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pomegranate Halwa — மாதுளை அல்வா",
     "nameTa": "மாதுளை அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Natural Fruit Ruby Halwa · மாதுளை அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "40"
+    "skuCode": "40",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811bd",
@@ -977,7 +1016,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 41,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Dal Poli (Paruppu Poli) — பருப்பு போளி",
     "nameTa": "பருப்பு போளி",
     "price": 20,
@@ -987,7 +1026,8 @@
     "tagline": "Sweet Chana Dal Stuffed Bread · பருப்பு போளி",
     "unit": "Pc",
     "unitPrice": 20,
-    "skuCode": "41"
+    "skuCode": "41",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811be",
@@ -1003,7 +1043,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 42,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Coconut Poli (Thengai Poli) — தேங்காய் போளி",
     "nameTa": "தேங்காய் போளி",
     "price": 25,
@@ -1013,7 +1053,8 @@
     "tagline": "Fresh Coconut & Jaggery Poli · தேங்காய் போளி",
     "unit": "Pc",
     "unitPrice": 25,
-    "skuCode": "42"
+    "skuCode": "42",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811bf",
@@ -1029,7 +1070,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 43,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Athirasam — அதிரசம்",
     "nameTa": "அதிரசம்",
     "price": 20,
@@ -1039,7 +1080,8 @@
     "tagline": "Heritage Jaggery Rice Sweet · பாரம்பரிய அதிரசம்",
     "unit": "Pc",
     "unitPrice": 20,
-    "skuCode": "43"
+    "skuCode": "43",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811c0",
@@ -1065,7 +1107,8 @@
     "tagline": "Crispy Puffed Rice Ball Packet · பொரி உருண்டை",
     "unit": "Pkt",
     "unitPrice": 50,
-    "skuCode": "44"
+    "skuCode": "44",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c1",
@@ -1081,7 +1124,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 45,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Sesame Sweet (Ellu Urundai) — எள் உருண்டை / அடை",
     "nameTa": "எள் உருண்டை / அடை",
     "price": 25,
@@ -1091,7 +1134,8 @@
     "tagline": "Healthy Black Sesame & Jaggery · எள் அடை",
     "unit": "Pc",
     "unitPrice": 25,
-    "skuCode": "45"
+    "skuCode": "45",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811c2",
@@ -1107,7 +1151,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 46,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Ellu Urundai — எள் உருண்டை",
     "nameTa": "எள் உருண்டை",
     "price": 25,
@@ -1117,7 +1161,8 @@
     "tagline": "Traditional Sesame Laddoo · எள் உருண்டை",
     "unit": "Pc",
     "unitPrice": 25,
-    "skuCode": "46"
+    "skuCode": "46",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811c3",
@@ -1133,17 +1178,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 47,
-    "minThreshold": 8,
+    "minThreshold": 15,
     "name": "Milk Cake — மில்க் கேக்",
     "nameTa": "மில்க் கேக்",
     "price": 300,
     "pricePerKg": 300,
-    "stockKg": 35,
+    "stockKg": 100,
     "subcategory": "Milk & Bengali",
     "tagline": "Grainy Caramelized Milk Cake · மில்க் கேக்",
     "unit": "kg",
     "unitPrice": 300,
-    "skuCode": "47"
+    "skuCode": "47",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc5776811c4",
@@ -1159,17 +1205,18 @@
     "isCustom": false,
     "isInactive": true,
     "itemNumber": 48,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Paal Peni — பால் பேனி",
     "nameTa": "பால் பேனி",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Featherlight Crispy Milk Peni · பால் பேனி",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "48"
+    "skuCode": "48",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c5",
@@ -1185,18 +1232,19 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 49,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mothi Laddu — மோதி லட்டு",
     "nameTa": "மோட்டிச்சூர் லட்டு",
     "price": 450,
     "pricePerKg": 450,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Fine Saffron Boondi Laddu · மோட்டிச்சூர் லட்டு",
     "unit": "kg",
     "unitPrice": 450,
     "skuCode": "49",
-    "tamilName": "மோதி லட்டு"
+    "tamilName": "மோதி லட்டு",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c6",
@@ -1212,17 +1260,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 50,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Agra Burfi — ஆக்ரா பர்பி",
     "nameTa": "ஆக்ரா பர்பி",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Milk & Bengali",
     "tagline": "North Indian Petha & Khoya Burfi · ஆக்ரா பர்பி",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "50"
+    "skuCode": "50",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c7",
@@ -1238,17 +1287,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 51,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Tender Coconut Halwa — இளநீர் அல்வா",
     "nameTa": "இளநீர் அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Fresh Coconut Water & Pulp Halwa · இளநீர் அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "51"
+    "skuCode": "51",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c8",
@@ -1264,17 +1314,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 52,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Badam Pillow — பாதாம் பிலோவ்",
     "nameTa": "பாதாம் பிலோவ்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Cushioned Almond Luxury Sweet · பாதாம் பிலோவ்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "52"
+    "skuCode": "52",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811c9",
@@ -1290,17 +1341,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 53,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Kaju Pista Roll — காஜூ பிஸ்தா ரோல்",
     "nameTa": "காஜூ பிஸ்தா ரோல்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Cashew Cylinder with Pistachio Core · காஜூ பிஸ்தா ரோல்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "53"
+    "skuCode": "53",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ca",
@@ -1316,18 +1368,19 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 54,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pure Badam Halwa — பியூர் பாதாம் அல்வா",
     "nameTa": "பாதாம் அல்வா",
     "price": 1000,
     "pricePerKg": 1000,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Royal Almond Halwa · பாதாம் அல்வா",
     "unit": "kg",
     "unitPrice": 1000,
     "skuCode": "54",
-    "tamilName": "பியூர் பாதாம் அல்வா"
+    "tamilName": "பியூர் பாதாம் அல்வா",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811cb",
@@ -1343,7 +1396,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 55,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Gulkand Laddu — குல்கந்து லட்டு",
     "nameTa": "குல்கந்து லட்டு",
     "price": 60,
@@ -1353,7 +1406,8 @@
     "tagline": "Damask Rose Petal Stuffed Laddu · குல்கந்து லட்டு",
     "unit": "Pc",
     "unitPrice": 60,
-    "skuCode": "55"
+    "skuCode": "55",
+    "counterStock": 80
   },
   {
     "_id": "6aae595e60582bc5776811cc",
@@ -1369,17 +1423,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 56,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Sugarless Badusha — சுகர்லெஸ் பாதுஷா",
     "nameTa": "சுகர்லெஸ் பாதுஷா",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Zero Added Sugar Flaky Badusha · சுகர்லெஸ் பாதுஷா",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "56"
+    "skuCode": "56",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811cd",
@@ -1395,17 +1450,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 57,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Karupatti Kaju Cake — கருப்பட்டி முந்திரி கேக்",
     "nameTa": "கருப்பட்டி முந்திரி கேக்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Organic Palm Jaggery Cashew Fudge · கருப்பட்டி முந்திரி கேக்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "57"
+    "skuCode": "57",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ce",
@@ -1421,17 +1477,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 58,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Honey Nuts Burfi — ஹனி நட்ஸ் பர்பி",
     "nameTa": "ஹனி நட்ஸ் பர்பி",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Pure Forest Honey & Dry Nuts · ஹனி நட்ஸ் பர்பி",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "58"
+    "skuCode": "58",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811cf",
@@ -1447,17 +1504,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 59,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Muscoth Halwa — மஸ்கோத் அல்வா",
     "nameTa": "மஸ்கோத் அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Heritage Coconut Milk Halwa · மஸ்கோத் அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "59"
+    "skuCode": "59",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d0",
@@ -1473,17 +1531,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 60,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Red Rose Gulkand — ரெட் ரோஸ் குல்கந்து",
     "nameTa": "ரெட் ரோஸ் குல்கந்து",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Pure Sun-Cooked Rose Petal Jam · ரெட் ரோஸ் குல்கந்து",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "60"
+    "skuCode": "60",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d1",
@@ -1499,17 +1558,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 61,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Flax Seed Laddu — ஃபிளாக்ஸ் சீட் லட்டு",
     "nameTa": "ஃபிளாக்ஸ் சீட் லட்டு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Traditional Sweets",
     "tagline": "Omega-3 Enriched Health Sweet · ஃபிளாக்ஸ் சீட் லட்டு",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "61"
+    "skuCode": "61",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d2",
@@ -1525,17 +1585,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 62,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Carrot Mysore Pak — கேரட் மைசூர்பாகு",
     "nameTa": "கேரட் மைசூர்பாகு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Carrot Infused Ghee Mysore Pak · கேரட் மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "62"
+    "skuCode": "62",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d3",
@@ -1551,17 +1612,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 63,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Beetroot Mysore Pak — பீட்ரூட் மைசூர்பாகு",
     "nameTa": "பீட்ரூட் மைசூர்பாகு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Natural Beetroot Crimson Sweet · பீட்ரூட் மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "63"
+    "skuCode": "63",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d4",
@@ -1577,18 +1639,19 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 64,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Perichai Mysore Pak — பேரிச்சை மைசூர்பாகு",
     "nameTa": "பொரிட்டை மைசூர்பாகு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Classic Porous Fried Mysore Pak · பொரிட்டை மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 700,
     "skuCode": "64",
-    "tamilName": "பேரிச்சை மைசூர்பாகு"
+    "tamilName": "பேரிச்சை மைசூர்பாகு",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d5",
@@ -1604,17 +1667,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 65,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Tender Coconut Mysore Pak — இளநீர் மைசூர்பாகு",
     "nameTa": "இளநீர் மைசூர்பாகு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Fresh Coconut Water Infusion · இளநீர் மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "65"
+    "skuCode": "65",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d6",
@@ -1630,17 +1694,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 66,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Karupatti Mysore Pak — கருப்பட்டி மைசூர்பாகு",
     "nameTa": "கருப்பட்டி மைசூர்பாகு",
     "price": 700,
     "pricePerKg": 700,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Mysore Pak & Ghee",
     "tagline": "Palm Jaggery Heritage Sweet · கருப்பட்டி மைசூர்பாகு",
     "unit": "kg",
     "unitPrice": 700,
-    "skuCode": "66"
+    "skuCode": "66",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d7",
@@ -1656,17 +1721,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 67,
-    "minThreshold": 8,
+    "minThreshold": 15,
     "name": "Onion Milk Halwa — வெங்காயப்பால் அல்வா",
     "nameTa": "வெங்காயப்பால் அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 100,
     "subcategory": "Halwa",
     "tagline": "Medicinal Heritage Recipe · வெங்காயப்பால் அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "67"
+    "skuCode": "67",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc5776811d8",
@@ -1682,17 +1748,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 68,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Kiwi Halwa — கிவி அல்வா",
     "nameTa": "கிவி அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Tangy Fresh Kiwi Fruit Halwa · கிவி அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "68"
+    "skuCode": "68",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811d9",
@@ -1708,17 +1775,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 69,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Ashoka Halwa — அசோகா அல்வா",
     "nameTa": "அசோகா அல்வா",
     "price": 800,
     "pricePerKg": 800,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Halwa",
     "tagline": "Thiruvaiyaru Moong Dal Halwa · அசோகா அல்வா",
     "unit": "kg",
     "unitPrice": 800,
-    "skuCode": "69"
+    "skuCode": "69",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811da",
@@ -1734,17 +1802,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 70,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Nendran Roll — நேந்திரன் ரோல்",
     "nameTa": "நேந்திரன் ரோல்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Kerala Nendran Banana Sweet Roll · நேந்திரன் ரோல்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "70"
+    "skuCode": "70",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811db",
@@ -1760,17 +1829,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 71,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Badam Roll — பாதாம் ரோல்",
     "nameTa": "பாதாம் ரோல்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "100% Pure Almond Cylinders · பாதாம் ரோல்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "71"
+    "skuCode": "71",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811dc",
@@ -1786,17 +1856,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 72,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pista Roll — பிஸ்தா ரோல்",
     "nameTa": "பிஸ்தா ரோல்",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Emerald Green Pistachio Roll · பிஸ்தா ரோல்",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "72"
+    "skuCode": "72",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811dd",
@@ -1812,17 +1883,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 73,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pista Burfi — பிஸ்தா பர்பி",
     "nameTa": "பிஸ்தா பர்பி",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Nutty Pistachio Diamond Fudge · பிஸ்தா பர்பி",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "73"
+    "skuCode": "73",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811de",
@@ -1838,17 +1910,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 74,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Low Sugar Cashew Burfi — லோ சுகர் முந்திரி பர்பி",
     "nameTa": "லோ சுகர் முந்திரி பர்பி",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Diabetic Friendly Cashew Sweet · லோ சுகர் முந்திரி பர்பி",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "74"
+    "skuCode": "74",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811df",
@@ -1864,17 +1937,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 75,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Low Sugar Fig Burfi — லோ சுகர் அத்திப்பழ பர்பி",
     "nameTa": "லோ சுகர் அத்திப்பழ பர்பி",
     "price": 1100,
     "pricePerKg": 1100,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tagline": "Natural Anjeer / Fig Sweet · அத்திப்பழ பர்பி",
     "unit": "kg",
     "unitPrice": 1100,
-    "skuCode": "75"
+    "skuCode": "75",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e0",
@@ -1890,17 +1964,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 76,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Round Murukku — ரவுண்டு முறுக்கு",
     "nameTa": "ரவுண்டு முறுக்கு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Traditional Coil · ரவுண்டு முறுக்கு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "76"
+    "skuCode": "76",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e1",
@@ -1916,17 +1991,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 77,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Peanuts — கடலை கொட்டை",
     "nameTa": "கடலை கொட்டை",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crunchy Roasted Peanuts · வறுத்த கடலை",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "77"
+    "skuCode": "77",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e2",
@@ -1942,17 +2018,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 78,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "S.P. Mixture — S.P. மிக்சர்",
     "nameTa": "S.P. மிக்சர்",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Special Savory Mix · ஸ்பெஷல் மிக்சர்",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "78"
+    "skuCode": "78",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e3",
@@ -1968,17 +2045,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 79,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pepper Chips — மிளகு சிப்ஸ்",
     "nameTa": "மிளகு சிப்ஸ்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Black Pepper Spiced · மிளகு சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "79"
+    "skuCode": "79",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e4",
@@ -1994,17 +2072,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 80,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Finger Chips — பிங்கர் சிப்ஸ்",
     "nameTa": "பிங்கர் சிப்ஸ்",
     "price": 450,
     "pricePerKg": 450,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Golden Finger Sticks · பிங்கர் சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 450,
-    "skuCode": "80"
+    "skuCode": "80",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e5",
@@ -2020,17 +2099,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 81,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Bitter Gourd Chips — பாவற்காய் சிப்ஸ்",
     "nameTa": "பாவற்காய் சிப்ஸ்",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Spiced Pavakkai · பாவற்காய் சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "81"
+    "skuCode": "81",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e6",
@@ -2046,17 +2126,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 82,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Raw Banana Chips — வாழைக்காய் சிப்ஸ்",
     "nameTa": "வாழைக்காய் சிப்ஸ்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Golden Banana Wafers · வாழைக்காய் சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "82"
+    "skuCode": "82",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e7",
@@ -2072,17 +2153,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 83,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Nendran Chips — நேந்திரம் சிப்ஸ்",
     "nameTa": "நேந்திரம் சிப்ஸ்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Pure Kerala Nendran · நேந்திரங்காய் சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "83"
+    "skuCode": "83",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e8",
@@ -2098,17 +2180,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 84,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pepper Sevu — மிளகு சேவு",
     "nameTa": "மிளகு சேவு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Black Pepper Sev · மிளகு சேவு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "84"
+    "skuCode": "84",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811e9",
@@ -2124,17 +2207,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 85,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Spicy Peanuts — கார கடலை",
     "nameTa": "கார கடலை",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Spicy Garlic Groundnuts · காரக்கடலை",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "85"
+    "skuCode": "85",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ea",
@@ -2150,17 +2234,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 86,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Kara Boondi — காராபூந்தி",
     "nameTa": "காராபூந்தி",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crisp Spiced Boondi · காராபூந்தி",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "86"
+    "skuCode": "86",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811eb",
@@ -2176,17 +2261,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 87,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Kara Sevu — காராசேவு",
     "nameTa": "காராசேவு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Spicy Thick Sev · காராசேவு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "87"
+    "skuCode": "87",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ec",
@@ -2202,17 +2288,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 88,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Navadhanyam — நவதானியம்",
     "nameTa": "நவதானியம்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "9 Roasted Healthy Grains · நவதானியம்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "88"
+    "skuCode": "88",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ed",
@@ -2228,17 +2315,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 89,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Green Gram — பச்சைப்பயிறு",
     "nameTa": "பச்சைப்பயிறு",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Fried Moong · பச்சைப்பயிறு",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "89"
+    "skuCode": "89",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ee",
@@ -2254,17 +2342,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 90,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Masala Cashew — மசால் முந்திரி",
     "nameTa": "மசால் முந்திரி",
     "price": 1200,
     "pricePerKg": 1200,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Spicy Roasted Whole Cashew · மசால் முந்திரி",
     "unit": "kg",
     "unitPrice": 1200,
-    "skuCode": "90"
+    "skuCode": "90",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ef",
@@ -2280,17 +2369,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 91,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Sesame Murukku — எள்ளு முறுக்கு",
     "nameTa": "எள்ளு முறுக்கு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Aromatic Black Sesame · எள்ளு முறுக்கு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "91"
+    "skuCode": "91",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f0",
@@ -2306,17 +2396,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 92,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Soft Kara Sevu — மெதுவ காராசேவு",
     "nameTa": "மெதுவ காராசேவு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Melt-in-Mouth Spiced Sev · மெதுவ காராசேவு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "92"
+    "skuCode": "92",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f1",
@@ -2332,17 +2423,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 93,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pepper Cashew — பெப்பர் முந்திரி",
     "nameTa": "பெப்பர் முந்திரி",
     "price": 1000,
     "pricePerKg": 1000,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Black Pepper Glazed Cashews · பெப்பர் முந்திரி",
     "unit": "kg",
     "unitPrice": 1000,
-    "skuCode": "93"
+    "skuCode": "93",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f2",
@@ -2358,17 +2450,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 94,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Moong Dal — பாசிப்பருப்பு",
     "nameTa": "பாசிப்பருப்பு",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Yellow Dal · பாசிப்பருப்பு",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "94"
+    "skuCode": "94",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f3",
@@ -2384,17 +2477,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 95,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Omapodi — ஓம்பொடி",
     "nameTa": "ஓம்பொடி",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Ajwain Infused Fine Sev · ஓம்பொடி",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "95"
+    "skuCode": "95",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f4",
@@ -2410,17 +2504,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 96,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Nippat — நிப்பட்",
     "nameTa": "நிப்பட்",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Spiced Crackers · நிப்பட்",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "96"
+    "skuCode": "96",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f5",
@@ -2436,17 +2531,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 97,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pepper Nippat — மிளகு நிப்பட்",
     "nameTa": "மிளகு நிப்பட்",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Black Pepper Discs · மிளகு நிப்பட்",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "97"
+    "skuCode": "97",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f6",
@@ -2462,17 +2558,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 98,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Spicy Murukku — கார முறுக்கு",
     "nameTa": "கார முறுக்கு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Fiery Red Chilli Murukku · கார முறுக்கு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "98"
+    "skuCode": "98",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f7",
@@ -2488,17 +2585,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 99,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Ghee Murukku — நெய் முறுக்கு",
     "nameTa": "நெய் முறுக்கு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Pure Desi Ghee Butter Murukku · நெய் முறுக்கு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "99"
+    "skuCode": "99",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f8",
@@ -2514,17 +2612,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 100,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Garlic Murukku — பூண்டு முறுக்கு",
     "nameTa": "பூண்டு முறுக்கு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Roasted Garlic Fragrant Murukku · பூண்டு முறுக்கு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "100"
+    "skuCode": "100",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811f9",
@@ -2540,17 +2639,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 101,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Nuts Mixture — நட்ஸ் மிக்சர்",
     "nameTa": "நட்ஸ் மிக்சர்",
     "price": 1000,
     "pricePerKg": 1000,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Royal Dry Fruit Savory Mix · நட்ஸ் மிக்சர்",
     "unit": "kg",
     "unitPrice": 1000,
-    "skuCode": "101"
+    "skuCode": "101",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811fa",
@@ -2566,17 +2666,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 102,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mint Mixture — புதினா மிக்சர்",
     "nameTa": "புதினா மிக்சர்",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Refreshing Mint Infusion · புதினா மிக்சர்",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "102"
+    "skuCode": "102",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811fb",
@@ -2592,17 +2693,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 103,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Ragi Mixture — ராகி மிக்சர்",
     "nameTa": "ராகி மிக்சர்",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Finger Millet Savory Mix · ராகி மிக்சர்",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "103"
+    "skuCode": "103",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811fc",
@@ -2618,17 +2720,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 104,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Aval Mixture — அவல் மிக்சர்",
     "nameTa": "அவல் மிக்சர்",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crispy Poha Savory · அவல் மிக்சர்",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "104"
+    "skuCode": "104",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811fd",
@@ -2654,7 +2757,8 @@
     "tagline": "Spicy Puffed Rice Packet · காரப்பொரி",
     "unit": "Pkt",
     "unitPrice": 30,
-    "skuCode": "105"
+    "skuCode": "105",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811fe",
@@ -2680,7 +2784,8 @@
     "tagline": "Fresh Farm Curd · தயிர் பாக்கெட்",
     "unit": "Pkt",
     "unitPrice": 20,
-    "skuCode": "106"
+    "skuCode": "106",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc5776811ff",
@@ -2696,7 +2801,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 107,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Buttermilk — மோர்",
     "nameTa": "மோர்",
     "price": 20,
@@ -2706,7 +2811,8 @@
     "tagline": "Refreshing Neer Mor · மோர்",
     "unit": "Cup",
     "unitPrice": 20,
-    "skuCode": "107"
+    "skuCode": "107",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc577681200",
@@ -2722,7 +2828,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 108,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Badam Milk — பாதாம் பால்",
     "nameTa": "பாதாம்",
     "price": 30,
@@ -2732,7 +2838,8 @@
     "tagline": "Chilled Almond Delight · பாதாம் பால்",
     "unit": "Cup",
     "unitPrice": 30,
-    "skuCode": "108"
+    "skuCode": "108",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc577681201",
@@ -2748,7 +2855,7 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 109,
-    "minThreshold": 10,
+    "minThreshold": 15,
     "name": "Rose Milk — ரோஸ் மில்க்",
     "nameTa": "ரோஸ் மில்க்",
     "price": 30,
@@ -2758,7 +2865,8 @@
     "tagline": "Fragrant Chilled Rose Milk · ரோஸ் மில்க்",
     "unit": "Cup",
     "unitPrice": 30,
-    "skuCode": "109"
+    "skuCode": "109",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc577681202",
@@ -2784,7 +2892,8 @@
     "tagline": "Packaged Mineral Water 500ml · தண்ணீர்",
     "unit": "Bottle",
     "unitPrice": 10,
-    "skuCode": "110"
+    "skuCode": "110",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681203",
@@ -2810,7 +2919,8 @@
     "tagline": "Packaged Mineral Water 1L · தண்ணீர்",
     "unit": "Bottle",
     "unitPrice": 20,
-    "skuCode": "111"
+    "skuCode": "111",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681204",
@@ -2836,7 +2946,8 @@
     "tagline": "Packaged Mineral Water 2L · தண்ணீர்",
     "unit": "Bottle",
     "unitPrice": 30,
-    "skuCode": "112"
+    "skuCode": "112",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681205",
@@ -2862,7 +2973,8 @@
     "tagline": "Heritage Grape Carbonated Drink · போவண்டோ",
     "unit": "Bottle",
     "unitPrice": 35,
-    "skuCode": "113"
+    "skuCode": "113",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681206",
@@ -2878,17 +2990,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 114,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mini Thattai — மினி தட்டை",
     "nameTa": "மினி தட்டை",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Bite-sized Crispy Thattai · மினி தட்டை",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "114"
+    "skuCode": "114",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681207",
@@ -2904,17 +3017,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 115,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Seedai — சீடை",
     "nameTa": "சீடை",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Crunchy Rice Roundels · உப்பு சீடை",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "115"
+    "skuCode": "115",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681208",
@@ -2930,17 +3044,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 116,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Cumin Murukku — சீரக முறுக்கு",
     "nameTa": "சீரக முறுக்கு",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Aromatic Cumin Infused · சீரக முறுக்கு",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "116"
+    "skuCode": "116",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681209",
@@ -2956,17 +3071,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 117,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Pepper Chips (Special) — பெப்பர் சிப்ஸ்",
     "nameTa": "பெப்பர் சிப்ஸ்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Coarsely Ground Pepper Chips · பெப்பர் சிப்ஸ்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "117"
+    "skuCode": "117",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120a",
@@ -2982,17 +3098,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 118,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Sattur Kara Sevu — சாத்தூர் காராசேவு",
     "nameTa": "சாத்தூர் காராசேவு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Famous Sattur Heritage Recipe · சாத்தூர் காராசேவு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "118"
+    "skuCode": "118",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120b",
@@ -3008,17 +3125,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 119,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Drumstick Leaves Nippat — முருங்கைக்கீரை நெப்பட்",
     "nameTa": "முருங்கைக்கீரை நெப்பட்",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Nutritious Moringa Thattai · முருங்கைக்கீரை நெப்பட்",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "119"
+    "skuCode": "119",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120c",
@@ -3034,17 +3152,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 120,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Cashew Pakoda — முந்திரி பக்கோடா",
     "nameTa": "முந்திரி பக்கோடா",
     "price": 600,
     "pricePerKg": 600,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Rich Crunchy Cashew Fritters · முந்திரி பக்கோடா",
     "unit": "kg",
     "unitPrice": 600,
-    "skuCode": "120"
+    "skuCode": "120",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120d",
@@ -3060,17 +3179,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 121,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Ribbon Pakoda — ஓலை பக்கோடா",
     "nameTa": "ஓலை பக்கோடா",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Golden Ribbon Strips · ஓலை பக்கோடா",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "121"
+    "skuCode": "121",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120e",
@@ -3086,17 +3206,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 122,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Arcot Mixture — ஆற்காடு மிக்சர்",
     "nameTa": "ஆற்காடு மிக்சர்",
     "price": 500,
     "pricePerKg": 500,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Heritage North Arcot Mixture · ஆற்காடு மிக்சர்",
     "unit": "kg",
     "unitPrice": 500,
-    "skuCode": "122"
+    "skuCode": "122",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc57768120f",
@@ -3112,17 +3233,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 123,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Kovilpatti Kara Sevu — கோவில்பட்டி காராசேவு",
     "nameTa": "கோவில்பட்டி காராசேவு",
     "price": 380,
     "pricePerKg": 380,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Authentic Kovilpatti Flavor · கோவில்பட்டி காராசேவு",
     "unit": "kg",
     "unitPrice": 380,
-    "skuCode": "123"
+    "skuCode": "123",
+    "counterStock": 50
   },
   {
     "_id": "6aae595e60582bc577681210",
@@ -3138,17 +3260,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 124,
-    "minThreshold": 8,
+    "minThreshold": 15,
     "name": "Thenisai Milk Murukku — தேன்னிசை பால்முறுக்கு",
     "nameTa": "தேன்னிசை பால்முறுக்கு",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 100,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Signature Milk Murukku · பால்முறுக்கு",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "124"
+    "skuCode": "124",
+    "counterStock": 100
   },
   {
     "_id": "6aae595e60582bc577681211",
@@ -3164,17 +3287,18 @@
     "isCustom": false,
     "isInactive": false,
     "itemNumber": 125,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Thenisai Thenkuzhal — தேன்னிசை தேன்குழல்",
     "nameTa": "தேன்னிசை தேன்குழல்",
     "price": 400,
     "pricePerKg": 400,
-    "stockKg": 35,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tagline": "Heritage Butter Thenkuzhal · தேன்குழல் முறுக்கு",
     "unit": "kg",
     "unitPrice": 400,
-    "skuCode": "125"
+    "skuCode": "125",
+    "counterStock": 50
   },
   {
     "_id": "6aae664f60582bc577681217",
@@ -3185,16 +3309,17 @@
     "image": "/images/products/palkova_card.jpg",
     "isInactive": false,
     "itemNumber": 126,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Corn Mixture — சோள மிக்சர்",
     "price": 380,
     "pricePerKg": 380,
     "skuCode": "126",
-    "stockKg": 25,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tamilName": "சோள மிக்சர்",
     "unit": "kg",
-    "unitPrice": 380
+    "unitPrice": 380,
+    "counterStock": 50
   },
   {
     "_id": "6aae664f60582bc577681218",
@@ -3205,16 +3330,17 @@
     "image": "/images/products/palkova_card.jpg",
     "isInactive": false,
     "itemNumber": 127,
-    "minThreshold": 8,
+    "minThreshold": 10,
     "name": "Mundhiri Mixture — முந்திரி மிக்சர்",
     "price": 800,
     "pricePerKg": 800,
     "skuCode": "127",
-    "stockKg": 25,
+    "stockKg": 50,
     "subcategory": "Spices (Kara Vagai)",
     "tamilName": "முந்திரி மிக்சர்",
     "unit": "kg",
-    "unitPrice": 800
+    "unitPrice": 800,
+    "counterStock": 50
   },
   {
     "_id": "6aae664f60582bc577681219",
@@ -3225,15 +3351,16 @@
     "image": "/images/products/palkova_card.jpg",
     "isInactive": true,
     "itemNumber": 128,
-    "minThreshold": 5,
+    "minThreshold": 10,
     "name": "Anjeer Roll (Athipalam Roll) — அத்திப்பழம் ரோல்",
     "price": 0,
     "pricePerKg": 0,
     "skuCode": "128",
-    "stockKg": 0,
+    "stockKg": 50,
     "subcategory": "Cashew & Rolls",
     "tamilName": "அத்திப்பழம் ரோல்",
     "unit": "kg",
-    "unitPrice": 0
+    "unitPrice": 0,
+    "counterStock": 50
   }
 ]

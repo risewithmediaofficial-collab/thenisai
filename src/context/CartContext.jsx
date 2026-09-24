@@ -11,7 +11,7 @@ const CartContext = createContext();
 const CART_STORAGE_KEY = 'thenisai_cart_items_v1';
 const INVOICE_STORAGE_KEY = 'thenisai_last_invoice_v1';
 const ORDERS_STORAGE_KEY = 'thenisai_orders_v1';
-const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v3';
+const INVENTORY_STORAGE_KEY = 'thenisai_inventory_v4';
 const BILLS_CACHE_KEY = 'thenisai_bills_cache';
 const OFFLINE_LEDGER_KEY = 'thenisai_offline_backup_ledger';
 const OFFLINE_QUEUE_KEY = 'thenisai_offline_sync_queue';
@@ -81,12 +81,12 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
     name: item.name,
     englishName: item.englishName,
     tamilName: item.tamilName,
-    stockKg: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
-    counterStock: isKg ? 35 : isLitre ? 25 : isCup ? 100 : isPc ? 80 : 50,
-    godownStock: isKg ? 80 : isLitre ? 60 : isCup ? 250 : isPc ? 200 : 120,
+    stockKg: isCup ? 100 : isPc ? 80 : isLitre ? 40 : 50,
+    counterStock: isCup ? 100 : isPc ? 80 : isLitre ? 40 : 50,
+    godownStock: 0,
     minThreshold: isKg ? 8 : isCup ? 20 : isPc ? 15 : 10,
-    batchDate: 'Today 06:30 AM',
-    batchNote: item.description || 'Fresh counter stock',
+    batchDate: 'Today',
+    batchNote: item.description || 'Fresh shop stock',
     unit: defaultUnit,
     price: item.price,
     unitPrice: item.price,
@@ -1219,6 +1219,16 @@ export function CartProvider({ children }) {
             const userPrice = savedMaster[item.id];
             const finalPrice = (userPrice && userPrice > 0) ? userPrice : (bPrice || item.price);
 
+            const bStock = (typeof bItem.counterStock === 'number' && bItem.counterStock > 0)
+              ? bItem.counterStock
+              : (typeof bItem.stockKg === 'number' && bItem.stockKg > 0)
+              ? bItem.stockKg
+              : (typeof item.counterStock === 'number' && item.counterStock > 0)
+              ? item.counterStock
+              : (typeof item.stockKg === 'number' && item.stockKg > 0)
+              ? item.stockKg
+              : 50;
+
             return {
               ...item,
               ...bItem,
@@ -1229,7 +1239,8 @@ export function CartProvider({ children }) {
               unitPrice: finalPrice,
               pricePerKg: item.unit === 'kg' ? finalPrice : item.pricePerKg || finalPrice,
               skuCode: bItem.skuCode || item.skuCode || (item.itemNumber ? String(item.itemNumber) : ''),
-              stockKg: bItem.stockKg !== undefined ? bItem.stockKg : item.stockKg,
+              stockKg: bStock,
+              counterStock: bStock,
               isInactive: bItem.isInactive !== undefined ? bItem.isInactive : item.isInactive,
             };
           });
@@ -1245,6 +1256,11 @@ export function CartProvider({ children }) {
               );
               const userPrice = savedMaster[bItem.id];
               const finalPrice = (userPrice && userPrice > 0) ? userPrice : (bPrice || 20);
+              const bStock = (typeof bItem.counterStock === 'number' && bItem.counterStock > 0)
+                ? bItem.counterStock
+                : (typeof bItem.stockKg === 'number' && bItem.stockKg > 0)
+                ? bItem.stockKg
+                : 50;
 
               merged.push({
                 ...bItem,
@@ -1255,6 +1271,8 @@ export function CartProvider({ children }) {
                 unitPrice: finalPrice,
                 pricePerKg: bItem.unit === 'kg' ? finalPrice : bItem.pricePerKg || finalPrice,
                 skuCode: bItem.skuCode || (bItem.itemNumber ? String(bItem.itemNumber) : ''),
+                stockKg: bStock,
+                counterStock: bStock,
               });
             }
           });
