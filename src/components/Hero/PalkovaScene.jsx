@@ -11,7 +11,7 @@ function PhotorealisticUruli({ mouseRef }) {
   // Load the authentic high-resolution photograph as a PBR texture
   const texture = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    const tex = loader.load('/images/products/palkova_hero.jpg');
+    const tex = loader.load('/images/products/palkova_hero.webp');
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;

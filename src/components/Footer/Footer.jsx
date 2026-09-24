@@ -25,7 +25,7 @@ export default function Footer() {
           {/* Logo + tagline */}
           <div className="footer__brand">
             <div className="footer__logo-wrap">
-              <img src="/images/branding/logo-light.webp" alt="Thenisai Palkhova & Sweets" className="footer__logo-img" />
+              <img src="/images/branding/logo-light.webp" alt="Thenisai Palkhova & Sweets" className="footer__logo-img" width="210" height="127" loading="lazy" decoding="async" />
             </div>
             <p className="footer__tagline">The Taste of Tradition · Since 2006</p>
             <div className="gold-line gold-line-left" style={{ marginTop: 16 }} />

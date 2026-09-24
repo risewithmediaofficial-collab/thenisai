@@ -247,33 +247,31 @@ function AppContent({ isLoaded, handleLoadComplete }) {
   // Default Customer Storefront UI
   return (
     <>
-      {/* Loading screen */}
-      <LoadingScreen onComplete={handleLoadComplete} />
+      {/* Loading screen overlay */}
+      {!isLoaded && <LoadingScreen onComplete={handleLoadComplete} />}
 
-      {/* Main site */}
-      {isLoaded && (
-        <div className="site">
-          <Navbar />
+      {/* Main site — mounted immediately for instant LCP discovery & zero layout delay */}
+      <div className="site">
+        <Navbar />
 
-          <main>
-            <HeroSection />
+        <main>
+          <HeroSection />
 
-            <DeferredSection><BrandStory /></DeferredSection>
-            <DeferredSection><SignaturePalkova /></DeferredSection>
-            <DeferredSection minHeight={680}><SweetsCollection /></DeferredSection>
-            <DeferredSection><InteractiveSweet /></DeferredSection>
-            <DeferredSection><IngredientsSection /></DeferredSection>
-            <DeferredSection><TraditionSection /></DeferredSection>
-            <DeferredSection><ProductShowcase /></DeferredSection>
-            <DeferredSection><CustomerReviews /></DeferredSection>
-            <DeferredSection><ContactSection /></DeferredSection>
-          </main>
+          <DeferredSection><BrandStory /></DeferredSection>
+          <DeferredSection><SignaturePalkova /></DeferredSection>
+          <DeferredSection minHeight={680}><SweetsCollection /></DeferredSection>
+          <DeferredSection><InteractiveSweet /></DeferredSection>
+          <DeferredSection><IngredientsSection /></DeferredSection>
+          <DeferredSection><TraditionSection /></DeferredSection>
+          <DeferredSection><ProductShowcase /></DeferredSection>
+          <DeferredSection><CustomerReviews /></DeferredSection>
+          <DeferredSection><ContactSection /></DeferredSection>
+        </main>
 
-          <Suspense fallback={null}>
-            <Footer />
-          </Suspense>
-        </div>
-      )}
+        <Suspense fallback={null}>
+          <Footer />
+        </Suspense>
+      </div>
 
       {/* Cart Drawer, Wishlist Drawer, Customer Auth & Tax Invoice Portals */}
       <CartDrawer />

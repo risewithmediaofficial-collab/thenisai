@@ -77,10 +77,13 @@ export default function ProductShowcase() {
             style={{ transformStyle: 'preserve-3d' }}
           >
             <img
-              src="/images/products/sweet_box.jpg"
+              src="/images/products/sweet_box.webp"
               alt="Thenisai premium sweet box"
               className="showcase__img"
+              width="600"
+              height="600"
               loading="lazy"
+              decoding="async"
             />
             {/* Shadow */}
             <div className="showcase__img-shadow" />

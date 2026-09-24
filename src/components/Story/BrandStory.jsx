@@ -8,7 +8,7 @@ const frames = [
     label: 'The Source',
     subheading: 'Pure Farm Milk',
     caption: 'Fresh whole milk collected daily at dawn from local heritage farms in Tamil Nadu, preserving unmatched rich sweetness and purity.',
-    img: '/images/story/ingredients.jpg',
+    img: '/images/story/ingredients.webp',
   },
   {
     id: 'frame-2',
@@ -16,7 +16,7 @@ const frames = [
     label: 'The Process',
     subheading: 'Slow Stirred with Love',
     caption: 'Patiently stirred for 4+ continuous hours over gentle fire with pure country cow ghee, allowing milk solids to naturally coalesce.',
-    img: '/images/story/brand_story.jpg',
+    img: '/images/story/brand_story.webp',
   },
   {
     id: 'frame-3',
@@ -24,7 +24,7 @@ const frames = [
     label: 'The Craft',
     subheading: 'Melt-in-Mouth Perfection',
     caption: 'Finished to rich, velvety goodness without artificial essence or preservatives — authentic South Indian Palkova as tradition intended.',
-    img: '/images/products/palkova_hero.jpg',
+    img: '/images/products/palkova_hero.webp',
   },
 ];
 
@@ -184,18 +184,18 @@ export default function BrandStory() {
                 <button
                   key={frame.id}
                   onClick={() => goToSlide(index)}
-                  className={`text-left p-3 md:p-4 rounded-lg border transition-all duration-500 relative overflow-hidden group ${
+                  className={`text-left p-3 md:p-4 rounded-lg border transition-colors duration-200 relative overflow-hidden group ${
                     isActive
                       ? 'bg-cream/10 border-gold/60 shadow-gold-glow'
                       : 'bg-cream/5 border-white/10 hover:border-gold/30 hover:bg-cream/[0.07]'
                   }`}
                 >
-                  {/* Progress bar fill for active step */}
+                  {/* Progress bar fill for active step (GPU-composited transform) */}
                   {isActive && !isPaused && (
                     <motion.div
-                      className="absolute bottom-0 left-0 top-0 bg-gold/15 -z-0"
-                      initial={{ width: '0%' }}
-                      animate={{ width: '100%' }}
+                      className="absolute inset-0 bg-gold/15 -z-0 origin-left"
+                      initial={{ scaleX: 0 }}
+                      animate={{ scaleX: 1 }}
                       transition={{ duration: AUTO_SWIPE_INTERVAL / 1000, ease: 'linear' }}
                       key={current}
                     />
@@ -231,6 +231,8 @@ export default function BrandStory() {
                   <img
                     src={currentFrame.img}
                     alt={currentFrame.label}
+                    width="896"
+                    height="500"
                     className="w-full h-full object-cover object-center transition-transform duration-1000 group-hover:scale-105"
                     loading="lazy"
                     decoding="async"

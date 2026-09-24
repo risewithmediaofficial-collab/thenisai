@@ -65,7 +65,7 @@ export default function IngredientsSection() {
   return (
     <section className="ingredients section">
       <div className="ingredients__bg-img">
-        <img src="/images/story/ingredients.jpg" alt="Ingredients" loading="lazy" />
+        <img src="/images/story/ingredients.webp" alt="Authentic Sweet Ingredients" width="896" height="500" loading="lazy" decoding="async" />
         <div className="ingredients__bg-overlay" />
       </div>
 

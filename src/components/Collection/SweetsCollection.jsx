@@ -63,7 +63,10 @@ function SweetCard({ sweet, index }) {
           src={sweet.image}
           alt={sweet.name}
           className="sweet-card__img"
+          width="400"
+          height="534"
           loading="lazy"
+          decoding="async"
         />
         <div className="sweet-card__overlay" />
         {sweet.featured && (

@@ -47,7 +47,7 @@ export default function Navbar() {
         <div className="navbar__inner">
           {/* Logo */}
           <a className="navbar__logo" href="#hero" onClick={(e) => { e.preventDefault(); scrollTo('#hero'); }} aria-label="Thenisai Palkhova & Sweets">
-            <img src="/images/branding/logo-light.webp" alt="Thenisai Palkhova & Sweets" className="navbar__logo-img" />
+            <img src="/images/branding/logo-light.webp" alt="Thenisai Palkhova & Sweets" className="navbar__logo-img" width="160" height="97" decoding="async" />
           </a>
 
           {/* Desktop links */}

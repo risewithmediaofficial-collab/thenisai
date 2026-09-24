@@ -42,9 +42,11 @@ export default function TraditionSection() {
           {/* Base Layer: Traditional / The Old Way (Left/Background) */}
           <div className="tradition__layer tradition__layer--base">
             <img
-              src="/images/story/brand_story.jpg"
+              src="/images/story/brand_story.webp"
               alt="Traditional cooking in brass uruli"
               className="tradition__layer-img"
+              width="800"
+              height="500"
               loading="lazy"
               decoding="async"
             />
@@ -62,9 +64,11 @@ export default function TraditionSection() {
             style={{ clipPath: `polygon(${sliderPos}% 0, 100% 0, 100% 100%, ${sliderPos}% 100%)` }}
           >
             <img
-              src="/images/products/sweet_box.jpg"
+              src="/images/products/sweet_box.webp"
               alt="Thenisai luxury sweet presentation"
               className="tradition__layer-img"
+              width="800"
+              height="500"
               loading="lazy"
               decoding="async"
             />

@@ -16491,7 +16491,8 @@ time, .hours {
 
 .collection__eyebrow {
   display: block;
-  color: var(--caramel);
+  color: #8C4F14;
+  font-weight: 700;
   margin-bottom: 12px;
   letter-spacing: 0.3em;
 }
@@ -17183,10 +17184,11 @@ time, .hours {
 
 .footer__right-text {
   font-family: var(--font-ui);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.35em;
   text-transform: uppercase;
-  color: rgba(255, 248, 238, 0.3);
+  color: rgba(255, 248, 238, 0.85);
+  font-weight: 500;
 }
 
 .footer__social {
@@ -17200,8 +17202,8 @@ time, .hours {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 1px solid rgba(212, 168, 67, 0.2);
-  color: rgba(255, 248, 238, 0.5);
+  border: 1px solid rgba(212, 168, 67, 0.3);
+  color: rgba(255, 248, 238, 0.85);
   text-decoration: none;
   transition: all 0.3s ease;
 }
@@ -17218,11 +17220,11 @@ time, .hours {
   justify-content: space-between;
   align-items: center;
   padding: 24px 0;
-  border-top: 1px solid rgba(255, 248, 238, 0.06);
+  border-top: 1px solid rgba(255, 248, 238, 0.12);
   font-family: var(--font-ui);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.12em;
-  color: rgba(255, 248, 238, 0.25);
+  color: rgba(255, 248, 238, 0.85);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -17231,12 +17233,14 @@ time, .hours {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: rgba(255, 248, 238, 0.25);
+  color: rgba(255, 248, 238, 0.85);
+  font-weight: 500;
 }
 
 .footer__staff-links a {
-  color: rgba(212, 168, 67, 0.55);
-  text-decoration: none;
+  color: #F8D179;
+  text-decoration: underline;
+  font-weight: 600;
   transition: color 0.2s ease;
 }
 
@@ -18938,7 +18942,7 @@ select.stock-form__input {
   right: 0;
   z-index: 1000;
   padding: 24px 0;
-  transition: all 0.5s var(--ease-smooth);
+  transition: background 0.3s ease, padding 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .navbar--scrolled {
