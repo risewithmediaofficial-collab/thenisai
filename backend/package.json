@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "kill-port": "powershell -NoProfile -Command \"$c = Get-NetTCPConnection -LocalPort 5003 -ErrorAction SilentlyContinue; if ($c) { Stop-Process -Id $c.OwningProcess -Force; Write-Host 'Port 5003 freed!' } else { Write-Host 'Port 5003 is already free' }\""
   },
   "dependencies": {
     "cors": "^2.8.5",
