@@ -162,6 +162,17 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         </Suspense>
       );
     }
+    if (isAdmin || isTestMode) {
+      return (
+        <Suspense fallback={<ModuleLoader label="Loading Company Stock Portal..." />}>
+          {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}
+          <div style={isTestMode ? { marginTop: 36 } : undefined}>
+            <AdminDashboard />
+          </div>
+        </Suspense>
+      );
+    }
+
     return (
       <Suspense fallback={<ModuleLoader label="Loading Company Manager Portal..." />}>
         {isTestMode && <SandboxBanner onLogout={() => { logout(); navigateTo('storefront'); }} />}

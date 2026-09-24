@@ -185,10 +185,11 @@ export default function SideNavbar({
                 {/* 4b. Company Manager / Company Stock Inward */}
                 <button
                   type="button"
-                  className="sidebar-nav-item"
+                  className={`sidebar-nav-item ${currentSection === 'company-stock' || currentSection === 'admin-company-stock' || currentSection === 'admin-manager' ? 'active' : ''}`}
                   onClick={() =>
                     handleNav(() => {
-                      navigateTo('manager');
+                      if (onSelectSection) onSelectSection('company-stock');
+                      else navigateTo('admin', 'company-stock');
                     })
                   }
                 >

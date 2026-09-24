@@ -9,6 +9,7 @@ import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from '../Billing/DeleteBillModal';
 import EditBillModal from '../Billing/EditBillModal';
 import StaffManagement from './StaffManagement';
+import CompanyManagerDashboard from './CompanyManagerDashboard';
 import CatalogSettingsModal from './CatalogSettingsModal';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
@@ -63,6 +64,7 @@ export default function AdminDashboard() {
 
     if (normalized.includes('daily') || normalized.includes('revenue') || normalized.includes('shift')) return 'daily-revenue';
     if (normalized.includes('recycle') || normalized.includes('trash') || normalized.includes('bin')) return 'recycle-bin';
+    if (normalized.includes('company') || normalized.includes('manager') || normalized.includes('godown') || normalized.includes('inward')) return 'company-stock';
     if (normalized.includes('inventory') || normalized.includes('product') || normalized.includes('stock')) return 'inventory';
     if (normalized.includes('activity') || normalized.includes('audit')) return 'activity-logs';
     if (normalized.includes('price') || normalized.includes('override')) return 'activity-logs';
@@ -146,7 +148,7 @@ export default function AdminDashboard() {
       if (h === '#admin/billing' || h.startsWith('#admin/billing') || h === '#admin/pos' || h.startsWith('#admin/pos')) {
         return;
       }
-      if (!h.startsWith('#admin') && !['#orders', '#dispatch', '#inventory', '#sales', '#daily-revenue', '#shift-bills', '#activity-logs', '#recycle-bin', '#staff', '#admin/staff'].includes(h)) return;
+      if (!h.startsWith('#admin') && !['#orders', '#dispatch', '#inventory', '#sales', '#daily-revenue', '#shift-bills', '#activity-logs', '#recycle-bin', '#staff', '#admin/staff', '#company-stock', '#manager', '#admin/company-stock', '#admin/manager'].includes(h)) return;
       const tab = resolveAdminTabFromHash();
       setActiveTab(tab);
       const adminRouteMap = {
@@ -159,6 +161,7 @@ export default function AdminDashboard() {
         'activity-logs': '#admin/activity-logs',
         'recycle-bin': '#admin/recycle-bin',
         staff: '#admin/staff',
+        'company-stock': '#admin/company-stock',
       };
       const target = adminRouteMap[tab] || '#admin/inventory';
       if (window.location.hash !== target && window.location.hash !== '#admin/orders' && window.location.hash !== '#admin/daily-revenue') {
@@ -202,6 +205,8 @@ export default function AdminDashboard() {
       if (fetchRecycleBinProducts) fetchRecycleBinProducts();
     } else if (tab === 'staff') {
       syncAdminHash('#admin/staff');
+    } else if (tab === 'company-stock' || tab === 'manager') {
+      syncAdminHash('#admin/company-stock');
     }
   };
 
@@ -732,10 +737,13 @@ export default function AdminDashboard() {
             ? 'admin-shift-bills'
             : activeTab === 'orders'
             ? 'admin-dispatch'
+            : activeTab === 'company-stock'
+            ? 'company-stock'
             : `admin-${activeTab}`
         }
         onSelectSection={(sec) => {
           if (sec === 'admin-billing' || sec === 'pos-register') navigateTo('admin', 'billing');
+          else if (sec === 'company-stock' || sec === 'admin-manager') handleSwitchAdminTab('company-stock');
           else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue' || sec === 'pos-bills' || sec === 'pos-daily-sales') handleSwitchAdminTab('daily-revenue');
           else if (sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') handleSwitchAdminTab('orders');
           else if (sec === 'admin-inventory' || sec === 'pos-inventory') handleSwitchAdminTab('inventory');
@@ -3159,6 +3167,13 @@ export default function AdminDashboard() {
            ========================================= */}
         {activeTab === 'staff' && (
           <StaffManagement currentUser={user} />
+        )}
+
+        {/* =========================================
+            TAB 7: COMPANY STOCK INWARD & MANAGER
+           ========================================= */}
+        {(activeTab === 'company-stock' || activeTab === 'manager') && (
+          <CompanyManagerDashboard />
         )}
 
         {/* Delete Bill Modal (Triggered from Sales Table) */}
