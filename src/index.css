@@ -22243,6 +22243,444 @@ select.stock-form__input {
   flex-wrap: wrap;
 }
 
+/* ============================================================================
+   RESPONSIVE WORKSPACE CONTRACT
+   Shared Tailwind utilities and final mobile overrides for every route.
+   ============================================================================ */
+@layer components {
+  .responsive-shell {
+    @apply w-full min-w-0 max-w-full;
+  }
+
+  .inline-scroll {
+    @apply max-w-full overflow-x-auto overflow-y-hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .inline-scroll > table,
+  .inline-scroll > .table,
+  .inline-scroll > [role='table'] {
+    min-width: 42rem;
+  }
+}
+
+@layer utilities {
+  .scrollbar-inline {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
+  }
+
+  .scrollbar-inline::-webkit-scrollbar {
+    height: 7px;
+  }
+
+  .scrollbar-inline::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.8);
+    border-radius: 999px;
+  }
+}
+
+/* Viewport containment for every routed workspace and its flex/grid children. */
+.admin-root,
+.billing-pos-root,
+.customer-menu-root,
+.admin-content-area,
+.pos-content-area,
+.pos-main-split,
+.menu-main-wrap,
+.menu-page-grid,
+.admin-content-area > *,
+.billing-pos-root > *,
+.pos-content-area > *,
+.pos-main-split > *,
+.menu-page-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.admin-content-area [class*='table-wrap'],
+.admin-content-area [class*='table-container'],
+.billing-pos-root [class*='table-wrap'],
+.billing-pos-root [class*='table-container'],
+.admin-content-area .data-table,
+.billing-pos-root .data-table {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+.admin-content-area table,
+.billing-pos-root table {
+  max-width: none;
+}
+
+.admin-content-area input,
+.admin-content-area select,
+.admin-content-area textarea,
+.billing-pos-root input,
+.billing-pos-root select,
+.billing-pos-root textarea,
+.customer-menu-root input,
+.customer-menu-root select,
+.customer-menu-root textarea {
+  max-width: 100%;
+}
+
+.pos-catalog-pane,
+.pos-bill-pane,
+.pos-content-area.is-full-page-tab,
+.tray-items-scroll,
+.checkout-modal__body,
+.printable-invoice-container,
+.cart-drawer__content,
+.wishlist-content,
+.mobile-menu,
+.minimal-auth-overlay {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 1024px) {
+  .admin-root.side-layout,
+  .billing-pos-root.side-layout {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .admin-content-area,
+  .pos-content-area,
+  .pos-catalog-pane,
+  .pos-bill-pane {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .billing-pos-header,
+  .admin-header,
+  .pos-toolbar,
+  .admin-toolbar,
+  .invoice-toolbar-top-row,
+  .invoice-toolbar-left,
+  .invoice-toolbar-top-left {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .preorder-tray-panel,
+  .checkout-modal,
+  .invoice-modal-wrap,
+  .cart-drawer,
+  .wishlist-drawer,
+  .minimal-auth-card {
+    max-width: 100vw;
+  }
+}
+
+@media (max-width: 640px) {
+  [aria-label='Sandbox Mode Announcement'] {
+    align-items: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    padding: 8px 12px !important;
+  }
+
+  [aria-label='Sandbox Mode Announcement'] > span:first-child {
+    min-width: 0;
+    flex: 1 1 100%;
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    line-height: 1.35;
+  }
+
+  [aria-label='Sandbox Mode Announcement'] button {
+    margin-left: auto;
+  }
+
+  .admin-content-area,
+  .pos-content-area,
+  .pos-catalog-pane,
+  .pos-bill-pane {
+    overflow-x: hidden;
+  }
+
+  .menu-list-row,
+  .clean-menu-card,
+  .cart-item,
+  .wl-item-card,
+  .completed-bill-meta,
+  .completed-amount-banner,
+  .panel-action-bar {
+    min-width: 0;
+  }
+
+  .form-grid-3col,
+  .form-grid-2col,
+  .admin-form-grid,
+  .checkout-form-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .checkout-modal__body {
+    min-width: 0;
+  }
+
+  .invoice-modal-wrap,
+  .checkout-modal,
+  .cart-drawer,
+  .wishlist-drawer,
+  .minimal-auth-card {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .minimal-auth-overlay {
+    justify-content: flex-start;
+    padding: 72px 12px 24px;
+  }
+
+  .minimal-top-bar {
+    top: 12px;
+    left: 12px;
+  }
+
+  .minimal-auth-card {
+    padding: 24px 16px 20px;
+    border-radius: 14px;
+  }
+
+  .minimal-role-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 380px) {
+  .menu-main-wrap {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .billing-pos-header,
+  .admin-header,
+  .invoice-toolbar,
+  .checkout-modal__header,
+  .cart-drawer__header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .mobile-only,
+  .desktop-only {
+    min-width: 0;
+  }
+}
+
+/* Billing/POS mobile finishing rules. */
+@media (max-width: 640px) {
+  .billing-pos-root.side-layout,
+  .billing-pos-root .pos-content-area,
+  .billing-pos-root .pos-main-split {
+    width: 100%;
+    max-width: 100vw;
+  }
+
+  .billing-pos-root .pos-mobile-strip {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .billing-pos-root .mobile-strip-brand {
+    flex: 1 1 auto;
+    max-width: none;
+    overflow: hidden;
+  }
+
+  .billing-pos-root .pos-mobile-view-tabs {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .billing-pos-root .mobile-view-tab {
+    min-width: 0;
+    padding-left: 7px;
+    padding-right: 7px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .billing-pos-root .pos-catalog-sticky-header,
+  .billing-pos-root .pos-bill-header,
+  .billing-pos-root .pos-cust-row,
+  .billing-pos-root .pos-bill-items,
+  .billing-pos-root .pos-bill-calc {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .billing-pos-root .pos-cust-row {
+    flex-wrap: wrap;
+  }
+
+  .billing-pos-root .cust-input-wrap,
+  .billing-pos-root .cust-input.name {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .billing-pos-root .pos-line-stepper,
+  .billing-pos-root .pos-line-price,
+  .billing-pos-root .pos-line-del {
+    flex-shrink: 0;
+  }
+
+  .billing-pos-root .pos-pay-modes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .billing-pos-root .manual-row-inline,
+  .billing-pos-root .manual-form-actions,
+  .billing-pos-root .online-card-bottom,
+  .billing-pos-root .pos-ord-bottom {
+    flex-wrap: wrap;
+  }
+
+  .billing-pos-root .inventory-search-box,
+  .billing-pos-root .online-search-box {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .billing-pos-root .inventory-filter-chips,
+  .billing-pos-root .online-filter-chips,
+  .billing-pos-root .shift-filter-chips {
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .billing-pos-root .inventory-filter-chips .filter-chip,
+  .billing-pos-root .online-filter-chips .filter-chip,
+  .billing-pos-root .shift-filter-chips > * {
+    flex: 0 0 auto;
+  }
+
+  .billing-pos-root .pos-online-drawer__inner,
+  .billing-pos-root .pos-online-page,
+  .billing-pos-root .pos-inventory-page,
+  .billing-pos-root .pos-shift-ledger {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .billing-pos-root .online-page-header,
+  .billing-pos-root .inventory-page-header,
+  .billing-pos-root .shift-ledger-header {
+    min-width: 0;
+  }
+
+  .billing-pos-root .online-header-right,
+  .billing-pos-root .inventory-header-right,
+  .billing-pos-root .shift-header-right {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .billing-pos-root .inventory-table-wrap,
+  .billing-pos-root .shift-invoices-table-wrap,
+  .billing-pos-root .pos-online-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 380px) {
+  .billing-pos-root .pos-mobile-strip {
+    gap: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
+  .billing-pos-root .mobile-strip-brand-text span {
+    display: none;
+  }
+
+  .billing-pos-root .mobile-strip-brand strong {
+    font-size: 0.76rem;
+  }
+
+  .billing-pos-root .pos-mobile-view-tabs {
+    gap: 0;
+  }
+
+  .billing-pos-root .mobile-view-tab {
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 0.68rem;
+  }
+
+  .billing-pos-root .pos-bill-line {
+    gap: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+
+  .billing-pos-root .pos-line-price {
+    min-width: 52px;
+    font-size: 0.8rem;
+  }
+
+  /* Keep cashier product names readable beside the quantity controls. */
+  .billing-pos-root .pos-list-row {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .billing-pos-root .pos-list-info {
+    flex: 1 1 0;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .billing-pos-root .pos-list-title-wrap {
+    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+  }
+
+  .billing-pos-root .pos-list-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: normal;
+    line-height: 1.15;
+  }
+
+  .billing-pos-root .pos-list-rate {
+    align-self: flex-start;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+  }
+
+  .billing-pos-root .pos-list-kg-action,
+  .billing-pos-root .pos-list-stock-action,
+  .billing-pos-root .pos-catalog-stepper {
+    flex: 0 0 auto;
+    max-width: 6.5rem;
+  }
+}
+
 .hint-text {
   font-size: 12px;
   color: #64748B;
