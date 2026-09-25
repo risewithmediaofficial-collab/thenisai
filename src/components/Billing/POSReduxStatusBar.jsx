@@ -1,12 +1,7 @@
 import React, { memo, useCallback, useRef, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import {
-  setScannerActive,
-  setActiveWeightPreset,
-  setPaymentMethod,
-} from '../../store/slices/posSlice';
+import { setPaymentMethod } from '../../store/slices/posSlice';
 import { selectInventorySummary } from '../../store/slices/inventorySlice';
-import { showToast } from '../../store/slices/uiSlice';
 
 /**
  * High-performance POS Status Bar powered by Redux.
@@ -17,8 +12,6 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
 
   // Fast selectors from Redux
   const inventorySummary = useAppSelector(selectInventorySummary);
-  const scannerActive = useAppSelector((state) => state.pos.scannerActive);
-  const activeWeightPreset = useAppSelector((state) => state.pos.activeWeightPreset);
   const paymentMethod = useAppSelector((state) => state.pos.paymentMethod);
 
   // Pulse animation ref for stock updates
@@ -37,24 +30,6 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
     }
   }, [inventorySummary.totalProducts]);
 
-  const handleToggleScanner = useCallback(() => {
-    const next = !scannerActive;
-    dispatch(setScannerActive(next));
-    dispatch(
-      showToast({
-        message: next ? 'Barcode Scanner Activated' : 'Barcode Scanner Paused',
-        type: next ? 'success' : 'info',
-      })
-    );
-  }, [dispatch, scannerActive]);
-
-  const handleSelectPreset = useCallback(
-    (preset) => {
-      dispatch(setActiveWeightPreset(preset));
-    },
-    [dispatch]
-  );
-
   const handleSelectPayment = useCallback(
     (method) => {
       dispatch(setPaymentMethod(method));
@@ -62,7 +37,6 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
     [dispatch]
   );
 
-  const presets = ['100g', '250g', '500g', '1kg'];
   const methods = [
     { id: 'CASH', label: '💵 Cash' },
     { id: 'UPI', label: '📱 UPI' },
@@ -177,96 +151,38 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
         )}
       </div>
 
-      {/* Right: Quick Toggles (Scanner, Presets, Fast Payment) */}
+      {/* Right: Quick Payment Toggles */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '14px',
+          gap: '8px',
           flexWrap: 'wrap',
         }}
       >
-        {/* Weight Preset Pills */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{ fontSize: '11px', color: '#64748b' }}>Weight:</span>
-          {presets.map((p) => {
-            const isSelected = activeWeightPreset === p;
-            return (
-              <button
-                key={p}
-                type="button"
-                onClick={() => handleSelectPreset(p)}
-                style={{
-                  padding: '2px 7px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: isSelected ? 700 : 500,
-                  border: isSelected ? '1px solid #b45309' : '1px solid #e2e8f0',
-                  backgroundColor: isSelected ? '#fffbeb' : '#f8fafc',
-                  color: isSelected ? '#b45309' : '#64748b',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {p}
-              </button>
-            );
-          })}
-        </div>
-
-        <span style={{ color: '#cbd5e1' }}>|</span>
-
-        {/* Quick Payment Toggles */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          {methods.map((m) => {
-            const isSelected = paymentMethod === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => handleSelectPayment(m.id)}
-                style={{
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  fontSize: '11px',
-                  fontWeight: isSelected ? 700 : 500,
-                  border: isSelected ? '1px solid #16a34a' : '1px solid #e2e8f0',
-                  backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
-                  color: isSelected ? '#15803d' : '#64748b',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {m.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <span style={{ color: '#cbd5e1' }}>|</span>
-
-        {/* Barcode Scanner Toggle */}
-        <button
-          type="button"
-          onClick={handleToggleScanner}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '5px',
-            padding: '3px 10px',
-            borderRadius: '6px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-            border: scannerActive ? '1px solid #10b981' : '1px solid #cbd5e1',
-            backgroundColor: scannerActive ? '#ecfdf5' : '#f1f5f9',
-            color: scannerActive ? '#065f46' : '#64748b',
-            transition: 'all 0.15s ease',
-          }}
-          title="Toggle hardware barcode scanner input listener"
-        >
-          📷 {scannerActive ? 'Scanner Active' : 'Scanner Off'}
-        </button>
+        {methods.map((m) => {
+          const isSelected = paymentMethod === m.id;
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => handleSelectPayment(m.id)}
+              style={{
+                padding: '4px 10px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: isSelected ? 700 : 500,
+                border: isSelected ? '1px solid #16a34a' : '1px solid #e2e8f0',
+                backgroundColor: isSelected ? '#f0fdf4' : '#ffffff',
+                color: isSelected ? '#15803d' : '#64748b',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {m.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

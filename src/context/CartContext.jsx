@@ -470,6 +470,10 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Expenses logged by cashier (persisted purely from backend, no localStorage)
+  const [expenses, setExpenses] = useState([]);
+
+
 
   // Inventory state (guarded so deleted products never get resurrected)
   const [inventory, setInventory] = useState(() => {
@@ -1048,6 +1052,7 @@ export function CartProvider({ children }) {
         register: '#admin/billing',
         preorders: '#admin/preorders',
         'pre-orders': '#admin/preorders',
+        expenses: '#admin/expenses',
       };
       const targetHash = subTab ? (adminRouteMap[subTab] || `#admin/${subTab}`) : '#admin/inventory';
       if (window.location.hash !== targetHash) {
@@ -1064,6 +1069,7 @@ export function CartProvider({ children }) {
         dispatch: '#billing/preorders',
         preorders: '#billing/preorders',
         'pre-orders': '#billing/preorders',
+        expenses: '#billing/expenses',
       };
       const targetHash = subTab ? (billingRouteMap[subTab] || `#billing/${subTab}`) : '#billing';
       if (window.location.hash !== targetHash) {
@@ -3178,9 +3184,16 @@ export function CartProvider({ children }) {
           }
         } catch {}
 
+        // Refresh inventory from backend so stock reflects server truth
+        syncWithBackend().catch(() => {});
+
         return finalBill;
       }
     } catch (err) {
+      // Check if this is an oversell/insufficient stock error from backend (HTTP 409)
+      if (err?.status === 409 || err?.response?.status === 409 || (err?.message && err.message.includes('INSUFFICIENT_STOCK'))) {
+        throw err; // Re-throw so BillingCounter can display specific stock error to cashier
+      }
       console.warn('Backend bill save failed — queuing for offline sync:', err);
       // Backend is down → add to offline sync queue
       try {
@@ -3197,6 +3210,112 @@ export function CartProvider({ children }) {
 
     return fullOrder;
   };
+
+  // ─── Validate stock levels before creating a bill (pre-bill oversell check) ─
+  const validateStockBeforeBilling = async (items) => {
+    if (!Array.isArray(items) || items.length === 0) return { ok: true, errors: [] };
+    try {
+      const res = await api.post('/api/bills/validate-stock', { items });
+      return res; // { ok: bool, errors: [...] }
+    } catch (err) {
+      console.warn('[Stock Validate] Pre-bill check failed (non-blocking):', err);
+      return { ok: true, errors: [], warning: 'Stock validation could not be completed.' };
+    }
+  };
+
+  // ─── Expenses (Cashier logs / Admin views) ──────────────────────────────────
+  const fetchExpenses = useCallback(async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.cashierId && filters.cashierId !== 'all') params.set('cashierId', filters.cashierId);
+      if (filters.category && filters.category !== 'all') params.set('category', filters.category);
+      if (filters.date) params.set('date', filters.date);
+      if (filters.dateFrom) params.set('dateFrom', String(filters.dateFrom));
+      if (filters.dateTo) params.set('dateTo', String(filters.dateTo));
+
+      const endpoint = `/api/expenses${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await api.get(endpoint);
+      if (res && res.success && Array.isArray(res.expenses)) {
+        setExpenses(res.expenses);
+        try { localStorage.setItem('thenisai_expenses_cache', JSON.stringify(res.expenses)); } catch {}
+        return { expenses: res.expenses, total: res.total || 0, categories: res.categories || [] };
+      }
+    } catch (err) {
+      console.warn('[Expenses] Fetch failed, checking local cache:', err);
+    }
+    try {
+      const cached = JSON.parse(localStorage.getItem('thenisai_expenses_cache') || '[]');
+      if (Array.isArray(cached) && cached.length > 0) {
+        setExpenses(cached);
+        return { expenses: cached, total: cached.reduce((sum, e) => sum + (Number(e.amount) || 0), 0), categories: [] };
+      }
+    } catch {}
+    return { expenses: [], total: 0, categories: [] };
+  }, []);
+
+  const logExpense = useCallback(async (expenseData) => {
+    const cashier = resolveActiveUser(expenseData.cashier);
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    const payload = {
+      amount: Number(expenseData.amount),
+      purpose: String(expenseData.purpose || '').trim(),
+      category: expenseData.category || 'General',
+      date: expenseData.date || todayStr,
+      cashier,
+      note: expenseData.note || '',
+    };
+
+    if (!payload.amount || payload.amount <= 0) throw new Error('A valid positive amount is required.');
+    if (!payload.purpose) throw new Error('Purpose / reason is required.');
+
+    if (isSandboxActive()) {
+      // In sandbox, simulate the expense without touching the database
+      const fakeExpense = { ...payload, id: `exp-sandbox-${Date.now()}`, createdAt: Date.now() };
+      setExpenses((prev) => [fakeExpense, ...prev]);
+      return fakeExpense;
+    }
+
+    try {
+      const res = await api.post('/api/expenses', payload);
+      if (res && res.success && res.expense) {
+        setExpenses((prev) => [res.expense, ...prev]);
+        try {
+          const cached = JSON.parse(localStorage.getItem('thenisai_expenses_cache') || '[]');
+          localStorage.setItem('thenisai_expenses_cache', JSON.stringify([res.expense, ...cached]));
+        } catch {}
+        return res.expense;
+      }
+    } catch (err) {
+      console.warn('[Expenses] API save failed, saving to local offline cache:', err);
+      const offlineExpense = { ...payload, id: `exp-offline-${Date.now()}`, createdAt: Date.now() };
+      setExpenses((prev) => [offlineExpense, ...prev]);
+      try {
+        const cached = JSON.parse(localStorage.getItem('thenisai_expenses_cache') || '[]');
+        localStorage.setItem('thenisai_expenses_cache', JSON.stringify([offlineExpense, ...cached]));
+      } catch {}
+      return offlineExpense;
+    }
+  }, []);
+
+  const deleteExpense = useCallback(async (expenseId) => {
+    if (isSandboxActive()) {
+      setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+      return true;
+    }
+    try {
+      const res = await api.delete(`/api/expenses/${encodeURIComponent(expenseId)}`);
+      if (res && res.success) {
+        setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+        return true;
+      }
+    } catch (err) {
+      console.warn('[Expenses] Delete failed:', err);
+    }
+    return false;
+  }, []);
+
 
   const updateOrderStatus = async (orderId, newStatus) => {
     setOrders((prev) =>
@@ -3757,6 +3876,12 @@ export function CartProvider({ children }) {
     activityLogs,
     recordActivity,
     fetchActivityLogs,
+    // Expenses
+    expenses,
+    logExpense,
+    fetchExpenses,
+    deleteExpense,
+    validateStockBeforeBilling,
     subtotal,
     totalItems,
     freeDeliveryRemaining,
@@ -3791,6 +3916,7 @@ export function CartProvider({ children }) {
     recycleBinBills,
     recycleBinProducts,
     activityLogs,
+    expenses,
     subtotal,
     totalItems,
     freeDeliveryRemaining,

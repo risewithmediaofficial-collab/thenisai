@@ -281,6 +281,27 @@ export default function SideNavbar({
                   </svg>
                   <span className="nav-text">Staff Accounts</span>
                 </button>
+
+                {/* 9. Expenses Log */}
+                <button
+                  type="button"
+                  id="side-nav-admin-expenses"
+                  className={`sidebar-nav-item ${currentSection === 'admin-expenses' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('admin-expenses');
+                      else navigateTo('admin', 'expenses');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                    <circle cx="7" cy="15" r="1" />
+                    <line x1="12" y1="15" x2="17" y2="15" />
+                  </svg>
+                  <span className="nav-text">Expenses Log</span>
+                </button>
               </div>
             </>
           ) : (
@@ -371,6 +392,27 @@ export default function SideNavbar({
                     <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
                   </svg>
                   <span className="nav-text">{user?.role === 'admin' ? 'Shift Bills & Daily Revenue' : "Today's Shift Bills & Revenue"}</span>
+                </button>
+
+                {/* Expenses Log */}
+                <button
+                  type="button"
+                  id="side-nav-pos-expenses"
+                  className={`sidebar-nav-item ${currentSection === 'pos-expenses' ? 'active' : ''}`}
+                  onClick={() =>
+                    handleNav(() => {
+                      if (onSelectSection) onSelectSection('pos-expenses');
+                      else navigateTo('billing', 'expenses');
+                    })
+                  }
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="nav-icon-svg">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                    <circle cx="7" cy="15" r="1" />
+                    <line x1="12" y1="15" x2="17" y2="15" />
+                  </svg>
+                  <span className="nav-text">Record Expense</span>
                 </button>
               </div>
 

@@ -11,6 +11,7 @@ import EditBillModal from '../Billing/EditBillModal';
 import StaffManagement from './StaffManagement';
 import CompanyManagerDashboard from './CompanyManagerDashboard';
 import CatalogSettingsModal from './CatalogSettingsModal';
+import ExpensesPage from './ExpensesPage';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
 import { isProductUnlimitedStock } from '../../utils/unitConfig';
@@ -72,6 +73,7 @@ export default function AdminDashboard() {
     if (normalized.includes('sales') || normalized.includes('ledger')) return 'sales';
     if (normalized.includes('staff') || normalized.includes('user') || normalized.includes('account')) return 'staff';
     if (normalized.includes('dispatch') || normalized.includes('order')) return 'orders';
+    if (normalized.includes('expense')) return 'expenses';
     return 'inventory';
   };
 
@@ -149,7 +151,7 @@ export default function AdminDashboard() {
       if (h === '#admin/billing' || h.startsWith('#admin/billing') || h === '#admin/pos' || h.startsWith('#admin/pos')) {
         return;
       }
-      if (!h.startsWith('#admin') && !['#orders', '#dispatch', '#inventory', '#sales', '#daily-revenue', '#shift-bills', '#activity-logs', '#recycle-bin', '#staff', '#admin/staff', '#company-stock', '#manager', '#admin/company-stock', '#admin/manager'].includes(h)) return;
+      if (!h.startsWith('#admin') && !['#orders', '#dispatch', '#inventory', '#sales', '#daily-revenue', '#shift-bills', '#activity-logs', '#recycle-bin', '#staff', '#admin/staff', '#company-stock', '#manager', '#admin/company-stock', '#admin/manager', '#admin/expenses', '#expenses'].includes(h)) return;
       const tab = resolveAdminTabFromHash();
       setActiveTab(tab);
       const adminRouteMap = {
@@ -163,6 +165,7 @@ export default function AdminDashboard() {
         'recycle-bin': '#admin/recycle-bin',
         staff: '#admin/staff',
         'company-stock': '#admin/company-stock',
+        expenses: '#admin/expenses',
       };
       const target = adminRouteMap[tab] || '#admin/inventory';
       if (window.location.hash !== target && window.location.hash !== '#admin/orders' && window.location.hash !== '#admin/daily-revenue') {
@@ -208,6 +211,8 @@ export default function AdminDashboard() {
       syncAdminHash('#admin/staff');
     } else if (tab === 'company-stock' || tab === 'manager') {
       syncAdminHash('#admin/company-stock');
+    } else if (tab === 'expenses') {
+      syncAdminHash('#admin/expenses');
     }
   };
 
@@ -755,6 +760,7 @@ export default function AdminDashboard() {
           else if (sec === 'admin-activity-logs' || sec === 'admin-price-logs') handleSwitchAdminTab('activity-logs');
           else if (sec === 'admin-recycle-bin') handleSwitchAdminTab('recycle-bin');
           else if (sec === 'admin-staff') handleSwitchAdminTab('staff');
+          else if (sec === 'admin-expenses') handleSwitchAdminTab('expenses');
           else if (sec === 'storefront') navigateTo('storefront');
         }}
         pendingOnlineCount={pendingOrders.length}
@@ -3197,6 +3203,13 @@ export default function AdminDashboard() {
            ========================================= */}
         {(activeTab === 'company-stock' || activeTab === 'manager') && (
           <CompanyManagerDashboard />
+        )}
+
+        {/* =========================================
+            TAB 8: EXPENSES
+           ========================================= */}
+        {activeTab === 'expenses' && (
+          <ExpensesPage currentUser={user} role="admin" />
         )}
 
         {/* Delete Bill Modal (Triggered from Sales Table) */}

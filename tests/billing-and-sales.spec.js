@@ -1,7 +1,24 @@
 import { test, expect } from '@playwright/test';
+import { execSync } from 'child_process';
 import { formatInvoiceNumber, parseInvoiceNumber, getNextInvoiceNumber } from '../src/utils/invoiceNumber';
 
 test.describe('Thenisai POS Billing & Admin Sales', () => {
+
+  test.beforeAll(() => {
+    try {
+      execSync('node backend/reset-bills.js', { stdio: 'inherit' });
+    } catch (e) {
+      console.error('Failed to reset bills in beforeAll:', e);
+    }
+  });
+
+  test.afterAll(() => {
+    try {
+      execSync('node backend/reset-bills.js', { stdio: 'inherit' });
+    } catch (e) {
+      console.error('Failed to reset bills in afterAll:', e);
+    }
+  });
 
   test('0. Vehicle Registration format AA001 to AA999 to AB001 unit tests', async () => {
     expect(formatInvoiceNumber(1)).toBe('AA001');
@@ -243,6 +260,15 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     }, todayBills);
 
+    // Mock API response so seeded bills are isolated from database
+    await page.route('**/api/bills', async (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, bills: todayBills })
+      });
+    });
+
     // Open Admin Sales & Ledger
     await page.goto('/#admin/sales');
     await page.waitForSelector('.sales-table, .admin-sales-tab', { timeout: 15000 });
@@ -355,6 +381,15 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     }, todayBills);
 
+    // Mock API response so seeded bills are isolated from database
+    await page.route('**/api/bills', async (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, bills: todayBills })
+      });
+    });
+
     // Navigate to shift bills
     await page.goto('/#admin/shift-bills');
     await page.waitForSelector('.daily-revenue-wrapper', { timeout: 15000 });
@@ -364,7 +399,7 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     expect(revValue).toContain('400'); // 150 + 250 = 400
 
     // Verify bills appear in the daily bills table
-    const tableText = await page.locator('.daily-bills-table').innerText();
+    const tableText = await page.locator('.daily-bills-table').first().innerText();
     expect(tableText).toContain('AA001');
     expect(tableText).toContain('AA002');
     expect(tableText).toContain('Ramesh');
@@ -431,6 +466,15 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
       localStorage.setItem('thenisai_offline_ledger_v2', JSON.stringify(bills));
       localStorage.setItem('thenisai_recycle_bin_bills_v1', '[]');
     }, multiDateBills);
+
+    // Mock API response so seeded bills are isolated from database
+    await page.route('**/api/bills', async (route) => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, bills: multiDateBills })
+      });
+    });
 
     // Navigate to shift bills
     await page.goto('/#admin/shift-bills');

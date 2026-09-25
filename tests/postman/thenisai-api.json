@@ -1,0 +1,182 @@
+{
+  "info": {
+    "name": "Thenisai Sweets POS - Billing, Stock & Expenses API",
+    "_postman_id": "c7a84501-92be-4971-bf36-thenisai-pos-api",
+    "description": "Complete collection of API endpoints for Stock Deduction, Oversell Prevention, Expenses Tracking, and Daily Summary Report.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Stock & Inventory",
+      "item": [
+        {
+          "name": "Validate Stock Before Billing (Pre-bill Oversell Check)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"id\": \"sweet-1\",\n      \"name\": \"Special Milk Palkova\",\n      \"quantity\": 2,\n      \"weight\": \"500g\",\n      \"unit\": \"500g\",\n      \"price\": 340\n    },\n    {\n      \"id\": \"sweet-13\",\n      \"name\": \"Thenisai Filter Coffee\",\n      \"quantity\": 4,\n      \"unit\": \"1 Cup\",\n      \"price\": 30,\n      \"isUnlimitedStock\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills/validate-stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bills", "validate-stock"]
+            },
+            "description": "Checks whether all items in the candidate bill have sufficient stock before finalizing. Returns ok: true or ok: false with array of insufficient items."
+          }
+        },
+        {
+          "name": "Get Inventory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/inventory",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "inventory"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing & Sales",
+      "item": [
+        {
+          "name": "Create Counter Bill with Stock Deduction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceNumber\": \"AA001\",\n  \"source\": \"pos\",\n  \"paymentMethod\": \"cash\",\n  \"grandTotal\": 680,\n  \"subtotal\": 680,\n  \"cashier\": {\n    \"id\": \"staff-2\",\n    \"name\": \"M. Kannan\",\n    \"username\": \"cashier\",\n    \"counter\": \"Counter Desk 01\"\n  },\n  \"customer\": {\n    \"fullName\": \"Walk-in Customer\",\n    \"phone\": \"9876543210\"\n  },\n  \"items\": [\n    {\n      \"id\": \"sweet-1\",\n      \"name\": \"Special Milk Palkova\",\n      \"quantity\": 2,\n      \"weight\": \"500g\",\n      \"unit\": \"500g\",\n      \"price\": 340\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/bills",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bills"]
+            },
+            "description": "Creates a new bill, performs pre-bill oversell validation (returns HTTP 409 if insufficient), creates the invoice and deducts unit-converted stock atomically."
+          }
+        },
+        {
+          "name": "Get All Bills",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/bills",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "bills"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Expenses Management",
+      "item": [
+        {
+          "name": "Log Expense (Cashier / Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 150,\n  \"purpose\": \"Tea and morning snacks for counter staff\",\n  \"category\": \"Tea & Snacks\",\n  \"note\": \"Voucher #104\",\n  \"cashier\": {\n    \"id\": \"staff-2\",\n    \"name\": \"M. Kannan\",\n    \"username\": \"cashier\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/expenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expenses"]
+            },
+            "description": "Records a store expense with amount, purpose, category, and cashier details."
+          }
+        },
+        {
+          "name": "List Expenses (Filtered)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/expenses?category=Tea %26 Snacks&date=2026-09-25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expenses"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Tea %26 Snacks"
+                },
+                {
+                  "key": "date",
+                  "value": "2026-09-25"
+                },
+                {
+                  "key": "cashierId",
+                  "value": "staff-2",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieves logged expenses with support for category, cashierId, date, and date range filters."
+          }
+        },
+        {
+          "name": "Delete Expense",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/expenses/exp_123456",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "expenses", "exp_123456"]
+            },
+            "description": "Deletes an expense entry by its unique ID."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports & Reconciliation",
+      "item": [
+        {
+          "name": "Real-time Daily Report (Revenue, Expenses & Net)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/daily-report?date=2026-09-25",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "daily-report"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-09-25"
+                }
+              ]
+            },
+            "description": "Computes real-time daily metrics including gross revenue, tender breakdown (cash, upi, card, split), total expenses, and net profit."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ]
+}

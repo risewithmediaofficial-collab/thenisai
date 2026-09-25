@@ -87,8 +87,14 @@ export default function DailyRevenueReport({
     (activeUser?.role !== 'admin' && (isBillingScreen || activeUser?.role === 'cashier'))
   );
 
-  const { taxSettings, deleteBill } = useCart();
+  const { taxSettings, deleteBill, expenses = [], fetchExpenses } = useCart();
   const todayKey = toDateKey(new Date());
+
+  React.useEffect(() => {
+    if (fetchExpenses) {
+      fetchExpenses();
+    }
+  }, [fetchExpenses]);
 
   // Date Selection: For cashiers, strictly 'today' (no yesterday, no all-time)
   const [dateMode, setDateMode] = useState('today');
@@ -233,10 +239,48 @@ export default function DailyRevenueReport({
     });
   }, [allSales, activeDateString, isCashier, todayKey, dateMode, fromDate, toDate, activeUser, selectedStaffFilter, selectedPaymentFilter, searchTerm]);
 
+  // Filter expenses for the selected date and staff
+  const dayExpenses = useMemo(() => {
+    if (!Array.isArray(expenses)) return [];
+    return expenses.filter((exp) => {
+      const expDateKey = toDateKey(exp.date || exp.createdAt);
+      if (isCashier) {
+        if (expDateKey !== todayKey) return false;
+        if (activeUser) {
+          const uid = activeUser.id || activeUser._id || activeUser.username;
+          if (exp.cashier?.username && exp.cashier.username !== activeUser.username && exp.cashier?.id !== uid) {
+            return false;
+          }
+        }
+      } else if (dateMode === 'this-month' || dateMode === 'range') {
+        if (!expDateKey || expDateKey < fromDate || expDateKey > toDate) return false;
+      } else if (activeDateString) {
+        if (expDateKey !== activeDateString) return false;
+      }
+
+      if (!isCashier && selectedStaffFilter !== 'all') {
+        const cid = exp.cashier?.id || exp.cashier?.username || exp.cashier?.name;
+        const match =
+          cid === selectedStaffFilter ||
+          exp.cashier?.username === selectedStaffFilter ||
+          exp.cashier?.id === selectedStaffFilter ||
+          exp.cashier?.name === selectedStaffFilter;
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [expenses, isCashier, todayKey, dateMode, fromDate, toDate, activeDateString, activeUser, selectedStaffFilter]);
+
   // Key Financial Calculations
   const grossRevenue = useMemo(() => {
     return daySales.reduce((acc, s) => acc + (s.grandTotal || 0), 0);
   }, [daySales]);
+
+  const totalExpenses = useMemo(() => {
+    return dayExpenses.reduce((acc, exp) => acc + (Number(exp.amount) || 0), 0);
+  }, [dayExpenses]);
+
+  const netRevenueAfterExpenses = grossRevenue - totalExpenses;
 
   const totalTax = useMemo(() => {
     return daySales.reduce((acc, s) => {
@@ -798,6 +842,18 @@ export default function DailyRevenueReport({
           <div className="rev-value">{totalBills}</div>
           <span className="rev-foot">Cash: ₹{tenderSummary.cash.amount.toLocaleString('en-IN')} · UPI: ₹{tenderSummary.upi.amount.toLocaleString('en-IN')}</span>
         </div>
+
+        <div className="rev-card expenses" style={{ borderLeft: '4px solid #ef4444' }}>
+          <span className="rev-label">TOTAL STORE EXPENSES</span>
+          <div className="rev-value" style={{ color: '#ef4444' }}>₹{totalExpenses.toLocaleString('en-IN')}</div>
+          <span className="rev-foot">{dayExpenses.length} Expense Payouts Logged</span>
+        </div>
+
+        <div className="rev-card net-revenue" style={{ borderLeft: '4px solid #10b981' }}>
+          <span className="rev-label">NET REVENUE (PROFIT)</span>
+          <div className="rev-value" style={{ color: '#10b981' }}>₹{netRevenueAfterExpenses.toLocaleString('en-IN')}</div>
+          <span className="rev-foot">Sales (₹{grossRevenue.toLocaleString('en-IN')}) − Expenses</span>
+        </div>
       </section>
 
       {/* Tender Breakdown Cards (Cash vs UPI vs Card) with SVG Strokes instead of emojis */}
@@ -1109,6 +1165,90 @@ export default function DailyRevenueReport({
         )}
       </section>
 
+      {/* Daily Expenses Transaction Log */}
+      <section className="daily-bills-section" style={{ marginTop: '24px' }}>
+        <div className="bills-header-line">
+          <div>
+            <h3 className="section-subtitle">
+              Logged Store Expenses ({dayExpenses.length} Records)
+            </h3>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              Tea, provisions, packaging &amp; miscellaneous operational disbursements
+            </span>
+          </div>
+          <div style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>
+            Total: ₹{totalExpenses.toLocaleString('en-IN')}
+          </div>
+        </div>
+
+        {dayExpenses.length === 0 ? (
+          <div className="empty-day-state">
+            <p>No expense payouts logged for this period.</p>
+          </div>
+        ) : (
+          <div className="daily-bills-table-wrap">
+            <table className="daily-bills-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                  <th>Time / Date</th>
+                  <th>Category</th>
+                  <th>Purpose / Description</th>
+                  <th>Cashier</th>
+                  <th>Note</th>
+                  <th className="text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {dayExpenses.map((exp, idx) => (
+                  <tr key={exp.id || idx}>
+                    <td style={{ textAlign: 'center', fontWeight: 700, color: '#6366f1', fontSize: '13px' }}>
+                      {idx + 1}
+                    </td>
+                    <td>
+                      <span className="time-text">
+                        {exp.createdAt ? new Date(exp.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (exp.date || '-')}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        background: 'rgba(239,68,68,0.1)',
+                        color: '#dc2626',
+                        border: '1px solid rgba(239,68,68,0.2)'
+                      }}>
+                        {exp.category || 'General'}
+                      </span>
+                    </td>
+                    <td>
+                      <strong style={{ color: '#0f172a', fontSize: '13px' }}>{exp.purpose || 'Expense'}</strong>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '12px', color: '#475569' }}>
+                        {exp.cashier?.name || exp.cashier?.username || 'Counter Staff'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '12px', color: '#64748b' }}>{exp.note || '—'}</span>
+                    </td>
+                    <td className="text-right">
+                      <strong style={{ color: '#ef4444', fontSize: '14px', fontWeight: 800 }}>
+                        ₹{(Number(exp.amount) || 0).toLocaleString('en-IN')}
+                      </strong>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       {/* Printable Z-Report / Monthly Report Modal */}
       <AnimatePresence>
         {isZReportOpen && (
@@ -1224,6 +1364,14 @@ export default function DailyRevenueReport({
                   <div className="slip-row total">
                     <strong>{dateMode === 'this-month' ? 'GROSS MONTH REVENUE:' : dateMode === 'range' ? 'GROSS PERIOD REVENUE:' : 'GROSS DAY REVENUE:'}</strong>
                     <strong>₹{grossRevenue.toLocaleString('en-IN')}</strong>
+                  </div>
+                  <div className="slip-row" style={{ color: '#dc2626' }}>
+                    <span>Store Expenses Logged:</span>
+                    <span>-₹{totalExpenses.toLocaleString('en-IN')} ({dayExpenses.length})</span>
+                  </div>
+                  <div className="slip-row total" style={{ borderTop: '1px dashed #334155', marginTop: '4px', paddingTop: '4px' }}>
+                    <strong>NET SETTLED REVENUE:</strong>
+                    <strong>₹{netRevenueAfterExpenses.toLocaleString('en-IN')}</strong>
                   </div>
                 </div>
 

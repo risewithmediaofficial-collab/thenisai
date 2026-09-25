@@ -13,6 +13,7 @@ import POSReduxStatusBar from './POSReduxStatusBar';
 import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
+import ExpensesPage from '../Admin/ExpensesPage';
 import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
 import {
   isBeverageDrink,
@@ -66,6 +67,7 @@ export default function BillingCounter() {
     updateProductSkuCode,
     deleteBill,
     deleteBills,
+    validateStockBeforeBilling,
     // Customer Website Pre-Orders
     preOrders = [],
     pendingPreOrdersCount = 0,
@@ -85,10 +87,14 @@ export default function BillingCounter() {
   const [selectedShiftBillIds, setSelectedShiftBillIds] = useState([]);
   const [bulkDeleteBills, setBulkDeleteBills] = useState(null);
 
+  // Pre-bill stock error state (oversell protection)
+  const [stockErrors, setStockErrors] = useState(null);
+  const [isCheckingStock, setIsCheckingStock] = useState(false);
 
-  // POS Page Navigation: 'register' | 'my-bills' | 'daily-sales' | 'inventory' | 'pre-orders'
+  // POS Page Navigation: 'register' | 'my-bills' | 'daily-sales' | 'inventory' | 'pre-orders' | 'expenses'
   const [posTab, setPosTab] = useState(() => {
     const h = window.location.hash.toLowerCase();
+    if (h.includes('expense')) return 'expenses';
     if (h.includes('preorder') || h.includes('pre-order') || h.includes('orders') || h.includes('dispatch') || h.includes('online')) return 'pre-orders';
     if (h.includes('bills')) return 'my-bills';
     if (h.includes('daily') || h.includes('revenue')) return 'daily-sales';
@@ -467,7 +473,9 @@ export default function BillingCounter() {
       // Only handle billing routes inside BillingCounter
       if (!h.startsWith('#billing') && !h.startsWith('#admin/billing') && !h.startsWith('#admin/pos')) return;
 
-      if (h.includes('preorder') || h.includes('pre-order') || h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
+      if (h.includes('expense')) {
+        setPosTab('expenses');
+      } else if (h.includes('preorder') || h.includes('pre-order') || h.includes('orders') || h.includes('online') || h.includes('dispatch')) {
         setPosTab('pre-orders');
       } else if (h.includes('bills')) {
         setPosTab('my-bills');
@@ -496,6 +504,7 @@ export default function BillingCounter() {
       else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/shift-bills';
       else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/inventory')) target = '#admin/inventory';
+      else if (hash.startsWith('#billing/expenses')) target = '#admin/expenses';
     }
     if (window.location.hash !== target) {
       window.location.hash = target;
@@ -533,6 +542,12 @@ export default function BillingCounter() {
         return;
       }
       syncBillingHash('#billing/inventory');
+    } else if (newTab === 'expenses') {
+      if (isAdminMode) {
+        navigateTo('admin', 'expenses');
+      } else {
+        syncBillingHash('#billing/expenses');
+      }
     }
   };
 
@@ -1390,6 +1405,23 @@ export default function BillingCounter() {
 
     const year = new Date().getFullYear();
     const isSandbox = isSandboxActive() || user?.role === 'tester' || Boolean(user?.isSandbox);
+
+    // Pre-bill stock validation (prevent overselling)
+    if (!isSandbox && validateStockBeforeBilling) {
+      setIsCheckingStock(true);
+      try {
+        const stockCheck = await validateStockBeforeBilling(billItems);
+        if (stockCheck && !stockCheck.ok && stockCheck.errors && stockCheck.errors.length > 0) {
+          setIsCheckingStock(false);
+          setStockErrors(stockCheck.errors);
+          return;
+        }
+      } catch (err) {
+        console.warn('Stock validation check error (proceeding to bill):', err);
+      } finally {
+        setIsCheckingStock(false);
+      }
+    }
     
     // Calculate sequential bill number starting from 1 for active bills
     // Collect all active bills from state, cache, and ledger to guarantee continuous unique numbering
@@ -1484,7 +1516,19 @@ export default function BillingCounter() {
       orderStatus: 'Completed (Paid at Counter)',
     };
 
-    const savedOrder = await addCounterSale(saleData);
+    let savedOrder;
+    try {
+      savedOrder = await addCounterSale(saleData);
+    } catch (err) {
+      if (err.response?.status === 409 || err.code === 'INSUFFICIENT_STOCK' || err.response?.data?.code === 'INSUFFICIENT_STOCK') {
+        const errDetails = err.response?.data?.errors || err.response?.data?.error;
+        setStockErrors(Array.isArray(errDetails) ? errDetails : [{ message: errDetails || 'Insufficient stock to fulfill this order.' }]);
+        return;
+      }
+      alert(err.response?.data?.error || err.message || 'Failed to complete sale. Please try again.');
+      return;
+    }
+
     if (activePreOrderId) {
       markPreOrderBilled(activePreOrderId);
       setActivePreOrderId(null);
@@ -1618,11 +1662,13 @@ export default function BillingCounter() {
       <SideNavbar
         currentSection={
           (user?.role === 'admin' && !window.location.hash.toLowerCase().startsWith('#billing'))
-            ? (posTab === 'pre-orders' ? 'admin-preorders' : 'admin-billing')
+            ? (posTab === 'pre-orders' ? 'admin-preorders' : posTab === 'expenses' ? 'admin-expenses' : 'admin-billing')
             : (posTab === 'register'
                 ? 'pos-register'
                 : posTab === 'pre-orders'
                 ? 'pos-preorders'
+                : posTab === 'expenses'
+                ? 'pos-expenses'
                 : posTab === 'my-bills' || posTab === 'daily-sales'
                 ? 'pos-daily-sales'
                 : 'pos-inventory')
@@ -1665,6 +1711,9 @@ export default function BillingCounter() {
           }
           else if (sec === 'pos-inventory') {
             handleSwitchTab('inventory');
+          }
+          else if (sec === 'pos-expenses' || sec === 'admin-expenses') {
+            handleSwitchTab('expenses');
           }
           else if (sec === 'storefront') {
             navigateTo('storefront');
@@ -4364,6 +4413,55 @@ export default function BillingCounter() {
           </main>
         )}
 
+        {/* TAB 5: EXPENSES LOG */}
+        {posTab === 'expenses' && (
+          <main className="pos-expenses-page" data-lenis-prevent="true" style={{ padding: '24px 32px' }}>
+            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#d4a843', letterSpacing: '0.08em' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <line x1="2" y1="10" x2="22" y2="10" />
+                  </svg>
+                  STORE &amp; COUNTER EXPENSES
+                </span>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a', margin: '4px 0 2px' }}>
+                  {user?.role === 'admin' ? 'Store Expenses Portal' : 'Cashier Expense Log'}
+                </h2>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                  {user?.role === 'admin' ? 'Review all store expenditures, filter by cashier or category' : 'Log daily counter expenses, tea, delivery, or maintenance payouts'}
+                </p>
+              </div>
+              <button
+                type="button"
+                id="btn-expenses-return-pos"
+                onClick={() => handleSwitchTab('register')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: '#f1f5f9',
+                  color: '#0f172a',
+                  border: '1px solid #cbd5e1',
+                  padding: '9px 16px',
+                  borderRadius: '10px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer'
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span>Return to POS</span>
+              </button>
+            </div>
+            <ExpensesPage currentUser={user} role={user?.role === 'admin' ? 'admin' : 'cashier'} />
+          </main>
+        )}
+
         {/* TAB 4: DAILY SALES - merged into TERMINAL SHIFT REPORT above */}
       </div>
 
@@ -4748,6 +4846,127 @@ export default function BillingCounter() {
           }}
           currentUser={user}
         />
+      )}
+
+      {/* Insufficient Stock Modal (Pre-bill Oversell Protection) */}
+      {stockErrors && (
+        <div
+          id="stock-error-modal"
+          role="dialog"
+          aria-labelledby="stock-error-title"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 999999,
+            padding: '16px',
+          }}
+        >
+          <div
+            style={{
+              background: '#1a100a',
+              border: '1px solid rgba(239,68,68,0.4)',
+              borderRadius: '16px',
+              maxWidth: '520px',
+              width: '100%',
+              padding: '24px',
+              color: '#fff',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'rgba(239,68,68,0.15)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ef4444',
+                flexShrink: 0
+              }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <div>
+                <h3 id="stock-error-title" style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: '#fca5a5' }}>
+                  Insufficient Stock to Finalize Bill
+                </h3>
+                <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                  The requested quantities exceed available inventory. Please adjust or restock.
+                </p>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'rgba(0,0,0,0.3)',
+              borderRadius: '10px',
+              border: '1px solid rgba(255,255,255,0.08)',
+              padding: '12px 14px',
+              maxHeight: '220px',
+              overflowY: 'auto',
+              marginBottom: '20px'
+            }}>
+              {Array.isArray(stockErrors) ? (
+                stockErrors.map((err, idx) => (
+                  <div key={idx} style={{
+                    padding: '8px 0',
+                    borderBottom: idx < stockErrors.length - 1 ? '1px solid rgba(255,255,255,0.08)' : 'none',
+                    fontSize: '13px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: '#fee2e2' }}>
+                      <span>{err.name || err.nameEn || `Item #${err.id || idx + 1}`}</span>
+                      <span style={{ color: '#ef4444' }}>
+                        {err.reason || err.message || (err.available !== undefined ? `Stock: ${err.available} available` : 'Low Stock')}
+                      </span>
+                    </div>
+                    {(err.requestedKg !== undefined || err.availableKg !== undefined) && (
+                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                        Requested: {err.requestedQty ? `${err.requestedQty} (${err.billingUnit || ''})` : ''} · Available in inventory: {err.availableKg !== undefined ? `${err.availableKg} kg` : (err.available ?? '0')}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div style={{ color: '#fee2e2', fontSize: '13px' }}>
+                  {typeof stockErrors === 'string' ? stockErrors : JSON.stringify(stockErrors)}
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                id="btn-dismiss-stock-error"
+                onClick={() => setStockErrors(null)}
+                style={{
+                  background: '#ef4444',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 20px',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Adjust Items in Bill
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
