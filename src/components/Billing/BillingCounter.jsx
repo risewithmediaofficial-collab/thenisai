@@ -14,6 +14,7 @@ import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import ExpensesPage from '../Admin/ExpensesPage';
+import api from '../../utils/api';
 import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
 import {
   isBeverageDrink,
@@ -253,6 +254,19 @@ export default function BillingCounter() {
 
   // Inline weight/volume popover state (popup inside each kg & litre row)
   const [inlineWeightId, setInlineWeightId] = useState(null); // sweet.id of open popover
+
+  // Listen to bill sequence resets from Admin
+  useEffect(() => {
+    const handleReset = () => {
+      try {
+        localStorage.setItem('thenisai_bills_cache', '[]');
+        localStorage.setItem('thenisai_offline_backup_ledger', '[]');
+        localStorage.setItem('thenisai_offline_ledger_v2', '[]');
+      } catch {}
+    };
+    window.addEventListener('thenisai:bills-reset', handleReset);
+    return () => window.removeEventListener('thenisai:bills-reset', handleReset);
+  }, []);
   const [editingWeight, setEditingWeight] = useState(null); // original weight if editing existing line
   const [inlineVal, setInlineVal] = useState('');
   const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg' | 'ml' | 'L' | 'rs'
@@ -1450,7 +1464,28 @@ export default function BillingCounter() {
       return !b.isSandbox;
     });
 
-    const invoiceNumber = getNextInvoiceNumber(activeBills, isSandbox);
+    let invoiceNumber = getNextInvoiceNumber(activeBills, isSandbox);
+
+    // If online, check server's authoritative next invoice number
+    if (!isSandbox) {
+      try {
+        const nextRes = await api.get('/api/bills/next-invoice-number');
+        if (nextRes && nextRes.success && nextRes.nextInvoiceNumber) {
+          // If server sequence starts from AA001, clear any stale client cache
+          if (nextRes.nextInvoiceNumber === 'AA001') {
+            try {
+              localStorage.setItem('thenisai_bills_cache', '[]');
+              localStorage.setItem('thenisai_offline_backup_ledger', '[]');
+              localStorage.setItem('thenisai_offline_ledger_v2', '[]');
+            } catch {}
+          }
+          invoiceNumber = nextRes.nextInvoiceNumber;
+        }
+      } catch (err) {
+        console.warn('Could not query server next invoice number, using client sequence:', err);
+      }
+    }
+
     const now = new Date();
 
     const saleData = {

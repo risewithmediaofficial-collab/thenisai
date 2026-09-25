@@ -1628,6 +1628,69 @@ app.get('/api/bills/next-invoice-number', async (req, res) => {
   }
 });
 
+// ─── Reset Bill Number Sequence (Admin Action) ──────────────────────────────
+app.post('/api/bills/reset-sequence', async (req, res) => {
+  try {
+    const { archiveToRecycleBin = true, resetBy } = req.body || {};
+    const adminUser = resetBy || { name: 'Admin', role: 'admin' };
+
+    // 1. Fetch all active bills
+    const activeBills = await Bill.find({});
+    let archivedCount = 0;
+
+    if (archiveToRecycleBin && activeBills.length > 0) {
+      const now = new Date();
+      const docsToArchive = activeBills.map((b) => ({
+        ...b.toObject(),
+        deletedAt: Date.now(),
+        deletedDate: now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        deletedTime: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        deletedBy: adminUser,
+        deletionReason: 'Admin Reset Bill Sequence to AA001',
+      }));
+      await DeletedBill.insertMany(docsToArchive);
+      archivedCount = docsToArchive.length;
+    }
+
+    // 2. Remove all bills from active collection
+    const deleteResult = await Bill.deleteMany({});
+
+    // 3. Clear orders collection if any
+    try {
+      await Order.deleteMany({});
+    } catch {}
+
+    // 4. Log in ActivityLog
+    try {
+      await ActivityLog.create({
+        id: `activity-${Date.now()}`,
+        type: 'bill_reset',
+        action: 'Reset Bill Sequence to AA001',
+        description: `Admin reset bill sequence starting from AA001. ${deleteResult.deletedCount} active bills cleared (${archivedCount} archived to Recycle Bin).`,
+        performedBy: adminUser,
+        timestamp: Date.now(),
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      });
+    } catch (e) {
+      console.warn('[ActivityLog] Could not log bill reset:', e.message);
+    }
+
+    console.log(`[Admin] Bill sequence reset to AA001 by ${adminUser.name}. Cleared ${deleteResult.deletedCount} bills.`);
+
+    res.json({
+      success: true,
+      message: 'Bill sequence successfully reset. Next invoice starts from AA001.',
+      nextInvoiceNumber: 'AA001',
+      clearedCount: deleteResult.deletedCount,
+      archivedCount,
+    });
+  } catch (err) {
+    console.error('[Admin] Error resetting bill sequence:', err);
+    res.status(500).json({ success: false, message: 'Failed to reset bill sequence: ' + err.message });
+  }
+});
+
 app.post('/api/bills', async (req, res) => {
   try {
     const now = new Date();

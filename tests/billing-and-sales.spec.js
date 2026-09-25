@@ -540,4 +540,104 @@ test.describe('Thenisai POS Billing & Admin Sales', () => {
     expect(download.suggestedFilename()).toContain('Thenisai');
   });
 
+  test('7. Admin Reset Bill Number button resets sequence and next bill is AA001', async ({ page }) => {
+    // Authenticate as Admin
+    await page.addInitScript(() => {
+      sessionStorage.setItem('thenisai_auth_user', JSON.stringify({
+        id: 'staff-1',
+        username: 'admin',
+        name: 'S. Ramanathan',
+        role: 'admin',
+        title: 'Operations Head',
+      }));
+      sessionStorage.setItem('thenisai_admin_session_unlocked', 'true');
+      sessionStorage.setItem('thenisai_billing_session_unlocked', 'true');
+      sessionStorage.setItem('thenisai_auth_token', 'mock_admin_token');
+    });
+
+    // Go to Admin Sales & Ledger
+    await page.goto('/#admin/sales');
+    await page.waitForSelector('#admin-reset-bill-sequence-btn', { timeout: 15000 });
+
+    // Click "Reset Bill Number (AA001)" button
+    await page.locator('#admin-reset-bill-sequence-btn').click();
+
+    // Verify modal is open and shows AA001 preview
+    const modal = page.locator('.delete-bill-card');
+    await expect(modal).toBeVisible();
+    expect(await modal.innerText()).toContain('AA001');
+
+    // Confirm reset
+    const confirmBtn = page.locator('#confirm-reset-bill-sequence-btn');
+    await confirmBtn.click();
+
+    // Modal closes upon successful reset
+    await expect(modal).toBeHidden({ timeout: 10000 });
+
+    // Verify backend confirms next invoice number is AA001
+    const nextInvRes = await page.request.get('/api/bills/next-invoice-number');
+    const nextInvData = await nextInvRes.json();
+    expect(nextInvData.nextInvoiceNumber).toBe('AA001');
+
+    // Navigate to Admin POS billing to verify live bill creation starts from AA001
+    await page.goto('/#admin/billing');
+    await page.waitForSelector('.pos-list-row', { timeout: 15000 });
+
+    // Select first product
+    const firstRow = page.locator('.pos-list-row:not(.is-out-of-stock)').first();
+    await firstRow.click();
+
+    // Settle bill
+    const settleBtn = page.locator('.btn-pos-complete');
+    await settleBtn.click();
+
+    // Invoice modal appears
+    const invoiceModal = page.locator('.invoice-modal-wrap').first();
+    await invoiceModal.waitFor({ state: 'visible', timeout: 10000 });
+
+    // Verify bill number is AA001
+    const newInvoiceText = (await page.locator('.invoice-quick-inv-badge, .pos-slip-document').allInnerTexts()).join(' ');
+    expect(newInvoiceText).toContain('AA001');
+  });
+
+  test('8. In Admin login, clicking Pre-Orders from Shift Bills routes successfully to Pre-Orders', async ({ page }) => {
+    // Authenticate as Admin
+    await page.addInitScript(() => {
+      sessionStorage.setItem('thenisai_auth_user', JSON.stringify({
+        id: 'staff-1',
+        username: 'admin',
+        name: 'S. Ramanathan',
+        role: 'admin',
+        title: 'Operations Head',
+      }));
+      sessionStorage.setItem('thenisai_admin_session_unlocked', 'true');
+      sessionStorage.setItem('thenisai_auth_token', 'mock_admin_token');
+    });
+
+    // Go to Admin Shift Bills
+    await page.goto('/#admin/shift-bills');
+    await page.waitForSelector('.daily-revenue-wrapper', { timeout: 15000 });
+
+    // Verify currently on Shift Bills / Daily Revenue
+    const shiftNavBtn = page.locator('.sidebar-nav-item').filter({ hasText: 'Shift Bills' });
+    await expect(shiftNavBtn).toHaveClass(/active/);
+
+    // Click "Pre-Orders" in sidebar
+    const preOrdersNavBtn = page.locator('.sidebar-nav-item').filter({ hasText: 'Pre-Orders' });
+    await expect(preOrdersNavBtn).toBeVisible();
+    await preOrdersNavBtn.click();
+
+    // Verify successfully routed to Pre-Orders processing view
+    await page.waitForSelector('.filter-chips', { timeout: 10000 });
+    const preOrderTabActive = page.locator('.sidebar-nav-item').filter({ hasText: 'Pre-Orders' });
+    await expect(preOrderTabActive).toHaveClass(/active/);
+
+    // Verify Pre-Orders KPI / portal title is visible
+    const portalTitle = page.locator('.admin-portal-title');
+    await expect(portalTitle).toBeVisible();
+    expect(await portalTitle.innerText()).toContain('ADMIN MANAGEMENT PORTAL');
+  });
+
 });
+
+

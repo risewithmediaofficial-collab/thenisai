@@ -205,8 +205,6 @@ function AppContent({ isLoaded, handleLoadComplete }) {
     const isAdminBilling =
       currentHash === '#admin/billing' ||
       currentHash.startsWith('#admin/billing') ||
-      currentHash === '#admin/preorders' ||
-      currentHash.startsWith('#admin/preorders') ||
       currentHash === '#admin/pos' ||
       currentHash.startsWith('#admin/pos');
 

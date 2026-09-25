@@ -12,6 +12,7 @@ import StaffManagement from './StaffManagement';
 import CompanyManagerDashboard from './CompanyManagerDashboard';
 import CatalogSettingsModal from './CatalogSettingsModal';
 import ExpensesPage from './ExpensesPage';
+import ResetBillSequenceModal from './ResetBillSequenceModal';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
 import { isProductUnlimitedStock } from '../../utils/unitConfig';
@@ -155,8 +156,9 @@ export default function AdminDashboard() {
       const tab = resolveAdminTabFromHash();
       setActiveTab(tab);
       const adminRouteMap = {
-        orders: '#admin/dispatch',
-        dispatch: '#admin/dispatch',
+        orders: '#admin/orders',
+        dispatch: '#admin/orders',
+        preorders: '#admin/orders',
         inventory: '#admin/inventory',
         sales: '#admin/sales',
         'daily-revenue': '#admin/shift-bills',
@@ -168,7 +170,14 @@ export default function AdminDashboard() {
         expenses: '#admin/expenses',
       };
       const target = adminRouteMap[tab] || '#admin/inventory';
-      if (window.location.hash !== target && window.location.hash !== '#admin/orders' && window.location.hash !== '#admin/daily-revenue') {
+      if (
+        window.location.hash !== target &&
+        window.location.hash !== '#admin/orders' &&
+        window.location.hash !== '#admin/dispatch' &&
+        window.location.hash !== '#admin/preorders' &&
+        window.location.hash !== '#admin/pre-orders' &&
+        window.location.hash !== '#admin/daily-revenue'
+      ) {
         window.location.hash = target;
       }
     };
@@ -189,8 +198,8 @@ export default function AdminDashboard() {
 
   const handleSwitchAdminTab = (tab) => {
     setActiveTab(tab);
-    if (tab === 'orders' || tab === 'dispatch') {
-      syncAdminHash('#admin/dispatch');
+    if (tab === 'orders' || tab === 'dispatch' || tab === 'preorders') {
+      syncAdminHash('#admin/orders');
     } else if (tab === 'inventory') {
       syncAdminHash('#admin/inventory');
     } else if (tab === 'sales') {
@@ -252,6 +261,7 @@ export default function AdminDashboard() {
   const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card' | 'split'
   const [salesSortBy, setSalesSortBy] = useState('date-desc');
   const [isSyncingSales, setIsSyncingSales] = useState(false);
+  const [isResetBillModalOpen, setIsResetBillModalOpen] = useState(false);
 
   // Mobile Sidebar State
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -744,23 +754,33 @@ export default function AdminDashboard() {
         currentSection={
           activeTab === 'daily-revenue'
             ? 'admin-shift-bills'
-            : activeTab === 'orders'
-            ? 'admin-dispatch'
+            : (activeTab === 'orders' || activeTab === 'dispatch')
+            ? 'admin-preorders'
             : activeTab === 'company-stock'
             ? 'company-stock'
             : `admin-${activeTab}`
         }
         onSelectSection={(sec) => {
           if (sec === 'admin-billing' || sec === 'pos-register') navigateTo('admin', 'billing');
-          else if (sec === 'company-stock' || sec === 'admin-manager') handleSwitchAdminTab('company-stock');
+          else if (sec === 'company-stock' || sec === 'admin-manager' || sec === 'admin-company-stock') handleSwitchAdminTab('company-stock');
           else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue' || sec === 'pos-bills' || sec === 'pos-daily-sales') handleSwitchAdminTab('daily-revenue');
-          else if (sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') handleSwitchAdminTab('orders');
+          else if (
+            sec === 'admin-preorders' ||
+            sec === 'pos-preorders' ||
+            sec === 'admin-dispatch' ||
+            sec === 'admin-orders' ||
+            sec === 'pos-online' ||
+            sec === 'orders' ||
+            sec === 'preorders'
+          ) {
+            handleSwitchAdminTab('orders');
+          }
           else if (sec === 'admin-inventory' || sec === 'pos-inventory') handleSwitchAdminTab('inventory');
           else if (sec === 'admin-sales') handleSwitchAdminTab('sales');
           else if (sec === 'admin-activity-logs' || sec === 'admin-price-logs') handleSwitchAdminTab('activity-logs');
           else if (sec === 'admin-recycle-bin') handleSwitchAdminTab('recycle-bin');
           else if (sec === 'admin-staff') handleSwitchAdminTab('staff');
-          else if (sec === 'admin-expenses') handleSwitchAdminTab('expenses');
+          else if (sec === 'admin-expenses' || sec === 'pos-expenses') handleSwitchAdminTab('expenses');
           else if (sec === 'storefront') navigateTo('storefront');
         }}
         pendingOnlineCount={pendingOrders.length}
@@ -1595,29 +1615,56 @@ export default function AdminDashboard() {
                 <h3 className="section-title">All Sales, Cashier Desks & Invoices</h3>
               </div>
 
-              <button
-                type="button"
-                className="btn-sync-sales"
-                onClick={handleSyncAllSales}
-                disabled={isSyncingSales}
-              >
-                <svg
-                  className={isSyncingSales ? 'spin' : ''}
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  id="admin-reset-bill-sequence-btn"
+                  onClick={() => setIsResetBillModalOpen(true)}
+                  style={{
+                    background: '#fff1f2',
+                    color: '#e11d48',
+                    border: '1.5px solid #fecdd3',
+                    borderRadius: '8px',
+                    padding: '8px 14px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Reset invoice numbering sequence to start fresh from AA001"
                 >
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-                </svg>
-                <span>{isSyncingSales ? 'Syncing...' : 'Sync Database Bills'}</span>
-              </button>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  <span>Reset Bill Number (AA001)</span>
+                </button>
 
-
+                <button
+                  type="button"
+                  className="btn-sync-sales"
+                  onClick={handleSyncAllSales}
+                  disabled={isSyncingSales}
+                >
+                  <svg
+                    className={isSyncingSales ? 'spin' : ''}
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                  </svg>
+                  <span>{isSyncingSales ? 'Syncing...' : 'Sync Database Bills'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Sales Summary Metrics Strip */}
@@ -3211,6 +3258,13 @@ export default function AdminDashboard() {
         {activeTab === 'expenses' && (
           <ExpensesPage currentUser={user} role="admin" />
         )}
+
+        {/* Reset Bill Sequence Modal */}
+        <ResetBillSequenceModal
+          isOpen={isResetBillModalOpen}
+          onClose={() => setIsResetBillModalOpen(false)}
+          onResetSuccess={handleSyncAllSales}
+        />
 
         {/* Delete Bill Modal (Triggered from Sales Table) */}
         <DeleteBillModal

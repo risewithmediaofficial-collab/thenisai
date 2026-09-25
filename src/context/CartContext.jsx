@@ -3316,6 +3316,30 @@ export function CartProvider({ children }) {
     return false;
   }, []);
 
+  const resetBillSequence = useCallback(async (options = { archiveToRecycleBin: true }, userObj = null) => {
+    const adminUser = resolveActiveUser(userObj);
+    try {
+      const res = await api.post('/api/bills/reset-sequence', {
+        ...options,
+        resetBy: adminUser,
+      });
+      // Clear client-side bills state
+      setBills([]);
+      // Clear all local storage caches
+      try {
+        localStorage.setItem('thenisai_bills_cache', '[]');
+        localStorage.setItem('thenisai_offline_backup_ledger', '[]');
+        localStorage.setItem('thenisai_offline_ledger_v2', '[]');
+      } catch {}
+      // Broadcast reset event to all components & tabs
+      window.dispatchEvent(new CustomEvent('thenisai:bills-reset'));
+      return res;
+    } catch (err) {
+      console.error('Failed to reset bill sequence:', err);
+      throw err;
+    }
+  }, []);
+
 
   const updateOrderStatus = async (orderId, newStatus) => {
     setOrders((prev) =>
@@ -3881,6 +3905,7 @@ export function CartProvider({ children }) {
     logExpense,
     fetchExpenses,
     deleteExpense,
+    resetBillSequence,
     validateStockBeforeBilling,
     subtotal,
     totalItems,
