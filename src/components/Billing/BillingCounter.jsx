@@ -75,6 +75,9 @@ export default function BillingCounter() {
     acceptPreOrder,
     markPreOrderBilled,
     deletePreOrder,
+    // Expenses
+    expenses = [],
+    fetchExpenses,
   } = useCart();
 
   const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
@@ -705,10 +708,62 @@ export default function BillingCounter() {
   }, 0);
   const myShiftCardTotal = myShiftBills.filter((b) => b.paymentMethod === 'card').reduce((sum, b) => sum + (b.grandTotal || 0), 0);
 
+  // Helper to determine if an expense belongs to Today's shift (strict cashier scoping)
+  const isTodayExpense = (exp) => {
+    if (!exp) return false;
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const da = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yr}-${mo}-${da}`;
+
+    const checkMatch = (dVal) => {
+      if (!dVal) return false;
+      const d = new Date(dVal);
+      if (isNaN(d.getTime())) return false;
+      const dYr = d.getFullYear();
+      const dMo = String(d.getMonth() + 1).padStart(2, '0');
+      const dDa = String(d.getDate()).padStart(2, '0');
+      return `${dYr}-${dMo}-${dDa}` === todayStr;
+    };
+
+    if (exp.createdAt && checkMatch(exp.createdAt)) return true;
+    if (exp.date) {
+      if (typeof exp.date === 'string' && exp.date.includes(todayStr)) return true;
+      if (checkMatch(exp.date)) return true;
+      const todayLocale = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      if (exp.date === todayLocale) return true;
+    }
+    return false;
+  };
+
+  const myShiftExpenses = useMemo(() => {
+    return (expenses || []).filter((e) => {
+      if (!isTodayExpense(e)) return false;
+      if (!user || user.role === 'admin') return true;
+      const uid = user.id || user._id || user.username;
+      return (
+        e.cashier?.id === uid ||
+        e.cashier?.username === user.username ||
+        !e.cashier?.username
+      );
+    });
+  }, [expenses, user]);
+
+  const myShiftExpensesTotal = myShiftExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const myShiftNetBalance = myShiftTotalRevenue - myShiftExpensesTotal;
+
+  useEffect(() => {
+    if (fetchExpenses) {
+      fetchExpenses();
+    }
+  }, [fetchExpenses]);
+
   const handleRefreshShiftBills = async () => {
     setIsRefreshingBills(true);
     try {
       await fetchBills(user?.id || user?.username);
+      if (fetchExpenses) await fetchExpenses();
     } finally {
       setTimeout(() => setIsRefreshingBills(false), 400);
     }
@@ -3290,6 +3345,24 @@ export default function BillingCounter() {
                 <span className="kpi-label">Total Shift Revenue</span>
                 <div className="kpi-val">₹{myShiftTotalRevenue.toLocaleString('en-IN')}</div>
                 <span className="kpi-sub">{myShiftBills.length} Invoices</span>
+              </div>
+
+              <div className="shift-kpi-card expense">
+                <span className="kpi-label">Shift Expenses</span>
+                <div className="kpi-val" style={{ color: '#e11d48' }}>₹{myShiftExpensesTotal.toLocaleString('en-IN')}</div>
+                <span className="kpi-sub">
+                  {myShiftExpenses.length} {myShiftExpenses.length === 1 ? 'Expense Logged' : 'Expenses Logged'}
+                </span>
+              </div>
+
+              <div className="shift-kpi-card net" style={{ borderLeftColor: myShiftNetBalance >= 0 ? '#059669' : '#dc2626' }}>
+                <span className="kpi-label">Net Shift Balance</span>
+                <div className="kpi-val" style={{ color: myShiftNetBalance >= 0 ? '#059669' : '#dc2626' }}>
+                  {myShiftNetBalance < 0 ? '-' : ''}₹{Math.abs(myShiftNetBalance).toLocaleString('en-IN')}
+                </div>
+                <span className="kpi-sub">
+                  Shift Revenue − Expenses
+                </span>
               </div>
 
               <div className="shift-kpi-card cash">

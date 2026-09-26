@@ -60,6 +60,9 @@ export default function AdminDashboard() {
     activityLogs,
     fetchActivityLogs,
     clearAllActivityLogs,
+    // Expenses
+    expenses = [],
+    fetchExpenses,
   } = useCart();
 
   const resolveAdminTabFromHash = () => {
@@ -365,7 +368,17 @@ export default function AdminDashboard() {
   const onlineRevenue = onlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const totalCashRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const totalUpiRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-  const totalCardRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalExpenses = useMemo(() => {
+    return (expenses || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  }, [expenses]);
+  const netRevenue = totalRevenue - totalExpenses;
+
+  // Auto-sync expenses on load
+  useEffect(() => {
+    if (fetchExpenses) {
+      fetchExpenses();
+    }
+  }, [fetchExpenses]);
 
   // Cashier Performance Aggregation
   const cashierSummary = useMemo(() => {
@@ -1702,6 +1715,29 @@ export default function AdminDashboard() {
                 <span className="stat-label">Gross Sales Revenue</span>
                 <strong className="stat-val">₹{totalRevenue.toLocaleString('en-IN')}</strong>
                 <span className="stat-sub">{allSales.length} Total Bills</span>
+              </div>
+              <div className="sales-stat-card expense">
+                <span className="stat-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                    <path d="M19 13H5M12 19l-7-7 7-7" />
+                  </svg>
+                  Total Expenses
+                </span>
+                <strong className="stat-val" style={{ color: '#e11d48' }}>₹{totalExpenses.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{expenses.length} {expenses.length === 1 ? 'Expense Logged' : 'Expenses Logged'}</span>
+              </div>
+              <div className="sales-stat-card net" style={{ borderLeftColor: netRevenue >= 0 ? '#059669' : '#dc2626' }}>
+                <span className="stat-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={netRevenue >= 0 ? '#059669' : '#dc2626'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                    <polyline points="17 6 23 6 23 12" />
+                  </svg>
+                  Net Store Revenue
+                </span>
+                <strong className="stat-val" style={{ color: netRevenue >= 0 ? '#059669' : '#dc2626' }}>
+                  {netRevenue < 0 ? '-' : ''}₹{Math.abs(netRevenue).toLocaleString('en-IN')}
+                </strong>
+                <span className="stat-sub">Gross Revenue − Expenses</span>
               </div>
               <div className="sales-stat-card counter">
                 <span className="stat-label">

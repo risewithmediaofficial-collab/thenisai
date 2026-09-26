@@ -366,7 +366,7 @@ function ExpenseLogForm({ onSuccess, cashier, isAdmin = false }) {
 
 // ─── Expenses Main View ────────────────────────────────────────────────────────
 export default function ExpensesPage({ currentUser, role = 'admin' }) {
-  const { expenses, fetchExpenses, deleteExpense } = useCart();
+  const { expenses, fetchExpenses, deleteExpense, bills = [], orders = [] } = useCart();
   const [isLoading, setIsLoading] = useState(false);
   const [filterDate, setFilterDate] = useState('');
   const [filterCashier, setFilterCashier] = useState('all');
@@ -419,6 +419,93 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
     () => expenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
     [expenses]
   );
+
+  // Consolidated sales to determine sales revenue
+  const allSales = useMemo(() => {
+    let offlineLedger = [];
+    let cachedBills = [];
+    try {
+      offlineLedger = JSON.parse(localStorage.getItem('thenisai_offline_ledger_v2') || '[]');
+    } catch {}
+    try {
+      cachedBills = JSON.parse(localStorage.getItem('thenisai_bills_cache') || '[]');
+    } catch {}
+
+    const map = new Map();
+    (bills || []).forEach((b) => {
+      const key = b.id || b._id || b.invoiceNumber;
+      if (key) map.set(key, b);
+    });
+    offlineLedger.forEach((b) => {
+      const key = b.id || b._id || b.invoiceNumber;
+      if (key && !map.has(key)) map.set(key, b);
+    });
+    cachedBills.forEach((b) => {
+      const key = b.id || b._id || b.invoiceNumber;
+      if (key && !map.has(key)) map.set(key, b);
+    });
+    (orders || []).forEach((o) => {
+      const key = o.id || o._id || o.invoiceNumber;
+      if (key && !map.has(key)) map.set(key, o);
+    });
+    return Array.from(map.values());
+  }, [bills, orders]);
+
+  // Helper to test if a record is from today
+  const isTodayDate = (dateVal) => {
+    if (!dateVal) return false;
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const da = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yr}-${mo}-${da}`;
+
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      const dYr = d.getFullYear();
+      const dMo = String(d.getMonth() + 1).padStart(2, '0');
+      const dDa = String(d.getDate()).padStart(2, '0');
+      if (`${dYr}-${dMo}-${dDa}` === todayStr) return true;
+    }
+    if (typeof dateVal === 'string' && (dateVal.includes(todayStr) || dateVal === now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }))) {
+      return true;
+    }
+    return false;
+  };
+
+  const shiftSales = useMemo(() => {
+    return allSales.filter((s) => {
+      if (!isTodayDate(s.createdAt || s.orderDate || s.date)) return false;
+      if (!currentUser || currentUser.role === 'admin') return true;
+      const uid = currentUser.id || currentUser._id || currentUser.username;
+      return (
+        s.cashier?.id === uid ||
+        s.cashier?.username === currentUser.username ||
+        !s.cashier?.username
+      );
+    });
+  }, [allSales, currentUser]);
+
+  const salesRevenue = useMemo(() => {
+    if (isCashier) {
+      return shiftSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+    }
+    return allSales.filter((s) => {
+      if (filterCashier !== 'all') {
+        const cid = s.cashier?.id || s.cashier?.username || s.cashier?.name;
+        if (cid !== filterCashier && s.cashier?.username !== filterCashier && s.cashier?.id !== filterCashier) {
+          return false;
+        }
+      }
+      if (filterDate) {
+        const sDate = s.orderDate || (s.createdAt ? new Date(s.createdAt).toISOString().split('T')[0] : '');
+        if (!sDate.includes(filterDate)) return false;
+      }
+      return true;
+    }).reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  }, [isCashier, shiftSales, allSales, filterCashier, filterDate]);
+
+  const netBalance = salesRevenue - totalAmount;
 
   const categoryBreakdown = useMemo(() => {
     const map = {};
@@ -586,33 +673,73 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
           gap: '14px',
           marginBottom: '24px',
         }}
       >
+        {/* Sales Revenue Card */}
+        <div style={summaryCardStyle('#0284c7')}>
+          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            {isCashier ? 'Shift Sales Revenue' : (hasActiveFilters ? 'Sales Revenue (Filtered)' : 'Gross Sales Revenue')}
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: '#0284c7', letterSpacing: '-0.02em' }}>
+            {formatCurrency(salesRevenue)}
+          </div>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
+            {isCashier
+              ? `${shiftSales.length} ${shiftSales.length === 1 ? 'bill' : 'bills'} today`
+              : `${allSales.length} total bills collected`}
+          </div>
+        </div>
+
+        {/* Total Expenses Card */}
         <div style={summaryCardStyle('#e11d48')}>
-          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#e11d48" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 13H5M12 19l-7-7 7-7" />
+            </svg>
             Total Expenses
           </div>
           <div style={{ fontSize: '24px', fontWeight: 800, color: '#e11d48', letterSpacing: '-0.02em' }}>
             {formatCurrency(totalAmount)}
           </div>
-          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', fontWeight: 500 }}>
+          <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
             {expenses.length} {expenses.length === 1 ? 'entry' : 'entries'} logged
           </div>
         </div>
 
-        {categoryBreakdown.slice(0, 3).map(([cat, amount]) => (
+        {/* Net Balance (Revenue - Expense) Card */}
+        <div style={summaryCardStyle(netBalance >= 0 ? '#059669' : '#dc2626')}>
+          <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={netBalance >= 0 ? '#059669' : '#dc2626'} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+            Net Balance (Revenue − Expense)
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: 800, color: netBalance >= 0 ? '#059669' : '#dc2626', letterSpacing: '-0.02em' }}>
+            {netBalance < 0 ? '-' : ''}{formatCurrency(Math.abs(netBalance))}
+          </div>
+          <div style={{ fontSize: '12px', color: netBalance >= 0 ? '#059669' : '#dc2626', marginTop: '4px', fontWeight: 600 }}>
+            {netBalance >= 0 ? '✓ Net Surplus' : '⚠ Expenses exceed sales'}
+          </div>
+        </div>
+
+        {categoryBreakdown.slice(0, 2).map(([cat, amount]) => (
           <div key={cat} style={summaryCardStyle(CATEGORY_COLORS[cat] || '#64748b')}>
-            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               {cat}
             </div>
             <div style={{ fontSize: '22px', fontWeight: 800, color: CATEGORY_COLORS[cat] || '#0f172a', letterSpacing: '-0.02em' }}>
               {formatCurrency(amount)}
             </div>
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px', fontWeight: 500 }}>
-              {Math.round((amount / (totalAmount || 1)) * 100)}% of total
+            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px', fontWeight: 500 }}>
+              {Math.round((amount / (totalAmount || 1)) * 100)}% of expenses
             </div>
           </div>
         ))}

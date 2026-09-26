@@ -1838,24 +1838,31 @@ time, .hours {
   border-color: #94A3B8;
 }
 
-/* Sales Overview 4-Card Grid - Compact layout */
+/* Sales Overview 6-Card Grid - Compact layout */
 .sales-overview-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
   box-sizing: border-box;
   margin-bottom: 0;
 }
 
-@media (max-width: 1360px) {
+@media (max-width: 1440px) {
+  .sales-overview-metrics {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+@media (max-width: 800px) {
   .sales-overview-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 500px) {
   .sales-overview-metrics {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1877,6 +1884,14 @@ time, .hours {
 
 .sales-stat-card.total {
   border-left: 4px solid #B45309;
+}
+
+.sales-stat-card.expense {
+  border-left: 4px solid #E11D48;
+}
+
+.sales-stat-card.net {
+  border-left: 4px solid #059669;
 }
 
 .sales-stat-card.counter {
@@ -9809,23 +9824,30 @@ time, .hours {
 /* Shift KPI Summary Grid */
 .shift-kpis-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
   width: 100%;
   box-sizing: border-box;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1440px) {
   .shift-kpis-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 800px) {
+  .shift-kpis-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 500px) {
   .shift-kpis-grid {
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
   }
 }
 
@@ -9833,7 +9855,7 @@ time, .hours {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
   border-radius: 12px;
-  padding: 20px 22px;
+  padding: 16px 18px;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
@@ -9850,6 +9872,14 @@ time, .hours {
 
 .shift-kpi-card.total {
   border-left: 4px solid #B45309;
+}
+
+.shift-kpi-card.expense {
+  border-left: 4px solid #E11D48;
+}
+
+.shift-kpi-card.net {
+  border-left: 4px solid #059669;
 }
 
 .shift-kpi-card.cash {

@@ -470,8 +470,15 @@ export function CartProvider({ children }) {
     }
   });
 
-  // Expenses logged by cashier (persisted purely from backend, no localStorage)
-  const [expenses, setExpenses] = useState([]);
+  // Expenses logged by cashier (persisted from backend with local cache fallback)
+  const [expenses, setExpenses] = useState(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('thenisai_expenses_cache') || '[]');
+      return Array.isArray(cached) ? cached : [];
+    } catch {
+      return [];
+    }
+  });
 
 
 
@@ -3281,6 +3288,11 @@ export function CartProvider({ children }) {
     return { expenses: [], total: 0, categories: [] };
   }, []);
 
+  // Fetch expenses automatically on mount
+  useEffect(() => {
+    fetchExpenses();
+  }, [fetchExpenses]);
+
   const logExpense = useCallback(async (expenseData) => {
     const cashier = resolveActiveUser(expenseData.cashier);
     const now = new Date();
@@ -3336,6 +3348,10 @@ export function CartProvider({ children }) {
       const res = await api.delete(`/api/expenses/${encodeURIComponent(expenseId)}`);
       if (res && res.success) {
         setExpenses((prev) => prev.filter((e) => e.id !== expenseId));
+        try {
+          const cached = JSON.parse(localStorage.getItem('thenisai_expenses_cache') || '[]');
+          localStorage.setItem('thenisai_expenses_cache', JSON.stringify(cached.filter((e) => e.id !== expenseId)));
+        } catch {}
         return true;
       }
     } catch (err) {
