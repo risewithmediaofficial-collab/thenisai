@@ -537,25 +537,37 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
   return (
     <div
       id="expenses-page"
+      className="expenses-page-container"
       style={{
-        padding: '24px',
-        maxWidth: '1100px',
+        padding: '12px 18px',
+        width: '100%',
+        maxWidth: '1440px',
         margin: '0 auto',
         fontFamily: "'Inter', sans-serif",
         color: '#0f172a',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        maxHeight: '100%',
+        flex: '1 1 0%',
+        minHeight: 0,
+        overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
     >
       {/* Header Strip */}
       <div
+        className="expenses-header-strip"
         style={{
           display: 'flex',
           alignItems: 'flex-start',
           justifyContent: 'space-between',
-          marginBottom: '24px',
+          marginBottom: '10px',
           flexWrap: 'wrap',
-          gap: '14px',
-          paddingBottom: '16px',
+          gap: '10px',
+          paddingBottom: '8px',
           borderBottom: '1px solid #e2e8f0',
+          flexShrink: 0,
         }}
       >
         <div>
@@ -671,11 +683,13 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
 
       {/* Summary KPI Cards */}
       <div
+        className="expenses-kpis-strip"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '14px',
-          marginBottom: '24px',
+          gap: '10px',
+          marginBottom: '10px',
+          flexShrink: 0,
         }}
       >
         {/* Sales Revenue Card */}
@@ -748,16 +762,18 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
       {/* Filters (Admin and Cashier) */}
       {!isCashier && (
         <div
+          className="expenses-filter-strip"
           style={{
             background: '#f8fafc',
             border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '14px 18px',
-            marginBottom: '20px',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            marginBottom: '10px',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '12px',
+            gap: '10px',
             alignItems: 'center',
+            flexShrink: 0,
           }}
         >
           <div
@@ -886,15 +902,30 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
         </div>
       ) : (
         <div
+          className="expenses-table-card"
           style={{
             background: '#ffffff',
             borderRadius: '12px',
-            border: '1px solid #e2e8f0',
+            border: '1px solid #cbd5e1',
             overflow: 'hidden',
             boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
+            flex: '1 1 0%',
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <div className="expenses-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+          <div
+            className="expenses-table-wrap"
+            style={{
+              overflowX: 'auto',
+              overflowY: 'auto',
+              flex: '1 1 0%',
+              minHeight: 0,
+              maxHeight: '100%',
+              height: '100%',
+            }}
+          >
             <table
               id="expenses-table"
               style={{
@@ -909,6 +940,9 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
                   style={{
                     background: '#f8fafc',
                     borderBottom: '1.5px solid #e2e8f0',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10,
                   }}
                 >
                   {[
@@ -931,6 +965,10 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         whiteSpace: 'nowrap',
+                        background: '#f8fafc',
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 11,
                       }}
                     >
                       {h}
@@ -1055,6 +1093,9 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
                   style={{
                     background: '#f8fafc',
                     borderTop: '2px solid #e2e8f0',
+                    position: 'sticky',
+                    bottom: 0,
+                    zIndex: 10,
                   }}
                 >
                   <td

@@ -368,6 +368,7 @@ export default function AdminDashboard() {
   const onlineRevenue = onlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const totalCashRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const totalUpiRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalCardRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const totalExpenses = useMemo(() => {
     return (expenses || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   }, [expenses]);
@@ -3369,14 +3370,18 @@ export default function AdminDashboard() {
             TAB 7: COMPANY STOCK INWARD & MANAGER
            ========================================= */}
         {(activeTab === 'company-stock' || activeTab === 'manager') && (
-          <CompanyManagerDashboard />
+          <section className="tab-content admin-company-stock-tab">
+            <CompanyManagerDashboard />
+          </section>
         )}
 
         {/* =========================================
             TAB 8: EXPENSES
            ========================================= */}
         {activeTab === 'expenses' && (
-          <ExpensesPage currentUser={user} role="admin" />
+          <section className="tab-content admin-expenses-tab">
+            <ExpensesPage currentUser={user} role="admin" />
+          </section>
         )}
 
         {/* Reset Bill Sequence Modal */}

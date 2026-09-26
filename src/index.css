@@ -23928,6 +23928,11 @@ section.tab-content,
 .admin-recycle-tab,
 .admin-sales-tab,
 .admin-staff-tab,
+.admin-company-stock-tab,
+.admin-expenses-tab,
+.company-manager-dashboard,
+.expenses-page-container,
+.company-manager-main,
 .daily-revenue-wrapper {
   flex: 1 1 0% !important;
   min-height: 0 !important;
@@ -24128,6 +24133,17 @@ section.tab-content,
   position: relative !important;
 }
 
+.company-stock-table-card,
+.expenses-table-card {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow: hidden !important;
+}
+
 /* ── 7. STICKY TABLE HEADERS (ALWAYS VISIBLE WHILE SCROLLING ROWS) ── */
 .inventory-table thead,
 .activity-audit-table thead,
@@ -24139,7 +24155,9 @@ section.tab-content,
 .admin-sales-table thead,
 .shift-invoices-table thead,
 .cashier-table thead,
-#expenses-table thead {
+#expenses-table thead,
+.company-stock-table-wrap thead,
+.expenses-table-wrap thead {
   position: sticky !important;
   top: 0 !important;
   z-index: 25 !important;
@@ -24155,7 +24173,9 @@ section.tab-content,
 .admin-sales-table thead th,
 .shift-invoices-table thead th,
 .cashier-table thead th,
-#expenses-table thead th {
+#expenses-table thead th,
+.company-stock-table-wrap thead th,
+.expenses-table-wrap thead th {
   position: sticky !important;
   top: 0 !important;
   z-index: 25 !important;

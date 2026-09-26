@@ -235,8 +235,15 @@ export default function CompanyManagerDashboard() {
 
   return (
     <div
+      className="company-manager-dashboard"
       style={{
-        minHeight: '100vh',
+        height: '100%',
+        maxHeight: '100%',
+        flex: '1 1 0%',
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
         backgroundColor: '#f8fafc',
         color: '#0f172a',
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
@@ -244,18 +251,20 @@ export default function CompanyManagerDashboard() {
     >
       {/* Top Navigation Bar - Light Theme */}
       <header
+        className="company-manager-header"
         style={{
+          flexShrink: 0,
           position: 'sticky',
           top: 0,
-          zIndex: 100,
+          zIndex: 50,
           backgroundColor: '#ffffff',
           borderBottom: '1px solid #e2e8f0',
-          padding: '12px 24px',
+          padding: '8px 18px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '12px',
+          gap: '10px',
           boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
         }}
       >
@@ -398,14 +407,30 @@ export default function CompanyManagerDashboard() {
       </header>
 
       {/* Main Container */}
-      <main style={{ maxWidth: '1440px', margin: '0 auto', padding: '24px 20px' }}>
+      <main
+        className="company-manager-main"
+        style={{
+          width: '100%',
+          maxWidth: '1440px',
+          margin: '0 auto',
+          padding: '10px 18px',
+          display: 'flex',
+          flexDirection: 'column',
+          flex: '1 1 0%',
+          minHeight: 0,
+          height: '100%',
+          overflow: 'hidden',
+          boxSizing: 'border-box',
+        }}
+      >
         {/* KPI Summary Cards - Light Theme */}
         <section
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '16px',
-            marginBottom: '24px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: '10px',
+            marginBottom: '10px',
+            flexShrink: 0,
           }}
         >
           {/* Total Products in Catalog */}
@@ -413,21 +438,21 @@ export default function CompanyManagerDashboard() {
             style={{
               backgroundColor: '#ffffff',
               border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '16px 20px',
+              borderRadius: '12px',
+              padding: '10px 14px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#64748b', fontWeight: 600, letterSpacing: '0.04em' }}>
                 📋 Total Products
               </span>
-              <span style={{ fontSize: '18px' }}>🏷️</span>
+              <span style={{ fontSize: '16px' }}>🏷️</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#0f172a', marginTop: '6px' }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', marginTop: '2px' }}>
               {stockSummary.totalProducts}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
               Active sweet, savoury & beverage varieties
             </div>
           </div>
@@ -437,21 +462,21 @@ export default function CompanyManagerDashboard() {
             style={{
               backgroundColor: '#ffffff',
               border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '16px 20px',
+              borderRadius: '12px',
+              padding: '10px 14px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#047857', fontWeight: 600, letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#047857', fontWeight: 600, letterSpacing: '0.04em' }}>
                 🏪 Shop Stored Stock
               </span>
-              <span style={{ fontSize: '18px' }}>🧁</span>
+              <span style={{ fontSize: '16px' }}>🧁</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#059669', marginTop: '6px' }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#059669', marginTop: '2px' }}>
               {stockSummary.totalShopStock}
             </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
               Total units stored in shop ready for selling
             </div>
           </div>
@@ -461,22 +486,22 @@ export default function CompanyManagerDashboard() {
             style={{
               backgroundColor: '#ffffff',
               border: '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '16px 20px',
+              borderRadius: '12px',
+              padding: '10px 14px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', textTransform: 'uppercase', color: '#b45309', fontWeight: 600, letterSpacing: '0.04em' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#b45309', fontWeight: 600, letterSpacing: '0.04em' }}>
                 📦 Added to Shop Today
               </span>
-              <span style={{ fontSize: '18px' }}>🧁</span>
+              <span style={{ fontSize: '16px' }}>🧁</span>
             </div>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#b45309', marginTop: '6px' }}>
+            <div style={{ fontSize: '22px', fontWeight: 800, color: '#b45309', marginTop: '2px' }}>
               {dailyMetrics.inwardCount}{' '}
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>batches</span>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>batches</span>
             </div>
-            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+            <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
               Stock verified and added to shop storage today
             </div>
           </div>
@@ -486,15 +511,15 @@ export default function CompanyManagerDashboard() {
             style={{
               backgroundColor: stockSummary.lowStockCount > 0 ? '#fef2f2' : '#ffffff',
               border: stockSummary.lowStockCount > 0 ? '1px solid #fecaca' : '1px solid #e2e8f0',
-              borderRadius: '14px',
-              padding: '16px 20px',
+              borderRadius: '12px',
+              padding: '10px 14px',
               boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span
                 style={{
-                  fontSize: '12px',
+                  fontSize: '11px',
                   textTransform: 'uppercase',
                   color: stockSummary.lowStockCount > 0 ? '#b91c1c' : '#64748b',
                   fontWeight: 600,
@@ -503,24 +528,24 @@ export default function CompanyManagerDashboard() {
               >
                 ⚠️ Low Stock in Shop
               </span>
-              <span style={{ fontSize: '18px' }}>🚨</span>
+              <span style={{ fontSize: '16px' }}>🚨</span>
             </div>
             <div
               style={{
-                fontSize: '28px',
+                fontSize: '22px',
                 fontWeight: 800,
                 color: stockSummary.lowStockCount > 0 ? '#dc2626' : '#059669',
-                marginTop: '6px',
+                marginTop: '2px',
               }}
             >
               {stockSummary.lowStockCount}{' '}
-              <span style={{ fontSize: '14px', fontWeight: 500, color: '#64748b' }}>items</span>
+              <span style={{ fontSize: '13px', fontWeight: 500, color: '#64748b' }}>items</span>
             </div>
             <div
               style={{
                 fontSize: '11px',
                 color: stockSummary.lowStockCount > 0 ? '#b91c1c' : '#64748b',
-                marginTop: '4px',
+                marginTop: '2px',
               }}
             >
               {stockSummary.lowStockCount > 0 ? 'Order refill from company godown' : 'All shop stock levels healthy'}
@@ -535,9 +560,10 @@ export default function CompanyManagerDashboard() {
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '2px solid #e2e8f0',
-            marginBottom: '20px',
+            marginBottom: '10px',
             flexWrap: 'wrap',
-            gap: '12px',
+            gap: '10px',
+            flexShrink: 0,
           }}
         >
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -545,12 +571,12 @@ export default function CompanyManagerDashboard() {
               type="button"
               onClick={() => setActiveTab('remaining')}
               style={{
-                padding: '12px 18px',
+                padding: '8px 14px',
                 background: 'transparent',
                 border: 'none',
                 borderBottom: activeTab === 'remaining' ? '3px solid #d97706' : '3px solid transparent',
                 color: activeTab === 'remaining' ? '#92400e' : '#64748b',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: activeTab === 'remaining' ? 700 : 500,
                 cursor: 'pointer',
                 display: 'flex',
@@ -579,12 +605,12 @@ export default function CompanyManagerDashboard() {
               type="button"
               onClick={() => setActiveTab('daily')}
               style={{
-                padding: '12px 18px',
+                padding: '8px 14px',
                 background: 'transparent',
                 border: 'none',
                 borderBottom: activeTab === 'daily' ? '3px solid #d97706' : '3px solid transparent',
                 color: activeTab === 'daily' ? '#92400e' : '#64748b',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: activeTab === 'daily' ? 700 : 500,
                 cursor: 'pointer',
                 display: 'flex',
@@ -694,7 +720,7 @@ export default function CompanyManagerDashboard() {
 
         {/* TAB 1: REMAINING STOCK (MEETHAMULLA SARAKKU) */}
         {activeTab === 'remaining' && (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 0%', minHeight: 0, height: '100%', overflow: 'hidden' }}>
             {/* Filter Toolbar - Light Theme */}
             <div
               style={{
@@ -702,13 +728,14 @@ export default function CompanyManagerDashboard() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: '12px',
-                marginBottom: '16px',
+                gap: '10px',
+                marginBottom: '10px',
                 backgroundColor: '#ffffff',
-                padding: '14px 18px',
-                borderRadius: '12px',
+                padding: '10px 14px',
+                borderRadius: '10px',
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                flexShrink: 0,
               }}
             >
               {/* Search Input */}
@@ -827,10 +854,15 @@ export default function CompanyManagerDashboard() {
             {/* CARD VIEW (For Mobile & Optional Toggle) */}
             {viewMode === 'cards' ? (
               <div
+                className="company-stock-cards-wrap"
                 style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                  gap: '16px',
+                  gap: '12px',
+                  overflowY: 'auto',
+                  flex: '1 1 0%',
+                  minHeight: 0,
+                  paddingBottom: '10px',
                 }}
               >
                 {filteredInventory.length === 0 ? (
@@ -1053,34 +1085,53 @@ export default function CompanyManagerDashboard() {
             ) : (
               /* TABLE VIEW (Light Theme with Crisp Typography) */
               <div
+                className="company-stock-table-card"
                 style={{
                   backgroundColor: '#ffffff',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '14px',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '12px',
                   overflow: 'hidden',
                   boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flex: '1 1 0%',
+                  minHeight: 0,
+                  height: '100%',
                 }}
               >
-                <div className="company-stock-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+                <div
+                  className="company-stock-table-wrap"
+                  style={{
+                    overflowX: 'auto',
+                    overflowY: 'auto',
+                    flex: '1 1 0%',
+                    minHeight: 0,
+                    maxHeight: '100%',
+                    height: '100%',
+                  }}
+                >
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px' }}>
                     <thead>
                       <tr
                         style={{
                           backgroundColor: '#f8fafc',
-                          borderBottom: '1px solid #e2e8f0',
+                          borderBottom: '1.5px solid #e2e8f0',
                           fontSize: '11px',
                           textTransform: 'uppercase',
                           letterSpacing: '0.05em',
                           color: '#475569',
                           fontWeight: 700,
+                          position: 'sticky',
+                          top: 0,
+                          zIndex: 10,
                         }}
                       >
-                        <th style={{ padding: '14px 18px' }}>Product &amp; SKU</th>
-                        <th style={{ padding: '14px 14px' }}>Unit</th>
-                        <th style={{ padding: '14px 14px' }}>🏪 Shop Stored Stock</th>
-                        <th style={{ padding: '14px 14px' }}>Min Threshold</th>
-                        <th style={{ padding: '14px 14px' }}>Status</th>
-                        <th style={{ padding: '14px 18px', textAlign: 'right' }}>Quick Actions</th>
+                        <th style={{ padding: '12px 16px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Product &amp; SKU</th>
+                        <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Unit</th>
+                        <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>🏪 Shop Stored Stock</th>
+                        <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Min Threshold</th>
+                        <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Status</th>
+                        <th style={{ padding: '12px 16px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc', textAlign: 'right' }}>Quick Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1353,7 +1404,7 @@ export default function CompanyManagerDashboard() {
 
         {/* TAB 2: DAILY STOCK ACTIVITY LOG (DINASARI SARAKKU NAGARVU) */}
         {activeTab === 'daily' && (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 0%', minHeight: 0, height: '100%', overflow: 'hidden' }}>
             {/* Filter toolbar - Light Theme */}
             <div
               style={{
@@ -1361,13 +1412,14 @@ export default function CompanyManagerDashboard() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
-                gap: '12px',
-                marginBottom: '16px',
+                gap: '10px',
+                marginBottom: '10px',
                 backgroundColor: '#ffffff',
-                padding: '14px 18px',
-                borderRadius: '12px',
+                padding: '10px 14px',
+                borderRadius: '10px',
                 border: '1px solid #e2e8f0',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                flexShrink: 0,
               }}
             >
               {/* Search Log Input */}
@@ -1492,34 +1544,53 @@ export default function CompanyManagerDashboard() {
 
             {/* Daily Logs Table - Light Theme */}
             <div
+              className="company-stock-table-card"
               style={{
                 backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '14px',
+                border: '1px solid #cbd5e1',
+                borderRadius: '12px',
                 overflow: 'hidden',
                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: '1 1 0%',
+                minHeight: 0,
+                height: '100%',
               }}
             >
-              <div className="company-stock-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+              <div
+                className="company-stock-table-wrap"
+                style={{
+                  overflowX: 'auto',
+                  overflowY: 'auto',
+                  flex: '1 1 0%',
+                  minHeight: 0,
+                  maxHeight: '100%',
+                  height: '100%',
+                }}
+              >
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px' }}>
                   <thead>
                     <tr
                       style={{
                         backgroundColor: '#f8fafc',
-                        borderBottom: '1px solid #e2e8f0',
+                        borderBottom: '1.5px solid #e2e8f0',
                         fontSize: '11px',
                         textTransform: 'uppercase',
                         letterSpacing: '0.05em',
                         color: '#475569',
                         fontWeight: 700,
+                        position: 'sticky',
+                        top: 0,
+                        zIndex: 10,
                       }}
                     >
-                      <th style={{ padding: '14px 18px' }}>Date &amp; Time</th>
-                      <th style={{ padding: '14px 14px' }}>Movement Type</th>
-                      <th style={{ padding: '14px 14px' }}>Product</th>
-                      <th style={{ padding: '14px 14px' }}>Quantity</th>
-                      <th style={{ padding: '14px 14px' }}>Handled By</th>
-                      <th style={{ padding: '14px 18px' }}>Batch / Note</th>
+                      <th style={{ padding: '12px 16px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Date &amp; Time</th>
+                      <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Movement Type</th>
+                      <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Product</th>
+                      <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Quantity</th>
+                      <th style={{ padding: '12px 14px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Handled By</th>
+                      <th style={{ padding: '12px 16px', position: 'sticky', top: 0, zIndex: 11, backgroundColor: '#f8fafc' }}>Batch / Note</th>
                     </tr>
                   </thead>
                   <tbody>
