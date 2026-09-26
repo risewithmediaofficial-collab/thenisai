@@ -17,6 +17,13 @@ import '@fontsource/plus-jakarta-sans/600.css'
 import { Provider } from 'react-redux';
 import { store } from './store';
 
+// Global fallbacks for payment metrics to prevent legacy cached bundle reference errors
+if (typeof window !== 'undefined') {
+  window.totalCardRevenue = 0;
+  window.totalCashRevenue = 0;
+  window.totalUpiRevenue = 0;
+}
+
 const root = createRoot(document.getElementById('root'));
 
 // StrictMode in dev only — it double-renders every component which makes

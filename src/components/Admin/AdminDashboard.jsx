@@ -366,9 +366,14 @@ export default function AdminDashboard() {
 
   const counterRevenue = counterSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
   const onlineRevenue = onlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-  const totalCashRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-  const totalUpiRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
-  const totalCardRevenue = allSales.filter((s) => (s.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (s.grandTotal || 0), 0);
+  const totalCashRevenue = (allSales || []).filter((s) => (s?.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0);
+  const totalUpiRevenue = (allSales || []).filter((s) => (s?.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0);
+  const totalCardRevenue = (allSales || []).filter((s) => (s?.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0);
+  if (typeof window !== 'undefined') {
+    window.totalCashRevenue = totalCashRevenue;
+    window.totalUpiRevenue = totalUpiRevenue;
+    window.totalCardRevenue = totalCardRevenue;
+  }
   const totalExpenses = useMemo(() => {
     return (expenses || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   }, [expenses]);
@@ -1772,21 +1777,21 @@ export default function AdminDashboard() {
                       <circle cx="12" cy="12" r="2" />
                       <path d="M6 12h.01M18 12h.01" />
                     </svg>
-                    Cash: ₹{totalCashRevenue.toLocaleString('en-IN')}
+                    Cash: ₹{(typeof totalCashRevenue !== 'undefined' ? totalCashRevenue : (window.totalCashRevenue || 0)).toLocaleString('en-IN')}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                       <line x1="12" y1="18" x2="12.01" y2="18" />
                     </svg>
-                    UPI: ₹{totalUpiRevenue.toLocaleString('en-IN')}
+                    UPI: ₹{(typeof totalUpiRevenue !== 'undefined' ? totalUpiRevenue : (window.totalUpiRevenue || 0)).toLocaleString('en-IN')}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                       <line x1="1" y1="10" x2="23" y2="10" />
                     </svg>
-                    Card: ₹{totalCardRevenue.toLocaleString('en-IN')}
+                    Card: ₹{(typeof totalCardRevenue !== 'undefined' ? totalCardRevenue : (window.totalCardRevenue || 0)).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
