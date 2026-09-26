@@ -295,7 +295,7 @@ export default function CompanyManagerDashboard() {
                   fontWeight: 800,
                   letterSpacing: '0.02em',
                   color: '#0f172a',
-                  fontFamily: "'Outfit', 'Cinzel', serif",
+                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 }}
               >
                 THENISAI SWEETS

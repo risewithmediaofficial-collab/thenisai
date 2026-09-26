@@ -219,6 +219,56 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
 }
 
+/* ── UNIFIED BILLING & ADMIN ENTERPRISE TYPOGRAPHY ── */
+.billing-pos-root,
+.billing-pos-root *,
+.billing-pos-root h1, .billing-pos-root h2, .billing-pos-root h3, .billing-pos-root h4, .billing-pos-root h5, .billing-pos-root h6,
+.admin-root,
+.admin-root *,
+.admin-root h1, .admin-root h2, .admin-root h3, .admin-root h4, .admin-root h5, .admin-root h6,
+.admin-container,
+.admin-container *,
+.admin-container h1, .admin-container h2, .admin-container h3, .admin-container h4, .admin-container h5, .admin-container h6,
+.pos-content-area,
+.pos-content-area *,
+.pos-content-area h1, .pos-content-area h2, .pos-content-area h3, .pos-content-area h4, .pos-content-area h5, .pos-content-area h6,
+.admin-content-area,
+.admin-content-area *,
+.admin-content-area h1, .admin-content-area h2, .admin-content-area h3, .admin-content-area h4, .admin-content-area h5, .admin-content-area h6,
+.daily-revenue-wrapper,
+.daily-revenue-wrapper *,
+.daily-revenue-wrapper h1, .daily-revenue-wrapper h2, .daily-revenue-wrapper h3, .daily-revenue-wrapper h4, .daily-revenue-wrapper h5, .daily-revenue-wrapper h6,
+.pos-sidebar,
+.pos-sidebar *,
+.pos-sidebar h1, .pos-sidebar h2, .pos-sidebar h3, .pos-sidebar h4, .pos-sidebar h5, .pos-sidebar h6,
+.company-manager-dashboard,
+.company-manager-dashboard *,
+.company-manager-dashboard h1, .company-manager-dashboard h2, .company-manager-dashboard h3, .company-manager-dashboard h4,
+.expenses-page-container,
+.expenses-page-container *,
+.expenses-page-container h1, .expenses-page-container h2, .expenses-page-container h3, .expenses-page-container h4,
+.daily-title-h2,
+.section-subtitle,
+.rev-value,
+.tender-amt,
+.pos-title,
+.pos-sweet-title,
+.sidebar-brand-title,
+.sidebar-brand-subtitle,
+.section-title,
+.tab-header-strip h2,
+.inventory-header-strip h2,
+.shift-ledger-header h2,
+.admin-portal-title,
+.sub-title,
+.invoice-modal-wrap,
+.invoice-modal-wrap *,
+.invoice-modal-wrap h1, .invoice-modal-wrap h2, .invoice-modal-wrap h3, .invoice-modal-wrap h4,
+.pos-modal-card,
+.pos-modal-card * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+}
+
 /* Modern, Clean Sans-Serif Numbers for Prices, Calculations, Badges & Totals */
 .grand-total-highlight,
 .total-value,
@@ -837,7 +887,7 @@ time, .hours {
 }
 
 .admin-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.55rem;
   color: #0F172A;
   margin: 0;
@@ -1461,7 +1511,7 @@ time, .hours {
 }
 
 .inv-card__title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.1rem;
   color: #0F172A;
   margin: 0;
@@ -1691,7 +1741,7 @@ time, .hours {
 }
 
 .modal-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.4rem;
   color: #0F172A;
   margin: 4px 0 0 0;
@@ -3485,7 +3535,7 @@ time, .hours {
 }
 
 .daily-title-h2 {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(22px, 2.2vw, 28px);
   font-weight: 700;
   color: #0F172A;
@@ -3676,7 +3726,7 @@ time, .hours {
 }
 
 .rev-value {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(24px, 2.2vw, 30px);
   font-weight: 800;
   color: #0F172A;
@@ -3710,7 +3760,7 @@ time, .hours {
    4. Tender Breakdown (Cash vs UPI vs Card)
    ============================================================================== */
 .section-subtitle {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.18rem;
   font-weight: 700;
   color: #0F172A;
@@ -3790,7 +3840,7 @@ time, .hours {
 }
 
 .tender-amt {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.6rem;
   font-weight: 800;
   color: #0F172A;
@@ -5300,7 +5350,7 @@ time, .hours {
 }
 
 .pos-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   color: #0F172A;
   margin: 0;
@@ -5969,7 +6019,7 @@ time, .hours {
 }
 
 .pos-sweet-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.05rem;
   color: #0F172A;
   margin: 0;
@@ -8203,7 +8253,7 @@ time, .hours {
 }
 
 .scale-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.25rem;
   color: #0F172A;
   margin: 4px 0 0 0;
@@ -8406,7 +8456,7 @@ time, .hours {
 }
 
 .shift-view-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #0F172A;
@@ -9756,7 +9806,7 @@ time, .hours {
 }
 
 .shift-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.55rem;
   font-weight: 800;
   color: #0F172A;
@@ -12784,11 +12834,11 @@ time, .hours {
 }
 
 .checkout-modal__title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.6rem;
   color: #FFF6EA;
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .checkout-modal__close {
@@ -12895,7 +12945,7 @@ time, .hours {
 }
 
 .form-section__title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.12rem;
   color: #F8E7CD;
   margin: 0 0 16px 0;
@@ -13351,10 +13401,11 @@ time, .hours {
 }
 
 .checkout-summary__title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.25rem;
   color: #FFF6EA;
   margin: 0 0 16px 0;
+  font-weight: 600;
 }
 
 .checkout-summary__items {
@@ -14825,12 +14876,12 @@ time, .hours {
 }
 
 .inv-brand-name {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.5rem;
   color: #7A1F1D;
   margin: 0 0 4px 0;
   letter-spacing: 0.05em;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .inv-brand-sub {
@@ -18219,7 +18270,7 @@ time, .hours {
 }
 
 .stock-modal__title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #0F172A;
@@ -20798,7 +20849,7 @@ select.stock-form__input {
 }
 
 .cust-auth-title {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.45rem;
   font-weight: 600;
   color: #FFF6EA;
@@ -21034,7 +21085,7 @@ select.stock-form__input {
 .cust-auth-submit-btn {
   background: linear-gradient(135deg, #C8943A 0%, #DFB76C 100%);
   color: #160D07;
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   border: none;
   border-radius: 10px;
   padding: 13px;

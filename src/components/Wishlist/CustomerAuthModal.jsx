@@ -178,7 +178,7 @@ export default function CustomerAuthModal() {
 
           {/* ── Content ── */}
           <div className="px-6 pt-1.5 pb-6">
-            <h3 className="font-['Playfair_Display',Georgia,serif] text-[1.45rem] font-semibold text-[#FFF6EA] mb-1.5 mt-0">
+            <h3 className="font-sans text-[1.45rem] font-semibold text-[#FFF6EA] mb-1.5 mt-0">
               {step === 'phone' ? 'Save to Your Wishlist' : 'Verify Mobile Number'}
             </h3>
             <p className="text-[0.86rem] text-[#C8B39B] leading-[1.45] mb-4 mt-0">
@@ -195,7 +195,7 @@ export default function CustomerAuthModal() {
               >
                 <span className="text-[#D4A843] text-[0.74rem] font-semibold uppercase tracking-[0.05em]">Saving Item:</span>
                 <span className="flex-1 font-semibold text-[#FFF8EF] truncate">{targetItem.name}</span>
-                <span className="font-bold text-[#F5D37E] font-['Playfair_Display',serif]">
+                <span className="font-bold text-[#F5D37E] font-sans">
                   ₹{targetItem.price || targetItem.prices?.['500g'] || Object.values(targetItem.prices || {})[0]}
                 </span>
               </div>
@@ -254,7 +254,7 @@ export default function CustomerAuthModal() {
                 <button
                   type="submit"
                   disabled={loading || phone.replace(/\D/g, '').length < 10}
-                  className="cust-submit-btn w-full py-3.5 rounded-xl border-none font-['Playfair_Display',Georgia,serif] text-[0.97rem] font-semibold text-[#160D07] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200"
+                  className="cust-submit-btn w-full py-3.5 rounded-xl border-none font-sans text-[0.97rem] font-semibold text-[#160D07] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200"
                   style={{ background: 'linear-gradient(135deg,#C8943A 0%,#DFB76C 100%)', boxShadow: '0 4px 16px rgba(200,148,58,0.35)' }}
                 >
                   {loading ? 'Sending Verification Code...' : (
@@ -340,7 +340,7 @@ export default function CustomerAuthModal() {
                 <button
                   type="submit"
                   disabled={loading || otp.trim().length < 4}
-                  className="cust-submit-btn w-full py-3.5 rounded-xl border-none font-['Playfair_Display',Georgia,serif] text-[0.97rem] font-semibold text-[#160D07] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200"
+                  className="cust-submit-btn w-full py-3.5 rounded-xl border-none font-sans text-[0.97rem] font-semibold text-[#160D07] cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200"
                   style={{ background: 'linear-gradient(135deg,#C8943A 0%,#DFB76C 100%)', boxShadow: '0 4px 16px rgba(200,148,58,0.35)' }}
                 >
                   {loading ? 'Verifying Account...' : (
