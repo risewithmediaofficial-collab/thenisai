@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { useState, useEffect, useRef, Suspense, lazy, startTransition } from 'react';
 import LoadingScreen from './components/Loader/LoadingScreen';
 import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
@@ -138,6 +138,18 @@ function AppContent({ isLoaded, handleLoadComplete }) {
       window.removeEventListener('hashchange', handleHash);
       window.removeEventListener('popstate', handleHash);
     };
+  }, []);
+
+  // Preload admin/billing chunks early so navigation is instant
+  useEffect(() => {
+    // Always prefetch admin + billing after 2s — users navigate there frequently
+    const t = setTimeout(() => {
+      void import('./components/Admin/AdminDashboard');
+      void import('./components/Billing/BillingCounter');
+      void import('./components/Billing/InvoiceModal');
+      void import('./components/Auth/StaffLoginModal');
+    }, 2000);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {

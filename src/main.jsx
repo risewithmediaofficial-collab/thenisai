@@ -17,11 +17,18 @@ import '@fontsource/plus-jakarta-sans/600.css'
 import { Provider } from 'react-redux';
 import { store } from './store';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </StrictMode>,
+const root = createRoot(document.getElementById('root'));
+
+// StrictMode in dev only — it double-renders every component which makes
+// routing feel 2x slower in development. Production runs single-render.
+const AppTree = (
+  <Provider store={store}>
+    <App />
+  </Provider>
 );
+
+root.render(
+  import.meta.env.DEV ? <StrictMode>{AppTree}</StrictMode> : AppTree
+);
+
 

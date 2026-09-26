@@ -1112,6 +1112,41 @@
   }
 }
 
+/* ── Tablet: comfortable mid-size modal ── */
+@media (max-width: 768px) {
+  .invoice-modal-wrap {
+    max-width: calc(100vw - 24px);
+  }
+  .invoice-toolbar-actions {
+    flex-wrap: wrap;
+  }
+  .invoice-toolbar-actions .toolbar-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 90px;
+    justify-content: center;
+  }
+}
+
+/* ── Landscape phone: keep toolbar scrollable, preview shrunk ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .invoice-portal {
+    padding: 4px;
+    align-items: flex-start;
+  }
+  .invoice-modal-wrap {
+    max-height: 100dvh;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .invoice-toolbar {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  .printable-invoice-container {
+    max-height: calc(100dvh - 110px);
+  }
+}
+
 @media print {
   /* 1. Global Page & Body Reset */
   html,

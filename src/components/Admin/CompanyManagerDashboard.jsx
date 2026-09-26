@@ -1061,7 +1061,7 @@ export default function CompanyManagerDashboard() {
                   boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                 }}
               >
-                <div style={{ overflowX: 'auto' }}>
+                <div className="company-stock-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px' }}>
                     <thead>
                       <tr
@@ -1500,7 +1500,7 @@ export default function CompanyManagerDashboard() {
                 boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
               }}
             >
-              <div style={{ overflowX: 'auto' }}>
+              <div className="company-stock-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '780px' }}>
                   <thead>
                     <tr

@@ -1026,14 +1026,14 @@ export function CartProvider({ children }) {
       if (window.location.hash !== '#manager') {
         window.location.hash = '#manager';
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
       return;
     }
     if (view === 'menu') {
       if (window.location.hash !== '#menu') {
         window.location.hash = '#menu';
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo(0, 0);
       return;
     }
     if (view === 'admin') {
@@ -1088,7 +1088,7 @@ export function CartProvider({ children }) {
         window.location.hash = '';
       }
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo(0, 0);
   };
 
   // Sync state to local storage

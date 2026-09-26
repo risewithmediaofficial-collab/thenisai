@@ -2595,7 +2595,7 @@ time, .hours {
   border: 1px solid #E2E8F0;
   border-radius: 12px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   -webkit-overflow-scrolling: touch;
 }
@@ -10867,7 +10867,7 @@ time, .hours {
   border: 1px solid #E2E8F0;
   border-radius: 14px;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
   scrollbar-width: thin;
   scrollbar-color: #94A3B8 #F1F5F9;
@@ -12281,7 +12281,7 @@ time, .hours {
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
@@ -22243,10 +22243,13 @@ select.stock-form__input {
   flex-wrap: wrap;
 }
 
+
 /* ============================================================================
    RESPONSIVE WORKSPACE CONTRACT
    Shared Tailwind utilities and final mobile overrides for every route.
    ============================================================================ */
+} /* end @layer components */
+
 @layer components {
   .responsive-shell {
     @apply w-full min-w-0 max-w-full;
@@ -22743,8 +22746,6 @@ select.stock-form__input {
     margin: 0 !important;
     padding: 0 !important;
   }
-}
-
 }
 
 /* ============================================================
@@ -23398,5 +23399,846 @@ select.stock-form__input {
   }
   .btn-pos-complete {
     padding: 9px 12px;
+  }
+}
+
+/* ================================================================
+   THENISAI — FINAL RESPONSIVE POLISH v3
+   Fills gaps in all billing / admin screens across every viewport.
+   Breakpoints: 1024px, 768px, 600px, 480px, 380px, 320px
+   ================================================================ */
+
+/* ── EXPENSES PAGE: override inline padding on mobile ── */
+@media (max-width: 640px) {
+  .pos-expenses-page {
+    padding: 14px 14px !important;
+  }
+  .expense-log-form {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+  .expense-log-form > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 420px) {
+  .pos-expenses-page {
+    padding: 10px 10px !important;
+  }
+}
+
+/* ── CATEGORY BAR: horizontal scroll on tablets (768-1024px) ── */
+@media (max-width: 1024px) {
+  .pos-category-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    overscroll-behavior-x: contain;
+  }
+  .pos-category-bar::-webkit-scrollbar { display: none; }
+  .pos-category-bar .category-pill { flex-shrink: 0; }
+}
+
+/* ── ADMIN HEADER: title group and actions on medium tablets ── */
+@media (max-width: 768px) {
+  .daily-revenue__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .daily-actions-group {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 8px;
+  }
+  .daily-action-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 110px;
+    justify-content: center;
+  }
+  .daily-filter-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .date-preset-pills {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .date-preset-pills::-webkit-scrollbar { display: none; }
+  .date-pill { flex-shrink: 0; }
+}
+
+/* ── ADMIN ORDERS: card grid collapses on medium screens ── */
+@media (max-width: 768px) {
+  .orders-cards-list {
+    gap: 12px;
+  }
+  .order-admin-card {
+    padding: 14px 16px;
+  }
+  .order-admin-card__top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* ── STAFF MANAGEMENT: table scroll + compact cells ── */
+@media (max-width: 640px) {
+  .staff-table-wrap,
+  .staff-management-wrap,
+  .cashier-list-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .staff-table th,
+  .staff-table td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+}
+
+/* ── INVOICE MODAL: portrait phone full-screen ── */
+@media (max-width: 480px) {
+  .invoice-portal {
+    padding: 0 !important;
+    align-items: flex-start;
+  }
+  .invoice-modal-wrap {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .invoice-toolbar {
+    padding: 10px 12px 8px !important;
+  }
+  .invoice-toolbar-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .invoice-toolbar-top-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .invoice-format-switcher {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  .invoice-toolbar-actions {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    width: 100%;
+  }
+  .invoice-toolbar-actions .toolbar-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 9px 6px;
+    font-size: 0.76rem;
+  }
+  /* A4 invoice parties / footer two-col → single col */
+  .inv-parties,
+  .inv-footer-calc {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .inv-title-block {
+    text-align: left;
+    align-items: flex-start;
+    border-top: 1px solid #e0d2be;
+    padding-top: 12px;
+    margin-top: 8px;
+  }
+  .invoice-document {
+    padding: 16px 12px !important;
+  }
+}
+
+/* ── PRE-ORDERS (POS Online Tab): card / table responsive ── */
+@media (max-width: 640px) {
+  .pos-online-page {
+    padding: 12px 12px;
+    gap: 12px;
+  }
+  .online-page-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .online-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .online-full-card {
+    padding: 12px 14px;
+  }
+  .online-card-top-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .online-card-bottom {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .online-action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .pre-order-tray-items {
+    overflow-x: hidden;
+  }
+}
+
+/* ── PRE-ORDER KPI grid: 2-col on mobile, 1-col on tiny ── */
+@media (max-width: 640px) {
+  .preorder-kpi-grid,
+  .online-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px;
+  }
+}
+@media (max-width: 380px) {
+  .preorder-kpi-grid,
+  .online-kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── TRAY / SIDE PANEL: full screen on small devices ── */
+@media (max-width: 640px) {
+  .preorder-tray-panel {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    border-radius: 0 !important;
+  }
+  .tray-header {
+    padding: 14px 16px;
+  }
+  .tray-items-scroll {
+    padding: 12px 14px;
+  }
+  .tray-footer {
+    padding: 12px 14px;
+  }
+}
+
+/* ── INVENTORY PAGE: table horizontal scroll + compact rows ── */
+@media (max-width: 640px) {
+  .pos-inventory-page {
+    padding: 12px 12px;
+    gap: 12px;
+  }
+  .inventory-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .inventory-stock-table {
+    min-width: 520px;
+  }
+  .inventory-stock-table th,
+  .inventory-stock-table td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+}
+
+/* ── SHIFT LEDGER: table scroll and billing card compact ── */
+@media (max-width: 640px) {
+  .pos-shift-ledger {
+    padding: 12px 12px;
+    gap: 12px;
+  }
+  .shift-ledger-header {
+    padding: 14px 16px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .shift-header-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .shift-invoices-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .shift-invoices-table {
+    min-width: 540px;
+  }
+  .shift-invoices-table th,
+  .shift-invoices-table td {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+}
+
+/* ── BILLING COUNTER: bill line items on small phones ── */
+@media (max-width: 360px) {
+  .pos-bill-line {
+    gap: 4px;
+    padding: 7px 8px;
+  }
+  .pos-line-name {
+    font-size: 0.82rem;
+  }
+  .pos-line-price {
+    font-size: 0.78rem;
+    min-width: 48px;
+  }
+  .pos-line-stepper {
+    gap: 2px;
+  }
+  .line-step-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 0.9rem;
+  }
+  .pos-line-qty {
+    font-size: 0.82rem;
+    min-width: 20px;
+  }
+}
+
+/* ── CHECKOUT MODAL: full-screen on portrait phones ── */
+@media (max-width: 480px) {
+  .checkout-modal {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-height: 100dvh;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+  .checkout-modal__header {
+    padding: 14px 16px;
+  }
+  .checkout-modal__body {
+    padding: 14px 16px;
+    gap: 12px;
+  }
+  .checkout-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+}
+
+/* ── EDIT / DELETE BILL MODALS ── */
+@media (max-width: 540px) {
+  .edit-bill-modal-wrap,
+  .delete-bill-modal-wrap {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    border-radius: 14px;
+    padding: 18px 16px;
+  }
+  .edit-bill-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .edit-bill-actions,
+  .delete-bill-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .edit-bill-actions button,
+  .delete-bill-actions button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* ── SIDEBAR NAV (SideNavbar): ensure it doesn't overflow ── */
+@media (max-width: 1024px) {
+  .pos-sidebar,
+  .side-nav {
+    position: fixed !important;
+    left: -280px;
+    top: 0;
+    height: 100dvh;
+    z-index: 300;
+    width: 260px !important;
+    transition: left 0.25s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .pos-sidebar.open,
+  .side-nav.open {
+    left: 0;
+  }
+}
+
+/* ── BILLING HEADER: compact on tablets ── */
+@media (max-width: 768px) {
+  .billing-pos-header {
+    padding: 10px 14px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .billing-pos-header .header-title {
+    font-size: 1rem;
+  }
+  .billing-pos-header .header-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+/* ── GLOBAL: prevent horizontal bleed on all pages ── */
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+  .billing-pos-root,
+  .admin-root,
+  .customer-menu-root {
+    overflow-x: hidden;
+  }
+}
+
+/* ── ADMIN PORTAL: tab bar scrollable even on small tablets ── */
+@media (max-width: 768px) {
+  .admin-tab-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 2px;
+    padding-bottom: 2px;
+  }
+  .admin-tab-bar::-webkit-scrollbar { display: none; }
+  .admin-tab-bar .tab-btn {
+    flex-shrink: 0;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ── 320px edge case: ensure minimum usable layout ── */
+@media (max-width: 320px) {
+  .invoice-toolbar-actions {
+    grid-template-columns: 1fr !important;
+  }
+  .invoice-toolbar-actions .toolbar-btn {
+    width: 100%;
+  }
+  .pos-bill-calc {
+    padding: 8px 8px 24px !important;
+  }
+  .pos-complete-btn,
+  .btn-pos-complete {
+    font-size: 0.8rem;
+    padding: 10px 8px;
+  }
+}
+
+/* ================================================================
+   THENISAI — INLINE SCROLL ARCHITECTURE
+   All admin & billing pages restricted to screen viewport height (100vh/100dvh).
+   Headers, KPIs, toolbars and search filters are PINNED at top.
+   Large data tables and lists scroll INLINE with sticky headers and sleek scrollbars.
+   Applies to: Activity Logs, Inventory, Sales & Ledger, Shift Bills,
+   Recycle Bin, Staff Accounts, Orders, Company Stock, Expenses.
+   ================================================================ */
+
+/* ── 1. ROOT & CONTENT AREA: Lock to viewport height ── */
+.admin-root,
+.billing-pos-root {
+  height: 100vh !important;
+  height: 100dvh !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  overflow: hidden !important;
+  display: flex !important;
+}
+
+.admin-content-area {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  max-height: 100dvh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* ── 2. ADMIN CONTAINER: Fills 100% height without page scroll ── */
+.admin-container {
+  width: 100% !important;
+  max-width: 1560px !important;
+  margin: 0 auto !important;
+  padding: 14px 24px 10px !important;
+  box-sizing: border-box !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* ── 3. ALL TAB SECTIONS: Flex column filling remaining height ── */
+.admin-container > .tab-content,
+.admin-container > section.tab-content,
+.admin-container > .daily-revenue-wrapper,
+section.tab-content,
+.admin-price-logs-tab,
+.admin-inventory-tab,
+.admin-recycle-tab,
+.admin-sales-tab,
+.admin-staff-tab,
+.daily-revenue-wrapper {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+/* ── 4. PINNED HEADER STRIPS: Never scroll away ── */
+.tab-header-strip,
+.inventory-header-strip,
+.recycle-header-strip,
+.daily-revenue__header,
+.admin-operations-bar,
+.admin-mobile-strip {
+  flex-shrink: 0 !important;
+  margin-bottom: 10px !important;
+}
+
+/* Compact headers to give maximum space to data */
+.admin-portal-title,
+.tab-header-strip h2,
+.inventory-header-strip h2,
+.daily-title-h2 {
+  font-size: 1.15rem !important;
+  margin: 2px 0 2px !important;
+}
+
+.inventory-eyebrow,
+.daily-title-badge {
+  font-size: 10px !important;
+}
+
+/* ── 5. PINNED KPI CARDS: Compact & pinned ── */
+.inventory-kpis-grid,
+.recycle-kpis-grid,
+.admin-kpi-grid,
+.revenue-kpi-grid,
+.tender-cards-grid {
+  flex-shrink: 0 !important;
+  margin-bottom: 10px !important;
+  gap: 10px !important;
+}
+
+.inv-kpi-card,
+.admin-container .kpi-card {
+  padding: 8px 14px !important;
+  min-height: unset !important;
+}
+
+.inv-kpi-card .kpi-val,
+.inv-kpi-card .kpi-value,
+.admin-container .kpi-card .kpi-value {
+  font-size: 1.35rem !important;
+  font-weight: 800 !important;
+}
+
+.inv-kpi-card .kpi-label,
+.admin-container .kpi-card .kpi-label {
+  font-size: 0.68rem !important;
+}
+
+.inv-kpi-card .kpi-sub,
+.admin-container .kpi-card .kpi-sub {
+  font-size: 0.72rem !important;
+}
+
+/* ── 6. PINNED TOOLBARS & FILTER CHIPS ── */
+.inventory-toolbar,
+.inventory-filter-bar,
+.tab-toolbar,
+.admin-sales-toolbar-top,
+.recycle-subtabs-bar,
+.recycle-filter-bar,
+.daily-filter-strip,
+.sales-filter-strip,
+.bills-header-line {
+  flex-shrink: 0 !important;
+  margin-bottom: 10px !important;
+}
+
+.inventory-filter-chips,
+.activity-filter-chips,
+.bills-filter-chips,
+.filter-chips,
+.date-preset-pills {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  gap: 6px !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding-bottom: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+.inventory-filter-chips::-webkit-scrollbar,
+.activity-filter-chips::-webkit-scrollbar,
+.bills-filter-chips::-webkit-scrollbar,
+.filter-chips::-webkit-scrollbar,
+.date-preset-pills::-webkit-scrollbar {
+  display: none !important;
+}
+
+.inventory-filter-chips .filter-chip,
+.activity-filter-chips .filter-chip,
+.bills-filter-chips .filter-chip,
+.filter-chips .filter-chip,
+.date-preset-pills .date-pill {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  padding: 5px 12px !important;
+  font-size: 12px !important;
+}
+
+/* ── 7. LARGE DATA TABLES & LISTS: INLINE SCROLL RESTRICTED TO SCREEN ── */
+.admin-content-area .inventory-table-wrap,
+.admin-content-area .recycle-table-wrap,
+.admin-content-area .daily-bills-table-wrap,
+.admin-content-area .sales-table-card,
+.admin-content-area .admin-table-wrapper,
+.admin-content-area .orders-cards-list,
+.admin-content-area .activity-audit-table-wrap,
+.billing-pos-root .inventory-table-wrap,
+.billing-pos-root .shift-table-card,
+.billing-pos-root .shift-table-wrap,
+.billing-pos-root .shift-invoices-table-wrap,
+.company-stock-table-wrap,
+.expenses-table-wrap {
+  flex: 1 1 0% !important;
+  min-height: 160px !important;
+  height: 100% !important;
+  max-height: calc(100vh - 240px) !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+}
+
+/* ── 8. STICKY TABLE HEADERS (ALWAYS VISIBLE WHILE SCROLLING ROWS) ── */
+.inventory-table thead,
+.activity-audit-table thead,
+.recycle-table thead,
+.recycle-bin-table thead,
+.sales-table thead,
+.daily-bills-table thead,
+.staff-table thead,
+.admin-sales-table thead,
+.shift-invoices-table thead,
+.cashier-table thead,
+#expenses-table thead {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 25 !important;
+}
+
+.inventory-table thead th,
+.activity-audit-table thead th,
+.recycle-table thead th,
+.recycle-bin-table thead th,
+.sales-table thead th,
+.daily-bills-table thead th,
+.staff-table thead th,
+.admin-sales-table thead th,
+.shift-invoices-table thead th,
+.cashier-table thead th,
+#expenses-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 25 !important;
+  background: #f8fafc !important;
+  box-shadow: 0 1px 0 #e2e8f0, 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+  padding: 10px 14px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: #475569 !important;
+}
+
+/* Dark mode table header in Billing Counter */
+.billing-pos-root .inventory-table thead th,
+.billing-pos-root .shift-invoices-table thead th {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  box-shadow: 0 1px 0 #334155 !important;
+}
+
+/* ── 9. CUSTOM SLEEK INLINE SCROLLBARS ── */
+.inventory-table-wrap::-webkit-scrollbar,
+.recycle-table-wrap::-webkit-scrollbar,
+.daily-bills-table-wrap::-webkit-scrollbar,
+.sales-table-card::-webkit-scrollbar,
+.admin-table-wrapper::-webkit-scrollbar,
+.orders-cards-list::-webkit-scrollbar,
+.shift-table-card::-webkit-scrollbar,
+.shift-table-wrap::-webkit-scrollbar,
+.company-stock-table-wrap::-webkit-scrollbar,
+.expenses-table-wrap::-webkit-scrollbar,
+.daily-revenue-scroll-area::-webkit-scrollbar {
+  width: 7px !important;
+  height: 7px !important;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-track,
+.recycle-table-wrap::-webkit-scrollbar-track,
+.daily-bills-table-wrap::-webkit-scrollbar-track,
+.sales-table-card::-webkit-scrollbar-track,
+.admin-table-wrapper::-webkit-scrollbar-track,
+.orders-cards-list::-webkit-scrollbar-track,
+.shift-table-card::-webkit-scrollbar-track,
+.shift-table-wrap::-webkit-scrollbar-track,
+.company-stock-table-wrap::-webkit-scrollbar-track,
+.expenses-table-wrap::-webkit-scrollbar-track,
+.daily-revenue-scroll-area::-webkit-scrollbar-track {
+  background: #f8fafc !important;
+  border-radius: 4px !important;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-thumb,
+.recycle-table-wrap::-webkit-scrollbar-thumb,
+.daily-bills-table-wrap::-webkit-scrollbar-thumb,
+.sales-table-card::-webkit-scrollbar-thumb,
+.admin-table-wrapper::-webkit-scrollbar-thumb,
+.orders-cards-list::-webkit-scrollbar-thumb,
+.shift-table-card::-webkit-scrollbar-thumb,
+.shift-table-wrap::-webkit-scrollbar-thumb,
+.company-stock-table-wrap::-webkit-scrollbar-thumb,
+.expenses-table-wrap::-webkit-scrollbar-thumb,
+.daily-revenue-scroll-area::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 4px !important;
+}
+
+.inventory-table-wrap::-webkit-scrollbar-thumb:hover,
+.recycle-table-wrap::-webkit-scrollbar-thumb:hover,
+.daily-bills-table-wrap::-webkit-scrollbar-thumb:hover,
+.sales-table-card::-webkit-scrollbar-thumb:hover,
+.admin-table-wrapper::-webkit-scrollbar-thumb:hover,
+.orders-cards-list::-webkit-scrollbar-thumb:hover,
+.shift-table-card::-webkit-scrollbar-thumb:hover,
+.shift-table-wrap::-webkit-scrollbar-thumb:hover,
+.company-stock-table-wrap::-webkit-scrollbar-thumb:hover,
+.expenses-table-wrap::-webkit-scrollbar-thumb:hover,
+.daily-revenue-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* Firefox thin scrollbars */
+.inventory-table-wrap,
+.recycle-table-wrap,
+.daily-bills-table-wrap,
+.sales-table-card,
+.admin-table-wrapper,
+.orders-cards-list,
+.shift-table-card,
+.shift-table-wrap,
+.company-stock-table-wrap,
+.expenses-table-wrap,
+.daily-revenue-scroll-area {
+  scrollbar-width: thin !important;
+  scrollbar-color: #cbd5e1 #f8fafc !important;
+}
+
+/* ── 10. DAILY REVENUE REPORT SCROLL AREA ── */
+.daily-revenue-scroll-area {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain !important;
+  padding: 0 4px 16px !important;
+}
+
+/* ── 11. TABLE MINIMUM COLUMN WIDTHS (NO CELL WRAPPING CRUSH) ── */
+.inventory-table,
+.activity-audit-table {
+  min-width: 780px !important;
+  width: 100% !important;
+}
+
+.sales-table,
+.shift-invoices-table,
+.daily-bills-table {
+  min-width: 680px !important;
+  width: 100% !important;
+}
+
+.staff-table,
+.admin-sales-table {
+  min-width: 600px !important;
+  width: 100% !important;
+}
+
+.recycle-table {
+  min-width: 720px !important;
+  width: 100% !important;
+}
+
+/* ── 12. RESPONSIVE MOBILE FALLBACK (MAX-WIDTH: 768px) ── */
+@media (max-width: 768px) {
+  .admin-root {
+    overflow-y: auto !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  .admin-content-area {
+    overflow-y: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+  .admin-container {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 12px 14px !important;
+  }
+  .admin-container > .tab-content,
+  .admin-container > section.tab-content,
+  .daily-revenue-wrapper {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .admin-content-area .inventory-table-wrap,
+  .admin-content-area .recycle-table-wrap,
+  .admin-content-area .daily-bills-table-wrap,
+  .admin-content-area .sales-table-card,
+  .admin-content-area .admin-table-wrapper,
+  .admin-content-area .orders-cards-list,
+  .admin-content-area .activity-audit-table-wrap {
+    max-height: 480px !important;
+    flex: none !important;
   }
 }

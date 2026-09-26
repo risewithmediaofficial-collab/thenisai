@@ -838,8 +838,10 @@ export default function DailyRevenueReport({
         </div>
       )}
 
-      {/* Primary KPI Metrics Grid — Revenue & Operations */}
-      <section className="revenue-kpi-grid">
+      {/* Scrollable Content Area: KPIs, Tender Breakdown, Shift & Daily Bills */}
+      <div className="daily-revenue-scroll-area">
+        {/* Primary KPI Metrics Grid — Revenue & Operations */}
+        <section className="revenue-kpi-grid">
         <div className="rev-card gross">
           <span className="rev-label">TOTAL SALES REVENUE</span>
           <div className="rev-value">₹{grossRevenue.toLocaleString('en-IN')}</div>
@@ -1271,6 +1273,7 @@ export default function DailyRevenueReport({
           </div>
         )}
       </section>
+      </div>
 
       {/* Printable Z-Report / Monthly Report Modal */}
       <AnimatePresence>

@@ -12,7 +12,7 @@
 // ==============================================================================
 
 const BASE_URL = import.meta.env.VITE_API_URL || '';
-const DEFAULT_TIMEOUT_MS = 10000; // 10 seconds
+const DEFAULT_TIMEOUT_MS = 8000; // 8 seconds — faster failure detection
 
 /**
  * Builds clean query string from an object of params (Rule 10)
@@ -82,18 +82,21 @@ export async function request(endpoint, options = {}) {
     userSignal.addEventListener('abort', () => controller.abort());
   }
 
+  const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase());
+
   // Rule 8 & 11: Request Interceptor (Inject auth token and required headers)
   const token = sessionStorage.getItem('thenisai_auth_token') || localStorage.getItem('thenisai_auth_token');
   const headers = {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache, no-store, must-revalidate',
-    Pragma: 'no-cache',
+    // Only send no-cache headers for writes — allow browser to cache GET responses
+    ...(isWrite ? { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(fetchOptions.headers || {}),
   };
 
   const config = {
-    cache: 'no-store',
+    // Only bypass cache for write operations
+    ...(isWrite ? { cache: 'no-store' } : {}),
     ...fetchOptions,
     headers,
     signal: controller.signal,
@@ -132,10 +135,6 @@ export async function request(endpoint, options = {}) {
 
   const method = (config.method || 'GET').toUpperCase();
 
-  // Rule 19: Log API Calls in Development
-  if (import.meta.env.DEV) {
-    console.debug(`[API Request] ${method} ${url}`, { headers: config.headers, body: config.body });
-  }
 
   try {
     const res = await fetch(url, config);
@@ -143,11 +142,6 @@ export async function request(endpoint, options = {}) {
 
     // Parse JSON safely
     const data = await res.json().catch(() => ({}));
-
-    // Rule 19: Log API Response in Development
-    if (import.meta.env.DEV) {
-      console.debug(`[API Response] ${res.status} ${url}`, data);
-    }
 
     // Rule 11 & 12: Handle 401 Session Invalidation & Error Statuses
     if (!res.ok) {

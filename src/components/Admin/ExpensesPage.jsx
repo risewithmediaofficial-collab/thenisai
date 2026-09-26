@@ -767,7 +767,7 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
             boxShadow: '0 2px 10px rgba(0,0,0,0.04)',
           }}
         >
-          <div style={{ overflowX: 'auto' }}>
+          <div className="expenses-table-wrap" style={{ overflowX: 'auto', overflowY: 'auto' }}>
             <table
               id="expenses-table"
               style={{

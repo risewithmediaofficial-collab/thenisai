@@ -15,6 +15,8 @@ RUN npm ci --omit=dev || npm install --omit=dev
 
 # Copy application source
 COPY server.js ./
+COPY src/ ./src/
+COPY data/ ./data/
 
 # Ensure data directory exists with correct ownership
 RUN mkdir -p /app/data && chown -R thenisai:thenisai /app
