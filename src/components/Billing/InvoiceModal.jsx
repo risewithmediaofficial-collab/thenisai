@@ -110,8 +110,11 @@ export default function InvoiceModal() {
   const splitUpi = activeInvoice.splitUpi ?? activeInvoice.paymentDetails?.upi ?? 0;
 
   const subtotal = Number(activeInvoice.subtotal) || 0;
+  const discountPercent = Number(activeInvoice.discountPercent) || 0;
+  const discountAmount = Number(activeInvoice.discountAmount) || 0;
+  const discountReason = activeInvoice.discountReason || '';
   const deliveryFee = Number(activeInvoice.deliveryFee) || 0;
-  const grandTotal = Number(activeInvoice.grandTotal) || (subtotal + deliveryFee);
+  const grandTotal = Number(activeInvoice.grandTotal) || Math.max(0, subtotal - discountAmount + deliveryFee);
 
   const rawTax = activeInvoice.taxBreakdown || {};
   const cgstRate = typeof rawTax.cgstRate === 'number' ? rawTax.cgstRate : (typeof taxSettings?.cgstRate === 'number' ? taxSettings.cgstRate : 2.5);
@@ -192,6 +195,7 @@ export default function InvoiceModal() {
       `📅 *Date:* ${orderDate} ${orderTime}\n` +
       `👤 *Customer:* ${customerDisplay}\n\n` +
       `📦 *Order Items:*\n${itemsText}\n\n` +
+      (discountAmount > 0 ? `🏷️ *Special Discount (${discountPercent}%${discountReason ? ` - ${discountReason}` : ''}):* -₹${discountAmount.toFixed(2)}\n` : '') +
       `💰 *Total Amount:* ₹${formattedTotal}\n` +
       `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
       `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦\n` +
@@ -350,6 +354,21 @@ export default function InvoiceModal() {
           </div>
 
           <div className="pos-slip-dashed-line" />
+
+          {/* Discount Breakdown if applied */}
+          {discountAmount > 0 && (
+            <>
+              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '1px 0' }}>
+                <span>Subtotal:</span>
+                <span>₹{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, padding: '1px 0' }}>
+                <span>DISCOUNT ({discountPercent}%):</span>
+                <span>-₹{discountAmount.toFixed(2)}</span>
+              </div>
+              <div className="pos-slip-dashed-line" />
+            </>
+          )}
 
           {/* Net Rs (Prominent Bold Amount - Without GST) */}
           <div className="pos-slip-net-row">
@@ -606,6 +625,13 @@ export default function InvoiceModal() {
               <span>Taxable Subtotal</span>
               <span>₹{subtotal.toFixed(2)}</span>
             </div>
+
+            {discountAmount > 0 && (
+              <div className="total-row discount-row" style={{ color: '#059669', fontWeight: 600 }}>
+                <span>Special Discount ({discountPercent}%{discountReason ? ` - ${discountReason}` : ''})</span>
+                <span>-₹{discountAmount.toFixed(2)}</span>
+              </div>
+            )}
 
             {!taxBreakdown.isInterState ? (
               <>

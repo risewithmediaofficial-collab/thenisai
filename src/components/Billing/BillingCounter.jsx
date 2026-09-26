@@ -60,10 +60,10 @@ export default function BillingCounter() {
     customProducts,
     productAvailabilityMap,
     toggleProductAvailability,
-    addNewProduct,
-    deleteProduct,
     updateProductMasterPrice,
     updateProductDetails,
+    updateProductDiscount,
+    productDiscounts,
     toggleProductUnlimitedStock,
     updateProductSkuCode,
     deleteBill,
@@ -1026,11 +1026,25 @@ export default function BillingCounter() {
     setInventoryPage(1);
   }, [invCategoryFilter, invStatusFilter, inventorySearch]);
 
+  // POS Order-Level Special Discount State
+  const [billDiscountPercent, setBillDiscountPercent] = useState(0);
+  const [billDiscountReason, setBillDiscountReason] = useState('Special Discount');
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [tempDiscountPercent, setTempDiscountPercent] = useState('');
+  const [tempDiscountReason, setTempDiscountReason] = useState('Special Discount');
+
   const billSubtotal = useMemo(
     () => billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0),
     [billItems]
   );
-  const billGrandTotal = useMemo(() => Math.round(billSubtotal), [billSubtotal]);
+  const billDiscountAmount = useMemo(() => {
+    if (!billDiscountPercent || billDiscountPercent <= 0) return 0;
+    return Math.round((billSubtotal * (billDiscountPercent / 100)) * 100) / 100;
+  }, [billSubtotal, billDiscountPercent]);
+
+  const billGrandTotal = useMemo(() => {
+    return Math.max(0, Math.round(billSubtotal - billDiscountAmount));
+  }, [billSubtotal, billDiscountAmount]);
 
   // Helper to compute exact price for any weight or volume (100g, 250g, 500g, 1 kg, 250ml, 500ml, 1L, 2L, or custom typed)
   const computeItemPrice = (sweet, weight) => {
@@ -1307,6 +1321,8 @@ export default function BillingCounter() {
     setSplitCash('');
     setSplitUpi('');
     setLastEditedSplit('cash');
+    setBillDiscountPercent(0);
+    setBillDiscountReason('Special Discount');
   };
 
   // Staff & Admin Price Override handler
@@ -1374,6 +1390,7 @@ export default function BillingCounter() {
         category: editingMasterPriceItem.category || 'sweets',
         unit: editingMasterPriceItem.unit || 'kg',
         price: num,
+        discountPercent: parseFloat(editingMasterPriceItem.discountPercent) || 0,
         isUnlimitedStock: Boolean(editingMasterPriceItem.isUnlimitedStock),
       }, user);
     }
@@ -1400,6 +1417,8 @@ export default function BillingCounter() {
       paymentMode,
       splitCash,
       splitUpi,
+      discountPercent: billDiscountPercent,
+      discountReason: billDiscountReason,
       time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
       total: billGrandTotal,
     };
@@ -1434,6 +1453,12 @@ export default function BillingCounter() {
     if (target.paymentMode) setPaymentMode(target.paymentMode);
     if (target.splitCash !== undefined) setSplitCash(target.splitCash);
     if (target.splitUpi !== undefined) setSplitUpi(target.splitUpi);
+    if (target.discountPercent !== undefined) {
+      setBillDiscountPercent(Number(target.discountPercent) || 0);
+      setBillDiscountReason(target.discountReason || 'Special Discount');
+    } else {
+      setBillDiscountPercent(0);
+    }
     setHeldBills(updatedHeld);
   };
 
@@ -1572,6 +1597,9 @@ export default function BillingCounter() {
       },
       items: [...billItems],
       subtotal: billSubtotal,
+      discountPercent: billDiscountPercent,
+      discountAmount: billDiscountAmount,
+      discountReason: billDiscountPercent > 0 ? billDiscountReason : null,
       taxBreakdown: {
         rate: 0,
         cgstRate: 0,
@@ -2967,12 +2995,65 @@ export default function BillingCounter() {
 
               {/* Bill Calculation & Summary (Pinned at Bottom) */}
               <div className="pos-bill-calc">
+                {/* Special Discount Action Row */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    id="btn-special-discount-trigger"
+                    className={`btn-pos-special-discount ${billDiscountPercent > 0 ? 'discount-active' : ''}`}
+                    onClick={() => {
+                      setTempDiscountPercent(billDiscountPercent > 0 ? String(billDiscountPercent) : '');
+                      setTempDiscountReason(billDiscountReason || 'Special Discount');
+                      setIsDiscountModalOpen(true);
+                    }}
+                    title="Apply percentage or special discount on bill"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="19" y1="5" x2="5" y2="19" />
+                      <circle cx="6.5" cy="6.5" r="2.5" />
+                      <circle cx="17.5" cy="17.5" r="2.5" />
+                    </svg>
+                    <span>
+                      {billDiscountPercent > 0
+                        ? `Discount Applied: ${billDiscountPercent}% OFF`
+                        : 'Special Discount %'}
+                    </span>
+                  </button>
+                  {billDiscountPercent > 0 && (
+                    <button
+                      type="button"
+                      className="btn-clear-discount-pill"
+                      onClick={() => setBillDiscountPercent(0)}
+                      title="Clear discount"
+                    >
+                      ✕ Clear
+                    </button>
+                  )}
+                </div>
+
                 <div className="calc-item">
                   <span>Total Items</span>
                   <span className="calc-val-bold">
                     {billItems.reduce((sum, it) => sum + it.quantity, 0)} cups/items ({billItems.length} items)
                   </span>
                 </div>
+
+                {billDiscountPercent > 0 && (
+                  <>
+                    <div className="calc-item subtotal-row">
+                      <span>Subtotal</span>
+                      <span className="calc-val-bold">₹{billSubtotal}</span>
+                    </div>
+                    <div className="calc-item discount-row" style={{ color: '#059669' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>Special Discount ({billDiscountPercent}%)</span>
+                        <small style={{ fontSize: '11px', color: '#16a34a' }}>· {billDiscountReason}</small>
+                      </span>
+                      <span className="calc-val-bold">− ₹{billDiscountAmount}</span>
+                    </div>
+                  </>
+                )}
+
                 <div className="calc-item total">
                   <span>Total Payable</span>
                   <span className="grand-total-highlight">
@@ -4340,6 +4421,7 @@ export default function BillingCounter() {
                       <th>CATEGORY</th>
                       <th>BILLING UNIT</th>
                       <th>SELLING PRICE</th>
+                      <th>DISCOUNT (%)</th>
                       <th>COUNTER AVAILABILITY</th>
                       <th>ACTIONS</th>
                     </tr>
@@ -4426,7 +4508,7 @@ export default function BillingCounter() {
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                               <strong style={{ fontSize: '15px', color: '#0f172a' }}>
-                                ₹{prod.price || prod.unitPrice || 0}
+                                ₹{prod.originalPrice ?? prod.price ?? prod.unitPrice ?? 0}
                               </strong>
                               <button
                                 type="button"
@@ -4439,7 +4521,8 @@ export default function BillingCounter() {
                                     tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
                                     category: prod.category || 'sweets',
                                     unit: getItemUnitDisplay(prod),
-                                    price: String(prod.price || prod.unitPrice || ''),
+                                    price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                                    discountPercent: String(prod.discountPercent || 0),
                                     isUnlimitedStock: isProductUnlimitedStock(prod),
                                   });
                                 }}
@@ -4450,6 +4533,41 @@ export default function BillingCounter() {
                                 </svg>
                                 Edit Product
                               </button>
+                            </div>
+                          </td>
+
+                          {/* Discount (%) */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {prod.discountPercent > 0 ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#ecfdf5',
+                                  color: '#065f46',
+                                  border: '1px solid #a7f3d0',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                }}>
+                                  🏷️ {prod.discountPercent}% OFF
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-block',
+                                  color: '#64748b',
+                                  background: '#f1f5f9',
+                                  border: '1px solid #e2e8f0',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                }}>
+                                  0% (Standard)
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td>
@@ -4795,20 +4913,38 @@ export default function BillingCounter() {
                   </select>
                 </div>
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Selling Price (₹)</label>
-                <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
-                  <span className="currency-prefix">₹</span>
-                  <input
-                    type="number"
-                    step="any"
-                    min="0"
-                    autoFocus
-                    className="custom-price-input"
-                    value={editingMasterPriceItem.price}
-                    onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, price: e.target.value })}
-                    placeholder="e.g. 380"
-                  />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Selling Price (₹)</label>
+                  <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
+                    <span className="currency-prefix">₹</span>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      autoFocus
+                      className="custom-price-input"
+                      value={editingMasterPriceItem.price}
+                      onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, price: e.target.value })}
+                      placeholder="e.g. 380"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>Discount (%)</label>
+                  <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
+                    <span className="currency-prefix">%</span>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      max="100"
+                      className="custom-price-input"
+                      value={editingMasterPriceItem.discountPercent ?? 0}
+                      onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, discountPercent: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -5072,6 +5208,262 @@ export default function BillingCounter() {
               >
                 Adjust Items in Bill
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Special Discount Modal in POS Billing */}
+      {isDiscountModalOpen && (
+        <div className="pos-price-modal-backdrop" onClick={() => setIsDiscountModalOpen(false)}>
+          <div
+            className="pos-price-modal-box special-discount-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '480px' }}
+          >
+            <div className="pos-price-modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '18px',
+                }}>
+                  %
+                </div>
+                <div>
+                  <span className="modal-eyebrow" style={{ color: '#059669' }}>ORDER CONCESSION</span>
+                  <h3 className="modal-title" style={{ fontSize: '18px', margin: 0 }}>Special Discount (தள்ளுபடி)</h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn-modal-close"
+                onClick={() => setIsDiscountModalOpen(false)}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="pos-price-modal-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Order Subtotal Display */}
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>Current Bill Subtotal</span>
+                <strong style={{ fontSize: '18px', color: '#0f172a' }}>₹{billSubtotal}</strong>
+              </div>
+
+              {/* Quick Preset Percentage Buttons */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '8px' }}>
+                  Quick Discount Presets
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                  {[5, 10, 15, 20, 25].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setTempDiscountPercent(String(pct))}
+                      style={{
+                        padding: '10px 4px',
+                        borderRadius: '8px',
+                        border: Number(tempDiscountPercent) === pct ? '2px solid #059669' : '1px solid #cbd5e1',
+                        background: Number(tempDiscountPercent) === pct ? '#ecfdf5' : '#fff',
+                        color: Number(tempDiscountPercent) === pct ? '#065f46' : '#0f172a',
+                        fontWeight: 700,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {pct}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom Percentage Input & Live Preview */}
+              <div>
+                <label htmlFor="temp-discount-input" style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Or Enter Custom Discount Percentage (%)
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className="input-with-prefix" style={{ flex: 1, position: 'relative' }}>
+                    <input
+                      id="temp-discount-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="any"
+                      placeholder="e.g. 12"
+                      value={tempDiscountPercent}
+                      onChange={(e) => setTempDiscountPercent(e.target.value)}
+                      autoFocus
+                      style={{
+                        width: '100%',
+                        padding: '10px 36px 10px 14px',
+                        fontSize: '18px',
+                        fontWeight: 800,
+                        color: '#0f172a',
+                        border: '1.5px solid #cbd5e1',
+                        borderRadius: '8px',
+                        outline: 'none',
+                      }}
+                    />
+                    <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#64748b', fontSize: '16px' }}>
+                      %
+                    </span>
+                  </div>
+                  {tempDiscountPercent !== '' && Number(tempDiscountPercent) > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setTempDiscountPercent('0')}
+                      style={{
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #fecdd3',
+                        background: '#fff1f2',
+                        color: '#e11d48',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Live Preview Box */}
+              {(() => {
+                const p = Math.max(0, Math.min(100, parseFloat(tempDiscountPercent) || 0));
+                const amt = p > 0 ? Math.round((billSubtotal * (p / 100)) * 100) / 100 : 0;
+                const net = Math.max(0, Math.round(billSubtotal - amt));
+                return (
+                  <div style={{
+                    background: p > 0 ? '#f0fdf4' : '#f8fafc',
+                    border: `1.5px solid ${p > 0 ? '#86efac' : '#e2e8f0'}`,
+                    borderRadius: '10px',
+                    padding: '12px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#475569' }}>
+                      <span>Discount Concession:</span>
+                      <strong style={{ color: p > 0 ? '#16a34a' : '#64748b' }}>
+                        {p > 0 ? `− ₹${amt} (${p}% off)` : '₹0'}
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', color: '#0f172a', paddingTop: '4px', borderTop: '1px dashed #cbd5e1' }}>
+                      <span style={{ fontWeight: 700 }}>Final Net Payable:</span>
+                      <strong style={{ fontSize: '18px', color: '#059669', fontWeight: 800 }}>₹{net}</strong>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Reason Presets */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                  Discount Reason (காரணம்)
+                </label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                  {['Special Discount', 'Festival Discount', 'Bulk Order Concession', 'VIP Customer', 'Management Approval', 'Counter Special Rate'].map((reason) => (
+                    <button
+                      key={reason}
+                      type="button"
+                      onClick={() => setTempDiscountReason(reason)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        border: tempDiscountReason === reason ? '1.5px solid #059669' : '1px solid #cbd5e1',
+                        background: tempDiscountReason === reason ? '#ecfdf5' : '#f8fafc',
+                        color: tempDiscountReason === reason ? '#065f46' : '#475569',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Or type custom reason..."
+                  value={tempDiscountReason}
+                  onChange={(e) => setTempDiscountReason(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              {/* Footer Actions */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsDiscountModalOpen(false)}
+                  style={{
+                    padding: '10px 18px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#fff',
+                    color: '#475569',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  id="btn-apply-special-discount"
+                  onClick={() => {
+                    const p = Math.max(0, Math.min(100, parseFloat(tempDiscountPercent) || 0));
+                    setBillDiscountPercent(p);
+                    setBillDiscountReason(tempDiscountReason.trim() || 'Special Discount');
+                    setIsDiscountModalOpen(false);
+                  }}
+                  style={{
+                    padding: '10px 22px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    color: '#fff',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.35)',
+                  }}
+                >
+                  Apply Discount
+                </button>
+              </div>
             </div>
           </div>
         </div>

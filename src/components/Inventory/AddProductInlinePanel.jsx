@@ -16,6 +16,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
     category: 'sweets',
     unit: 'kg',
     price: '',
+    discountPercent: 0,
     skuCode: '',
     isUnlimitedStock: false,
   });
@@ -40,6 +41,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         category: 'sweets',
         unit: 'kg',
         price: '',
+        discountPercent: 0,
         skuCode: nextCode,
         isUnlimitedStock: false,
       });
@@ -143,6 +145,8 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         ? `${form.nameEn.trim()} — ${form.nameTa.trim()}`
         : form.nameEn.trim();
 
+      const discountNum = Math.max(0, Math.min(100, parseFloat(form.discountPercent) || 0));
+
       const productPayload = {
         name: displayName,
         englishName: form.nameEn.trim(),
@@ -151,6 +155,7 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
         unit: form.unit,
         price: priceNum,
         unitPrice: priceNum,
+        discountPercent: discountNum,
         skuCode: form.skuCode.trim() || undefined,
         hsn: form.skuCode.trim() || undefined,
         inStock: true,
@@ -294,6 +299,29 @@ export default function AddProductInlinePanel({ isOpen, onClose, onAddProduct })
                   onChange={handleChange}
                   className="panel-input prefixed"
                   required
+                />
+              </div>
+            </div>
+
+            {/* Discount (%) */}
+            <div className="form-field-group">
+              <label htmlFor="prod-discount" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>Discount (%)</span>
+                <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 600 }}>0% Default</span>
+              </label>
+              <div className="input-with-prefix">
+                <span className="input-prefix" style={{ fontWeight: 700 }}>%</span>
+                <input
+                  id="prod-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="any"
+                  name="discountPercent"
+                  placeholder="0 (e.g. 5, 10)"
+                  value={form.discountPercent}
+                  onChange={handleChange}
+                  className="panel-input prefixed"
                 />
               </div>
             </div>

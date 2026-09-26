@@ -34,6 +34,7 @@ const RECYCLE_BIN_PRODUCTS_STORAGE_KEY = 'thenisai_recycle_bin_products_v1';
 const DELETED_PRODUCT_IDS_KEY = 'thenisai_deleted_product_ids_v1';
 const ACTIVITY_LOGS_STORAGE_KEY = 'thenisai_activity_logs_v1';
 const MASTER_PRICES_KEY = 'thenisai_master_prices_v1';
+const PRODUCT_DISCOUNTS_KEY = 'thenisai_product_discounts_v1';
 const CUSTOM_CATEGORIES_KEY = 'thenisai_custom_categories_v1';
 const CUSTOM_UNITS_KEY = 'thenisai_custom_units_v1';
 const CATEGORY_OVERRIDES_KEY = 'thenisai_category_overrides_v1';
@@ -529,6 +530,17 @@ export function CartProvider({ children }) {
     }
   });
 
+  // Persistent Product Discounts in Percentage (product id -> discount %)
+  // Defaults to 0% for all products
+  const [productDiscounts, setProductDiscounts] = useState(() => {
+    try {
+      const saved = localStorage.getItem(PRODUCT_DISCOUNTS_KEY);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
   // Admin-managed custom product categories (persisted to localStorage)
   const [customCategories, setCustomCategories] = useState(() => {
     try {
@@ -743,6 +755,17 @@ export function CartProvider({ children }) {
 
       const mergedDisplayName = mergedTamilName ? `${mergedName} — ${mergedTamilName}` : mergedName;
 
+      // Product discount percentage (default 0% for all)
+      const rawDiscount = productDiscounts[item.id] !== undefined
+        ? productDiscounts[item.id]
+        : (invRecord?.discountPercent !== undefined ? invRecord.discountPercent : (item.discountPercent || 0));
+      const discountPercent = Math.max(0, Math.min(100, Number(rawDiscount) || 0));
+      const originalPrice = livePrice;
+      const discountedUnitPrice = discountPercent > 0
+        ? Math.round((livePrice * (1 - discountPercent / 100)) * 100) / 100
+        : livePrice;
+      const effectivePrice = discountPercent > 0 ? discountedUnitPrice : livePrice;
+
       return {
         ...item,
         name: mergedDisplayName,
@@ -750,17 +773,20 @@ export function CartProvider({ children }) {
         tamilName: mergedTamilName,
         category: mergedCategory,
         unit: mergedUnit,
-        price: livePrice,
-        unitPrice: livePrice,
-        pricePerKg: mergedUnit === 'kg' ? livePrice : item.pricePerKg || livePrice,
+        price: effectivePrice,
+        unitPrice: effectivePrice,
+        originalPrice: livePrice,
+        discountPercent,
+        hasDiscount: discountPercent > 0,
+        pricePerKg: mergedUnit === 'kg' ? effectivePrice : (item.pricePerKg || effectivePrice),
         skuCode: invRecord?.skuCode ?? item.skuCode ?? (item.itemNumber ? String(item.itemNumber) : ''),
         prices: mergedUnit === 'kg' ? {
-          '100g': Math.round(livePrice * 0.1),
-          '250g': Math.round(livePrice * 0.25),
-          '500g': Math.round(livePrice * 0.5),
-          '1kg': livePrice,
-          '2kg': livePrice * 2,
-        } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: livePrice } : { [mergedUnit]: livePrice }),
+          '100g': Math.round(effectivePrice * 0.1),
+          '250g': Math.round(effectivePrice * 0.25),
+          '500g': Math.round(effectivePrice * 0.5),
+          '1kg': effectivePrice,
+          '2kg': effectivePrice * 2,
+        } : (item.prices ? { ...item.prices, [mergedUnit || '1 Cup']: effectivePrice } : { [mergedUnit]: effectivePrice }),
       };
     });
 
@@ -2278,6 +2304,7 @@ export function CartProvider({ children }) {
     const newId = productData.id || `custom-${Date.now()}`;
     const unitPrice = parseFloat(productData.price || productData.unitPrice || 500);
     const stockQty = parseFloat(productData.stockKg || productData.stock || 15);
+    const discountPct = Math.max(0, Math.min(100, parseFloat(productData.discountPercent) || 0));
 
     const newProd = {
       id: newId,
@@ -2289,6 +2316,7 @@ export function CartProvider({ children }) {
       price: unitPrice,
       unitPrice,
       pricePerKg: unitPrice,
+      discountPercent: discountPct,
       unit: productData.unit || 'kg',
       category: productData.category || 'sweets',
       subcategory: productData.subcategory || 'Special Sweets',
@@ -2299,6 +2327,18 @@ export function CartProvider({ children }) {
       isCustom: true,
       description: productData.description || 'Special preparation',
     };
+
+    if (discountPct > 0) {
+      setProductDiscounts((prev) => {
+        const updated = { ...prev, [newId]: discountPct };
+        try {
+          if (!isSandboxActive()) {
+            localStorage.setItem(PRODUCT_DISCOUNTS_KEY, JSON.stringify(updated));
+          }
+        } catch {}
+        return updated;
+      });
+    }
 
     setCustomProducts((prev) => {
       const updated = [...prev, newProd];
@@ -2910,6 +2950,9 @@ export function CartProvider({ children }) {
     const nextUnit = updates.unit || 'kg';
     const nextPrice = parseFloat(updates.price ?? updates.unitPrice ?? 0);
     const isUnlimited = typeof updates.isUnlimitedStock === 'boolean' ? updates.isUnlimitedStock : undefined;
+    const nextDiscount = updates.discountPercent !== undefined
+      ? Math.max(0, Math.min(100, parseFloat(updates.discountPercent) || 0))
+      : undefined;
 
     if (!nameEn || Number.isNaN(nextPrice) || nextPrice <= 0) {
       return { success: false, message: 'Please enter a valid product name and price.' };
@@ -2920,6 +2963,18 @@ export function CartProvider({ children }) {
     const item = (allBillingProducts || []).find((it) => it.id === productId);
     const oldName = item ? item.name : nameEn;
     const oldPrice = item ? item.price : 0;
+
+    if (nextDiscount !== undefined) {
+      setProductDiscounts((prev) => {
+        const updated = { ...prev, [productId]: nextDiscount };
+        try {
+          if (!isSandboxActive()) {
+            localStorage.setItem(PRODUCT_DISCOUNTS_KEY, JSON.stringify(updated));
+          }
+        } catch {}
+        return updated;
+      });
+    }
 
     setCustomProducts((prev) => {
       const updated = prev.map((p) => (p.id === productId ? {
@@ -2932,6 +2987,7 @@ export function CartProvider({ children }) {
         price: nextPrice,
         unitPrice: nextPrice,
         pricePerKg: nextPrice,
+        ...(nextDiscount !== undefined ? { discountPercent: nextDiscount } : {}),
         ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
         description: updates.description || p.description || 'Updated product details',
       } : p));
@@ -3087,6 +3143,48 @@ export function CartProvider({ children }) {
       console.warn('Backend unlimited stock update failed:', err);
       return { success: true, warning: true, isUnlimitedStock: resolvedNext };
     }
+  };
+
+  const updateProductDiscount = async (productId, discountPercent, performedBy = null) => {
+    const pct = Math.max(0, Math.min(100, Math.round((parseFloat(discountPercent) || 0) * 100) / 100));
+    const activePerformer = resolveActiveUser(performedBy);
+
+    setProductDiscounts((prev) => {
+      const updated = { ...prev, [productId]: pct };
+      try {
+        if (!isSandboxActive()) {
+          localStorage.setItem(PRODUCT_DISCOUNTS_KEY, JSON.stringify(updated));
+        }
+      } catch {}
+      return updated;
+    });
+
+    setCustomProducts((prev) => {
+      const updated = prev.map((p) => (p.id === productId ? { ...p, discountPercent: pct } : p));
+      try {
+        if (!isSandboxActive()) {
+          localStorage.setItem(CUSTOM_PRODUCTS_KEY, JSON.stringify(updated));
+        }
+      } catch {}
+      return updated;
+    });
+
+    setInventory((prev) => {
+      return prev.map((p) => (p.id === productId ? { ...p, discountPercent: pct } : p));
+    });
+
+    logActivity({
+      action: 'UPDATE_PRODUCT_DISCOUNT',
+      entity: 'Product',
+      entityId: productId,
+      performedBy: activePerformer.name,
+      details: {
+        productId,
+        discountPercent: pct,
+      },
+    });
+
+    return { success: true, discountPercent: pct };
   };
 
   const updateProductSkuCode = async (productId, newSkuCode) => {
@@ -3907,6 +4005,8 @@ export function CartProvider({ children }) {
     deleteProduct,
     updateProductMasterPrice,
     updateProductSkuCode,
+    productDiscounts,
+    updateProductDiscount,
     masterPrices,
     // Admin-managed custom Categories & Units
     allCategories,

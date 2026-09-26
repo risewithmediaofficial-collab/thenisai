@@ -7713,6 +7713,75 @@ time, .hours {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
+/* Special Discount in POS Bill Pane */
+.btn-pos-special-discount {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1.5px solid #A7F3D0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.01em;
+}
+
+.btn-pos-special-discount:hover {
+  background: #D1FAE5;
+  border-color: #34D399;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.18);
+}
+
+.btn-pos-special-discount.discount-active {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  color: #FFFFFF;
+  border-color: #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.32);
+}
+
+.btn-pos-special-discount.discount-active:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 3px 10px rgba(5, 150, 105, 0.4);
+}
+
+.btn-clear-discount-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: #FFF1F2;
+  color: #E11D48;
+  border: 1px solid #FECDD3;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-clear-discount-pill:hover {
+  background: #FFE4E6;
+  border-color: #FDA4AF;
+  color: #BE123C;
+}
+
+.calc-item.discount-row {
+  color: #059669 !important;
+  font-weight: 700;
+}
+
+.calc-item.discount-row span:last-child {
+  color: #059669 !important;
+  font-weight: 800;
+}
+
 /* Pay Mode Buttons */
 .pos-pay-modes {
   display: grid;

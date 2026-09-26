@@ -39,6 +39,7 @@ export default function AdminDashboard() {
     deleteProduct,
     updateProductMasterPrice,
     updateProductDetails,
+    updateProductDiscount,
     updateProductSkuCode,
     // Bill Deletion & 30-Day Recycle Bin
     recycleBinBills,
@@ -1467,6 +1468,7 @@ export default function AdminDashboard() {
                       <th>CATEGORY</th>
                       <th>BILLING UNIT</th>
                       <th>SELLING PRICE</th>
+                      <th>DISCOUNT (%)</th>
                       <th>COUNTER AVAILABILITY</th>
                       <th>ACTIONS</th>
                     </tr>
@@ -1581,7 +1583,7 @@ export default function AdminDashboard() {
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                               <strong style={{ fontSize: '15px', color: '#0f172a' }}>
-                                ₹{prod.price || prod.unitPrice || 0}
+                                ₹{prod.originalPrice ?? prod.price ?? prod.unitPrice ?? 0}
                               </strong>
                               <button
                                 type="button"
@@ -1592,13 +1594,14 @@ export default function AdminDashboard() {
                                   const invItem = (inventory || []).find((i) => i.id === prod.id);
                                   const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
                                   setEditingPriceProduct(prod);
-                                  setNewPriceInput(String(prod.price || prod.unitPrice || ''));
+                                  setNewPriceInput(String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''));
                                   setProductEditForm({
                                     nameEn: englishName,
                                     nameTa: tamilName,
                                     category: prod.category || 'sweets',
                                     unit: prod.unit || 'kg',
-                                    price: String(prod.price || prod.unitPrice || ''),
+                                    price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                                    discountPercent: String(prod.discountPercent || 0),
                                     isUnlimitedStock: Boolean(isUnlim),
                                   });
                                 }}
@@ -1609,6 +1612,41 @@ export default function AdminDashboard() {
                                 </svg>
                                 Edit Product
                               </button>
+                            </div>
+                          </td>
+
+                          {/* Discount (%) */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {prod.discountPercent > 0 ? (
+                                <span style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#ecfdf5',
+                                  color: '#065f46',
+                                  border: '1px solid #a7f3d0',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                }}>
+                                  🏷️ {prod.discountPercent}% OFF
+                                </span>
+                              ) : (
+                                <span style={{
+                                  display: 'inline-block',
+                                  color: '#64748b',
+                                  background: '#f1f5f9',
+                                  border: '1px solid #e2e8f0',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                }}>
+                                  0% (Standard)
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td>
@@ -3466,6 +3504,7 @@ export default function AdminDashboard() {
                     category: productEditForm.category,
                     unit: productEditForm.unit,
                     price: productEditForm.price,
+                    discountPercent: parseFloat(productEditForm.discountPercent) || 0,
                     isUnlimitedStock: Boolean(productEditForm.isUnlimitedStock),
                   }, user);
                   setEditingPriceProduct(null);
@@ -3555,19 +3594,37 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
-                      Selling Price (₹)
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      min="1"
-                      required
-                      value={productEditForm.price}
-                      onChange={(e) => setProductEditForm((prev) => ({ ...prev, price: e.target.value }))}
-                      style={{ width: '100%', padding: '10px 12px', fontSize: '16px', fontWeight: 800, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
-                    />
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        Selling Price (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="1"
+                        required
+                        value={productEditForm.price}
+                        onChange={(e) => setProductEditForm((prev) => ({ ...prev, price: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 12px', fontSize: '16px', fontWeight: 800, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                        Discount (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="0"
+                        max="100"
+                        placeholder="0"
+                        value={productEditForm.discountPercent ?? 0}
+                        onChange={(e) => setProductEditForm((prev) => ({ ...prev, discountPercent: e.target.value }))}
+                        style={{ width: '100%', padding: '10px 12px', fontSize: '16px', fontWeight: 800, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                      />
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>0% = Standard Rate</span>
+                    </div>
                   </div>
 
                   <div style={{
