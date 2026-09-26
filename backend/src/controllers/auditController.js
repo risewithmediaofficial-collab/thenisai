@@ -128,3 +128,25 @@ export async function recordActivity(req, res) {
     res.status(500).json({ success: false, message: 'Failed to record activity' });
   }
 }
+
+export async function clearActivities(req, res) {
+  try {
+    await ActivityLog.deleteMany({});
+    console.log('[Audit] Cleared all activity audit logs');
+    res.json({ success: true, message: 'All activity logs cleared successfully' });
+  } catch (err) {
+    console.error('[Audit] Error clearing activities:', err);
+    res.status(500).json({ success: false, message: 'Failed to clear activities: ' + err.message });
+  }
+}
+
+export async function clearPriceOverrides(req, res) {
+  try {
+    await PriceOverrideLog.deleteMany({});
+    console.log('[Audit] Cleared all price override logs');
+    res.json({ success: true, message: 'All price override logs cleared successfully' });
+  } catch (err) {
+    console.error('[Audit] Error clearing price overrides:', err);
+    res.status(500).json({ success: false, message: 'Failed to clear price overrides: ' + err.message });
+  }
+}

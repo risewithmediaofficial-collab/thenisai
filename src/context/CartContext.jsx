@@ -1596,6 +1596,34 @@ export function CartProvider({ children }) {
     return activityLogs;
   };
 
+  const clearAllActivityLogs = async () => {
+    try {
+      setActivityLogs([]);
+      setPriceOverrideLogs([]);
+      try {
+        localStorage.removeItem(ACTIVITY_LOGS_STORAGE_KEY);
+        localStorage.removeItem(PRICE_OVERRIDE_LOGS_STORAGE_KEY);
+      } catch {}
+
+      if (!isSandboxActive()) {
+        try {
+          await api.delete('/api/audit/activities');
+        } catch (err) {
+          console.warn('Backend clear activities fallback:', err);
+        }
+        try {
+          await api.delete('/api/audit/price-overrides');
+        } catch (err) {
+          console.warn('Backend clear price overrides fallback:', err);
+        }
+      }
+      return { success: true };
+    } catch (err) {
+      console.error('Failed to clear activity logs:', err);
+      return { success: false, message: err.message };
+    }
+  };
+
   const fetchRecycleBinBills = async () => {
     try {
       const res = await api.get('/api/recycle-bin/bills');
@@ -3900,6 +3928,7 @@ export function CartProvider({ children }) {
     activityLogs,
     recordActivity,
     fetchActivityLogs,
+    clearAllActivityLogs,
     // Expenses
     expenses,
     logExpense,
