@@ -958,7 +958,7 @@ export default function BillingCounter() {
     });
   }, [allBillingProducts, invCategoryFilter, invStatusFilter, inventorySearch, productAvailabilityMap, inventoryById]);
 
-  const INVENTORY_PAGE_SIZE = 25;
+  const INVENTORY_PAGE_SIZE = 200;
   const inventoryPageCount = Math.max(1, Math.ceil(filteredInventory.length / INVENTORY_PAGE_SIZE));
   const safeInventoryPage = Math.min(inventoryPage, inventoryPageCount);
   const inventoryPageStart = (safeInventoryPage - 1) * INVENTORY_PAGE_SIZE;
@@ -3985,7 +3985,7 @@ export default function BillingCounter() {
            =================================================== */}
         {posTab === 'inventory' && (
           <main className="pos-inventory-page" data-lenis-prevent="true">
-            <div className="inventory-page-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+            <div className="inventory-page-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <span className="inventory-eyebrow" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#d4a843', letterSpacing: '0.08em' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4075,7 +4075,7 @@ export default function BillingCounter() {
             />
 
             {/* Category Division Chips (Previous Inventory Layout) */}
-            <div className="inventory-category-division-chips" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>
+            <div className="inventory-category-division-chips" style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginRight: '4px' }}>
                 Categories:
               </span>
@@ -4193,7 +4193,7 @@ export default function BillingCounter() {
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <div className="inventory-filter-bar" style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap' }}>
               <div className="inventory-filter-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <select
                   value={invCategoryFilter}
@@ -4418,7 +4418,7 @@ export default function BillingCounter() {
               )}
             </div>
             {filteredInventory.length > INVENTORY_PAGE_SIZE && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginTop: '14px', flexWrap: 'wrap' }}>
+              <div className="inventory-pagination-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginTop: '6px', flexWrap: 'wrap', flexShrink: 0 }}>
                 <span style={{ fontSize: '13px', color: '#64748b' }}>
                   Showing {inventoryPageStart + 1}–{Math.min(inventoryPageStart + INVENTORY_PAGE_SIZE, filteredInventory.length)} of {filteredInventory.length} products
                 </span>
@@ -4450,8 +4450,8 @@ export default function BillingCounter() {
 
         {/* TAB 5: EXPENSES LOG */}
         {posTab === 'expenses' && (
-          <main className="pos-expenses-page" data-lenis-prevent="true" style={{ padding: '24px 32px' }}>
-            <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <main className="pos-expenses-page" data-lenis-prevent="true" style={{ padding: '12px 20px 10px', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: 800, color: '#d4a843', letterSpacing: '0.08em' }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
