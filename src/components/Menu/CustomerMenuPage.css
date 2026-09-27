@@ -549,6 +549,110 @@
   transform: scale(0.96) !important;
 }
 
+/* ── Main Bar inside Menu List Row ────────────────────────────────────────── */
+.menu-list-main-bar {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  gap: 12px !important;
+}
+
+.menu-list-row.weight-open {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+  border-color: #6366f1 !important;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.14) !important;
+  background-color: #fafaff !important;
+}
+
+/* Quick Rs & Units Buttons */
+.portion-btn.portion-rs-btn {
+  background: #fffdf5 !important;
+  border: 1px solid #fde68a !important;
+  color: #b45309 !important;
+  font-weight: 800 !important;
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+.portion-btn.portion-rs-btn:hover,
+.portion-btn.portion-rs-btn.active {
+  background: #d97706 !important;
+  border-color: #b45309 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3) !important;
+}
+
+.portion-btn.portion-custom-btn {
+  background: #eef2ff !important;
+  border: 1px solid #c7d2fe !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+}
+
+.portion-btn.portion-custom-btn:hover,
+.portion-btn.portion-custom-btn.active {
+  background: #6366f1 !important;
+  border-color: #4f46e5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3) !important;
+}
+
+/* Close button on Add button when popover is open */
+.btn-add-tray.is-close-btn {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+.btn-add-tray.is-close-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Pre-order Popover Customization */
+.preorder-iwp {
+  margin-top: 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border: 2px solid #6366f1 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  padding: 14px 16px !important;
+}
+
+.iwp-close-x {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+.iwp-close-x:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.tray-item-count-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  padding: 1px 7px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
 /* ── Customer Auth Header Buttons ────────────────────────────────────────── */
 .menu-auth-wrap {
   display: flex;
@@ -952,6 +1056,66 @@
     padding: 6px 12px !important;
     font-size: 12px !important;
     margin-top: 0 !important;
+  }
+
+  .menu-list-row.weight-open {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .menu-list-main-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .preorder-iwp {
+    padding: 10px 10px !important;
+  }
+
+  .preorder-iwp .iwp-tab-btn {
+    padding: 4px 10px !important;
+    min-height: 32px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .preorder-iwp .iwp-preset-pill {
+    padding: 4px 8px !important;
+    min-height: 30px !important;
+    font-size: 0.80rem !important;
+  }
+
+  .preorder-iwp .iwp-input-wrapper {
+    height: 34px !important;
+  }
+
+  .preorder-iwp .iwp-input {
+    min-width: 65px !important;
+    max-width: 85px !important;
+    height: 34px !important;
+    font-size: 0.95rem !important;
+  }
+
+  .preorder-iwp .iwp-input-affix {
+    height: 34px !important;
+    padding: 0 7px !important;
+    font-size: 0.85rem !important;
+  }
+
+  .preorder-iwp .iwp-confirm-btn {
+    height: 34px !important;
+    padding: 0 10px !important;
+    font-size: 0.82rem !important;
+  }
+
+  .preorder-iwp .iwp-rs-preview,
+  .preorder-iwp .iwp-price {
+    font-size: 0.82rem !important;
+    padding: 4px 8px !important;
   }
 
   /* Modals on Mobile */

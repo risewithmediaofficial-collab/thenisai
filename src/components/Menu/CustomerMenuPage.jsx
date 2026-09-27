@@ -120,6 +120,165 @@ export default function CustomerMenuPage() {
     return null;
   };
 
+  // Inline Weight / Volume / Rupee Selection State (matches POS Billing exactly)
+  const [inlineWeightId, setInlineWeightId] = useState(null); // item.id of open popover
+  const [inlineUnit, setInlineUnit] = useState('g'); // 'g' | 'kg' | 'ml' | 'L' | 'rs'
+  const [inlineMode, setInlineMode] = useState('g'); // 'g' | 'kg' | 'ml' | 'L' | 'rs'
+  const [inlineVal, setInlineVal] = useState('250');
+  const inlineInputRef = useRef(null);
+
+  const openInlineWeight = (item, initialMode = null, initialVal = null) => {
+    if (inlineWeightId === item.id && !initialMode) {
+      setInlineWeightId(null);
+      return;
+    }
+    setInlineWeightId(item.id);
+    const isLitre = isLitreItem(item);
+    const mode = initialMode || (isLitre ? 'ml' : 'g');
+    const val = initialVal || (mode === 'rs' ? '100' : mode === 'kg' || mode === 'L' ? '1' : isLitre ? '500' : '250');
+
+    setInlineMode(mode);
+    setInlineUnit(mode);
+    setInlineVal(val);
+
+    setTimeout(() => {
+      inlineInputRef.current?.focus();
+      inlineInputRef.current?.select();
+    }, 60);
+  };
+
+  const handleSelectUnitMode = (mode, item) => {
+    setInlineMode(mode);
+    setInlineUnit(mode);
+    if (mode === 'g') setInlineVal('250');
+    else if (mode === 'kg') setInlineVal('1');
+    else if (mode === 'ml') setInlineVal('500');
+    else if (mode === 'L') setInlineVal('1');
+    else if (mode === 'rs') setInlineVal('100');
+
+    setTimeout(() => {
+      inlineInputRef.current?.focus();
+      inlineInputRef.current?.select();
+    }, 60);
+  };
+
+  const getRupeePreview = (item, amountStr) => {
+    const amt = parseFloat(amountStr);
+    if (isNaN(amt) || amt <= 0) return '';
+    const rate = Number(item.price || item.unitPrice || item.pricePerKg || 0);
+    if (rate <= 0) return '';
+    if (isLitreItem(item)) {
+      const ml = Math.round((amt / rate) * 1000);
+      if (ml >= 1000) {
+        const l = parseFloat((ml / 1000).toFixed(3));
+        return `= ${l}L (${ml}ml)`;
+      }
+      return `= ${ml}ml`;
+    } else {
+      const grams = Math.round((amt / rate) * 1000);
+      if (grams >= 1000) {
+        const kg = parseFloat((grams / 1000).toFixed(3));
+        return `= ${kg} kg (${grams}g)`;
+      }
+      return `= ${grams}g`;
+    }
+  };
+
+  const computeInlinePrice = (item) => {
+    const num = parseFloat(inlineVal);
+    if (isNaN(num) || num <= 0) return 0;
+    if (inlineMode === 'rs') {
+      return Math.round(num);
+    }
+    const rate = Number(item.price || item.unitPrice || item.pricePerKg || 0);
+    if (isLitreItem(item)) {
+      if (inlineUnit === 'L' || inlineMode === 'L') {
+        return Math.round(rate * num);
+      }
+      return Math.round((rate * num) / 1000);
+    }
+    if (inlineUnit === 'kg' || inlineMode === 'kg') {
+      return Math.round(rate * num);
+    }
+    return Math.round((rate * num) / 1000);
+  };
+
+  const confirmAddInline = (item) => {
+    const num = parseFloat(inlineVal);
+    if (isNaN(num) || num <= 0) return;
+    const basePrice = Number(item.price || item.unitPrice || item.pricePerKg || 0);
+    if (basePrice <= 0) return;
+
+    let portionLabel = '';
+    let finalPrice = 0;
+
+    if (inlineMode === 'rs') {
+      const rupeeAmount = Math.round(num);
+      if (isLitreItem(item)) {
+        const ml = Math.round((rupeeAmount / basePrice) * 1000);
+        const weightStr = ml >= 1000 ? `${parseFloat((ml / 1000).toFixed(3))}L` : `${ml}ml`;
+        portionLabel = `${weightStr} (₹${rupeeAmount})`;
+      } else {
+        const grams = Math.round((rupeeAmount / basePrice) * 1000);
+        const weightStr = grams >= 1000 ? `${parseFloat((grams / 1000).toFixed(3))} kg` : `${grams}g`;
+        portionLabel = `${weightStr} (₹${rupeeAmount})`;
+      }
+      finalPrice = rupeeAmount;
+    } else if (isLitreItem(item)) {
+      if (inlineUnit === 'L' || inlineMode === 'L') {
+        portionLabel = `${num}L`;
+        finalPrice = Math.round(basePrice * num);
+      } else {
+        portionLabel = `${num}ml`;
+        finalPrice = Math.round((basePrice * num) / 1000);
+      }
+    } else {
+      if (inlineUnit === 'kg' || inlineMode === 'kg') {
+        portionLabel = `${num} kg`;
+        finalPrice = Math.round(basePrice * num);
+      } else {
+        portionLabel = `${num}g`;
+        finalPrice = Math.round((basePrice * num) / 1000);
+      }
+    }
+
+    const cartItemId = `${item.id}-${portionLabel}`;
+
+    setPreCart((prev) => {
+      const existingIndex = prev.findIndex((i) => i.cartItemId === cartItemId);
+      if (existingIndex > -1) {
+        const next = [...prev];
+        const updatedQty = next[existingIndex].quantity + 1;
+        next[existingIndex] = {
+          ...next[existingIndex],
+          quantity: updatedQty,
+          subtotal: updatedQty * finalPrice,
+        };
+        return next;
+      }
+      return [
+        ...prev,
+        {
+          cartItemId,
+          id: item.id,
+          name: item.name || item.englishName,
+          tamilName: item.tamilName || '',
+          portion: portionLabel,
+          weight: portionLabel,
+          unit: portionLabel,
+          price: finalPrice,
+          basePrice: item.price,
+          quantity: 1,
+          subtotal: finalPrice,
+        },
+      ];
+    });
+
+    setInlineWeightId(null);
+    setInlineMode('g');
+    setInlineVal('250');
+  };
+
   const getSelectedPortion = (item) => {
     if (itemSelections[item.id]) return itemSelections[item.id];
     if (isLitreItem(item)) return '500ml';
@@ -129,18 +288,39 @@ export default function CustomerMenuPage() {
 
   const computePrice = (item, portion) => {
     const basePrice = Number(item.price || item.unitPrice || item.pricePerKg || 0);
+    if (!portion || basePrice <= 0) return basePrice;
+    const pStr = String(portion).trim().toLowerCase();
+
+    // If portion has Rs formatted e.g. "250g (₹100)" or "₹100"
+    const rsMatch = pStr.match(/₹\s*([0-9.]+)/);
+    if (rsMatch) {
+      return Math.round(parseFloat(rsMatch[1]));
+    }
+
     if (isLitreItem(item)) {
-      if (portion === '250ml') return Math.round(basePrice * 0.25);
-      if (portion === '500ml') return Math.round(basePrice * 0.5);
-      if (portion === '1 Litre' || portion === '1L') return Math.round(basePrice * 1.0);
+      if (pStr.includes('ml')) {
+        const ml = parseFloat(pStr.replace(/[^0-9.]/g, ''));
+        if (!isNaN(ml) && ml > 0) return Math.round((basePrice * ml) / 1000);
+      }
+      if (pStr.includes('l') || pStr.includes('litre')) {
+        const l = parseFloat(pStr.replace(/[^0-9.]/g, ''));
+        if (!isNaN(l) && l > 0) return Math.round(basePrice * l);
+      }
       return basePrice;
     }
+
     if (isKgItem(item)) {
-      if (portion === '250g') return Math.round(basePrice * 0.25);
-      if (portion === '500g') return Math.round(basePrice * 0.5);
-      if (portion === '1 kg' || portion === '1kg') return Math.round(basePrice * 1.0);
+      if (pStr.includes('kg')) {
+        const kg = parseFloat(pStr.replace(/[^0-9.]/g, ''));
+        if (!isNaN(kg) && kg > 0) return Math.round(basePrice * kg);
+      }
+      if (pStr.includes('g')) {
+        const g = parseFloat(pStr.replace(/[^0-9.]/g, ''));
+        if (!isNaN(g) && g > 0) return Math.round((basePrice * g) / 1000);
+      }
       return basePrice;
     }
+
     return basePrice;
   };
 
@@ -225,6 +405,11 @@ export default function CustomerMenuPage() {
 
   // Add item to pre-order cart
   const handleAddToCart = useCallback((item) => {
+    if (inlineWeightId === item.id) {
+      confirmAddInline(item);
+      return;
+    }
+
     const portion = getSelectedPortion(item);
     const unitPrice = computePrice(item, portion);
     const isWeight = isKgItem(item) || isLitreItem(item);
@@ -250,6 +435,7 @@ export default function CustomerMenuPage() {
           name: item.name || item.englishName,
           tamilName: item.tamilName || '',
           portion,
+          weight: portion,
           unit: isWeight ? portion : getItemUnitDisplay(item),
           price: unitPrice,
           basePrice: item.price,
@@ -258,7 +444,7 @@ export default function CustomerMenuPage() {
         },
       ];
     });
-  }, [itemSelections]);
+  }, [itemSelections, inlineWeightId, inlineVal, inlineMode, inlineUnit]);
 
   // Update item quantity in pre-order cart
   const handleUpdateQty = useCallback((cartItemId, delta) => {
@@ -805,79 +991,360 @@ export default function CustomerMenuPage() {
                   const selectedPortion = getSelectedPortion(item);
                   const currentPrice = computePrice(item, selectedPortion);
                   const unitDisplay = getItemUnitDisplay(item);
+                  const isMeasurable = isKgItem(item) || isLitreItem(item);
+                  const isInlineOpen = inlineWeightId === item.id;
+                  const isLitre = isLitreItem(item);
+                  const inlinePrice = isInlineOpen ? computeInlinePrice(item) : 0;
+                  const rsPreview = isInlineOpen && inlineMode === 'rs' ? getRupeePreview(item, inlineVal) : '';
+
+                  const itemsInTray = preCart.filter((i) => i.id === item.id);
+                  const totalQtyInTray = itemsInTray.reduce((sum, i) => sum + i.quantity, 0);
 
                   return (
-                    <div key={item.id} className="menu-list-row">
-                      {/* Left: Item Information (Text Only) */}
-                      <div className="menu-list-info">
-                        <div className="menu-list-title-wrap">
-                          <h3 className="menu-list-title">
-                            {item.name || item.englishName}
-                          </h3>
-                          {item.tamilName && !item.name?.includes('—') && (
-                            <span className="menu-list-tamil">
-                              ({item.tamilName})
+                    <div
+                      key={item.id}
+                      id={`preorder-row-${item.id}`}
+                      className={`menu-list-row ${isInlineOpen ? 'weight-open' : ''}`}
+                    >
+                      {/* ── Main Bar ── */}
+                      <div className="menu-list-main-bar">
+                        {/* Left: Item Information (Text Only) */}
+                        <div className="menu-list-info">
+                          <div className="menu-list-title-wrap">
+                            <h3 className="menu-list-title">
+                              {item.name || item.englishName}
+                            </h3>
+                            {item.tamilName && !item.name?.includes('—') && (
+                              <span className="menu-list-tamil">
+                                ({item.tamilName})
+                              </span>
+                            )}
+                            {totalQtyInTray > 0 && (
+                              <span className="tray-item-count-badge" title="Already added in tray">
+                                {totalQtyInTray} in tray
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="menu-list-meta-row">
+                            <span className="menu-list-cat-badge">
+                              {item.category || 'Item'}
                             </span>
-                          )}
+                            <span className="menu-list-rate">
+                              Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {unitDisplay}
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="menu-list-meta-row">
-                          <span className="menu-list-cat-badge">
-                            {item.category || 'Item'}
-                          </span>
-                          <span className="menu-list-rate">
-                            Base rate: ₹{item.price || item.unitPrice || item.pricePerKg} / {unitDisplay}
-                          </span>
+                        {/* Right: Portion / Weight selector & Add button */}
+                        <div className="menu-list-action">
+                          {/* Portions if weight or litre item */}
+                          {isMeasurable ? (
+                            <div className="portion-selector-wrap">
+                              {isKgItem(item) ? (
+                                <>
+                                  {KG_WEIGHT_PRESETS.map((preset) => {
+                                    const isPSelected = selectedPortion === preset.label && !isInlineOpen;
+                                    return (
+                                      <button
+                                        key={preset.label}
+                                        type="button"
+                                        onClick={() => {
+                                          handleSelectPortion(item.id, preset.label);
+                                          if (isInlineOpen) setInlineWeightId(null);
+                                        }}
+                                        className={`portion-btn ${isPSelected ? 'active' : ''}`}
+                                      >
+                                        {preset.label}
+                                      </button>
+                                    );
+                                  })}
+                                  <button
+                                    type="button"
+                                    onClick={() => openInlineWeight(item, 'rs', '100')}
+                                    className={`portion-btn portion-rs-btn ${isInlineOpen && inlineMode === 'rs' ? 'active' : ''}`}
+                                    title="Order by Rupees (₹50, ₹100, ₹200, or custom amount)"
+                                  >
+                                    ₹ rs
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openInlineWeight(item, 'g', '250')}
+                                    className={`portion-btn portion-custom-btn ${isInlineOpen && inlineMode !== 'rs' ? 'active' : ''}`}
+                                    title="Custom weights & units (g, kg)"
+                                  >
+                                    Units
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  {LITRE_PORTIONS.map((preset) => {
+                                    const isPSelected = selectedPortion === preset.label && !isInlineOpen;
+                                    return (
+                                      <button
+                                        key={preset.label}
+                                        type="button"
+                                        onClick={() => {
+                                          handleSelectPortion(item.id, preset.label);
+                                          if (isInlineOpen) setInlineWeightId(null);
+                                        }}
+                                        className={`portion-btn ${isPSelected ? 'active' : ''}`}
+                                      >
+                                        {preset.label}
+                                      </button>
+                                    );
+                                  })}
+                                  <button
+                                    type="button"
+                                    onClick={() => openInlineWeight(item, 'rs', '100')}
+                                    className={`portion-btn portion-rs-btn ${isInlineOpen && inlineMode === 'rs' ? 'active' : ''}`}
+                                    title="Order by Rupees (₹50, ₹100, ₹200, or custom amount)"
+                                  >
+                                    ₹ rs
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => openInlineWeight(item, 'ml', '500')}
+                                    className={`portion-btn portion-custom-btn ${isInlineOpen && inlineMode !== 'rs' ? 'active' : ''}`}
+                                    title="Custom volumes & units (ml, L)"
+                                  >
+                                    Units
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="menu-list-unit-pill">
+                              {unitDisplay}
+                            </div>
+                          )}
+
+                          {/* Price Display */}
+                          <div className="menu-list-price-wrap">
+                            <div className="menu-list-price">
+                              ₹{isInlineOpen ? inlinePrice : currentPrice}
+                            </div>
+                            {isMeasurable && (
+                              <div className="menu-list-price-label">
+                                {isInlineOpen
+                                  ? (inlineMode === 'rs' ? (inlineVal ? `for ₹${inlineVal}` : 'by ₹') : `${inlineVal || 1}${inlineMode || 'g'}`)
+                                  : selectedPortion}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Add to Tray Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (isInlineOpen) {
+                                setInlineWeightId(null);
+                              } else {
+                                handleAddToCart(item);
+                              }
+                            }}
+                            className={`btn-add-tray ${isInlineOpen ? 'is-close-btn' : ''}`}
+                            title={isInlineOpen ? 'Close custom unit selector' : `Add ${item.name || item.englishName} to pre-order tray`}
+                          >
+                            {isInlineOpen ? (
+                              <>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                                <span>Close</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <line x1="12" y1="5" x2="12" y2="19" />
+                                  <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                <span>Add</span>
+                              </>
+                            )}
+                          </button>
                         </div>
                       </div>
 
-                      {/* Right: Portion / Weight selector & Add button placed on right side */}
-                      <div className="menu-list-action">
-                        {/* Portions if weight or litre item */}
-                        {availablePortions ? (
-                          <div className="portion-selector-wrap">
-                            {availablePortions.map((preset) => {
-                              const isPSelected = selectedPortion === preset.label;
-                              return (
-                                <button
-                                  key={preset.label}
-                                  type="button"
-                                  onClick={() => handleSelectPortion(item.id, preset.label)}
-                                  className={`portion-btn ${isPSelected ? 'active' : ''}`}
-                                >
-                                  {preset.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div className="menu-list-unit-pill">
-                            {unitDisplay}
-                          </div>
-                        )}
+                      {/* ── Inline Weight / Volume / Rs Popover (matches POS Billing exactly) ── */}
+                      {isInlineOpen && (
+                        <div className="inline-weight-popover preorder-iwp" onClick={(e) => e.stopPropagation()}>
+                          <div className="iwp-step-entry">
+                            {/* Mode switcher tabs (enlarged & touch-friendly) */}
+                            <div className="iwp-entry-header">
+                              <div className="iwp-mode-tabs">
+                                <span className="iwp-mode-tabs-label">MODE:</span>
+                                {isLitre ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn ${inlineMode === 'ml' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('ml', item)}
+                                    >
+                                      ml
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn ${inlineMode === 'L' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('L', item)}
+                                    >
+                                      L
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('rs', item)}
+                                    >
+                                      ₹ rs
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn ${inlineMode === 'g' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('g', item)}
+                                    >
+                                      g
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn ${inlineMode === 'kg' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('kg', item)}
+                                    >
+                                      kg
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('rs', item)}
+                                    >
+                                      ₹ rs
+                                    </button>
+                                  </>
+                                )}
+                              </div>
 
-                        {/* Price Display */}
-                        <div className="menu-list-price-wrap">
-                          <div className="menu-list-price">₹{currentPrice}</div>
-                          {availablePortions && (
-                            <div className="menu-list-price-label">{selectedPortion}</div>
-                          )}
+                              <button
+                                type="button"
+                                className="iwp-close-x"
+                                onClick={() => setInlineWeightId(null)}
+                                title="Close"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            {/* Quick Presets for fast 1-tap selection */}
+                            <div className="iwp-presets">
+                              {inlineMode === 'g' && (
+                                ['100', '250', '500', '750'].map((val) => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                    onClick={() => setInlineVal(val)}
+                                  >
+                                    {val}g
+                                  </button>
+                                ))
+                              )}
+                              {inlineMode === 'kg' && (
+                                ['0.5', '1', '1.5', '2', '5'].map((val) => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                    onClick={() => setInlineVal(val)}
+                                  >
+                                    {val} kg
+                                  </button>
+                                ))
+                              )}
+                              {inlineMode === 'ml' && (
+                                ['100', '250', '500', '750'].map((val) => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                    onClick={() => setInlineVal(val)}
+                                  >
+                                    {val}ml
+                                  </button>
+                                ))
+                              )}
+                              {inlineMode === 'L' && (
+                                ['0.5', '1', '2', '5'].map((val) => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                    onClick={() => setInlineVal(val)}
+                                  >
+                                    {val}L
+                                  </button>
+                                ))
+                              )}
+                              {inlineMode === 'rs' && (
+                                ['50', '100', '150', '200', '500'].map((val) => (
+                                  <button
+                                    key={val}
+                                    type="button"
+                                    className={`iwp-preset-pill rs-pill ${inlineVal === val ? 'active' : ''}`}
+                                    onClick={() => setInlineVal(val)}
+                                  >
+                                    ₹{val}
+                                  </button>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Custom Input & Controls */}
+                            <div className="iwp-controls-row">
+                              <div className="iwp-input-wrapper">
+                                <span className="iwp-input-affix">
+                                  {inlineMode === 'rs' ? '₹' : inlineMode === 'kg' ? 'kg' : inlineMode === 'L' ? 'L' : inlineMode === 'ml' ? 'ml' : 'g'}
+                                </span>
+                                <input
+                                  ref={inlineInputRef}
+                                  type="number"
+                                  min={inlineMode === 'kg' || inlineMode === 'L' ? '0.1' : '1'}
+                                  step={inlineMode === 'kg' || inlineMode === 'L' ? '0.1' : '1'}
+                                  className="iwp-input"
+                                  value={inlineVal}
+                                  placeholder={inlineMode === 'rs' ? 'Amount (₹)' : inlineMode === 'kg' ? '1' : inlineMode === 'L' ? '1' : '250'}
+                                  onChange={(e) => setInlineVal(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') confirmAddInline(item);
+                                    if (e.key === 'Escape') setInlineWeightId(null);
+                                  }}
+                                />
+                              </div>
+
+                              {inlineMode === 'rs' ? (
+                                rsPreview ? (
+                                  <span className="iwp-rs-preview" title="Calculated quantity for entered amount">
+                                    {rsPreview}
+                                  </span>
+                                ) : null
+                              ) : (
+                                inlineVal && parseFloat(inlineVal) > 0 && (
+                                  <span className="iwp-price">₹{inlinePrice}</span>
+                                )
+                              )}
+
+                              <button
+                                type="button"
+                                className="iwp-confirm-btn"
+                                disabled={!inlineVal || parseFloat(inlineVal) <= 0}
+                                onClick={() => confirmAddInline(item)}
+                              >
+                                Add to Tray {inlinePrice > 0 ? `(₹${inlinePrice})` : ''}
+                              </button>
+                            </div>
+                          </div>
                         </div>
-
-                        {/* Add to Tray Button - ALWAYS ON RIGHT SIDE */}
-                        <button
-                          type="button"
-                          onClick={() => handleAddToCart(item)}
-                          className="btn-add-tray"
-                          title={`Add ${item.name || item.englishName} to pre-order tray`}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                          </svg>
-                          <span>Add</span>
-                        </button>
-                      </div>
+                      )}
                     </div>
                   );
                 })}
