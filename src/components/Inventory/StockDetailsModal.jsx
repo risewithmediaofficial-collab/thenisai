@@ -4,11 +4,16 @@ import { isProductUnlimitedStock, getItemStockConfig } from '../../utils/unitCon
 
 export default function StockDetailsModal({
   item,
+  product,
+  isOpen = true,
   onClose,
   onEditItem,
   onOpenRefill,
+  onEditProduct,
+  onRefillStock,
 }) {
-  const { bills = [], stockLogs = [], inventory = [] } = useCart();
+  const targetItem = item || product;
+  const { bills = [], orders = [], stockLogs = [], inventory = [] } = useCart();
 
   // Filters state
   const [dateFilter, setDateFilter] = useState('all'); // 'all' | 'today' | 'yesterday' | '7days' | '30days' | 'custom'
@@ -19,16 +24,16 @@ export default function StockDetailsModal({
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onClose?.();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
-  if (!item) return null;
+  if (!targetItem) return null;
 
   // Fresh live inventory item data
-  const liveInv = inventory.find((i) => i.id === item.id) || item;
+  const liveInv = inventory.find((i) => i.id === targetItem.id) || targetItem;
   const isUnlimited = isProductUnlimitedStock(liveInv);
   const stockConfig = getItemStockConfig(liveInv);
   const currentStock = typeof liveInv.counterStock === 'number'
@@ -44,83 +49,130 @@ export default function StockDetailsModal({
     ? 'low_stock'
     : 'in_stock';
 
-  // Extract all historical sales records for this product from bills
+  // Extract all historical sales records for this product from bills & online orders
   const salesHistory = useMemo(() => {
     const records = [];
-    if (!Array.isArray(bills)) return records;
+    const allSources = [...(Array.isArray(bills) ? bills : []), ...(Array.isArray(orders) ? orders : [])];
 
-    bills.forEach((bill) => {
+    const targetIdStr = String(targetItem.id ?? '');
+    const targetSku = targetItem.skuCode ? String(targetItem.skuCode).toLowerCase() : '';
+    const targetName = (targetItem.name || targetItem.englishName || '').trim().toLowerCase();
+
+    allSources.forEach((bill) => {
       if (!Array.isArray(bill.items)) return;
       bill.items.forEach((lineItem) => {
-        if (lineItem.id === item.id) {
+        const lineIdStr = String(lineItem.id ?? '');
+        const lineProdIdStr = String(lineItem.productId ?? '');
+        const lineSku = lineItem.skuCode ? String(lineItem.skuCode).toLowerCase() : '';
+        const lineName = (lineItem.name || '').trim().toLowerCase();
+
+        const isMatch =
+          lineIdStr === targetIdStr ||
+          (lineProdIdStr && lineProdIdStr === targetIdStr) ||
+          (targetSku && lineSku && lineSku === targetSku) ||
+          (targetName && lineName && lineName === targetName);
+
+        if (isMatch) {
           const qty = parseFloat(lineItem.quantity) || 1;
           const lineTotal = Number(lineItem.total ?? (Number(lineItem.price || 0) * qty));
           const unitStr = lineItem.weight || lineItem.unit || liveInv.unit || 'unit';
 
-          // Extract date
-          let dateObj = null;
+          // Extract exact timestamp
+          let timestamp = 0;
           if (bill.createdAt) {
-            dateObj = new Date(bill.createdAt);
+            timestamp = typeof bill.createdAt === 'number' ? bill.createdAt : new Date(bill.createdAt).getTime();
+          } else if (bill.timestamp) {
+            timestamp = typeof bill.timestamp === 'number' ? bill.timestamp : new Date(bill.timestamp).getTime();
           } else if (bill.orderDate) {
-            dateObj = new Date(bill.orderDate);
+            timestamp = new Date(bill.orderDate).getTime();
           }
+          if (!timestamp || isNaN(timestamp)) timestamp = Date.now();
 
-          const rawDateStr = bill.orderDate || (dateObj ? dateObj.toLocaleDateString('en-IN') : 'N/A');
-          const rawTimeStr = bill.orderTime || (dateObj ? dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '');
+          const dateObj = new Date(timestamp);
+          const rawDateStr = bill.orderDate || dateObj.toLocaleDateString('en-IN');
+          const rawTimeStr = bill.orderTime || dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
           records.push({
-            id: `sale-${bill.id || bill.invoiceNumber}-${lineItem.id}`,
+            id: `sale-${bill.id || bill.invoiceNumber}-${lineItem.id}-${records.length}`,
             type: 'SALE',
-            typeLabel: 'Counter Sale',
+            typeLabel: bill.source === 'online' ? 'Website Order' : 'Counter Sale',
             invoiceNumber: bill.invoiceNumber || bill.id || 'N/A',
             quantity: qty,
-            unitDisplay: `${qty} × ${unitStr}`,
+            unitDisplay: `${qty} ${unitStr}`,
             rate: lineItem.price || 0,
             amount: lineTotal,
-            cashier: bill.cashier?.name || 'Counter Cashier',
+            cashier: bill.cashier?.name || (bill.source === 'online' ? 'Online Store' : 'Counter Cashier'),
             paymentMethod: bill.paymentMethod || 'Cash',
             dateStr: rawDateStr,
             timeStr: rawTimeStr,
-            timestamp: dateObj && !isNaN(dateObj.getTime()) ? dateObj.getTime() : (bill.createdAt || 0),
-            note: `Billed to ${bill.customer?.name || 'Walk-in Customer'}`,
+            timestamp,
+            note: `Billed to ${bill.customer?.fullName || bill.customer?.name || 'Walk-in Customer'} (${bill.paymentMethod || 'Cash'})`,
           });
         }
       });
     });
 
     return records;
-  }, [bills, item.id, liveInv.unit]);
+  }, [bills, orders, targetItem.id, targetItem.skuCode, targetItem.name, targetItem.englishName, liveInv.unit]);
 
   // Extract relevant stockLogs (inward, refills, returns, manual edits)
   const movementLogs = useMemo(() => {
     if (!Array.isArray(stockLogs)) return [];
+    const targetIdStr = String(targetItem.id ?? '');
+    const targetName = (targetItem.name || targetItem.englishName || '').trim().toLowerCase();
+
     return stockLogs
-      .filter((log) => log.productId === item.id)
-      .map((log) => ({
-        id: log.id || `log-${log.timestamp || Date.now()}`,
-        type: log.type === 'COUNTER_SALE' ? 'SALE' : (log.type === 'GODOWN_INWARD' || log.type === 'REFILL') ? 'INWARD' : 'MANUAL',
-        typeLabel: log.type === 'COUNTER_SALE'
-          ? 'Counter Sale'
-          : log.type === 'GODOWN_INWARD'
-          ? 'Godown Inward'
-          : log.type === 'REFILL'
-          ? 'Counter Refill'
-          : log.type === 'WASTAGE'
-          ? 'Wastage Return'
-          : 'Stock Adjustment',
-        invoiceNumber: log.invoiceNumber || '—',
-        quantity: log.quantity || 1,
-        unitDisplay: log.displayQty || `${log.quantity} ${log.unit || liveInv.unit || ''}`,
-        rate: log.sellingPrice || liveInv.price || 0,
-        amount: log.totalAmount || 0,
-        cashier: log.performedBy || 'Staff',
-        paymentMethod: '—',
-        dateStr: log.date || (log.timestamp ? new Date(log.timestamp).toLocaleDateString('en-IN') : 'N/A'),
-        timeStr: log.time || (log.timestamp ? new Date(log.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : ''),
-        timestamp: log.timestamp || log.createdAt || 0,
-        note: log.note || 'Stock event',
-      }));
-  }, [stockLogs, item.id, liveInv.unit, liveInv.price]);
+      .filter((log) => {
+        const logIdStr = String(log.productId || log.sweetId || '');
+        const logName = (log.productName || '').trim().toLowerCase();
+        return logIdStr === targetIdStr || (targetName && logName && logName === targetName);
+      })
+      .map((log) => {
+        const isSale = log.type === 'COUNTER_SALE';
+        const isInward =
+          log.type === 'GODOWN_INWARD' ||
+          log.type === 'REFILL' ||
+          log.type === 'INWARD' ||
+          log.type === 'STOCK_INWARD' ||
+          log.type === 'DISPATCH_TO_COUNTER';
+        const isReturn =
+          log.type === 'WASTAGE' ||
+          log.type === 'RETURN' ||
+          log.type === 'COUNTER_RETURN';
+
+        let timestamp = typeof log.timestamp === 'number'
+          ? log.timestamp
+          : (typeof log.createdAt === 'number' ? log.createdAt : new Date(log.date || Date.now()).getTime());
+        if (!timestamp || isNaN(timestamp)) timestamp = Date.now();
+
+        return {
+          id: log.id || `log-${timestamp}-${Math.random()}`,
+          type: isSale ? 'SALE' : isInward ? 'INWARD' : isReturn ? 'RETURN' : 'MANUAL',
+          typeLabel: isSale
+            ? 'Counter Sale'
+            : log.type === 'GODOWN_INWARD'
+            ? 'Godown Inward'
+            : log.type === 'REFILL'
+            ? 'Shop Stock Added'
+            : log.type === 'DISPATCH_TO_COUNTER'
+            ? 'Counter Dispatch'
+            : isReturn
+            ? 'Wastage Return'
+            : 'Stock Adjustment',
+          invoiceNumber: log.invoiceNumber || '—',
+          quantity: log.quantity || 1,
+          unitDisplay: log.displayQty || `${log.quantity} ${log.unit || liveInv.unit || ''}`,
+          rate: log.sellingPrice || liveInv.price || 0,
+          amount: log.totalAmount || 0,
+          cashier: log.performedBy || 'Staff',
+          paymentMethod: log.paymentMethod || '—',
+          dateStr: log.date || new Date(timestamp).toLocaleDateString('en-IN'),
+          timeStr: log.time || new Date(timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+          timestamp,
+          note: log.note || 'Stock event',
+        };
+      });
+  }, [stockLogs, targetItem.id, targetItem.name, targetItem.englishName, liveInv.unit, liveInv.price]);
 
   // Merge and deduplicate by ID or invoiceNumber
   const allEvents = useMemo(() => {
@@ -156,6 +208,7 @@ export default function StockDetailsModal({
       if (typeFilter === 'sale' && ev.type !== 'SALE') return false;
       if (typeFilter === 'inward' && ev.type !== 'INWARD') return false;
       if (typeFilter === 'manual' && ev.type !== 'MANUAL') return false;
+      if (typeFilter === 'return' && ev.type !== 'RETURN') return false;
 
       // Search filter
       if (searchTerm.trim()) {
@@ -203,6 +256,8 @@ export default function StockDetailsModal({
     let totalRevenue = 0;
     let totalSalesCount = 0;
     let totalInwardQty = 0;
+    let totalInwardCount = 0;
+    let totalReturnQty = 0;
 
     filteredEvents.forEach((ev) => {
       if (ev.type === 'SALE') {
@@ -211,6 +266,9 @@ export default function StockDetailsModal({
         totalSalesCount += 1;
       } else if (ev.type === 'INWARD') {
         totalInwardQty += ev.quantity;
+        totalInwardCount += 1;
+      } else if (ev.type === 'RETURN') {
+        totalReturnQty += ev.quantity;
       }
     });
 
@@ -219,6 +277,8 @@ export default function StockDetailsModal({
       totalRevenue: Math.round(totalRevenue),
       totalSalesCount,
       totalInwardQty: Math.round(totalInwardQty * 100) / 100,
+      totalInwardCount,
+      totalReturnQty: Math.round(totalReturnQty * 100) / 100,
     };
   }, [filteredEvents]);
 
@@ -431,7 +491,7 @@ export default function StockDetailsModal({
               gap: '14px',
             }}
           >
-            {/* 1. CURRENT AVAILABLE STOCK */}
+            {/* 1. REMAINING STOCK (மீதமுள்ள சரக்கு) */}
             <div
               style={{
                 background: isUnlimited
@@ -453,141 +513,161 @@ export default function StockDetailsModal({
                 borderRadius: '12px',
                 padding: '14px 16px',
                 position: 'relative',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Current Stock
-                </span>
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    padding: '2px 8px',
-                    borderRadius: '999px',
-                    background:
-                      isUnlimited
-                        ? '#dcfce7'
-                        : stockStatus === 'out_of_stock'
-                        ? '#fee2e2'
-                        : stockStatus === 'low_stock'
-                        ? '#fef3c7'
-                        : '#d1fae5',
-                    color:
-                      isUnlimited
-                        ? '#15803d'
-                        : stockStatus === 'out_of_stock'
-                        ? '#b91c1c'
-                        : stockStatus === 'low_stock'
-                        ? '#b45309'
-                        : '#047857',
-                  }}
-                >
-                  {isUnlimited
-                    ? '∞ UNLIMITED'
-                    : stockStatus === 'out_of_stock'
-                    ? '🔴 OUT OF STOCK'
-                    : stockStatus === 'low_stock'
-                    ? '⚠️ LOW STOCK'
-                    : '🟢 IN STOCK'}
-                </span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                <span
-                  style={{
-                    fontSize: '26px',
-                    fontWeight: 800,
-                    color:
-                      stockStatus === 'out_of_stock'
-                        ? '#b91c1c'
-                        : stockStatus === 'low_stock'
-                        ? '#b45309'
-                        : '#0f172a',
-                    fontFamily: "'JetBrains Mono', monospace",
-                  }}
-                >
-                  {isUnlimited ? '∞' : currentStock}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
-                  {isUnlimited ? 'Prepared on demand' : liveInv.unit || stockConfig.label}
-                </span>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Remaining Stock (மீதமுள்ள சரக்கு)
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                      background:
+                        isUnlimited
+                          ? '#dcfce7'
+                          : stockStatus === 'out_of_stock'
+                          ? '#fee2e2'
+                          : stockStatus === 'low_stock'
+                          ? '#fef3c7'
+                          : '#d1fae5',
+                      color:
+                        isUnlimited
+                          ? '#15803d'
+                          : stockStatus === 'out_of_stock'
+                          ? '#b91c1c'
+                          : stockStatus === 'low_stock'
+                          ? '#b45309'
+                          : '#047857',
+                    }}
+                  >
+                    {isUnlimited
+                      ? '∞ UNLIMITED'
+                      : stockStatus === 'out_of_stock'
+                      ? '🔴 OUT OF STOCK'
+                      : stockStatus === 'low_stock'
+                      ? '⚠️ LOW STOCK'
+                      : '🟢 IN STOCK'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span
+                    style={{
+                      fontSize: '26px',
+                      fontWeight: 800,
+                      color:
+                        stockStatus === 'out_of_stock'
+                          ? '#b91c1c'
+                          : stockStatus === 'low_stock'
+                          ? '#b45309'
+                          : '#0f172a',
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}
+                  >
+                    {isUnlimited ? '∞' : currentStock}
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
+                    {isUnlimited ? 'Prepared on demand' : (liveInv.unit || stockConfig.label)}
+                  </span>
+                </div>
               </div>
               {!isUnlimited && (
-                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                  Alert threshold: <strong>{minThreshold} {liveInv.unit || stockConfig.label}</strong>
+                <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                  Min alert threshold: <strong>{minThreshold} {liveInv.unit || stockConfig.label}</strong>
                 </div>
               )}
             </div>
 
-            {/* 2. TOTAL SOLD IN FILTERED PERIOD */}
+            {/* 2. STOCK SOLD (விற்பனையான சரக்கு) */}
             <div
               style={{
                 background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
+                border: '1.5px solid #fed7aa',
                 borderRadius: '12px',
                 padding: '14px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                Total Quantity Sold
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#9a3412', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                  Stock Sold (விற்பனையான சரக்கு)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 800, color: '#ea580c', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {summaryMetrics.totalQtySold}
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
+                    {liveInv.unit || stockConfig.label}
+                  </span>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                <span style={{ fontSize: '26px', fontWeight: 800, color: '#d97706', fontFamily: "'JetBrains Mono', monospace" }}>
-                  {summaryMetrics.totalQtySold}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
-                  units / times
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                From <strong>{summaryMetrics.totalSalesCount}</strong> finalized bills
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                From <strong>{summaryMetrics.totalSalesCount}</strong> finalized bills (Sales: <strong>₹{summaryMetrics.totalRevenue.toLocaleString('en-IN')}</strong>)
               </div>
             </div>
 
-            {/* 3. TOTAL REVENUE FROM ITEM */}
+            {/* 3. STOCK ADDED (சரக்கு வரவு) */}
             <div
               style={{
                 background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
+                border: '1.5px solid #bfdbfe',
                 borderRadius: '12px',
                 padding: '14px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                Total Revenue Generated
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#1e40af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                  Stock Added (சரக்கு வரவு)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 800, color: '#2563eb', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {summaryMetrics.totalInwardQty}
+                  </span>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
+                    {liveInv.unit || stockConfig.label}
+                  </span>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                <span style={{ fontSize: '26px', fontWeight: 800, color: '#059669', fontFamily: "'JetBrains Mono', monospace" }}>
-                  ₹{summaryMetrics.totalRevenue.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                Unit Price: <strong>₹{liveInv.price || 0}</strong> {liveInv.discountPercent > 0 && `(${liveInv.discountPercent}% OFF)`}
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                Added via <strong>{summaryMetrics.totalInwardCount}</strong> inward batches &amp; refills
               </div>
             </div>
 
-            {/* 4. TOTAL RESTOCKED / INWARD */}
+            {/* 4. TOTAL REVENUE (விற்பனை வருவாய்) */}
             <div
               style={{
                 background: '#ffffff',
-                border: '1.5px solid #e2e8f0',
+                border: '1.5px solid #bbf7d0',
                 borderRadius: '12px',
                 padding: '14px 16px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
               }}
             >
-              <div style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
-                Total Restocked
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#166534', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px' }}>
+                  Total Revenue (விற்பனை வருவாய்)
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                  <span style={{ fontSize: '26px', fontWeight: 800, color: '#059669', fontFamily: "'JetBrains Mono', monospace" }}>
+                    ₹{summaryMetrics.totalRevenue.toLocaleString('en-IN')}
+                  </span>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                <span style={{ fontSize: '26px', fontWeight: 800, color: '#2563eb', fontFamily: "'JetBrains Mono', monospace" }}>
-                  {summaryMetrics.totalInwardQty}
-                </span>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#64748b' }}>
-                  {liveInv.unit || stockConfig.label}
-                </span>
-              </div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                Through Godown Inward &amp; Refills
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                Unit Selling Rate: <strong>₹{liveInv.price || 0}</strong> {liveInv.discountPercent > 0 && `(${liveInv.discountPercent}% OFF)`}
               </div>
             </div>
           </div>
@@ -596,19 +676,89 @@ export default function StockDetailsModal({
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '12px',
-              padding: '12px 16px',
+              flexDirection: 'column',
+              gap: '10px',
+              padding: '14px 16px',
               backgroundColor: '#f8fafc',
               borderRadius: '12px',
               border: '1px solid #e2e8f0',
             }}
           >
-            {/* Quick Date Pills */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginRight: '4px' }}>
+            {/* Top row: Movement Type Tabs */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569', marginRight: '4px' }}>
+                  Filter Type:
+                </span>
+                {[
+                  { id: 'all', label: `📋 All Logs (${allEvents.length})` },
+                  { id: 'sale', label: `🛍️ Stock Sold (${allEvents.filter((e) => e.type === 'SALE').length})` },
+                  { id: 'inward', label: `📥 Stock Added (${allEvents.filter((e) => e.type === 'INWARD').length})` },
+                  { id: 'return', label: `↩️ Returns (${allEvents.filter((e) => e.type === 'RETURN').length})` },
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setTypeFilter(tab.id)}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      fontWeight: typeFilter === tab.id ? 700 : 600,
+                      backgroundColor: typeFilter === tab.id ? (tab.id === 'sale' ? '#ea580c' : tab.id === 'inward' ? '#2563eb' : '#0f172a') : '#ffffff',
+                      color: typeFilter === tab.id ? '#ffffff' : '#475569',
+                      border: typeFilter === tab.id ? '1px solid transparent' : '1px solid #cbd5e1',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search Box */}
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Search invoice #, cashier, note..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    padding: '6px 12px',
+                    paddingRight: searchTerm ? '28px' : '12px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    fontSize: '12px',
+                    width: '230px',
+                    backgroundColor: '#ffffff',
+                  }}
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    style={{
+                      position: 'absolute',
+                      right: '8px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      border: 'none',
+                      background: 'transparent',
+                      color: '#94a3b8',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom row: Quick Date Pills */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', borderTop: '1px solid #f1f5f9', paddingTop: '8px' }}>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748b', marginRight: '4px' }}>
                 📅 Time Range:
               </span>
               {[
@@ -624,13 +774,13 @@ export default function StockDetailsModal({
                   type="button"
                   onClick={() => setDateFilter(pill.id)}
                   style={{
-                    padding: '5px 12px',
-                    borderRadius: '20px',
-                    fontSize: '12px',
+                    padding: '3px 10px',
+                    borderRadius: '16px',
+                    fontSize: '11px',
                     fontWeight: dateFilter === pill.id ? 700 : 500,
-                    backgroundColor: dateFilter === pill.id ? '#0f172a' : '#ffffff',
-                    color: dateFilter === pill.id ? '#ffffff' : '#475569',
-                    border: dateFilter === pill.id ? '1px solid #0f172a' : '1px solid #cbd5e1',
+                    backgroundColor: dateFilter === pill.id ? '#334155' : '#ffffff',
+                    color: dateFilter === pill.id ? '#ffffff' : '#64748b',
+                    border: dateFilter === pill.id ? '1px solid #334155' : '1px solid #e2e8f0',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                   }}
@@ -645,51 +795,14 @@ export default function StockDetailsModal({
                   value={customDate}
                   onChange={(e) => setCustomDate(e.target.value)}
                   style={{
-                    padding: '4px 10px',
-                    borderRadius: '8px',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
                     border: '1px solid #94a3b8',
-                    fontSize: '12px',
+                    fontSize: '11px',
                     backgroundColor: '#ffffff',
                   }}
                 />
               )}
-            </div>
-
-            {/* Type Filter & Search Input */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#334155',
-                  backgroundColor: '#ffffff',
-                }}
-              >
-                <option value="all">All Movements</option>
-                <option value="sale">Sales Only (Billed)</option>
-                <option value="inward">Restocks / Inward</option>
-                <option value="manual">Manual Adjustments</option>
-              </select>
-
-              <input
-                type="text"
-                placeholder="Search invoice #, cashier..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  border: '1px solid #cbd5e1',
-                  fontSize: '12px',
-                  width: '180px',
-                  backgroundColor: '#ffffff',
-                }}
-              />
             </div>
           </div>
 
@@ -700,6 +813,7 @@ export default function StockDetailsModal({
               borderRadius: '12px',
               overflow: 'hidden',
               backgroundColor: '#ffffff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
             }}
           >
             <div
@@ -712,9 +826,27 @@ export default function StockDetailsModal({
                 alignItems: 'center',
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
-                Stock Sales &amp; Inward Log ({filteredEvents.length} transactions)
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a' }}>
+                  {typeFilter === 'sale'
+                    ? '🛍️ Stock Sold Details (விற்பனை விபரம்)'
+                    : typeFilter === 'inward'
+                    ? '📥 Stock Added Details (சரக்கு வரவு)'
+                    : 'Stock Activity & Sales Details Log'}
+                </span>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    backgroundColor: '#e2e8f0',
+                    color: '#334155',
+                  }}
+                >
+                  {filteredEvents.length} transactions
+                </span>
+              </div>
               <span style={{ fontSize: '11px', color: '#64748b' }}>
                 Real-time stock audit history with timestamp
               </span>
@@ -727,132 +859,168 @@ export default function StockDetailsModal({
                   No stock transactions found for this period
                 </div>
                 <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                  Try changing your time filter or search query.
+                  Try changing your type filter or date range.
                 </div>
               </div>
             ) : (
-              <div style={{ maxHeight: '360px', overflowY: 'auto' }}>
+              <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '12px' }}>
                   <thead>
                     <tr style={{ backgroundColor: '#f1f5f9', borderBottom: '1px solid #e2e8f0', color: '#475569', fontWeight: 700 }}>
                       <th style={{ padding: '10px 14px' }}>DATE &amp; TIME</th>
                       <th style={{ padding: '10px 14px' }}>EVENT TYPE</th>
-                      <th style={{ padding: '10px 14px' }}>INVOICE / REF</th>
-                      <th style={{ padding: '10px 14px' }}>QTY / WEIGHT</th>
-                      <th style={{ padding: '10px 14px' }}>RATE &amp; TOTAL</th>
-                      <th style={{ padding: '10px 14px' }}>CASHIER / STAFF</th>
-                      <th style={{ padding: '10px 14px' }}>DETAILS / NOTE</th>
+                      <th style={{ padding: '10px 14px' }}>INVOICE / BILL #</th>
+                      <th style={{ padding: '10px 14px' }}>QUANTITY</th>
+                      <th style={{ padding: '10px 14px' }}>RATE &amp; AMOUNT</th>
+                      <th style={{ padding: '10px 14px' }}>STAFF / CASHIER</th>
+                      <th style={{ padding: '10px 14px' }}>DETAILS &amp; NOTES</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredEvents.map((ev, index) => (
-                      <tr
-                        key={ev.id || index}
-                        style={{
-                          borderBottom: '1px solid #f1f5f9',
-                          backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa',
-                          transition: 'background-color 0.1s',
-                        }}
-                      >
-                        {/* 1. Date & Time */}
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <div style={{ fontWeight: 700, color: '#0f172a' }}>{ev.dateStr}</div>
-                          <div style={{ fontSize: '11px', color: '#64748b' }}>{ev.timeStr}</div>
-                        </td>
+                    {filteredEvents.map((ev, index) => {
+                      const isSale = ev.type === 'SALE';
+                      const isInward = ev.type === 'INWARD';
+                      const isReturn = ev.type === 'RETURN';
 
-                        {/* 2. Event Type */}
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              backgroundColor:
-                                ev.type === 'SALE'
-                                  ? '#fef2f2'
-                                  : ev.type === 'INWARD'
-                                  ? '#eff6ff'
-                                  : '#fef3c7',
-                              color:
-                                ev.type === 'SALE'
-                                  ? '#b91c1c'
-                                  : ev.type === 'INWARD'
-                                  ? '#1d4ed8'
-                                  : '#b45309',
-                            }}
-                          >
-                            {ev.type === 'SALE' ? '📉 Sold (Bill)' : ev.type === 'INWARD' ? '📈 Inward Refill' : '✏️ Adjustment'}
-                          </span>
-                        </td>
+                      return (
+                        <tr
+                          key={ev.id || index}
+                          style={{
+                            borderBottom: '1px solid #f1f5f9',
+                            backgroundColor: index % 2 === 0 ? '#ffffff' : '#fafafa',
+                            transition: 'background-color 0.1s',
+                          }}
+                        >
+                          {/* 1. Date & Time */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{ev.dateStr}</div>
+                            <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
+                              <span>🕒</span>
+                              <span>{ev.timeStr || '—'}</span>
+                            </div>
+                          </td>
 
-                        {/* 3. Invoice Number */}
-                        <td style={{ padding: '10px 14px', fontFamily: "'JetBrains Mono', monospace" }}>
-                          {ev.invoiceNumber !== '—' ? (
+                          {/* 2. Event Type */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                             <span
                               style={{
-                                background: '#f1f5f9',
-                                padding: '2px 6px',
-                                borderRadius: '4px',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                padding: '3px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
                                 fontWeight: 700,
-                                color: '#0f172a',
+                                backgroundColor: isSale
+                                  ? '#fef2f2'
+                                  : isInward
+                                  ? '#eff6ff'
+                                  : isReturn
+                                  ? '#fee2e2'
+                                  : '#fef3c7',
+                                color: isSale
+                                  ? '#b91c1c'
+                                  : isInward
+                                  ? '#1d4ed8'
+                                  : isReturn
+                                  ? '#b91c1c'
+                                  : '#b45309',
+                                border: `1px solid ${
+                                  isSale
+                                    ? '#fecaca'
+                                    : isInward
+                                    ? '#bfdbfe'
+                                    : isReturn
+                                    ? '#fca5a5'
+                                    : '#fde68a'
+                                }`,
                               }}
                             >
-                              #{ev.invoiceNumber}
+                              {isSale ? '🛍️ Stock Sold' : isInward ? '📥 Stock Added' : isReturn ? '↩️ Wastage' : '✏️ Adjustment'}
                             </span>
-                          ) : (
-                            <span style={{ color: '#94a3b8' }}>—</span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* 4. Quantity / Weight */}
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          <span
-                            style={{
-                              fontWeight: 800,
-                              color: ev.type === 'SALE' ? '#b91c1c' : '#059669',
-                              fontFamily: "'JetBrains Mono', monospace",
-                            }}
-                          >
-                            {ev.type === 'SALE' ? `-${ev.unitDisplay}` : `+${ev.unitDisplay}`}
-                          </span>
-                        </td>
-
-                        {/* 5. Rate & Amount */}
-                        <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                          {ev.amount > 0 ? (
-                            <div>
-                              <strong style={{ color: '#0f172a' }}>₹{ev.amount.toLocaleString('en-IN')}</strong>
-                              <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
-                                @ ₹{ev.rate}
+                          {/* 3. Invoice Number */}
+                          <td style={{ padding: '10px 14px', fontFamily: "'JetBrains Mono', monospace" }}>
+                            {ev.invoiceNumber && ev.invoiceNumber !== '—' ? (
+                              <span
+                                style={{
+                                  background: '#f1f5f9',
+                                  border: '1px solid #e2e8f0',
+                                  padding: '2px 8px',
+                                  borderRadius: '6px',
+                                  fontWeight: 700,
+                                  color: '#0f172a',
+                                  fontSize: '11px',
+                                }}
+                              >
+                                #{ev.invoiceNumber}
                               </span>
-                            </div>
-                          ) : (
-                            <span style={{ color: '#94a3b8' }}>—</span>
-                          )}
-                        </td>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>—</span>
+                            )}
+                          </td>
 
-                        {/* 6. Cashier */}
-                        <td style={{ padding: '10px 14px' }}>
-                          <span style={{ fontWeight: 600, color: '#334155' }}>
-                            {ev.cashier}
-                          </span>
-                          {ev.paymentMethod !== '—' && (
-                            <span style={{ fontSize: '10px', color: '#64748b', display: 'block' }}>
-                              Pay: {ev.paymentMethod}
+                          {/* 4. Quantity / Weight */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                            <span
+                              style={{
+                                fontWeight: 800,
+                                fontSize: '13px',
+                                color: isSale ? '#dc2626' : isInward ? '#16a34a' : '#d97706',
+                                fontFamily: "'JetBrains Mono', monospace",
+                              }}
+                            >
+                              {isSale ? `-${ev.unitDisplay}` : isInward ? `+${ev.unitDisplay}` : ev.unitDisplay}
                             </span>
-                          )}
-                        </td>
+                          </td>
 
-                        {/* 7. Note */}
-                        <td style={{ padding: '10px 14px', color: '#64748b', fontSize: '11px' }}>
-                          {ev.note}
-                        </td>
-                      </tr>
-                    ))}
+                          {/* 5. Rate & Amount */}
+                          <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                            {ev.amount > 0 ? (
+                              <div>
+                                <strong style={{ color: '#059669', fontSize: '13px' }}>
+                                  ₹{ev.amount.toLocaleString('en-IN')}
+                                </strong>
+                                <span style={{ fontSize: '11px', color: '#64748b', display: 'block' }}>
+                                  @ ₹{ev.rate}
+                                </span>
+                              </div>
+                            ) : (
+                              <span style={{ color: '#94a3b8' }}>—</span>
+                            )}
+                          </td>
+
+                          {/* 6. Cashier / Staff */}
+                          <td style={{ padding: '10px 14px' }}>
+                            <span style={{ fontWeight: 600, color: '#334155' }}>
+                              {ev.cashier}
+                            </span>
+                            {ev.paymentMethod && ev.paymentMethod !== '—' && (
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  fontWeight: 700,
+                                  color: '#475569',
+                                  background: '#f1f5f9',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  display: 'inline-block',
+                                  marginTop: '2px',
+                                }}
+                              >
+                                {ev.paymentMethod}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* 7. Details / Notes */}
+                          <td style={{ padding: '10px 14px', color: '#475569', fontSize: '11px' }}>
+                            {ev.note}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getItemStockConfig, isProductUnlimitedStock } from '../../utils/unitConfig';
 import AddStockModal from '../Inventory/AddStockModal';
 import ReturnStockModal from './ReturnStockModal';
+import StockDetailsModal from '../Inventory/StockDetailsModal';
 
 export default function CompanyManagerDashboard() {
   const { user, logout } = useAuth();
@@ -77,6 +78,7 @@ export default function CompanyManagerDashboard() {
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [modalSelectedSweetId, setModalSelectedSweetId] = useState(null);
   const [modalTarget, setModalTarget] = useState('counter');
+  const [selectedStockDetailItem, setSelectedStockDetailItem] = useState(null);
 
   // Refresh logs on mount
   useEffect(() => {
@@ -1035,6 +1037,29 @@ export default function CompanyManagerDashboard() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                           <button
                             type="button"
+                            onClick={() => setSelectedStockDetailItem(item)}
+                            style={{
+                              gridColumn: '1 / -1',
+                              backgroundColor: '#f0fdf4',
+                              border: '1px solid #86efac',
+                              color: '#15803d',
+                              borderRadius: '8px',
+                              padding: '7px 10px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '5px',
+                            }}
+                            title={`View Details: Stock Sold, Stock Added, Remaining Stock & Audit for ${item.name || item.englishName}`}
+                          >
+                            👁️ View Details
+                          </button>
+
+                          <button
+                            type="button"
                             onClick={() => handleOpenInward(item.id)}
                             style={{
                               backgroundColor: '#ecfdf5',
@@ -1331,6 +1356,28 @@ export default function CompanyManagerDashboard() {
                               {/* Row Action Buttons */}
                               <td style={{ padding: '14px 18px', textAlign: 'right' }}>
                                 <div style={{ display: 'inline-flex', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedStockDetailItem(item)}
+                                    style={{
+                                      backgroundColor: '#f0fdf4',
+                                      border: '1px solid #86efac',
+                                      color: '#15803d',
+                                      borderRadius: '6px',
+                                      padding: '6px 11px',
+                                      fontSize: '11px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                    }}
+                                    title={`View Details: Stock Sold, Stock Added, Remaining Stock & Audit for ${item.name || item.englishName}`}
+                                  >
+                                    👁️ View Details
+                                  </button>
+
                                   <button
                                     type="button"
                                     onClick={() => handleOpenInward(item.id)}
@@ -1738,6 +1785,24 @@ export default function CompanyManagerDashboard() {
         }}
         initialSweetId={modalSelectedSweetId}
       />
+
+      {/* Stock Details & Sales Audit Modal */}
+      {selectedStockDetailItem && (
+        <StockDetailsModal
+          item={selectedStockDetailItem}
+          product={selectedStockDetailItem}
+          isOpen={true}
+          onClose={() => setSelectedStockDetailItem(null)}
+          onOpenRefill={(id) => {
+            setSelectedStockDetailItem(null);
+            handleOpenInward(id);
+          }}
+          onRefillStock={(id) => {
+            setSelectedStockDetailItem(null);
+            handleOpenInward(id);
+          }}
+        />
+      )}
     </div>
   );
 }
