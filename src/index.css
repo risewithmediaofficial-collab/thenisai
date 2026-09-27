@@ -24259,7 +24259,6 @@ section.tab-content,
 /* ── 6. LARGE DATA TABLES & LISTS: INLINE SCROLL RESTRICTED TO SCREEN VIEWPORT ── */
 .admin-content-area .inventory-table-wrap,
 .admin-content-area .recycle-table-wrap,
-.admin-content-area .daily-bills-table-wrap,
 .admin-content-area .sales-table-card,
 .admin-content-area .admin-table-wrapper,
 .admin-content-area .orders-cards-list,
@@ -24285,15 +24284,20 @@ section.tab-content,
   position: relative !important;
 }
 
-/* Shift Invoices Table: Inline scroll up to 10 bills */
+/* Shift Invoices & Shift Bills Table: Inline scroll up to 10 bills without scroll locking */
 .shift-table-card,
-.billing-pos-root .shift-table-card {
+.billing-pos-root .shift-table-card,
+.daily-bills-table-wrap,
+.admin-content-area .daily-bills-table-wrap {
   flex: 0 0 auto !important;
   min-height: 0 !important;
   height: auto !important;
   max-height: 610px !important; /* Shows up to 10 bills; above 10 bills inline scroll active */
   overflow-y: auto !important; /* Inline scroll */
   overflow-x: auto !important;
+  overscroll-behavior: auto !important; /* Crucial: allows natural chaining so mouse wheel never locks */
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   background: #ffffff !important;
   border-radius: 12px !important;
   border: 1.5px solid #cbd5e1 !important;
@@ -24304,7 +24308,8 @@ section.tab-content,
 }
 
 .shift-table-wrap,
-.billing-pos-root .shift-table-wrap {
+.billing-pos-root .shift-table-wrap,
+.daily-bills-section {
   width: 100% !important;
   background: transparent !important;
   border: none !important;
@@ -24481,15 +24486,19 @@ section.tab-content,
   scrollbar-color: #94a3b8 #f1f5f9 !important;
 }
 
-/* ── 9. DAILY REVENUE REPORT SCROLL AREA ── */
+/* ── 9. DAILY REVENUE REPORT SCROLL AREA: Outline Scroll ── */
 .daily-revenue-scroll-area {
-  flex: 1 1 0% !important;
+  flex: 1 1 auto !important;
   min-height: 0 !important;
+  height: 100% !important;
+  max-height: 100% !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior: contain !important;
-  padding: 0 4px 16px !important;
+  overscroll-behavior-y: auto !important;
+  overscroll-behavior: auto !important;
+  padding: 0 4px 20px !important;
+  box-sizing: border-box !important;
 }
 
 /* ── 10. TABLE MINIMUM COLUMN WIDTHS (NO CELL WRAPPING CRUSH) ── */

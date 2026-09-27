@@ -2433,7 +2433,7 @@ export default function AdminDashboard() {
             TAB 3: DAILY SALES & REVENUE REPORT
            ========================================= */}
         {activeTab === 'daily-revenue' && (
-          <section className="tab-content admin-daily-revenue-tab">
+          <section className="tab-content admin-daily-revenue-tab" data-lenis-prevent="true">
             <DailyRevenueReport
               allSales={allSales}
               onOpenInvoice={openInvoice}

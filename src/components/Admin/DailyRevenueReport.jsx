@@ -591,7 +591,7 @@ export default function DailyRevenueReport({
   };
 
   return (
-    <div className="daily-revenue-wrapper">
+    <div className="daily-revenue-wrapper" data-lenis-prevent="true">
       {/* Top Controls & Title */}
       <div className="daily-revenue__header">
         <div className="daily-revenue__title-group">
@@ -839,7 +839,7 @@ export default function DailyRevenueReport({
       )}
 
       {/* Scrollable Content Area: KPIs, Tender Breakdown, Shift & Daily Bills */}
-      <div className="daily-revenue-scroll-area">
+      <div className="daily-revenue-scroll-area" data-lenis-prevent="true">
         {/* Primary KPI Metrics Grid — Revenue & Operations */}
         <section className="revenue-kpi-grid">
         <div className="rev-card gross">
@@ -1072,10 +1072,21 @@ export default function DailyRevenueReport({
 
       {/* Daily Bills Transaction Log */}
       <section className="daily-bills-section">
-        <div className="bills-header-line">
-          <h3 className="section-subtitle">
-            Shift Bills &amp; Invoices Log ({daySales.length} Transactions)
-          </h3>
+        <div className="bills-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+          <div>
+            <h3 className="section-subtitle" style={{ margin: 0 }}>
+              Shift Bills &amp; Invoices Log ({daySales.length} Transactions)
+            </h3>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              Showing {daySales.length} {daySales.length === 1 ? 'invoice' : 'invoices'}
+              {daySales.length > 10 ? ' · (Scroll inline to view all 10+ bills or scroll page outline)' : ''}
+            </span>
+          </div>
+          {daySales.length > 10 && (
+            <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '3px 10px', borderRadius: '12px', border: '1px solid #fde68a' }}>
+              <span>↕</span> Inline Scroll Active (Up to 10 bills view)
+            </span>
+          )}
           <div className="search-bills-box">
             <input
               type="text"
@@ -1092,7 +1103,7 @@ export default function DailyRevenueReport({
             <p>No transaction records found matching the selected date and filters.</p>
           </div>
         ) : (
-          <div className="daily-bills-table-wrap">
+          <div className="daily-bills-table-wrap" data-lenis-prevent="true">
             <table className="daily-bills-table">
               <thead>
                 <tr>
@@ -1211,7 +1222,7 @@ export default function DailyRevenueReport({
             <p>No expense payouts logged for this period.</p>
           </div>
         ) : (
-          <div className="daily-bills-table-wrap">
+          <div className="daily-bills-table-wrap" data-lenis-prevent="true">
             <table className="daily-bills-table">
               <thead>
                 <tr>
