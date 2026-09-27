@@ -12,9 +12,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
   const [username, setUsername] = useState(
     initialRole === 'cashier' ? 'cashier' : initialRole === 'tester' ? 'tester' : (initialRole === 'company_manager' || initialRole === 'manager') ? 'manager' : 'admin'
   );
-  const [password, setPassword] = useState(
-    initialRole === 'tester' ? 'test123' : (initialRole === 'company_manager' || initialRole === 'manager') ? 'manager123' : ''
-  );
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -23,16 +21,16 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
     const role = initialRole === 'cashier' ? 'cashier' : initialRole === 'tester' ? 'tester' : (initialRole === 'company_manager' || initialRole === 'manager') ? 'company_manager' : 'admin';
     setSelectedRole(role);
     setUsername(role === 'tester' ? 'tester' : role === 'company_manager' ? 'manager' : role);
-    setPassword(role === 'tester' ? 'test123' : role === 'company_manager' ? 'manager123' : '');
+    setPassword('');
   }, [initialRole]);
 
   const selectRolePreset = (role) => {
     setSelectedRole(role);
     setLocalError('');
-    if (role === 'admin') { setUsername('admin'); setPassword('admin123'); }
-    else if (role === 'cashier') { setUsername('cashier'); setPassword('cashier123'); }
-    else if (role === 'company_manager' || role === 'manager') { setUsername('manager'); setPassword('manager123'); }
-    else if (role === 'tester') { setUsername('tester'); setPassword('test123'); }
+    if (role === 'admin') { setUsername('admin'); setPassword(''); }
+    else if (role === 'cashier') { setUsername('cashier'); setPassword(''); }
+    else if (role === 'company_manager' || role === 'manager') { setUsername('manager'); setPassword(''); }
+    else if (role === 'tester') { setUsername('tester'); setPassword(''); }
   };
 
   const handleSubmit = async (e) => {
@@ -106,7 +104,6 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
         .staff-submit:hover:not(:disabled) { background:linear-gradient(135deg,#b45309 0%,#92400e 100%) !important; box-shadow:0 4px 16px rgba(217,119,6,0.38) !important; transform:translateY(-1px); }
         .staff-submit:active:not(:disabled){ transform:translateY(0); }
         .back-btn:hover { background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; transform:translateX(-2px); }
-        .autofill-chip-btn:hover { background:#e2e8f0; color:#0f172a; }
         .role-tab-btn:hover:not(.active-tab){ color:#1e293b; }
       `}</style>
 
@@ -148,13 +145,15 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
         </div>
 
         {/* Role segmented nav */}
-        <div className="grid grid-cols-4 gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4">
+        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 mb-4">
           {[
             { id: 'admin',           icon: '🛡️', label: 'Admin' },
             { id: 'cashier',         icon: '🧾', label: 'Cashier' },
             { id: 'company_manager', icon: '🏢', label: 'Manager', title: 'Stock Inward & Inventory Manager' },
             { id: 'tester',          icon: '🧪', label: 'Tester',  title: 'Sandbox Demo Mode' },
-          ].map(({ id, icon, label, title }) => (
+          ]
+            .filter((item) => !(initialRole === 'cashier' && item.id === 'admin'))
+            .map(({ id, icon, label, title }) => (
             <button
               key={id}
               type="button"
@@ -273,24 +272,6 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
             )}
           </button>
         </form>
-
-        {/* Quick autofill chips */}
-        <div className="mt-5 pt-[18px] border-t border-slate-100 flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-[0.03em]">Quick Logins:</span>
-          <div className="flex gap-1.5 flex-wrap">
-            {['admin', 'cashier', 'manager', 'tester'].map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                className="autofill-chip-btn bg-slate-100 border border-slate-200 text-slate-700 rounded-md px-2 py-0.5 text-[11px] font-semibold font-mono cursor-pointer transition-all duration-150"
-                onClick={() => selectRolePreset(chip === 'manager' ? 'company_manager' : chip)}
-                title={`Autofill ${chip} credentials`}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        </div>
 
         {/* Footer */}
         <div className="mt-4 text-center text-[11px] text-slate-400">
