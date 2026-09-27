@@ -1819,15 +1819,28 @@ export default function BillingCounter() {
             handleSwitchTab('register');
           }
           else if (sec === 'admin-preorders' || sec === 'pos-preorders' || sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') {
-            handleSwitchTab('pre-orders');
+            if (user?.role === 'admin' && (sec === 'admin-preorders' || sec === 'admin-dispatch' || sec === 'admin-orders')) {
+              navigateTo('admin', 'preorders');
+            } else {
+              handleSwitchTab('pre-orders');
+            }
           }
-          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue' || sec === 'pos-bills' || sec === 'pos-daily-sales') {
+          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue') {
+            navigateTo('admin', 'shift-bills');
+          }
+          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') {
             handleSwitchTab('my-bills');
           }
-          else if (sec === 'admin-inventory' || sec === 'pos-inventory') {
+          else if (sec === 'admin-inventory') {
+            navigateTo('admin', 'inventory');
+          }
+          else if (sec === 'pos-inventory') {
             handleSwitchTab('inventory');
           }
-          else if (sec === 'pos-expenses' || sec === 'admin-expenses') {
+          else if (sec === 'admin-expenses') {
+            navigateTo('admin', 'expenses');
+          }
+          else if (sec === 'pos-expenses') {
             handleSwitchTab('expenses');
           }
           else if (sec === 'company-stock' || sec === 'admin-company-stock' || sec === 'admin-manager') {

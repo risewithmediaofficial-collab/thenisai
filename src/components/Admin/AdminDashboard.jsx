@@ -207,7 +207,8 @@ export default function AdminDashboard() {
   };
 
   const handleSwitchAdminTab = (tab) => {
-    setActiveTab(tab);
+    const targetTab = (tab === 'shift-bills' || tab === 'daily-revenue') ? 'daily-revenue' : tab;
+    setActiveTab(targetTab);
     if (tab === 'orders' || tab === 'dispatch' || tab === 'preorders') {
       syncAdminHash('#admin/orders');
     } else if (tab === 'inventory') {
@@ -812,7 +813,7 @@ export default function AdminDashboard() {
       {/* 1. Sleek Left Side Navbar */}
       <SideNavbar
         currentSection={
-          activeTab === 'daily-revenue'
+          (activeTab === 'daily-revenue' || activeTab === 'shift-bills')
             ? 'admin-shift-bills'
             : (activeTab === 'orders' || activeTab === 'dispatch')
             ? 'admin-preorders'
@@ -2432,7 +2433,7 @@ export default function AdminDashboard() {
         {/* =========================================
             TAB 3: DAILY SALES & REVENUE REPORT
            ========================================= */}
-        {activeTab === 'daily-revenue' && (
+        {(activeTab === 'daily-revenue' || activeTab === 'shift-bills') && (
           <section className="tab-content admin-daily-revenue-tab" data-lenis-prevent="true">
             <DailyRevenueReport
               allSales={allSales}
