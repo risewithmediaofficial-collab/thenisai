@@ -992,7 +992,7 @@ export default function DailyRevenueReport({
               <p>No itemized sweets sold yet for this period.</p>
             </div>
           ) : (
-            <div className="top-sweets-table-wrap">
+            <div className="top-sweets-table-wrap" data-lenis-prevent="true">
               <table className="top-sweets-table">
                 <thead>
                   <tr>

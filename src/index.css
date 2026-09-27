@@ -3957,7 +3957,18 @@ time, .hours {
 
 /* Top Sweets Table */
 .top-sweets-table-wrap {
-  overflow-x: auto;
+  flex: 0 0 auto;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  max-height: 290px !important;
+  overscroll-behavior: auto !important;
+  overscroll-behavior-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  position: relative;
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 #f1f5f9 !important;
 }
 
 .top-sweets-table {
@@ -3967,6 +3978,9 @@ time, .hours {
 }
 
 .top-sweets-table th {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
   text-align: left;
   padding: 10px 12px;
   font-size: 0.74rem;
@@ -3974,8 +3988,9 @@ time, .hours {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 700;
-  background: #F8FAFC;
+  background: #F8FAFC !important;
   border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 0 #E2E8F0;
 }
 
 .top-sweets-table td {
@@ -24359,7 +24374,8 @@ section.tab-content,
 .cashier-table thead th,
 #expenses-table thead th,
 .company-stock-table-wrap thead th,
-.expenses-table-wrap thead th {
+.expenses-table-wrap thead th,
+.top-sweets-table thead th {
   position: sticky !important;
   top: 0 !important;
   z-index: 25 !important;
@@ -24398,7 +24414,8 @@ section.tab-content,
 .expenses-table-wrap::-webkit-scrollbar,
 .daily-revenue-scroll-area::-webkit-scrollbar,
 .pos-catalog-pane::-webkit-scrollbar,
-.tray-items-scroll::-webkit-scrollbar {
+.tray-items-scroll::-webkit-scrollbar,
+.top-sweets-table-wrap::-webkit-scrollbar {
   width: 9px !important;
   height: 9px !important;
   display: block !important;
@@ -24419,7 +24436,8 @@ section.tab-content,
 .expenses-table-wrap::-webkit-scrollbar-track,
 .daily-revenue-scroll-area::-webkit-scrollbar-track,
 .pos-catalog-pane::-webkit-scrollbar-track,
-.tray-items-scroll::-webkit-scrollbar-track {
+.tray-items-scroll::-webkit-scrollbar-track,
+.top-sweets-table-wrap::-webkit-scrollbar-track {
   background: #f1f5f9 !important;
   border-left: 1px solid #e2e8f0 !important;
   border-radius: 0 8px 8px 0 !important;
@@ -24440,7 +24458,8 @@ section.tab-content,
 .expenses-table-wrap::-webkit-scrollbar-thumb,
 .daily-revenue-scroll-area::-webkit-scrollbar-thumb,
 .pos-catalog-pane::-webkit-scrollbar-thumb,
-.tray-items-scroll::-webkit-scrollbar-thumb {
+.tray-items-scroll::-webkit-scrollbar-thumb,
+.top-sweets-table-wrap::-webkit-scrollbar-thumb {
   background: #94a3b8 !important;
   border-radius: 6px !important;
   border: 2px solid #f1f5f9 !important;
@@ -24461,7 +24480,8 @@ section.tab-content,
 .expenses-table-wrap::-webkit-scrollbar-thumb:hover,
 .daily-revenue-scroll-area::-webkit-scrollbar-thumb:hover,
 .pos-catalog-pane::-webkit-scrollbar-thumb:hover,
-.tray-items-scroll::-webkit-scrollbar-thumb:hover {
+.tray-items-scroll::-webkit-scrollbar-thumb:hover,
+.top-sweets-table-wrap::-webkit-scrollbar-thumb:hover {
   background: #64748b !important;
 }
 
@@ -24481,7 +24501,8 @@ section.tab-content,
 .expenses-table-wrap,
 .daily-revenue-scroll-area,
 .pos-catalog-pane,
-.tray-items-scroll {
+.tray-items-scroll,
+.top-sweets-table-wrap {
   scrollbar-width: thin !important;
   scrollbar-color: #94a3b8 #f1f5f9 !important;
 }
