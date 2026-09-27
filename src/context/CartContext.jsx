@@ -40,6 +40,7 @@ const CUSTOM_UNITS_KEY = 'thenisai_custom_units_v1';
 const CATEGORY_OVERRIDES_KEY = 'thenisai_category_overrides_v1';
 const UNIT_OVERRIDES_KEY = 'thenisai_unit_overrides_v1';
 const PRE_ORDERS_STORAGE_KEY = 'thenisai_preorders_v1';
+const STOCK_LOGS_KEY = 'thenisai_stock_transfer_logs';
 
 // Default categories (built-in, cannot be deleted by admin)
 export const DEFAULT_PRODUCT_CATEGORIES = [
@@ -112,21 +113,36 @@ const DEFAULT_INVENTORY = ALL_BILLING_ITEMS.map((item) => {
 
 const INITIAL_ORDERS = [];
 
-function getWeightInKg(weightStr) {
-  if (!weightStr) return 0.5;
+export function getWeightInKg(weightStr, item = null) {
+  if (!weightStr) {
+    if (item?.unit === '100g') return 0.1;
+    if (item?.unit === '200g') return 0.2;
+    if (item?.unit === '250g') return 0.25;
+    if (item?.unit === '500g') return 0.5;
+    if (item?.unit === '750g') return 0.75;
+    if (item?.unit === '1kg' || item?.unit === 'kg') return 1.0;
+    if (item && (isBeverageDrink(item) || isPieceItem(item) || isPacketItem(item))) return 1.0;
+    return 1.0;
+  }
   const str = String(weightStr).toLowerCase().trim();
-  if (str.includes('cup') || str.includes('pc') || str.includes('box')) return 1.0;
-  if (str.includes('250g') || str.includes('250ml') || str.includes('250 ml')) return 0.25;
-  if (str.includes('500g') || str.includes('500ml') || str.includes('500 ml')) return 0.5;
-  if (str.includes('1kg') || str.includes('1 kg') || str.includes('1l') || str.includes('1 l') || str.includes('1 litre') || str.includes('1000ml')) return 1.0;
-  if (str.includes('2l') || str.includes('2 l') || str.includes('2 litre') || str.includes('2000ml')) return 2.0;
+  if (str === '100g') return 0.1;
+  if (str === '200g') return 0.2;
+  if (str === '250g' || str === '250ml' || str === '250 ml') return 0.25;
+  if (str === '500g' || str === '500ml' || str === '500 ml') return 0.5;
+  if (str === '750g') return 0.75;
+  if (str === '1kg' || str === '1 kg' || str === '1l' || str === '1 l' || str === '1 litre' || str === '1000ml') return 1.0;
+  if (str === '2kg' || str === '2 kg' || str === '2l' || str === '2 l' || str === '2 litre' || str === '2000ml') return 2.0;
+  if (str === '5kg' || str === '5 kg') return 5.0;
+  if (str.includes('cup') || str.includes('pc') || str.includes('box') || str.includes('pkt') || str.includes('piece') || str.includes('bottle')) return 1.0;
+  const gMatch = str.match(/([\d.]+)\s*g\b/);
+  if (gMatch && !str.includes('kg')) return parseFloat(gMatch[1]) / 1000;
+  const kgMatch = str.match(/([\d.]+)\s*kg/);
+  if (kgMatch) return parseFloat(kgMatch[1]);
   const mlMatch = str.match(/([\d.]+)\s*ml/);
   if (mlMatch) return parseFloat(mlMatch[1]) / 1000;
   const lMatch = str.match(/([\d.]+)\s*(?:l|litre|liter)/);
   if (lMatch) return parseFloat(lMatch[1]);
-  const match = str.match(/([\d.]+)\s*kg/);
-  if (match) return parseFloat(match[1]);
-  return 0.5;
+  return 1.0;
 }
 
 export const isSandboxActive = () => {
@@ -517,6 +533,16 @@ export function CartProvider({ children }) {
       return DEFAULT_INVENTORY.filter((i) => !deletedIds.has(i.id));
     } catch {
       return DEFAULT_INVENTORY;
+    }
+  });
+
+  // Real-time stock movement & sales audit logs
+  const [stockLogs, setStockLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem(STOCK_LOGS_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
     }
   });
 
@@ -1286,13 +1312,13 @@ export function CartProvider({ children }) {
             const userPrice = savedMaster[item.id];
             const finalPrice = (userPrice && userPrice > 0) ? userPrice : (bPrice || item.price);
 
-            const bStock = (typeof bItem.counterStock === 'number' && bItem.counterStock > 0)
+            const bStock = typeof bItem.counterStock === 'number'
               ? bItem.counterStock
-              : (typeof bItem.stockKg === 'number' && bItem.stockKg > 0)
+              : typeof bItem.stockKg === 'number'
               ? bItem.stockKg
-              : (typeof item.counterStock === 'number' && item.counterStock > 0)
+              : typeof item.counterStock === 'number'
               ? item.counterStock
-              : (typeof item.stockKg === 'number' && item.stockKg > 0)
+              : typeof item.stockKg === 'number'
               ? item.stockKg
               : 50;
 
@@ -1456,30 +1482,75 @@ export function CartProvider({ children }) {
     return localMerged;
   };
 
-  // Deduct inventory helper
-  const deductStockForItems = (itemsList) => {
+  // Deduct inventory helper with comprehensive stock deduction & movement logging
+  const deductStockForItems = (itemsList, invoiceNumber = '', cashierName = '') => {
+    if (!Array.isArray(itemsList) || itemsList.length === 0) return;
+
+    const timestamp = Date.now();
+    const now = new Date(timestamp);
+    const dateStr = now.toLocaleDateString('en-IN');
+    const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const newStockLogs = [];
+
     setInventory((prev) => {
       const updated = [...prev];
       itemsList.forEach((item) => {
         const targetIdx = updated.findIndex((inv) => inv.id === item.id);
         if (targetIdx > -1) {
-          if (isProductUnlimitedStock(updated[targetIdx]) || isProductUnlimitedStock(item)) {
-            return; // Unlimited stock items (e.g. freshly brewed tea, coffee, hot beverages) never deplete!
+          const invItem = updated[targetIdx];
+          if (isProductUnlimitedStock(invItem) || isProductUnlimitedStock(item)) {
+            return; // Unlimited stock items never deplete!
           }
-          const weightKg = getWeightInKg(item.weight);
-          const totalDeduction = weightKg * item.quantity;
-          const newStock = Math.max(0, Math.round((updated[targetIdx].stockKg - totalDeduction) * 100) / 100);
-          const currentC = updated[targetIdx].counterStock ?? updated[targetIdx].stockKg ?? 0;
-          const newCounter = Math.max(0, Math.round((currentC - totalDeduction) * 100) / 100);
+          const weightKg = getWeightInKg(item.weight || item.unit, invItem);
+          const qty = Math.max(0, parseFloat(item.quantity) || 1);
+          const totalDeduction = Math.round(weightKg * qty * 1000) / 1000;
+
+          const currentStock = typeof invItem.stockKg === 'number' ? invItem.stockKg : 50;
+          const currentCounter = typeof invItem.counterStock === 'number' ? invItem.counterStock : currentStock;
+          const newStock = Math.max(0, Math.round((currentStock - totalDeduction) * 100) / 100);
+          const newCounter = Math.max(0, Math.round((currentCounter - totalDeduction) * 100) / 100);
+
           updated[targetIdx] = {
-            ...updated[targetIdx],
+            ...invItem,
             stockKg: newStock,
             counterStock: newCounter,
           };
+
+          // Record a stock sale movement log
+          newStockLogs.push({
+            id: `sale-log-${timestamp}-${item.id}`,
+            productId: item.id,
+            productName: invItem.name || item.name,
+            type: 'COUNTER_SALE',
+            quantity: totalDeduction,
+            displayQty: `${qty} × ${item.weight || item.unit || invItem.unit || 'unit'}`,
+            unit: invItem.unit || 'kg',
+            invoiceNumber: invoiceNumber || 'POS-BILL',
+            performedBy: cashierName || 'Counter Cashier',
+            sellingPrice: item.price || 0,
+            totalAmount: item.total || ((item.price || 0) * qty),
+            note: `Sold via Bill #${invoiceNumber || 'POS-BILL'} (${qty} × ${item.weight || item.unit || 'unit'})`,
+            date: dateStr,
+            time: timeStr,
+            timestamp,
+            stockAfter: newCounter,
+          });
         }
       });
+
+      // Synchronously push to Redux
+      store.dispatch(setInventoryItems(updated));
       return updated;
     });
+
+    if (newStockLogs.length > 0) {
+      setStockLogs((prev) => {
+        const updated = [...newStockLogs, ...(Array.isArray(prev) ? prev : [])].slice(0, 500);
+        try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+        store.dispatch(setReduxStockLogs(updated));
+        return updated;
+      });
+    }
   };
 
   // Orders Actions
@@ -2999,6 +3070,16 @@ export function CartProvider({ children }) {
       return updated;
     });
 
+    const nextStockKg = updates.stockKg !== undefined && !isNaN(parseFloat(updates.stockKg))
+      ? Math.max(0, Math.round(parseFloat(updates.stockKg) * 100) / 100)
+      : undefined;
+    const nextCounterStock = updates.counterStock !== undefined && !isNaN(parseFloat(updates.counterStock))
+      ? Math.max(0, Math.round(parseFloat(updates.counterStock) * 100) / 100)
+      : nextStockKg;
+    const nextMinThreshold = updates.minThreshold !== undefined && !isNaN(parseFloat(updates.minThreshold))
+      ? Math.max(0, Math.round(parseFloat(updates.minThreshold) * 100) / 100)
+      : undefined;
+
     setInventory((prev) => {
       const existing = prev.some((p) => p.id === productId);
       const updated = existing
@@ -3012,6 +3093,8 @@ export function CartProvider({ children }) {
             price: nextPrice,
             unitPrice: nextPrice,
             pricePerKg: nextPrice,
+            ...(nextStockKg !== undefined ? { stockKg: nextStockKg, counterStock: nextCounterStock } : {}),
+            ...(nextMinThreshold !== undefined ? { minThreshold: nextMinThreshold } : {}),
             ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
             description: updates.description || p.description || 'Updated product details',
           } : p))
@@ -3027,8 +3110,9 @@ export function CartProvider({ children }) {
               price: nextPrice,
               unitPrice: nextPrice,
               pricePerKg: nextPrice,
-              stockKg: 0,
-              minThreshold: 0,
+              stockKg: nextStockKg ?? 0,
+              counterStock: nextCounterStock ?? 0,
+              minThreshold: nextMinThreshold ?? 8,
               ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
               description: updates.description || 'Updated product details',
               isCustom: true,
@@ -3039,8 +3123,34 @@ export function CartProvider({ children }) {
           localStorage.setItem(INVENTORY_STORAGE_KEY, JSON.stringify(updated));
         }
       } catch {}
+      store.dispatch(setInventoryItems(updated));
       return updated;
     });
+
+    if (nextStockKg !== undefined) {
+      const now = new Date();
+      const stockLogEntry = {
+        id: `stock-edit-${Date.now()}-${productId}`,
+        productId,
+        productName: displayName,
+        type: 'MANUAL_STOCK_EDIT',
+        quantity: nextStockKg,
+        displayQty: `${nextStockKg} ${nextUnit}`,
+        unit: nextUnit,
+        performedBy: activePerformer?.name || 'Staff',
+        note: `Manual stock level update to ${nextStockKg} ${nextUnit}`,
+        date: now.toLocaleDateString('en-IN'),
+        time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        timestamp: Date.now(),
+        stockAfter: nextStockKg,
+      };
+      setStockLogs((prev) => {
+        const updatedLogs = [stockLogEntry, ...(Array.isArray(prev) ? prev : [])].slice(0, 500);
+        try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updatedLogs)); } catch {}
+        store.dispatch(setReduxStockLogs(updatedLogs));
+        return updatedLogs;
+      });
+    }
 
     setMasterPrices((prev) => {
       const updated = { ...prev, [productId]: nextPrice };
@@ -3064,6 +3174,7 @@ export function CartProvider({ children }) {
         newPrice: nextPrice,
         category: nextCategory,
         unit: nextUnit,
+        ...(nextStockKg !== undefined ? { stockKg: nextStockKg } : {}),
         ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
       },
       reason: 'Product details updated from admin inventory',
@@ -3081,6 +3192,8 @@ export function CartProvider({ children }) {
         category: nextCategory,
         unit: nextUnit,
         price: nextPrice,
+        ...(nextStockKg !== undefined ? { stockKg: nextStockKg, counterStock: nextCounterStock } : {}),
+        ...(nextMinThreshold !== undefined ? { minThreshold: nextMinThreshold } : {}),
         ...(isUnlimited !== undefined ? { isUnlimitedStock: isUnlimited } : {}),
       });
       return { success: true };
@@ -3240,7 +3353,7 @@ export function CartProvider({ children }) {
     if (isSandboxActive()) {
       // Counter sales in Sandbox: keep in memory only; DO NOT write to real database or real offline ledger
       setBills((prev) => [fullOrder, ...prev]);
-      deductStockForItems(saleData.items);
+      deductStockForItems(saleData.items, fullOrder.invoiceNumber, fullOrder.cashier?.name);
       return fullOrder;
     }
 
@@ -3275,7 +3388,7 @@ export function CartProvider({ children }) {
       } catch {}
       return updated;
     });
-    deductStockForItems(saleData.items);
+    deductStockForItems(saleData.items, fullOrder.invoiceNumber, fullOrder.cashier?.name);
 
     // Save to offline ledger immediately (always — serves as local backup)
     try {
@@ -3505,32 +3618,64 @@ export function CartProvider({ children }) {
     const kgToAdd = parseFloat(additionalKg) || 0;
     const now = new Date();
     const timeStr = `Today ${now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`;
+    let targetName = sweetId;
+    let targetUnit = 'kg';
 
     setInventory((prev) => {
       const idx = prev.findIndex((item) => item.id === sweetId);
       if (idx > -1) {
         const updated = [...prev];
+        targetName = updated[idx].name || sweetId;
+        targetUnit = updated[idx].unit || 'kg';
+        const curStock = typeof updated[idx].stockKg === 'number' ? updated[idx].stockKg : 0;
+        const curCounter = typeof updated[idx].counterStock === 'number' ? updated[idx].counterStock : curStock;
+        const newStock = Math.round((curStock + kgToAdd) * 100) / 100;
+        const newCounter = Math.round((curCounter + kgToAdd) * 100) / 100;
         updated[idx] = {
           ...updated[idx],
-          stockKg: Math.round((updated[idx].stockKg + kgToAdd) * 100) / 100,
+          stockKg: newStock,
+          counterStock: newCounter,
           batchDate: timeStr,
           batchNote: batchNote.trim() || updated[idx].batchNote,
         };
+        store.dispatch(setInventoryItems(updated));
         return updated;
       } else {
         const catalogItem = SWEETS_CATALOG.find((s) => s.id === sweetId);
-        return [
-          ...prev,
-          {
-            id: sweetId,
-            name: catalogItem?.name || sweetId,
-            stockKg: kgToAdd,
-            minThreshold: 8,
-            batchDate: timeStr,
-            batchNote: batchNote || 'Fresh batch',
-          },
-        ];
+        const newItem = {
+          id: sweetId,
+          name: catalogItem?.name || sweetId,
+          stockKg: kgToAdd,
+          counterStock: kgToAdd,
+          minThreshold: 8,
+          batchDate: timeStr,
+          batchNote: batchNote || 'Fresh batch',
+        };
+        const updated = [...prev, newItem];
+        store.dispatch(setInventoryItems(updated));
+        return updated;
       }
+    });
+
+    const newLog = {
+      id: `refill-log-${Date.now()}-${sweetId}`,
+      productId: sweetId,
+      productName: targetName,
+      type: 'REFILL',
+      quantity: kgToAdd,
+      displayQty: `+${kgToAdd} ${targetUnit}`,
+      unit: targetUnit,
+      performedBy: 'Counter Staff',
+      note: batchNote || 'Counter Tray Refill',
+      date: now.toLocaleDateString('en-IN'),
+      time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
+    };
+    setStockLogs((prev) => {
+      const updated = [newLog, ...(Array.isArray(prev) ? prev : [])].slice(0, 500);
+      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+      store.dispatch(setReduxStockLogs(updated));
+      return updated;
     });
 
     if (isSandboxActive()) {
@@ -3550,11 +3695,45 @@ export function CartProvider({ children }) {
 
   const adjustInventoryStock = async (sweetId, newKg) => {
     const val = Math.max(0, parseFloat(newKg) || 0);
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === sweetId ? { ...item, stockKg: Math.round(val * 100) / 100 } : item
-      )
-    );
+    const now = new Date();
+    let targetName = sweetId;
+    let targetUnit = 'kg';
+
+    setInventory((prev) => {
+      const updated = prev.map((item) => {
+        if (item.id === sweetId) {
+          targetName = item.name || sweetId;
+          targetUnit = item.unit || 'kg';
+          const nextVal = Math.round(val * 100) / 100;
+          return { ...item, stockKg: nextVal, counterStock: nextVal };
+        }
+        return item;
+      });
+      store.dispatch(setInventoryItems(updated));
+      return updated;
+    });
+
+    const newLog = {
+      id: `adjust-log-${Date.now()}-${sweetId}`,
+      productId: sweetId,
+      productName: targetName,
+      type: 'MANUAL_STOCK_EDIT',
+      quantity: val,
+      displayQty: `${val} ${targetUnit}`,
+      unit: targetUnit,
+      performedBy: 'Counter Staff',
+      note: `Stock adjusted to ${val} ${targetUnit}`,
+      date: now.toLocaleDateString('en-IN'),
+      time: now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+      timestamp: Date.now(),
+      stockAfter: val,
+    };
+    setStockLogs((prev) => {
+      const updated = [newLog, ...(Array.isArray(prev) ? prev : [])].slice(0, 500);
+      try { localStorage.setItem(STOCK_LOGS_KEY, JSON.stringify(updated)); } catch {}
+      store.dispatch(setReduxStockLogs(updated));
+      return updated;
+    });
 
     if (isSandboxActive()) {
       return;
@@ -3619,18 +3798,6 @@ export function CartProvider({ children }) {
       console.warn('Backend new product stock creation failed:', err);
     }
   };
-
-  // ── Two-Tier Stock Management (Godown & Counter) ──────────────────────────
-  const STOCK_LOGS_KEY = 'thenisai_stock_transfer_logs';
-
-  const [stockLogs, setStockLogs] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STOCK_LOGS_KEY);
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
 
   // Sync inventory and stockLogs into high-performance Redux store
   useEffect(() => {

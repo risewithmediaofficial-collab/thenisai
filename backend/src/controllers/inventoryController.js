@@ -40,20 +40,31 @@ export async function getInventory(req, res) {
 
 export async function addStock(req, res) {
   try {
-    const { sweetId, addKg, batchCode, batchNote, isRefill } = req.body;
+    const { sweetId, addKg, additionalKg, newKg, batchCode, batchNote, isRefill } = req.body;
     const item = await Inventory.findOne({ id: sweetId });
     if (!item) return res.status(404).json({ success: false, message: 'Sweet item not found.' });
 
-    const added = parseFloat(addKg) || 0;
-    item.stockKg = Math.round((item.stockKg + added) * 10) / 10;
+    if (newKg !== undefined && !isNaN(parseFloat(newKg))) {
+      const val = Math.max(0, parseFloat(newKg));
+      item.stockKg = Math.round(val * 100) / 100;
+      item.counterStock = Math.round(val * 100) / 100;
+    } else {
+      const added = parseFloat(additionalKg ?? addKg) || 0;
+      item.stockKg = Math.round((item.stockKg + added) * 100) / 100;
+      if (typeof item.counterStock === 'number') {
+        item.counterStock = Math.round((item.counterStock + added) * 100) / 100;
+      } else {
+        item.counterStock = item.stockKg;
+      }
+    }
     if (batchCode) item.batchCode = String(batchCode).trim();
     if (batchNote) item.batchNote = String(batchNote).trim();
     item.batchDate = 'Just now';
     await item.save();
 
     const inventory = await Inventory.find({});
-    console.log(`[Inventory] ${isRefill ? 'Refilled' : 'Inwarded'} ${item.name}: +${added} kg → ${item.stockKg} kg`);
-    res.json({ success: true, message: `Added +${added} kg to ${item.name}. New total: ${item.stockKg} kg`, sweet: item, inventory });
+    console.log(`[Inventory] Stock updated for ${item.name}: ${item.stockKg} kg`);
+    res.json({ success: true, message: `Stock updated for ${item.name}. New total: ${item.stockKg} kg`, sweet: item, inventory });
   } catch (err) {
     console.error('[Inventory] Stock update error:', err);
     res.status(500).json({ success: false, message: 'Failed to update stock: ' + err.message });
@@ -237,6 +248,17 @@ export async function updateProduct(req, res) {
         item.pricePerKg = numPrice;
         item.unitPrice = numPrice;
       }
+      if (req.body.stockKg !== undefined && !isNaN(parseFloat(req.body.stockKg))) {
+        const val = Math.max(0, parseFloat(req.body.stockKg));
+        item.stockKg = val;
+        item.counterStock = val;
+      }
+      if (req.body.counterStock !== undefined && !isNaN(parseFloat(req.body.counterStock))) {
+        item.counterStock = Math.max(0, parseFloat(req.body.counterStock));
+      }
+      if (req.body.minThreshold !== undefined && !isNaN(parseFloat(req.body.minThreshold))) {
+        item.minThreshold = Math.max(0, parseFloat(req.body.minThreshold));
+      }
       await item.save();
     }
 
@@ -252,6 +274,12 @@ export async function updateProduct(req, res) {
         updated.price = numPrice;
         updated.unitPrice = numPrice;
         updated.pricePerKg = numPrice;
+      }
+      if (req.body.stockKg !== undefined && !isNaN(parseFloat(req.body.stockKg))) {
+        updated.stockKg = Math.max(0, parseFloat(req.body.stockKg));
+      }
+      if (req.body.minThreshold !== undefined && !isNaN(parseFloat(req.body.minThreshold))) {
+        updated.minThreshold = Math.max(0, parseFloat(req.body.minThreshold));
       }
       return updated;
     });

@@ -9,6 +9,7 @@ import RefillStockModal from '../Inventory/RefillStockModal';
 import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from './DeleteBillModal';
 import EditBillModal from './EditBillModal';
+import StockDetailsModal from '../Inventory/StockDetailsModal';
 import POSReduxStatusBar from './POSReduxStatusBar';
 import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
@@ -78,11 +79,22 @@ export default function BillingCounter() {
     // Expenses
     expenses = [],
     fetchExpenses,
+    // Real-time stock audit & sales logs
+    stockLogs = [],
   } = useCart();
 
+  const inventoryById = useMemo(() => {
+    const map = new Map();
+    (inventory || []).forEach((item) => {
+      if (item?.id) map.set(item.id, item);
+    });
+    return map;
+  }, [inventory]);
+
+  const [selectedStockDetailItem, setSelectedStockDetailItem] = useState(null); // Click & View Details item
   const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
   const [editingPriceItem, setEditingPriceItem] = useState(null); // { item, newPrice, reason }
-  const [editingMasterPriceItem, setEditingMasterPriceItem] = useState(null); // { id, name, price }
+  const [editingMasterPriceItem, setEditingMasterPriceItem] = useState(null); // { id, name, price, stockKg, minThreshold }
   const [editingSkuProduct, setEditingSkuProduct] = useState(null); // { id, name, skuCode }
   const [newSkuInput, setNewSkuInput] = useState('');
   const [skuError, setSkuError] = useState('');
@@ -227,32 +239,59 @@ export default function BillingCounter() {
   const isMeasurableItem = (sweet) => isKgItem(sweet) || isLitreItem(sweet);
 
   // Dedicated helpers for displaying quantity vs kg across inventory and POS
-  const getItemUnitDisplay = (prod) => resolveProductUnitDisplay(prod);
+  const getItemUnitDisplay = (prod) => {
+    if (!prod) return 'kg';
+    const cat = (prod.category || '').toLowerCase();
+    const u = (prod.unit || '').trim();
+    const id = (prod.id || '').toLowerCase();
+    if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.toLowerCase().includes('cup')) {
+      return '1 Cup';
+    }
+    if (cat === 'snacks' || id === 'vada' || u.toLowerCase().includes('pc')) {
+      return '1 Pc';
+    }
+    if (u.toLowerCase() === 'litre' || u.toLowerCase() === '1 litre') return '1 Litre';
+    if (u.toLowerCase() === 'pkt' || u.toLowerCase() === 'packet') return '1 Pkt';
+    return u || 'kg';
+  };
 
   const getItemStockDisplay = (prod, inventoryMap, rawInventory) => {
-    if (!prod) return '0';
-    const invItem = inventoryMap?.get(prod.id) || rawInventory?.find((i) => i.id === prod.id);
-    if (isProductUnlimitedStock(prod) || isProductUnlimitedStock(invItem)) {
-      return 'Unlimited';
+    if (!prod) return { display: '0', num: 0, status: 'out', toString() { return '0'; } };
+    const invItem = inventoryMap?.get(prod.id) || inventoryById.get(prod.id) || (rawInventory || inventory || []).find((i) => i.id === prod.id);
+    const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
+    if (isUnlim) {
+      return { display: '∞ Unlimited', num: Infinity, status: 'unlimited', toString() { return '∞ Unlimited'; } };
     }
-    const stock = invItem ? invItem.stockKg : (prod.stockKg ?? prod.stock ?? 0);
+    const stock = invItem ? (typeof invItem.stockKg === 'number' ? invItem.stockKg : (invItem.counterStock ?? 0)) : (prod.stockKg ?? prod.stock ?? 50);
+    const minThreshold = invItem?.minThreshold ?? prod.minThreshold ?? 10;
     const cat = (prod.category || '').toLowerCase();
     const u = (prod.unit || '').toLowerCase();
     const id = (prod.id || '').toLowerCase();
 
+    let unitLabel = 'kg';
     if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) {
-      return `${stock} Cups`;
+      unitLabel = 'Cups';
+    } else if (cat === 'snacks' || id === 'vada' || u.includes('pc')) {
+      unitLabel = 'Pcs';
+    } else if (u.includes('pkt')) {
+      unitLabel = 'Pkts';
+    } else if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') {
+      unitLabel = 'Litres';
     }
-    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) {
-      return `${stock} Pcs`;
-    }
-    if (u.includes('pkt')) {
-      return `${stock} Pkts`;
-    }
-    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') {
-      return `${stock} Litres`;
-    }
-    return `${stock} kg`;
+
+    let status = 'in';
+    if (stock <= 0) status = 'out';
+    else if (stock <= minThreshold) status = 'low';
+
+    return {
+      display: `${stock} ${unitLabel}`,
+      num: stock,
+      minThreshold,
+      status,
+      toString() {
+        return `${stock} ${unitLabel}`;
+      },
+    };
   };
 
   // Inline weight/volume popover state (popup inside each kg & litre row)
@@ -515,16 +554,21 @@ export default function BillingCounter() {
 
   const syncBillingHash = (hash) => {
     let target = hash;
-    if (user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin')) {
+    const isUnderAdmin = user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin');
+    if (isUnderAdmin) {
       if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
-      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/preorders';
-      else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/shift-bills';
-      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/preorders';
-      else if (hash.startsWith('#billing/inventory')) target = '#admin/inventory';
-      else if (hash.startsWith('#billing/expenses')) target = '#admin/expenses';
+      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/billing/preorders';
+      else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/billing/daily-sales';
+      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/billing/preorders';
+      else if (hash.startsWith('#billing/inventory')) target = '#admin/billing/inventory';
+      else if (hash.startsWith('#billing/expenses')) target = '#admin/billing/expenses';
     }
     if (window.location.hash !== target) {
-      window.location.hash = target;
+      try {
+        window.history.replaceState(null, '', target);
+      } catch {
+        window.location.hash = target;
+      }
     }
   };
 
@@ -535,36 +579,16 @@ export default function BillingCounter() {
       syncBillingHash(isAdminMode ? '#admin/billing' : '#billing');
       setMobileTab('catalog');
     } else if (newTab === 'pre-orders') {
-      if (isAdminMode) {
-        navigateTo('admin', 'preorders');
-      } else {
-        syncBillingHash('#billing/preorders');
-      }
+      syncBillingHash(isAdminMode ? '#admin/billing/preorders' : '#billing/preorders');
     } else if (newTab === 'my-bills' || newTab === 'daily-sales') {
-      if (isAdminMode) {
-        navigateTo('admin', 'shift-bills');
-      } else {
-        syncBillingHash('#billing/daily-sales');
-        handleRefreshShiftBills();
-      }
+      syncBillingHash(isAdminMode ? '#admin/billing/daily-sales' : '#billing/daily-sales');
+      handleRefreshShiftBills();
     } else if (newTab === 'online-orders') {
-      if (isAdminMode) {
-        navigateTo('admin', 'preorders');
-      } else {
-        syncBillingHash('#billing/preorders');
-      }
+      syncBillingHash(isAdminMode ? '#admin/billing/preorders' : '#billing/preorders');
     } else if (newTab === 'inventory') {
-      if (isAdminMode) {
-        navigateTo('admin', 'inventory');
-        return;
-      }
-      syncBillingHash('#billing/inventory');
+      syncBillingHash(isAdminMode ? '#admin/billing/inventory' : '#billing/inventory');
     } else if (newTab === 'expenses') {
-      if (isAdminMode) {
-        navigateTo('admin', 'expenses');
-      } else {
-        syncBillingHash('#billing/expenses');
-      }
+      syncBillingHash(isAdminMode ? '#admin/billing/expenses' : '#billing/expenses');
     }
   };
 
@@ -948,13 +972,6 @@ export default function BillingCounter() {
     setRefillTargetSweetId(itemId);
     setIsRefillOpen(true);
   };
-
-  // Index inventory once. The old render searched the full array for every
-  // visible product, then repeated that work in the table cells.
-  const inventoryById = useMemo(
-    () => new Map((inventory || []).map((item) => [item.id, item])),
-    [inventory]
-  );
 
   // Filtered inventory products matching all catalog items
   const filteredInventory = useMemo(() => {
@@ -1383,6 +1400,9 @@ export default function BillingCounter() {
     const tamilName = String(editingMasterPriceItem.tamilName || '').trim();
 
     if (!isNaN(num) && num > 0 && englishName) {
+      const stockKgVal = editingMasterPriceItem.stockKg !== undefined && editingMasterPriceItem.stockKg !== '' ? parseFloat(editingMasterPriceItem.stockKg) : undefined;
+      const minThresholdVal = editingMasterPriceItem.minThreshold !== undefined && editingMasterPriceItem.minThreshold !== '' ? parseFloat(editingMasterPriceItem.minThreshold) : undefined;
+
       await updateProductDetails(editingMasterPriceItem.id, {
         name: tamilName ? `${englishName} — ${tamilName}` : englishName,
         englishName,
@@ -1392,6 +1412,9 @@ export default function BillingCounter() {
         price: num,
         discountPercent: parseFloat(editingMasterPriceItem.discountPercent) || 0,
         isUnlimitedStock: Boolean(editingMasterPriceItem.isUnlimitedStock),
+        stockKg: !isNaN(stockKgVal) ? stockKgVal : undefined,
+        counterStock: !isNaN(stockKgVal) ? stockKgVal : undefined,
+        minThreshold: !isNaN(minThresholdVal) ? minThresholdVal : undefined,
       }, user);
     }
     setEditingMasterPriceItem(null);
@@ -1793,24 +1816,22 @@ export default function BillingCounter() {
         }
         onSelectSection={(sec) => {
           if (sec === 'admin-billing' || sec === 'pos-register') {
-            if (user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin')) {
-              syncBillingHash('#admin/billing');
-              handleSwitchTab('register');
-            } else {
-              handleSwitchTab('register');
-            }
+            handleSwitchTab('register');
           }
-          else if (sec === 'admin-preorders' || sec === 'pos-preorders') {
+          else if (sec === 'admin-preorders' || sec === 'pos-preorders' || sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') {
             handleSwitchTab('pre-orders');
           }
-          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue') {
-            navigateTo('admin', 'shift-bills');
+          else if (sec === 'admin-shift-bills' || sec === 'admin-daily-revenue' || sec === 'pos-bills' || sec === 'pos-daily-sales') {
+            handleSwitchTab('my-bills');
           }
-          else if (sec === 'admin-dispatch' || sec === 'admin-orders') {
-            handleSwitchTab('pre-orders');
+          else if (sec === 'admin-inventory' || sec === 'pos-inventory') {
+            handleSwitchTab('inventory');
           }
-          else if (sec === 'admin-inventory') {
-            navigateTo('admin', 'inventory');
+          else if (sec === 'pos-expenses' || sec === 'admin-expenses') {
+            handleSwitchTab('expenses');
+          }
+          else if (sec === 'company-stock' || sec === 'admin-company-stock' || sec === 'admin-manager') {
+            navigateTo('admin', 'company-stock');
           }
           else if (sec === 'admin-sales') {
             navigateTo('admin', 'sales');
@@ -1821,17 +1842,8 @@ export default function BillingCounter() {
           else if (sec === 'admin-recycle-bin') {
             navigateTo('admin', 'recycle-bin');
           }
-          else if (sec === 'pos-bills' || sec === 'pos-daily-sales') {
-            handleSwitchTab('my-bills');
-          }
-          else if (sec === 'pos-online') {
-            handleSwitchTab('online-orders');
-          }
-          else if (sec === 'pos-inventory') {
-            handleSwitchTab('inventory');
-          }
-          else if (sec === 'pos-expenses' || sec === 'admin-expenses') {
-            handleSwitchTab('expenses');
+          else if (sec === 'admin-staff') {
+            navigateTo('admin', 'staff');
           }
           else if (sec === 'storefront') {
             navigateTo('storefront');
@@ -1934,10 +1946,279 @@ export default function BillingCounter() {
           </button>
         </header>
 
+        {/* UNIVERSAL POS WORKSPACE NAVIGATION BAR */}
+        <nav
+          className="pos-universal-nav-strip"
+          aria-label="POS Counter Navigation"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '8px',
+            padding: '8px 16px',
+            background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
+            borderBottom: '1px solid #e2e8f0',
+            flexWrap: 'wrap',
+            zIndex: 30,
+            position: 'sticky',
+            top: 0,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px', maxWidth: '100%' }}>
+            {/* 1. POS Billing */}
+            <button
+              type="button"
+              id="pos-tab-register"
+              onClick={() => handleSwitchTab('register')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: posTab === 'register' ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                background: posTab === 'register' ? 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)' : '#ffffff',
+                color: posTab === 'register' ? '#ffffff' : '#334155',
+                boxShadow: posTab === 'register' ? '0 2px 8px rgba(37, 99, 235, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              <span>POS Billing</span>
+              {billItems.length > 0 && (
+                <span style={{
+                  padding: '2px 6px',
+                  borderRadius: '12px',
+                  background: posTab === 'register' ? 'rgba(255,255,255,0.25)' : '#dbeafe',
+                  color: posTab === 'register' ? '#fff' : '#1d4ed8',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                }}>
+                  {billItems.length}
+                </span>
+              )}
+            </button>
+
+            {/* 2. Stock Management */}
+            <button
+              type="button"
+              id="pos-tab-inventory"
+              onClick={() => handleSwitchTab('inventory')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: posTab === 'inventory' ? '1.5px solid #059669' : '1px solid #e2e8f0',
+                background: posTab === 'inventory' ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : '#ffffff',
+                color: posTab === 'inventory' ? '#ffffff' : '#334155',
+                boxShadow: posTab === 'inventory' ? '0 2px 8px rgba(5, 150, 105, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+              <span>Stock Management</span>
+              {lowStockCount > 0 && (
+                <span style={{
+                  padding: '1px 6px',
+                  borderRadius: '10px',
+                  background: posTab === 'inventory' ? '#fef2f2' : '#fee2e2',
+                  color: '#b91c1c',
+                  fontSize: '10px',
+                  fontWeight: 800,
+                }}>
+                  {lowStockCount} Low
+                </span>
+              )}
+            </button>
+
+            {/* 3. Shift Bills & Sales */}
+            <button
+              type="button"
+              id="pos-tab-bills"
+              onClick={() => handleSwitchTab('my-bills')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: (posTab === 'my-bills' || posTab === 'daily-sales') ? '1.5px solid #d97706' : '1px solid #e2e8f0',
+                background: (posTab === 'my-bills' || posTab === 'daily-sales') ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : '#ffffff',
+                color: (posTab === 'my-bills' || posTab === 'daily-sales') ? '#ffffff' : '#334155',
+                boxShadow: (posTab === 'my-bills' || posTab === 'daily-sales') ? '0 2px 8px rgba(217, 119, 6, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span>Shift Invoices</span>
+              <span style={{
+                padding: '2px 6px',
+                borderRadius: '12px',
+                background: (posTab === 'my-bills' || posTab === 'daily-sales') ? 'rgba(255,255,255,0.25)' : '#fef3c7',
+                color: (posTab === 'my-bills' || posTab === 'daily-sales') ? '#fff' : '#b45309',
+                fontSize: '11px',
+                fontWeight: 800,
+              }}>
+                {myShiftBills.length}
+              </span>
+            </button>
+
+            {/* 4. Pre-Orders */}
+            <button
+              type="button"
+              id="pos-tab-preorders"
+              onClick={() => handleSwitchTab('pre-orders')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: posTab === 'pre-orders' ? '1.5px solid #8b5cf6' : '1px solid #e2e8f0',
+                background: posTab === 'pre-orders' ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : '#ffffff',
+                color: posTab === 'pre-orders' ? '#ffffff' : '#334155',
+                boxShadow: posTab === 'pre-orders' ? '0 2px 8px rgba(139, 92, 246, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+              <span>Pre-Orders</span>
+              {pendingPreOrdersList.length > 0 && (
+                <span style={{
+                  padding: '2px 7px',
+                  borderRadius: '12px',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 800,
+                }}>
+                  {pendingPreOrdersList.length} New
+                </span>
+              )}
+            </button>
+
+            {/* 5. Expenses */}
+            <button
+              type="button"
+              id="pos-tab-expenses"
+              onClick={() => handleSwitchTab('expenses')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                border: posTab === 'expenses' ? '1.5px solid #0891b2' : '1px solid #e2e8f0',
+                background: posTab === 'expenses' ? 'linear-gradient(135deg, #0891b2 0%, #0e7490 100%)' : '#ffffff',
+                color: posTab === 'expenses' ? '#ffffff' : '#334155',
+                boxShadow: posTab === 'expenses' ? '0 2px 8px rgba(8, 145, 178, 0.25)' : 'none',
+                transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <line x1="2" y1="10" x2="22" y2="10" />
+                <circle cx="7" cy="15" r="1" /><line x1="12" y1="15" x2="17" y2="15" />
+              </svg>
+              <span>Expenses</span>
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+            {user?.role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => navigateTo('admin', 'inventory')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#f8fafc',
+                  color: '#475569',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+                title="Switch to full Admin Portal"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5h-2v-2h2zm0-4h-2V7h2z"/>
+                </svg>
+                <span>Admin Portal</span>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => navigateTo('storefront')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                border: '1px solid #e2e8f0',
+                background: '#ffffff',
+                color: '#64748b',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              title="Visit Customer Storefront"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/>
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              </svg>
+              <span>Storefront</span>
+            </button>
+          </div>
+        </nav>
+
         {posTab === 'register' && (
           <POSReduxStatusBar
-            onOpenInventory={() => setPosTab('inventory')}
-            onOpenPreOrders={() => setPosTab('pre-orders')}
+            onOpenInventory={() => handleSwitchTab('inventory')}
+            onOpenPreOrders={() => handleSwitchTab('pre-orders')}
           />
         )}
         <ReduxToast />
@@ -2234,7 +2515,7 @@ export default function BillingCounter() {
                     title="Filter to view only items currently selected in the bill"
                   >
                     <span className="selected-mode-pulse-dot"></span>
-                    ★ Selected Mode ({billItems.length})
+                    ★ Selected ({billItems.length})
                   </button>
                 )}
                 {CATEGORIES.map((cat) => (
@@ -2349,13 +2630,6 @@ export default function BillingCounter() {
                           <div className="pos-list-title-wrap">
                             <span className="pos-item-num-badge" title="SKU Code">{sweet.skuCode || itemNum}</span>
                             <h4 className="pos-list-title">{sweet.name}</h4>
-                            {isItemInBill && (
-                              <span className="pos-selected-mode-pill" title={`${sweet.name} is in Selected Mode (${totalQtyInBill} in bill)`}>
-                                <span className="pos-selected-dot"></span>
-                                <span className="pos-selected-label">Selected Mode</span>
-                                <span className="pos-selected-count-badge">{totalQtyInBill}</span>
-                              </span>
-                            )}
                             <button
                               type="button"
                               className="btn-pos-quick-off"
@@ -2783,11 +3057,14 @@ export default function BillingCounter() {
                   </div>
                 ) : (
                   <div className="pos-items-table">
-                    {billItems.map((item) => {
+                    {billItems.map((item, idx) => {
                       const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
                       const itemSku = item.skuCode || sweetObj?.skuCode || (item.itemNumber ? String(item.itemNumber) : (sweetObj?.itemNumber ? String(sweetObj.itemNumber) : ''));
                       return (
                         <div key={`${item.id}-${item.weight}`} className="pos-bill-line">
+                          <span className="pos-bill-sno" title={`S.No: ${idx + 1}`}>
+                            {idx + 1}
+                          </span>
                           <div className="pos-line-info">
                             <div className="pos-line-name-wrap">
                               <span className="pos-line-name">{item.name}</span>
@@ -4416,14 +4693,15 @@ export default function BillingCounter() {
                 <table className="inventory-table">
                   <thead>
                     <tr>
-                      <th>SKU Code</th>
+                      <th style={{ width: '80px' }}>SKU Code</th>
                       <th>PRODUCT DETAILS</th>
                       <th>CATEGORY</th>
                       <th>BILLING UNIT</th>
+                      <th style={{ minWidth: '140px' }}>CURRENT STOCK</th>
                       <th>SELLING PRICE</th>
                       <th>DISCOUNT (%)</th>
                       <th>COUNTER AVAILABILITY</th>
-                      <th>ACTIONS</th>
+                      <th style={{ minWidth: '220px', textAlign: 'center' }}>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4493,16 +4771,63 @@ export default function BillingCounter() {
                             </span>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                              <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
-                                {getItemUnitDisplay(prod)}
-                              </span>
-                              {isProductUnlimitedStock(prod) && (
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '10px', fontWeight: 700, color: '#047857', background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '1px 6px', borderRadius: '4px', width: 'fit-content' }}>
-                                  ∞ Unlimited
-                                </span>
-                              )}
-                            </div>
+                            <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 600 }}>
+                              {getItemUnitDisplay(prod)}
+                            </span>
+                          </td>
+
+                          {/* CURRENT STOCK / QUANTITY */}
+                          <td>
+                            {(() => {
+                              const st = getItemStockDisplay(prod);
+                              if (st.status === 'unlimited') {
+                                return (
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '3px 8px',
+                                    borderRadius: '6px',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    background: '#ecfdf5',
+                                    color: '#047857',
+                                    border: '1px solid #a7f3d0'
+                                  }}>
+                                    ∞ Unlimited
+                                  </span>
+                                );
+                              }
+                              const badgeStyle = st.status === 'out'
+                                ? { bg: '#fef2f2', text: '#b91c1c', border: '#fecaca', label: 'Out of Stock' }
+                                : st.status === 'low'
+                                ? { bg: '#fffbeb', text: '#b45309', border: '#fde68a', label: 'Low Stock' }
+                                : { bg: '#f0fdf4', text: '#15803d', border: '#bbf7d0', label: 'In Stock' };
+
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                  <strong style={{ fontSize: '14px', color: '#0f172a', fontFamily: 'JetBrains Mono, monospace' }}>
+                                    {st.display}
+                                  </strong>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px',
+                                    padding: '1px 6px',
+                                    borderRadius: '4px',
+                                    fontSize: '10px',
+                                    fontWeight: 700,
+                                    width: 'fit-content',
+                                    background: badgeStyle.bg,
+                                    color: badgeStyle.text,
+                                    border: `1px solid ${badgeStyle.border}`
+                                  }}>
+                                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: badgeStyle.text }} />
+                                    {badgeStyle.label}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </td>
 
                           <td>
@@ -4514,6 +4839,9 @@ export default function BillingCounter() {
                                 type="button"
                                 className="btn-inline-price"
                                 onClick={() => {
+                                  const liveInv = inventoryById.get(prod.id) || (inventory || []).find((i) => i.id === prod.id);
+                                  const stockVal = liveInv?.stockKg ?? liveInv?.counterStock ?? 50;
+                                  const thresholdVal = liveInv?.minThreshold ?? 10;
                                   setEditingMasterPriceItem({
                                     id: prod.id,
                                     name: prod.name,
@@ -4524,6 +4852,8 @@ export default function BillingCounter() {
                                     price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
                                     discountPercent: String(prod.discountPercent || 0),
                                     isUnlimitedStock: isProductUnlimitedStock(prod),
+                                    stockKg: String(stockVal),
+                                    minThreshold: String(thresholdVal),
                                   });
                                 }}
                                 title="Edit product details"
@@ -4586,18 +4916,109 @@ export default function BillingCounter() {
                             </button>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              {/* 1. CLICK AND VIEW DETAILS BUTTON */}
+                              <button
+                                type="button"
+                                className="btn-view-stock-details"
+                                onClick={() => setSelectedStockDetailItem(prod)}
+                                title="View stock history, quantity sold, time, and movement audit"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  background: '#eff6ff',
+                                  color: '#1d4ed8',
+                                  border: '1px solid #bfdbfe',
+                                  padding: '5px 10px',
+                                  borderRadius: '7px',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#dbeafe'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <span>View Details</span>
+                              </button>
+
+                              {/* 2. EDIT PRODUCT BUTTON */}
+                              <button
+                                type="button"
+                                className="btn-edit-stock-item"
+                                onClick={() => {
+                                  const liveInv = inventoryById.get(prod.id) || (inventory || []).find((i) => i.id === prod.id);
+                                  const stockVal = liveInv?.stockKg ?? liveInv?.counterStock ?? 50;
+                                  const thresholdVal = liveInv?.minThreshold ?? 10;
+                                  setEditingMasterPriceItem({
+                                    id: prod.id,
+                                    name: prod.name,
+                                    englishName: prod.englishName || (prod.name || '').split('—')[0].trim(),
+                                    tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
+                                    category: prod.category || 'sweets',
+                                    unit: getItemUnitDisplay(prod),
+                                    price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                                    discountPercent: String(prod.discountPercent || 0),
+                                    isUnlimitedStock: isProductUnlimitedStock(prod),
+                                    stockKg: String(stockVal),
+                                    minThreshold: String(thresholdVal),
+                                  });
+                                }}
+                                title="Edit product price, stock quantity, and threshold"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  background: '#f8fafc',
+                                  color: '#334155',
+                                  border: '1px solid #cbd5e1',
+                                  padding: '5px 9px',
+                                  borderRadius: '7px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#f1f5f9'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                </svg>
+                                <span>Edit</span>
+                              </button>
+
+                              {/* 3. DELETE BUTTON */}
                               <button
                                 type="button"
                                 className="btn-delete-prod"
                                 onClick={() => setDeleteConfirmItem({ id: prod.id, name: prod.name })}
                                 title="Delete Product from Catalog"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  background: '#fff1f2',
+                                  color: '#e11d48',
+                                  border: '1px solid #fecdd3',
+                                  padding: '5px 8px',
+                                  borderRadius: '7px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = '#ffe4e6'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = '#fff1f2'; }}
                               >
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                                   <polyline points="3 6 5 6 21 6" />
                                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                 </svg>
-                                Delete
+                                <span>Delete</span>
                               </button>
                             </div>
                           </td>
@@ -4948,6 +5369,44 @@ export default function BillingCounter() {
                 </div>
               </div>
 
+              {/* Stock Quantity & Threshold Setting */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    Stock Available ({editingMasterPriceItem.unit || 'kg'})
+                  </label>
+                  <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="custom-price-input"
+                      value={editingMasterPriceItem.stockKg ?? ''}
+                      onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, stockKg: e.target.value })}
+                      placeholder="e.g. 50"
+                      disabled={Boolean(editingMasterPriceItem.isUnlimitedStock)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                    Low Stock Alert Min ({editingMasterPriceItem.unit || 'kg'})
+                  </label>
+                  <div className="comp-input-wrap" style={{ marginTop: '8px' }}>
+                    <input
+                      type="number"
+                      step="any"
+                      min="0"
+                      className="custom-price-input"
+                      value={editingMasterPriceItem.minThreshold ?? '10'}
+                      onChange={(e) => setEditingMasterPriceItem({ ...editingMasterPriceItem, minThreshold: e.target.value })}
+                      placeholder="10"
+                      disabled={Boolean(editingMasterPriceItem.isUnlimitedStock)}
+                    />
+                  </div>
+                </div>
+              </div>
+
               {/* Unlimited Stock Toggle in Edit Product Modal */}
               <div style={{ padding: '10px 14px', background: editingMasterPriceItem.isUnlimitedStock ? '#f0fdf4' : '#f8fafc', borderRadius: '10px', border: editingMasterPriceItem.isUnlimitedStock ? '1px solid #bbf7d0' : '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
                 <div>
@@ -4989,6 +5448,41 @@ export default function BillingCounter() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Click & View Stock Details Modal */}
+      {selectedStockDetailItem && (
+        <StockDetailsModal
+          isOpen={Boolean(selectedStockDetailItem)}
+          onClose={() => setSelectedStockDetailItem(null)}
+          product={selectedStockDetailItem}
+          stockLogs={stockLogs}
+          bills={bills}
+          onEdit={(prod) => {
+            setSelectedStockDetailItem(null);
+            const liveInv = inventoryById.get(prod.id) || (inventory || []).find((i) => i.id === prod.id);
+            const stockVal = liveInv?.stockKg ?? liveInv?.counterStock ?? 50;
+            const thresholdVal = liveInv?.minThreshold ?? 10;
+            setEditingMasterPriceItem({
+              id: prod.id,
+              name: prod.name,
+              englishName: prod.englishName || (prod.name || '').split('—')[0].trim(),
+              tamilName: prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : ''),
+              category: prod.category || 'sweets',
+              unit: getItemUnitDisplay(prod),
+              price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+              discountPercent: String(prod.discountPercent || 0),
+              isUnlimitedStock: isProductUnlimitedStock(prod),
+              stockKg: String(stockVal),
+              minThreshold: String(thresholdVal),
+            });
+          }}
+          onRefill={(prod) => {
+            setSelectedStockDetailItem(null);
+            setRefillTargetSweetId(prod.id);
+            setIsRefillOpen(true);
+          }}
+        />
       )}
 
       {/* Delete Product Confirmation Modal */}

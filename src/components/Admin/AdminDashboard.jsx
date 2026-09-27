@@ -13,6 +13,7 @@ import CompanyManagerDashboard from './CompanyManagerDashboard';
 import CatalogSettingsModal from './CatalogSettingsModal';
 import ExpensesPage from './ExpensesPage';
 import ResetBillSequenceModal from './ResetBillSequenceModal';
+import StockDetailsModal from '../Inventory/StockDetailsModal';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
 import { isProductUnlimitedStock } from '../../utils/unitConfig';
@@ -64,6 +65,8 @@ export default function AdminDashboard() {
     // Expenses
     expenses = [],
     fetchExpenses,
+    // Stock Audit Logs
+    stockLogs = [],
   } = useCart();
 
   const resolveAdminTabFromHash = () => {
@@ -108,6 +111,7 @@ export default function AdminDashboard() {
   const [billToPurge, setBillToPurge] = useState(null);
   const [editBillModalItem, setEditBillModalItem] = useState(null);
   const [activeActionMenuId, setActiveActionMenuId] = useState(null);
+  const [selectedStockDetailItem, setSelectedStockDetailItem] = useState(null);
 
   useEffect(() => {
     const handleDocClick = () => setActiveActionMenuId(null);
@@ -640,29 +644,36 @@ export default function AdminDashboard() {
   };
 
   const getItemStockDisplay = (prod) => {
-    if (!prod) return '0';
+    if (!prod) return { display: '0', num: 0, minThreshold: 5, status: 'out_of_stock' };
     const invItem = (inventory || []).find((i) => i.id === prod.id);
     if (isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem))) {
-      return 'Unlimited (∞)';
+      return { display: 'Unlimited (∞)', num: 999999, minThreshold: 0, status: 'unlimited' };
     }
-    const stock = invItem ? invItem.stockKg : (prod.stockKg ?? prod.stock ?? 0);
+    const stock = Number(invItem ? (invItem.stockKg ?? invItem.counterStock ?? 0) : (prod.stockKg ?? prod.counterStock ?? prod.stock ?? 0));
+    const minThreshold = Number(invItem?.minThreshold ?? prod.minThreshold ?? 5);
     const cat = (prod.category || '').toLowerCase();
     const u = (prod.unit || '').toLowerCase();
     const id = (prod.id || '').toLowerCase();
 
+    let display = `${stock} kg`;
     if (cat === 'beverages' || id.includes('tea') || id.includes('coffee') || id.includes('milk') || id.includes('boost') || id.includes('horlicks') || u.includes('cup')) {
-      return `${stock} Cups`;
+      display = `${stock} Cups`;
+    } else if (cat === 'snacks' || id === 'vada' || u.includes('pc')) {
+      display = `${stock} Pcs`;
+    } else if (u.includes('pkt')) {
+      display = `${stock} Pkts`;
+    } else if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') {
+      display = `${stock} Litres`;
     }
-    if (cat === 'snacks' || id === 'vada' || u.includes('pc')) {
-      return `${stock} Pcs`;
+
+    let status = 'in_stock';
+    if (stock <= 0) {
+      status = 'out_of_stock';
+    } else if (stock <= minThreshold) {
+      status = 'low_stock';
     }
-    if (u.includes('pkt')) {
-      return `${stock} Pkts`;
-    }
-    if (u.includes('bottle') || u.includes('litre') || u.includes('liter') || u === 'l') {
-      return `${stock} Litres`;
-    }
-    return `${stock} kg`;
+
+    return { display, num: stock, minThreshold, status };
   };
 
   // Filtered Bills for 30-Day Recycle Bin Tab
@@ -1467,6 +1478,7 @@ export default function AdminDashboard() {
                       <th>PRODUCT DETAILS</th>
                       <th>CATEGORY</th>
                       <th>BILLING UNIT</th>
+                      <th style={{ minWidth: '140px' }}>CURRENT STOCK</th>
                       <th>SELLING PRICE</th>
                       <th>DISCOUNT (%)</th>
                       <th>COUNTER AVAILABILITY</th>
@@ -1580,38 +1592,47 @@ export default function AdminDashboard() {
                             </div>
                           </td>
 
+                          {/* CURRENT STOCK */}
+                          <td>
+                            {(() => {
+                              const stockInfo = getItemStockDisplay(prod);
+                              const isUnlim = stockInfo.status === 'unlimited';
+                              const isLow = stockInfo.status === 'low_stock';
+                              const isOut = stockInfo.status === 'out_of_stock';
+                              return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                  <strong style={{
+                                    fontSize: '13.5px',
+                                    color: isOut ? '#dc2626' : isLow ? '#d97706' : '#0f172a',
+                                    fontFamily: 'monospace',
+                                    fontWeight: 800,
+                                  }}>
+                                    {stockInfo.display}
+                                  </strong>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    width: 'fit-content',
+                                    fontSize: '10.5px',
+                                    fontWeight: 700,
+                                    padding: '1px 6px',
+                                    borderRadius: '4px',
+                                    background: isUnlim ? '#e0f2fe' : isOut ? '#fee2e2' : isLow ? '#fef3c7' : '#dcfce7',
+                                    color: isUnlim ? '#0284c7' : isOut ? '#b91c1c' : isLow ? '#b45309' : '#15803d',
+                                    border: `1px solid ${isUnlim ? '#bae6fd' : isOut ? '#fecaca' : isLow ? '#fde68a' : '#bbf7d0'}`,
+                                  }}>
+                                    {isUnlim ? '∞ Unlimited' : isOut ? '● Out of Stock' : isLow ? '⚠ Low Stock' : '✓ In Stock'}
+                                  </span>
+                                </div>
+                              );
+                            })()}
+                          </td>
+
                           <td>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
                               <strong style={{ fontSize: '15px', color: '#0f172a' }}>
                                 ₹{prod.originalPrice ?? prod.price ?? prod.unitPrice ?? 0}
                               </strong>
-                              <button
-                                type="button"
-                                className="btn-inline-price"
-                                onClick={() => {
-                                  const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
-                                  const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
-                                  const invItem = (inventory || []).find((i) => i.id === prod.id);
-                                  const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
-                                  setEditingPriceProduct(prod);
-                                  setNewPriceInput(String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''));
-                                  setProductEditForm({
-                                    nameEn: englishName,
-                                    nameTa: tamilName,
-                                    category: prod.category || 'sweets',
-                                    unit: prod.unit || 'kg',
-                                    price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
-                                    discountPercent: String(prod.discountPercent || 0),
-                                    isUnlimitedStock: Boolean(isUnlim),
-                                  });
-                                }}
-                                title="Edit product details"
-                              >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                                </svg>
-                                Edit Product
-                              </button>
                             </div>
                           </td>
 
@@ -1665,7 +1686,78 @@ export default function AdminDashboard() {
                             </button>
                           </td>
                           <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedStockDetailItem(prod)}
+                                title="Click & View Stock Sold Details, Timestamps & Movement History"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '5px',
+                                  padding: '5px 10px',
+                                  background: '#f8fafc',
+                                  color: '#0f172a',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '6px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                  <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                View Details
+                              </button>
+
+                              <button
+                                type="button"
+                                className="btn-inline-price"
+                                onClick={() => {
+                                  const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
+                                  const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
+                                  const invItem = (inventory || []).find((i) => i.id === prod.id);
+                                  const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
+                                  const currentStockKg = invItem ? (invItem.stockKg ?? invItem.counterStock ?? 0) : (prod.stockKg ?? prod.counterStock ?? prod.stock ?? 0);
+                                  const currentMinThreshold = invItem?.minThreshold ?? prod.minThreshold ?? 5;
+                                  setEditingPriceProduct(prod);
+                                  setNewPriceInput(String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''));
+                                  setProductEditForm({
+                                    nameEn: englishName,
+                                    nameTa: tamilName,
+                                    category: prod.category || 'sweets',
+                                    unit: prod.unit || 'kg',
+                                    price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                                    discountPercent: String(prod.discountPercent || 0),
+                                    isUnlimitedStock: Boolean(isUnlim),
+                                    stockKg: String(currentStockKg),
+                                    minThreshold: String(currentMinThreshold),
+                                  });
+                                }}
+                                title="Edit Product details & stock"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  padding: '5px 10px',
+                                  background: '#f1f5f9',
+                                  color: '#334155',
+                                  border: '1px solid #cbd5e1',
+                                  borderRadius: '6px',
+                                  fontSize: '11.5px',
+                                  fontWeight: 600,
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                </svg>
+                                Edit
+                              </button>
+
                               <button
                                 type="button"
                                 className="btn-delete-prod"
@@ -3506,6 +3598,9 @@ export default function AdminDashboard() {
                     price: productEditForm.price,
                     discountPercent: parseFloat(productEditForm.discountPercent) || 0,
                     isUnlimitedStock: Boolean(productEditForm.isUnlimitedStock),
+                    stockKg: parseFloat(productEditForm.stockKg) || 0,
+                    counterStock: parseFloat(productEditForm.stockKg) || 0,
+                    minThreshold: parseFloat(productEditForm.minThreshold) || 5,
                   }, user);
                   setEditingPriceProduct(null);
                 }}
@@ -3626,6 +3721,39 @@ export default function AdminDashboard() {
                       <span style={{ fontSize: '11px', color: '#64748b' }}>0% = Standard Rate</span>
                     </div>
                   </div>
+
+                  {!productEditForm.isUnlimitedStock && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                          Stock Available ({productEditForm.unit || 'kg'})
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={productEditForm.stockKg ?? ''}
+                          onChange={(e) => setProductEditForm((prev) => ({ ...prev, stockKg: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: '15px', fontWeight: 700, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                          placeholder="Available quantity"
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#334155', marginBottom: '6px' }}>
+                          Low Stock Alert Min ({productEditForm.unit || 'kg'})
+                        </label>
+                        <input
+                          type="number"
+                          step="any"
+                          min="0"
+                          value={productEditForm.minThreshold ?? 5}
+                          onChange={(e) => setProductEditForm((prev) => ({ ...prev, minThreshold: e.target.value }))}
+                          style={{ width: '100%', padding: '10px 12px', fontSize: '15px', fontWeight: 700, color: '#0f172a', border: '1px solid #cbd5e1', borderRadius: '8px' }}
+                          placeholder="Alert threshold (e.g. 5)"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   <div style={{
                     padding: '10px 14px',
@@ -4370,6 +4498,61 @@ export default function AdminDashboard() {
           isOpen={isCatalogSettingsOpen}
           onClose={() => setIsCatalogSettingsOpen(false)}
         />
+
+        {/* Stock Details & Sold Analysis Modal */}
+        {selectedStockDetailItem && (
+          <StockDetailsModal
+            product={selectedStockDetailItem}
+            isOpen={!!selectedStockDetailItem}
+            onClose={() => setSelectedStockDetailItem(null)}
+            stockLogs={stockLogs}
+            inventory={inventory}
+            onRefillStock={(prod) => {
+              setSelectedStockDetailItem(null);
+              const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
+              const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
+              const invItem = (inventory || []).find((i) => i.id === prod.id);
+              const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
+              const currentStockKg = invItem ? (invItem.stockKg ?? invItem.counterStock ?? 0) : (prod.stockKg ?? prod.counterStock ?? prod.stock ?? 0);
+              const currentMinThreshold = invItem?.minThreshold ?? prod.minThreshold ?? 5;
+              setEditingPriceProduct(prod);
+              setNewPriceInput(String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''));
+              setProductEditForm({
+                nameEn: englishName,
+                nameTa: tamilName,
+                category: prod.category || 'sweets',
+                unit: prod.unit || 'kg',
+                price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                discountPercent: String(prod.discountPercent || 0),
+                isUnlimitedStock: Boolean(isUnlim),
+                stockKg: String(currentStockKg),
+                minThreshold: String(currentMinThreshold),
+              });
+            }}
+            onEditProduct={(prod) => {
+              setSelectedStockDetailItem(null);
+              const englishName = prod.englishName || (prod.name || '').split('—')[0].trim();
+              const tamilName = prod.tamilName || ((prod.name || '').includes('—') ? (prod.name || '').split('—')[1].trim() : '');
+              const invItem = (inventory || []).find((i) => i.id === prod.id);
+              const isUnlim = isProductUnlimitedStock(prod) || (invItem && isProductUnlimitedStock(invItem));
+              const currentStockKg = invItem ? (invItem.stockKg ?? invItem.counterStock ?? 0) : (prod.stockKg ?? prod.counterStock ?? prod.stock ?? 0);
+              const currentMinThreshold = invItem?.minThreshold ?? prod.minThreshold ?? 5;
+              setEditingPriceProduct(prod);
+              setNewPriceInput(String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''));
+              setProductEditForm({
+                nameEn: englishName,
+                nameTa: tamilName,
+                category: prod.category || 'sweets',
+                unit: prod.unit || 'kg',
+                price: String(prod.originalPrice ?? prod.price ?? prod.unitPrice ?? ''),
+                discountPercent: String(prod.discountPercent || 0),
+                isUnlimitedStock: Boolean(isUnlim),
+                stockKg: String(currentStockKg),
+                minThreshold: String(currentMinThreshold),
+              });
+            }}
+          />
+        )}
       </main>
       </div>
     </div>
