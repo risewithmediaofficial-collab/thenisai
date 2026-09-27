@@ -9831,15 +9831,18 @@ time, .hours {
    DEDICATED FULL-PAGE SHIFT INVOICES LEDGER
    ========================================================= */
 .pos-shift-ledger {
-  flex: 1 1 0%;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 16px 24px 12px;
+  padding: 16px 24px 20px;
   background: #F8FAFC;
-  overflow: hidden;
+  overflow-y: auto !important; /* Outline scroll */
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   min-height: 0;
-  height: 100%;
+  height: auto;
   max-height: 100%;
   width: 100%;
   box-sizing: border-box;
@@ -10150,8 +10153,9 @@ time, .hours {
   border-radius: 12px;
   border: 1px solid #E2E8F0;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow-x: auto !important;
+  overflow-y: auto !important; /* Inline scroll for bills */
+  max-height: 610px !important; /* Shows up to 10 bills; above 10 bills inline scroll active */
   width: 100%;
   box-sizing: border-box;
   scrollbar-width: thin;
@@ -24054,7 +24058,6 @@ select.stock-form__input {
 /* ── 2. PAGE CONTAINERS & ALL TAB SECTIONS: Strict Flex Column with Zero Viewport Overflow ── */
 .admin-container,
 .pos-inventory-page,
-.pos-shift-ledger,
 .pos-online-page,
 .pos-expenses-page,
 .admin-container > .tab-content,
@@ -24080,6 +24083,22 @@ section.tab-content,
   flex-direction: column !important;
   overflow: hidden !important;
   box-sizing: border-box !important;
+}
+
+/* Shift Invoices Ledger: Outline scroll enabled */
+.pos-shift-ledger,
+.billing-pos-root .pos-shift-ledger {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow-y: auto !important; /* Outline scroll */
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 .admin-container {
@@ -24246,15 +24265,10 @@ section.tab-content,
 .admin-content-area .orders-cards-list,
 .admin-content-area .activity-audit-table-wrap,
 .billing-pos-root .inventory-table-wrap,
-.billing-pos-root .shift-table-card,
-.billing-pos-root .shift-table-wrap,
-.billing-pos-root .shift-invoices-table-wrap,
 .billing-pos-root .online-orders-list,
 .billing-pos-root .pos-online-table-wrap,
 .company-stock-table-wrap,
 .expenses-table-wrap,
-.shift-table-card,
-.shift-table-wrap,
 .inventory-table-wrap {
   flex: 1 1 0% !important;
   min-height: 0 !important;
@@ -24269,6 +24283,33 @@ section.tab-content,
   border: 1.5px solid #cbd5e1 !important;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
   position: relative !important;
+}
+
+/* Shift Invoices Table: Inline scroll up to 10 bills */
+.shift-table-card,
+.billing-pos-root .shift-table-card {
+  flex: 0 0 auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: 610px !important; /* Shows up to 10 bills; above 10 bills inline scroll active */
+  overflow-y: auto !important; /* Inline scroll */
+  overflow-x: auto !important;
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05) !important;
+  position: relative !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #94A3B8 #F1F5F9 !important;
+}
+
+.shift-table-wrap,
+.billing-pos-root .shift-table-wrap {
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
 }
 
 .company-stock-table-card,

@@ -3636,7 +3636,7 @@ export default function BillingCounter() {
 
         {/* PAGE 2: SHIFT INVOICES LEDGER */}
         {(posTab === 'my-bills' || posTab === 'daily-sales') && (
-          <main className="pos-shift-ledger" data-lenis-prevent="true">
+          <main className="pos-shift-ledger" data-lenis-prevent="true" style={{ overflowY: 'auto', overflowX: 'hidden' }}>
             <div className="shift-ledger-header">
               <div className="shift-header-left">
                 <span className="shift-eyebrow">TERMINAL SHIFT REPORT</span>
@@ -3874,13 +3874,24 @@ export default function BillingCounter() {
             </div>
 
             {/* Invoices List */}
-            <div className="shift-table-wrap">
+            <div className="shift-table-wrap" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 2px', fontSize: '12px', color: '#64748b' }}>
+                <span>
+                  Showing <strong>{filteredShiftBills.length}</strong> {filteredShiftBills.length === 1 ? 'invoice' : 'invoices'}
+                  {filteredShiftBills.length > 10 ? ' · (Scroll inline to view all 10+ bills)' : ''}
+                </span>
+                {filteredShiftBills.length > 10 && (
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '2px 8px', borderRadius: '12px', border: '1px solid #fde68a' }}>
+                    <span>↕</span> Inline Scroll Active (Up to 10 bills view)
+                  </span>
+                )}
+              </div>
               {filteredShiftBills.length === 0 ? (
                 <div className="shift-empty-box">
                   <p>No invoices match the current search or payment filter.</p>
                 </div>
               ) : (
-                <div className="shift-table-card">
+                <div className="shift-table-card" style={{ maxHeight: '610px', overflowY: 'auto', overflowX: 'auto' }}>
                   <table className="shift-invoices-table">
                     <thead>
                       <tr>
