@@ -7303,13 +7303,14 @@ time, .hours {
 
 /* Customer Row - Permanently Fixed right under Bill Header, Never Scrolls */
 .pos-cust-row {
+  position: relative;
   flex-shrink: 0;
   display: flex;
   gap: 8px;
   padding: 10px 20px;
   background: #F8FAFC;
   border-bottom: 1px solid #E2E8F0;
-  z-index: 10;
+  z-index: 25;
 }
 
 .cust-input-wrap {
@@ -7317,6 +7318,10 @@ time, .hours {
   display: flex;
   align-items: center;
   flex: 1.2;
+}
+
+.cust-input-wrap.cust-name-wrap {
+  flex: 1;
 }
 
 .input-prefix {
@@ -7337,19 +7342,195 @@ time, .hours {
   font-size: 0.84rem;
   color: #0F172A;
   outline: none;
+  transition: all 0.15s ease;
 }
 
 .cust-input.phone {
   padding-left: 54px;
+  padding-right: 28px;
 }
 
 .cust-input.name {
-  flex: 1;
+  width: 100%;
+  padding-right: 28px;
 }
 
 .cust-input:focus {
   border-color: #D97706;
   box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
+}
+
+.cust-field-clear-btn {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  z-index: 2;
+  transition: color 0.15s ease;
+}
+
+.cust-field-clear-btn:hover {
+  color: #DC2626;
+}
+
+/* Customer Suggestions Dropdown (1st digits or last 4 digits matching) */
+.pos-customer-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 20px;
+  right: 20px;
+  z-index: 200;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.22), 0 8px 16px -6px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  animation: fadeInCustDropdown 0.15s ease-out;
+}
+
+@keyframes fadeInCustDropdown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pos-cust-suggestions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 14px;
+  background: #F8FAFC;
+  border-bottom: 1px solid #E2E8F0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748B;
+  letter-spacing: 0.05em;
+}
+
+.cust-sug-nav-hint {
+  font-size: 0.68rem;
+  color: #94A3B8;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+.pos-cust-suggestions-list {
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.pos-cust-suggestion-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.15s ease;
+}
+
+.pos-cust-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.pos-cust-suggestion-item:hover,
+.pos-cust-suggestion-item.is-active {
+  background: #FEF3C7;
+}
+
+.cust-sug-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 5px rgba(217, 119, 6, 0.25);
+}
+
+.cust-sug-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cust-sug-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cust-sug-name {
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: #0F172A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cust-repeat-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #B45309;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  padding: 1px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.cust-sug-phone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cust-sug-phone {
+  font-size: 0.78rem;
+  font-family: monospace;
+  font-weight: 600;
+  color: #475569;
+}
+
+.cust-match-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.cust-match-pill.lastDigits {
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #86EFAC;
+}
+
+.cust-match-pill.firstDigits {
+  background: #DBEAFE;
+  color: #1D4ED8;
+  border: 1px solid #93C5FD;
+}
+
+.cust-match-pill.name,
+.cust-match-pill.containsDigits {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
 }
 
 /* Active Bill Items List: Inline Scrollable (Items scroll internally; Header & Totals stay pinned) */

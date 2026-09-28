@@ -18,6 +18,14 @@ import ExpensesPage from '../Admin/ExpensesPage';
 import api from '../../utils/api';
 import { getNextInvoiceNumber, parseInvoiceNumber } from '../../utils/invoiceNumber';
 import {
+  getSavedCustomers,
+  saveCustomerToDirectory,
+  searchCustomers,
+  isValidCustomerPhone,
+  isValidCustomerName,
+  normalizePhone,
+} from '../../utils/customerDirectory';
+import {
   isBeverageDrink,
   isPieceItem,
   isPacketItem,
@@ -148,6 +156,103 @@ export default function BillingCounter() {
     fullName: '',
     phone: '',
   });
+
+  // Customer Directory & Smart Auto-Suggest (1st or last 4 digits matching)
+  const [savedCustomers, setSavedCustomers] = useState(() => getSavedCustomers(bills));
+  const [custSuggestions, setCustSuggestions] = useState([]);
+  const [showCustSuggestions, setShowCustSuggestions] = useState(false);
+  const [selectedCustIdx, setSelectedCustIdx] = useState(-1);
+  const [activeCustField, setActiveCustField] = useState('phone');
+  const custRowRef = useRef(null);
+  const custPhoneInputRef = useRef(null);
+
+  // Sync customer directory with localStorage events and active bills
+  useEffect(() => {
+    const handleCustomerUpdate = () => {
+      setSavedCustomers(getSavedCustomers(bills));
+    };
+    window.addEventListener('thenisai_customers_updated', handleCustomerUpdate);
+    return () => window.removeEventListener('thenisai_customers_updated', handleCustomerUpdate);
+  }, [bills]);
+
+  useEffect(() => {
+    if (bills && bills.length > 0) {
+      setSavedCustomers(getSavedCustomers(bills));
+    }
+  }, [bills]);
+
+  // Click outside to dismiss customer suggestions
+  useEffect(() => {
+    const handleClickOutsideCust = (e) => {
+      if (custRowRef.current && !custRowRef.current.contains(e.target)) {
+        setShowCustSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideCust);
+    return () => document.removeEventListener('mousedown', handleClickOutsideCust);
+  }, []);
+
+  const handleCustPhoneChange = (e) => {
+    const rawVal = e.target.value.replace(/\D/g, '');
+    setCustomerInfo((prev) => ({ ...prev, phone: rawVal }));
+    setSelectedCustIdx(-1);
+    setActiveCustField('phone');
+
+    if (rawVal.length >= 2) {
+      const matches = searchCustomers(rawVal, savedCustomers);
+      setCustSuggestions(matches);
+      setShowCustSuggestions(matches.length > 0);
+    } else {
+      setCustSuggestions([]);
+      setShowCustSuggestions(false);
+    }
+  };
+
+  const handleCustNameChange = (e) => {
+    const val = e.target.value;
+    setCustomerInfo((prev) => ({ ...prev, fullName: val }));
+    setSelectedCustIdx(-1);
+    setActiveCustField('name');
+
+    if (val.trim().length >= 2) {
+      const matches = searchCustomers(val, savedCustomers);
+      setCustSuggestions(matches);
+      setShowCustSuggestions(matches.length > 0);
+    } else {
+      setCustSuggestions([]);
+      setShowCustSuggestions(false);
+    }
+  };
+
+  const handleSelectCustomer = (cust) => {
+    if (!cust) return;
+    setCustomerInfo({
+      fullName: cust.name || '',
+      phone: cust.phone || '',
+    });
+    setShowCustSuggestions(false);
+    setSelectedCustIdx(-1);
+  };
+
+  const handleCustKeyDown = (e) => {
+    if (!showCustSuggestions || custSuggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedCustIdx((prev) => (prev < custSuggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedCustIdx((prev) => (prev > 0 ? prev - 1 : custSuggestions.length - 1));
+    } else if (e.key === 'Enter') {
+      if (selectedCustIdx >= 0 && selectedCustIdx < custSuggestions.length) {
+        e.preventDefault();
+        handleSelectCustomer(custSuggestions[selectedCustIdx]);
+      }
+    } else if (e.key === 'Escape') {
+      setShowCustSuggestions(false);
+    }
+  };
+
   const [paymentMode, setPaymentMode] = useState('cash'); // 'cash' | 'upi' | 'card' | 'split'
   const [splitCash, setSplitCash] = useState('');
   const [splitUpi, setSplitUpi] = useState('');
@@ -1335,6 +1440,9 @@ export default function BillingCounter() {
   const handleClearBill = () => {
     setBillItems([]);
     setCustomerInfo({ fullName: '', phone: '' });
+    setShowCustSuggestions(false);
+    setCustSuggestions([]);
+    setSelectedCustIdx(-1);
     setSplitCash('');
     setSplitUpi('');
     setLastEditedSplit('cash');
@@ -1674,6 +1782,12 @@ export default function BillingCounter() {
       markPreOrderBilled(activePreOrderId);
       setActivePreOrderId(null);
     }
+
+    // Auto-save customer details to store directory for next time autocompletion
+    if (customerInfo.phone && isValidCustomerPhone(customerInfo.phone)) {
+      saveCustomerToDirectory(customerInfo.fullName, customerInfo.phone);
+    }
+
     handleClearBill();
     openInvoice(savedOrder || saleData);
 
@@ -3023,8 +3137,8 @@ export default function BillingCounter() {
                 </div>
               </div>
 
-              {/* Customer Phone & Name Input */}
-              <div className="pos-cust-row">
+              {/* Customer Phone & Name Input with Smart Auto-Suggest */}
+              <div className="pos-cust-row" ref={custRowRef}>
                 <div className="cust-input-wrap">
                   <span className="input-prefix" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -3033,25 +3147,116 @@ export default function BillingCounter() {
                     +91
                   </span>
                   <input
+                    ref={custPhoneInputRef}
                     type="tel"
                     maxLength="10"
                     placeholder="Mobile (SMS/WhatsApp Bill)"
                     value={customerInfo.phone}
-                    onChange={(e) =>
-                      setCustomerInfo((prev) => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))
-                    }
+                    onChange={handleCustPhoneChange}
+                    onFocus={() => {
+                      setActiveCustField('phone');
+                      if (customerInfo.phone.length >= 2) {
+                        const matches = searchCustomers(customerInfo.phone, savedCustomers);
+                        setCustSuggestions(matches);
+                        setShowCustSuggestions(matches.length > 0);
+                      }
+                    }}
+                    onKeyDown={handleCustKeyDown}
                     className="cust-input phone"
+                    autoComplete="off"
                   />
+                  {customerInfo.phone && (
+                    <button
+                      type="button"
+                      className="cust-field-clear-btn"
+                      onClick={() => {
+                        setCustomerInfo((prev) => ({ ...prev, phone: '' }));
+                        setShowCustSuggestions(false);
+                      }}
+                      title="Clear phone number"
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  placeholder="Walk-in Customer"
-                  value={customerInfo.fullName}
-                  onChange={(e) =>
-                    setCustomerInfo((prev) => ({ ...prev, fullName: e.target.value }))
-                  }
-                  className="cust-input name"
-                />
+
+                <div className="cust-input-wrap cust-name-wrap">
+                  <input
+                    type="text"
+                    placeholder="Walk-in Customer"
+                    value={customerInfo.fullName}
+                    onChange={handleCustNameChange}
+                    onFocus={() => {
+                      setActiveCustField('name');
+                      if (customerInfo.fullName.trim().length >= 2) {
+                        const matches = searchCustomers(customerInfo.fullName, savedCustomers);
+                        setCustSuggestions(matches);
+                        setShowCustSuggestions(matches.length > 0);
+                      }
+                    }}
+                    onKeyDown={handleCustKeyDown}
+                    className="cust-input name"
+                    autoComplete="off"
+                  />
+                  {customerInfo.fullName && (
+                    <button
+                      type="button"
+                      className="cust-field-clear-btn"
+                      onClick={() => {
+                        setCustomerInfo((prev) => ({ ...prev, fullName: '' }));
+                        setShowCustSuggestions(false);
+                      }}
+                      title="Clear customer name"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                {/* Autocomplete Dropdown: Matches 1st numbers or last 4 digits */}
+                {showCustSuggestions && custSuggestions.length > 0 && (
+                  <div className="pos-customer-suggestions-dropdown">
+                    <div className="pos-cust-suggestions-header">
+                      <span>CUSTOMER DIRECTORY ({custSuggestions.length})</span>
+                      <span className="cust-sug-nav-hint">↑↓ navigate • ↵ select</span>
+                    </div>
+                    <div className="pos-cust-suggestions-list">
+                      {custSuggestions.map((cust, idx) => (
+                        <div
+                          key={cust.phone}
+                          className={`pos-cust-suggestion-item ${idx === selectedCustIdx ? 'is-active' : ''}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // prevent input blur before click
+                            handleSelectCustomer(cust);
+                          }}
+                          onMouseEnter={() => setSelectedCustIdx(idx)}
+                        >
+                          <div className="cust-sug-avatar">
+                            {(cust.name || 'C').charAt(0).toUpperCase()}
+                          </div>
+                          <div className="cust-sug-details">
+                            <div className="cust-sug-name-row">
+                              <span className="cust-sug-name">{cust.name || 'Valued Customer'}</span>
+                              {cust.orderCount > 1 && (
+                                <span className="cust-repeat-badge">
+                                  ⭐ {cust.orderCount} orders
+                                </span>
+                              )}
+                            </div>
+                            <div className="cust-sug-phone-row">
+                              <span className="cust-sug-phone">+91 {cust.phone}</span>
+                              {cust.matchSnippet && (
+                                <span className={`cust-match-pill ${cust.matchType}`}>
+                                  {cust.matchSnippet}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Active Bill Items List (Inline Scrollable with data-lenis-prevent) */}

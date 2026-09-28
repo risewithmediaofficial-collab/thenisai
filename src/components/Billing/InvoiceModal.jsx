@@ -3,16 +3,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { STORE_DETAILS, ALL_BILLING_ITEMS } from '../../data/sweetsData';
+import {
+  getSavedCustomers,
+  saveCustomerToDirectory,
+  searchCustomers,
+  isValidCustomerName,
+  isValidCustomerPhone,
+  normalizePhone,
+} from '../../utils/customerDirectory';
 import EditBillModal from './EditBillModal';
 import DeleteBillModal from './DeleteBillModal';
 import './InvoiceModal.css';
 
 export default function InvoiceModal() {
-  const { activeInvoice, closeInvoice, taxSettings, deleteBill, openInvoice } = useCart();
+  const { activeInvoice, closeInvoice, taxSettings, deleteBill, openInvoice, editBill, bills } = useCart();
   const { user } = useAuth();
   const invoiceRef = useRef();
   const [isEditingBill, setIsEditingBill] = useState(false);
   const [isDeletingBill, setIsDeletingBill] = useState(false);
+
+  // WhatsApp Prompt Modal for entering Name & WhatsApp Number if missing
+  const [isWhatsappPromptOpen, setIsWhatsappPromptOpen] = useState(false);
+  const [promptCustomerName, setPromptCustomerName] = useState('');
+  const [promptCustomerPhone, setPromptCustomerPhone] = useState('');
+  const [promptPhoneSuggestions, setPromptPhoneSuggestions] = useState([]);
+  const [promptError, setPromptError] = useState('');
+  const [isSendingWhatsapp, setIsSendingWhatsapp] = useState(false);
 
   // Format: 'thermal' (standard thermal roll), 'a4' (A4 sheet)
   const [billFormat, setBillFormat] = useState(() => {
@@ -218,19 +234,131 @@ export default function InvoiceModal() {
       (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
       `\nPlease confirm order packing and readiness. Thank you! 🙏✨`;
 
-  const whatsappMessage = encodeURIComponent(whatsappMessageText);
-
-  // If customer's 10-digit phone number is entered, open chat with customer; otherwise open store WhatsApp
   const cleanPhone = (hasCustomerPhone ? rawCustomerPhone : '').replace(/\D/g, '');
-  const targetPhone = isPosSale && cleanPhone.length >= 10
-    ? (cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone)
-    : STORE_DETAILS.whatsappNumber;
 
-  // Direct api.whatsapp.com / web.whatsapp.com URLs prevent wa.me 302 redirect header corruption of 4-byte UTF-8 emojis
-  const isMobileDevice = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
-  const whatsappUrl = isMobileDevice
-    ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${whatsappMessage}`
-    : `https://web.whatsapp.com/send?phone=${targetPhone}&text=${whatsappMessage}`;
+  // Direct helper to trigger WhatsApp sending with authentic sweet shop format & Tamil greeting
+  const openDirectWhatsApp = (phone10, customerName) => {
+    const cleanDigits = normalizePhone(phone10);
+    const targetPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+    const resolvedName = isValidCustomerName(customerName) ? customerName.trim() : '';
+
+    const greeting = resolvedName
+      ? `🙏 *வணக்கம் / Vanakkam ${resolvedName}!*`
+      : `🙏 *வணக்கம் / Vanakkam!*`;
+
+    const custDisplay = resolvedName
+      ? `${resolvedName} (${cleanDigits})`
+      : cleanDigits;
+
+    const messageText = isPosSale
+      ? `${greeting}\n` +
+        `Thank you for shopping at *Thenisai Sweets*! 🍯✨\n\n` +
+        `🧾 *Invoice No:* ${invoiceNumber}\n` +
+        `📅 *Date:* ${orderDate} ${orderTime}\n` +
+        `👤 *Customer:* ${custDisplay}\n\n` +
+        `📦 *Order Items:*\n${itemsText}\n\n` +
+        (discountAmount > 0 ? `🏷️ *Special Discount (${discountPercent}%${discountReason ? ` - ${discountReason}` : ''}):* -₹${discountAmount.toFixed(2)}\n` : '') +
+        `💰 *Total Amount:* ₹${formattedTotal}\n` +
+        `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
+        `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦✨\n` +
+        `Did you know? You can now pre-order your favorite traditional sweets & savouries at *www.thenisaisweets.com* and have them packed ready for quick counter pickup!\n\n` +
+        `🌐 *Pre-Order Menu:* https://www.thenisaisweets.com/#menu\n` +
+        `📞 *Counter & Orders Helpline:* +91 93448 93547\n\n` +
+        `Thank you! Visit us again! 🙏🍯✨`
+      : `🙏 *வணக்கம் / Vanakkam Thenisai Sweets!*\n` +
+        `I just placed a pre-order on your website. 🍯✨\n\n` +
+        `🧾 *Invoice No:* ${invoiceNumber}\n` +
+        `👤 *Customer:* ${custDisplay}\n` +
+        `📍 *Delivery / Pickup Address:* ${fullAddress}\n\n` +
+        `📦 *Order Items:*\n${itemsText}\n\n` +
+        `💰 *Total Amount:* ₹${formattedTotal}\n` +
+        `💳 *Payment Mode:* ${paymentModeLabel}\n` +
+        (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
+        `\nPlease confirm order packing and readiness. Thank you! 🙏✨`;
+
+    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    const url = isMobile
+      ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(messageText)}`
+      : `https://web.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(messageText)}`;
+    window.open(url, '_blank');
+  };
+
+  const handleWhatsAppClick = (e) => {
+    if (e) {
+      if (typeof e.preventDefault === 'function') e.preventDefault();
+      if (typeof e.stopPropagation === 'function') e.stopPropagation();
+    }
+    const cleanDigits = normalizePhone(rawCustomerPhone);
+    const hasValidPhone = cleanDigits.length >= 10 && rawCustomerPhone.toLowerCase() !== 'store counter' && rawCustomerPhone.toLowerCase() !== 'counter desk 01';
+
+    if (hasValidPhone) {
+      openDirectWhatsApp(cleanDigits, rawCustomerName);
+    } else {
+      // Missing customer mobile number: prompt modal to enter Name & WhatsApp Number
+      setPromptCustomerName(hasCustomerName ? rawCustomerName : '');
+      setPromptCustomerPhone('');
+      setPromptPhoneSuggestions([]);
+      setPromptError('');
+      setIsWhatsappPromptOpen(true);
+    }
+  };
+
+  const handleConfirmSendWhatsApp = async () => {
+    const cleanDigits = normalizePhone(promptCustomerPhone);
+    if (cleanDigits.length < 10) {
+      setPromptError('Please enter a valid 10-digit WhatsApp mobile number.');
+      return;
+    }
+
+    const trimmedName = promptCustomerName.trim();
+    setIsSendingWhatsapp(true);
+    setPromptError('');
+
+    try {
+      // 1. Save customer to directory for auto-suggest in future POS billing
+      saveCustomerToDirectory(trimmedName, cleanDigits);
+
+      // 2. Prepare updated customer object
+      const updatedCustomer = {
+        fullName: trimmedName || 'Walk-in Customer',
+        phone: cleanDigits,
+        email: activeInvoice?.customer?.email || 'counter@thenisaisweets.com',
+      };
+
+      // 3. Persist update to bill backend/ledger if editBill is available
+      if (typeof editBill === 'function' && (activeInvoice.id || activeInvoice.invoiceNumber)) {
+        try {
+          await editBill(
+            activeInvoice.id || activeInvoice.invoiceNumber,
+            { customer: updatedCustomer },
+            'Added Customer WhatsApp Number',
+            user
+          );
+        } catch (err) {
+          console.warn('[InvoiceModal] Bill update in background:', err);
+        }
+      }
+
+      // 4. Update activeInvoice in CartContext so receipt on screen immediately displays customer
+      const updatedInvoice = {
+        ...activeInvoice,
+        customer: updatedCustomer,
+      };
+      if (typeof openInvoice === 'function') {
+        openInvoice(updatedInvoice);
+      }
+
+      // 5. Open direct WhatsApp chat with the customer!
+      openDirectWhatsApp(cleanDigits, trimmedName);
+
+      // 6. Close prompt
+      setIsWhatsappPromptOpen(false);
+    } catch (err) {
+      setPromptError(err?.message || 'Failed to process WhatsApp request.');
+    } finally {
+      setIsSendingWhatsapp(false);
+    }
+  };
 
   // Helper to format item weight/quantity, rate, and amount matching the authentic sweet shop POS layout
   const formatItemDetails = (item) => {
@@ -837,18 +965,17 @@ export default function InvoiceModal() {
                 <span>Delete</span>
               </button>
 
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
                 className="toolbar-btn whatsapp-btn"
-                title={isPosSale && hasCustomerPhone ? `Send bill & online delivery link to ${customerDisplay} on WhatsApp` : 'Share Bill on WhatsApp'}
+                onClick={handleWhatsAppClick}
+                title={isPosSale && hasCustomerPhone ? `Send bill & online delivery link to ${customerDisplay} on WhatsApp` : 'Send Bill on WhatsApp'}
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.75 1.21 5.48 0 9.93-4.45 9.93-9.93 0-5.48-4.45-9.9-9.93-9.9zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.36c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.7 8.22-8.23 8.22zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.78.98-.14.16-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.41.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.76-1.85-.2-.49-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.01 2.57.12.16 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.1-.22-.16-.47-.29z" />
                 </svg>
                 <span>WhatsApp</span>
-              </a>
+              </button>
             </div>
           </div>
 
@@ -904,6 +1031,153 @@ export default function InvoiceModal() {
           }}
           user={user}
         />
+      )}
+
+      {/* WhatsApp Prompt Modal: Enter Name & WhatsApp Number when bill had no phone */}
+      {isWhatsappPromptOpen && (
+        <div
+          className="whatsapp-prompt-overlay"
+          onClick={() => setIsWhatsappPromptOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <motion.div
+            className="whatsapp-prompt-card"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.93, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.93, y: 15 }}
+            transition={{ duration: 0.2 }}
+          >
+            {/* Header */}
+            <div className="whatsapp-prompt-header">
+              <div className="whatsapp-prompt-title-wrap">
+                <span className="whatsapp-icon-badge">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.75 1.21 5.48 0 9.93-4.45 9.93-9.93 0-5.48-4.45-9.9-9.93-9.9zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.36c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.7 8.22-8.23 8.22zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.78.98-.14.16-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.41.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.76-1.85-.2-.49-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.01 2.57.12.16 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.1-.22-.16-.47-.29z" />
+                  </svg>
+                </span>
+                <div>
+                  <h3>Send Bill on WhatsApp</h3>
+                  <p className="bill-summary-subtitle">Bill #{invoiceNumber} • ₹{formattedTotal}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="whatsapp-prompt-close"
+                onClick={() => setIsWhatsappPromptOpen(false)}
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Form Body */}
+            <div className="whatsapp-prompt-body">
+              <p className="whatsapp-prompt-hint">
+                💡 <strong>Customer details missing:</strong> Enter the customer's name and WhatsApp number below. They will be saved to your store directory for instant autocomplete next time!
+              </p>
+
+              <div className="whatsapp-form-group">
+                <label htmlFor="prompt-cust-name">Customer Name</label>
+                <div className="prompt-input-box">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#94A3B8', marginRight: '8px' }}>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <input
+                    id="prompt-cust-name"
+                    type="text"
+                    placeholder="e.g. Ramesh Kumar"
+                    value={promptCustomerName}
+                    onChange={(e) => setPromptCustomerName(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+
+              <div className="whatsapp-form-group">
+                <label htmlFor="prompt-cust-phone">WhatsApp Number <span className="req-star">*</span></label>
+                <div className="prompt-input-box">
+                  <span className="prompt-prefix">+91</span>
+                  <input
+                    id="prompt-cust-phone"
+                    type="tel"
+                    maxLength="10"
+                    placeholder="10-digit mobile (e.g. 93448 93547)"
+                    value={promptCustomerPhone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '');
+                      setPromptCustomerPhone(val);
+                      setPromptError('');
+                      if (val.length >= 2) {
+                        const matches = searchCustomers(val, getSavedCustomers(bills));
+                        setPromptPhoneSuggestions(matches);
+                      } else {
+                        setPromptPhoneSuggestions([]);
+                      }
+                    }}
+                    autoFocus
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Instant suggestions if entering 1st or last 4 digits */}
+                {promptPhoneSuggestions.length > 0 && (
+                  <div className="prompt-suggestions-list">
+                    {promptPhoneSuggestions.map((cust) => (
+                      <div
+                        key={cust.phone}
+                        className="prompt-suggestion-item"
+                        onClick={() => {
+                          setPromptCustomerPhone(cust.phone);
+                          if (cust.name) setPromptCustomerName(cust.name);
+                          setPromptPhoneSuggestions([]);
+                        }}
+                      >
+                        <div className="prompt-sug-left">
+                          <span className="prompt-sug-name">{cust.name || 'Saved Customer'}</span>
+                          <span className="prompt-sug-phone">+91 {cust.phone}</span>
+                        </div>
+                        {cust.matchSnippet && (
+                          <span className="prompt-sug-badge">{cust.matchSnippet}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {promptError && (
+                <div className="whatsapp-prompt-error">
+                  ⚠️ {promptError}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="whatsapp-prompt-footer">
+              <button
+                type="button"
+                className="btn-prompt-cancel"
+                onClick={() => setIsWhatsappPromptOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-prompt-send"
+                onClick={handleConfirmSendWhatsApp}
+                disabled={isSendingWhatsapp}
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.75 1.21 5.48 0 9.93-4.45 9.93-9.93 0-5.48-4.45-9.9-9.93-9.9zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.19 8.19 0 01-1.26-4.36c0-4.54 3.7-8.23 8.25-8.23 4.54 0 8.23 3.69 8.23 8.23 0 4.54-3.7 8.22-8.23 8.22zm4.52-6.17c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.78.98-.14.16-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.38-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.12-.15.16-.25.25-.41.08-.16.04-.31-.02-.44-.06-.12-.56-1.35-.76-1.85-.2-.49-.41-.42-.56-.43h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.41 1.01 2.57.12.16 1.76 2.68 4.26 3.76.6.26 1.06.41 1.42.53.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.14-1.18-.06-.1-.22-.16-.47-.29z" />
+                </svg>
+                <span>{isSendingWhatsapp ? 'Opening WhatsApp...' : 'Send on WhatsApp'}</span>
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

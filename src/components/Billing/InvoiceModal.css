@@ -1683,3 +1683,313 @@
   padding-bottom: 14px;
   font-family: 'Consolas', 'Courier New', monospace;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   WHATSAPP CUSTOMER DETAILS PROMPT MODAL
+   ══════════════════════════════════════════════════════════════════ */
+.whatsapp-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1250;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeInPromptOverlay 0.2s ease-out;
+}
+
+@keyframes fadeInPromptOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.whatsapp-prompt-card {
+  position: relative;
+  z-index: 1251;
+  width: 100%;
+  max-width: 460px;
+  background: #FFFFFF;
+  border-radius: 16px;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.whatsapp-prompt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border-bottom: 1px solid #BBF7D0;
+}
+
+.whatsapp-prompt-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.whatsapp-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #25D366;
+  color: #FFFFFF;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);
+  flex-shrink: 0;
+}
+
+.whatsapp-prompt-title-wrap h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #14532D;
+}
+
+.bill-summary-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.whatsapp-prompt-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(22, 101, 52, 0.15);
+  border-radius: 8px;
+  color: #166534;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.whatsapp-prompt-close:hover {
+  background: #FFFFFF;
+  color: #DC2626;
+  border-color: #FCA5A5;
+}
+
+.whatsapp-prompt-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.whatsapp-prompt-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #475569;
+  background: #F8FAFC;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-left: 4px solid #25D366;
+  border-top: 1px solid #E2E8F0;
+  border-right: 1px solid #E2E8F0;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.whatsapp-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.whatsapp-form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.whatsapp-form-group .req-star {
+  color: #DC2626;
+  font-weight: bold;
+}
+
+.prompt-input-box {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  padding: 0 12px;
+  height: 42px;
+  transition: all 0.2s ease;
+}
+
+.prompt-input-box:focus-within {
+  border-color: #25D366;
+  box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.18);
+}
+
+.prompt-prefix {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  margin-right: 8px;
+  user-select: none;
+}
+
+.prompt-input-box input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.9rem;
+  color: #0F172A;
+  font-family: inherit;
+}
+
+.prompt-input-box input::placeholder {
+  color: #94A3B8;
+  font-size: 0.84rem;
+}
+
+/* Prompt suggestions dropdown */
+.prompt-suggestions-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px -4px rgba(15, 23, 42, 0.2);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.prompt-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #F1F5F9;
+  transition: background 0.15s ease;
+}
+
+.prompt-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.prompt-suggestion-item:hover {
+  background: #F0FDF4;
+}
+
+.prompt-sug-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.prompt-sug-name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #0F172A;
+}
+
+.prompt-sug-phone {
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: #64748B;
+}
+
+.prompt-sug-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 2px 7px;
+  border-radius: 10px;
+  border: 1px solid #86EFAC;
+}
+
+.whatsapp-prompt-error {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 0.82rem;
+  color: #991B1B;
+  font-weight: 500;
+}
+
+.whatsapp-prompt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  background: #F8FAFC;
+  border-top: 1px solid #E2E8F0;
+}
+
+.btn-prompt-cancel {
+  padding: 9px 16px;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-prompt-cancel:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+}
+
+.btn-prompt-send {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: #25D366;
+  border: 1px solid #1EBE5D;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  transition: all 0.15s ease;
+}
+
+.btn-prompt-send:hover:not(:disabled) {
+  background: #20BA5A;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.45);
+}
+
+.btn-prompt-send:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media print {
+  .whatsapp-prompt-overlay {
+    display: none !important;
+  }
+}
+
