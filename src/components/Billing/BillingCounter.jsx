@@ -3969,7 +3969,7 @@ export default function BillingCounter() {
             {/* Toolbar: Search and Filter */}
             <div className="shift-toolbar">
               <div className="shift-search-box">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon-svg">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shift-search-icon">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
@@ -4009,21 +4009,11 @@ export default function BillingCounter() {
                 ))}
               </div>
 
-              <div className="shift-sort-wrap" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span className="filter-label" style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>Sort:</span>
+              <div className="shift-sort-wrap">
+                <span className="filter-label">Sort:</span>
                 <select
                   value={shiftSortBy}
                   onChange={(e) => setShiftSortBy(e.target.value)}
-                  style={{
-                    padding: '6px 10px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
-                    background: '#fff',
-                    color: '#334155',
-                    cursor: 'pointer'
-                  }}
                   aria-label="Sort shift bills"
                 >
                   <option value="date-desc">Newest First</option>
@@ -4036,56 +4026,55 @@ export default function BillingCounter() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', margin: '0 0 14px', padding: '10px 12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: '10px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#9a3412' }}>
-                {selectedShiftBills.length ? `${selectedShiftBills.length} bill${selectedShiftBills.length === 1 ? '' : 's'} selected` : 'Select bills to delete them together'}
-              </span>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button type="button" className="btn-shift-refresh" onClick={toggleAllFilteredShiftBills} disabled={!filteredShiftBills.length}>
+            {/* Bulk Actions Banner */}
+            <div className="shift-bulk-actions-bar">
+              <div className="shift-bulk-info">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 11l3 3L22 4"/>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                <span className="shift-bulk-text">
+                  {selectedShiftBills.length ? (
+                    <>
+                      <strong className="shift-bulk-count">{selectedShiftBills.length}</strong> bill{selectedShiftBills.length === 1 ? '' : 's'} selected
+                    </>
+                  ) : (
+                    'Select bills to delete them together'
+                  )}
+                </span>
+              </div>
+              <div className="shift-bulk-buttons">
+                <button
+                  type="button"
+                  className="btn-shift-bulk-select"
+                  onClick={toggleAllFilteredShiftBills}
+                  disabled={!filteredShiftBills.length}
+                >
                   {allFilteredShiftBillsSelected ? 'Clear Selection' : 'Select Filtered'}
                 </button>
                 <button
                   type="button"
+                  className="btn-shift-bulk-del-selected"
                   onClick={() => setBulkDeleteBills(selectedShiftBills)}
                   disabled={!selectedShiftBills.length}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '7px 16px',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    border: '1.5px solid #dc2626',
-                    background: 'transparent',
-                    color: '#dc2626',
-                    cursor: selectedShiftBills.length ? 'pointer' : 'not-allowed',
-                    opacity: selectedShiftBills.length ? 1 : 0.5,
-                    transition: 'background 0.15s, color 0.15s',
-                  }}
                 >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
                   Delete Selected ({selectedShiftBills.length})
                 </button>
                 <button
                   type="button"
+                  className="btn-shift-bulk-del-all"
                   onClick={() => setBulkDeleteBills(myShiftBills)}
                   disabled={!myShiftBills.length}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '7px 16px',
-                    borderRadius: '8px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    border: '1.5px solid #991b1b',
-                    background: '#991b1b',
-                    color: '#fff',
-                    cursor: myShiftBills.length ? 'pointer' : 'not-allowed',
-                    opacity: myShiftBills.length ? 1 : 0.5,
-                    transition: 'background 0.15s',
-                  }}
                 >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M3 6h18"/>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>
+                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
                   Delete All Today ({myShiftBills.length})
                 </button>
               </div>
@@ -4113,7 +4102,7 @@ export default function BillingCounter() {
                   <table className="shift-invoices-table">
                     <thead>
                       <tr>
-                        <th>
+                        <th style={{ width: '44px', textAlign: 'center' }}>
                           <input
                             type="checkbox"
                             checked={allFilteredShiftBillsSelected}
@@ -4122,37 +4111,37 @@ export default function BillingCounter() {
                           />
                         </th>
                         <th
-                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          style={{ width: '130px', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
                           onClick={() => setShiftSortBy(prev => prev === 'inv-asc' ? 'inv-desc' : 'inv-asc')}
                           title="Click to sort by Invoice No"
                         >
                           Invoice No {shiftSortBy === 'inv-asc' ? '▲' : shiftSortBy === 'inv-desc' ? '▼' : ''}
                         </th>
                         <th
-                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          style={{ width: '110px', textAlign: 'left', cursor: 'pointer', userSelect: 'none' }}
                           onClick={() => setShiftSortBy(prev => prev === 'date-desc' ? 'date-asc' : 'date-desc')}
                           title="Click to sort by Time"
                         >
                           Time {shiftSortBy === 'date-desc' ? '▼' : shiftSortBy === 'date-asc' ? '▲' : ''}
                         </th>
-                        <th>Customer</th>
-                        <th>Items Sold</th>
-                        <th>Payment</th>
+                        <th style={{ minWidth: '190px', textAlign: 'left' }}>Customer</th>
+                        <th style={{ minWidth: '180px', textAlign: 'left' }}>Items Sold</th>
+                        <th style={{ width: '130px', textAlign: 'left' }}>Payment</th>
                         <th
-                          style={{ cursor: 'pointer', userSelect: 'none' }}
+                          style={{ width: '110px', textAlign: 'right', cursor: 'pointer', userSelect: 'none' }}
                           onClick={() => setShiftSortBy(prev => prev === 'amount-desc' ? 'amount-asc' : 'amount-desc')}
                           title="Click to sort by Amount"
                         >
                           Amount {shiftSortBy === 'amount-desc' ? '▼' : shiftSortBy === 'amount-asc' ? '▲' : ''}
                         </th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
+                        <th style={{ minWidth: '235px', textAlign: 'right' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {sortedShiftBills.map((bill) => (
                         <tr key={bill.id || bill.invoiceNumber}>
-                          <td>
+                          <td style={{ textAlign: 'center' }}>
                             <input
                               type="checkbox"
                               checked={selectedShiftBillIds.includes(bill.id || bill.invoiceNumber)}
@@ -4161,25 +4150,39 @@ export default function BillingCounter() {
                             />
                           </td>
                           <td>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <div className="shift-inv-badge-wrap">
                               <span className="shift-inv-badge">{bill.invoiceNumber || bill.id}</span>
                               {bill.isEdited && (
-                                <span style={{ fontSize: '10px', background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d', padding: '1px 5px', borderRadius: '4px', fontWeight: 800, textTransform: 'uppercase' }}>
-                                  Edited
-                                </span>
+                                <span className="shift-edited-tag">Edited</span>
                               )}
                             </div>
                           </td>
                           <td>
-                            <span className="shift-time">{bill.orderTime || 'Just now'}</span>
+                            <span className="shift-time-val">{bill.orderTime || 'Just now'}</span>
                           </td>
                           <td>
-                            <strong>{bill.customer?.fullName || 'Walk-in Customer'}</strong>
-                            <div className="cust-phone-sub" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                              </svg>
-                              {bill.customer?.phone || 'Counter'}
+                            <div className="shift-cust-cell">
+                              <span className="shift-cust-name">{bill.customer?.fullName || 'Walk-in Customer'}</span>
+                              <div className="shift-cust-sub">
+                                {bill.customer?.phone &&
+                                 !bill.customer.phone.toLowerCase().includes('counter') &&
+                                 !bill.customer.phone.toLowerCase().includes('desk') ? (
+                                  <span className="shift-phone-chip">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                    </svg>
+                                    <span>{bill.customer.phone}</span>
+                                  </span>
+                                ) : (
+                                  <span className="shift-counter-chip">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                      <polyline points="9 22 9 12 15 12 15 22"/>
+                                    </svg>
+                                    <span>Store Counter</span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td>
@@ -4188,7 +4191,8 @@ export default function BillingCounter() {
                                 const shortName = (it.name || '').split('—')[0].trim();
                                 return (
                                   <span key={idx} className="shift-item-pill">
-                                    {shortName} ×{it.quantity}
+                                    <span className="item-name">{shortName}</span>
+                                    <span className="item-qty">×{it.quantity}</span>
                                   </span>
                                 );
                               })}
@@ -4208,103 +4212,82 @@ export default function BillingCounter() {
                                     <line x1="14.47" y1="14.48" x2="20" y2="20" />
                                     <line x1="8.12" y1="8.12" x2="12" y2="12" />
                                   </svg>
-                                  Split (₹{bill.paymentDetails?.cash ?? bill.splitCash ?? 0}+₹{bill.paymentDetails?.upi ?? bill.splitUpi ?? 0})
+                                  <span>Split (₹{bill.paymentDetails?.cash ?? bill.splitCash ?? 0}+₹{bill.paymentDetails?.upi ?? bill.splitUpi ?? 0})</span>
                                 </span>
                               ) : bill.paymentMethod === 'upi' ? (
                                 <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                                   </svg>
-                                  UPI
+                                  <span>UPI</span>
                                 </>
                               ) : bill.paymentMethod === 'card' ? (
                                 <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                                   </svg>
-                                  Card
+                                  <span>Card</span>
                                 </>
                               ) : (
                                 <>
-                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                     <rect x="2" y="6" width="20" height="12" rx="2" />
                                     <circle cx="12" cy="12" r="2" />
                                   </svg>
-                                  Cash
+                                  <span>Cash</span>
                                 </>
                               )}
                             </span>
                           </td>
-                          <td>
-                            <strong className="shift-amount">₹{bill.grandTotal}</strong>
+                          <td style={{ textAlign: 'right' }}>
+                            <strong className="shift-amount">₹{Number(bill.grandTotal || 0).toLocaleString('en-IN')}</strong>
                           </td>
-                          <td>
+                          <td style={{ textAlign: 'center' }}>
                             <span className="shift-status-pill">
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '3px' }}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
-                              {bill.orderStatus || bill.status || 'Paid'}
+                              <span>{bill.orderStatus || bill.status || 'Completed'}</span>
                             </span>
                           </td>
-                          <td>
-                            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="shift-actions-cell">
                               <button
                                 type="button"
                                 className="btn-shift-print-inv"
                                 onClick={() => openInvoice(bill)}
                                 title="View &amp; Print Thermal Bill"
                               >
-                                Print Bill
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9"/>
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                                  <rect x="6" y="14" width="12" height="8"/>
+                                </svg>
+                                <span>Print Bill</span>
                               </button>
                               <button
                                 type="button"
                                 className="btn-shift-edit-inv"
                                 onClick={() => setEditBillModalItem(bill)}
                                 title="Edit Bill Items, Quantities &amp; Details"
-                                style={{
-                                  background: '#eff6ff',
-                                  color: '#1d4ed8',
-                                  border: '1px solid #bfdbfe',
-                                  borderRadius: '8px',
-                                  padding: '6px 12px',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                }}
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                   <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                 </svg>
-                                Edit
+                                <span>Edit</span>
                               </button>
                               <button
                                 type="button"
                                 className="btn-shift-del-inv"
                                 onClick={() => setDeleteBillModalItem(bill)}
                                 title="Delete invoice (moved to 30-day Admin Recycle Bin with mandatory reason)"
-                                style={{
-                                  background: '#fee2e2',
-                                  color: '#dc2626',
-                                  border: '1px solid #fca5a5',
-                                  borderRadius: '8px',
-                                  padding: '6px 12px',
-                                  fontSize: '11px',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                }}
                               >
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                   <polyline points="3 6 5 6 21 6" />
                                   <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                                 </svg>
-                                Delete
+                                <span>Delete</span>
                               </button>
                             </div>
                           </td>
