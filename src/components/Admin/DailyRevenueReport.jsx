@@ -1027,7 +1027,21 @@ export default function DailyRevenueReport({
 
       {/* Cashier Shift Reconciliation */}
       <section className="cashier-reconciliation-section">
-        <h3 className="section-subtitle">Cashier Shift &amp; Drawer Settlement</h3>
+        <div className="section-header-block">
+          <div className="section-title-wrap">
+            <div className="section-icon-badge cashier">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="M7 15h0M2 9.5h20"/>
+              </svg>
+            </div>
+            <div>
+              <h3 className="section-subtitle">Cashier Shift &amp; Drawer Settlement</h3>
+              <p className="section-desc">Shift collections, drawer cash balances, and payment modes by cashier terminal</p>
+            </div>
+          </div>
+        </div>
+
         <div className="cashier-table-wrap">
           <table className="cashier-table">
             <thead>
@@ -1045,12 +1059,27 @@ export default function DailyRevenueReport({
               {cashierSettlement.map((c) => (
                 <tr key={c.id}>
                   <td>
-                    <strong>{c.name}</strong>
+                    <div className="cashier-staff-cell">
+                      <span className="staff-avatar-initial">{(c.name || 'C').charAt(0).toUpperCase()}</span>
+                      <div className="staff-name-wrap">
+                        <strong className="staff-name">{c.name}</strong>
+                        <span className="staff-sub">Active Cashier</span>
+                      </div>
+                    </div>
                   </td>
                   <td>
-                    <span className="terminal-badge">{c.counter}</span>
+                    <span className="terminal-badge">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" style={{ marginRight: '4px', verticalAlign: '-1px' }}>
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <line x1="8" y1="21" x2="16" y2="21"/>
+                        <line x1="12" y1="17" x2="12" y2="21"/>
+                      </svg>
+                      {c.counter}
+                    </span>
                   </td>
-                  <td>{c.bills}</td>
+                  <td>
+                    <span className="bills-count-tag">{c.bills} {c.bills === 1 ? 'bill' : 'bills'}</span>
+                  </td>
                   <td>
                     <span className="t-cash">₹{c.cash.toLocaleString('en-IN')}</span>
                   </td>
@@ -1072,29 +1101,60 @@ export default function DailyRevenueReport({
 
       {/* Daily Bills Transaction Log */}
       <section className="daily-bills-section">
-        <div className="bills-header-line" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
-          <div>
-            <h3 className="section-subtitle" style={{ margin: 0 }}>
-              Shift Bills &amp; Invoices Log ({daySales.length} Transactions)
-            </h3>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
-              Showing {daySales.length} {daySales.length === 1 ? 'invoice' : 'invoices'}
-              {daySales.length > 10 ? ' · (Scroll inline to view all 10+ bills or scroll page outline)' : ''}
-            </span>
+        <div className="bills-header-line">
+          <div className="bills-header-left">
+            <div className="section-title-wrap">
+              <div className="section-icon-badge invoices">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                  <line x1="16" y1="13" x2="8" y2="13"/>
+                  <line x1="16" y1="17" x2="8" y2="17"/>
+                  <polyline points="10 9 9 9 8 9"/>
+                </svg>
+              </div>
+              <div>
+                <div className="title-with-pill">
+                  <h3 className="section-subtitle">Shift Bills &amp; Invoices Log</h3>
+                  <span className="transactions-count-pill">{daySales.length} Transactions</span>
+                </div>
+                <p className="section-desc">
+                  Showing {daySales.length} {daySales.length === 1 ? 'invoice' : 'invoices'}
+                  {daySales.length > 10 ? ' · Scroll table inline to browse through all records' : ''}
+                </p>
+              </div>
+            </div>
           </div>
-          {daySales.length > 10 && (
-            <span style={{ fontSize: '11px', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: '4px', background: '#fef3c7', padding: '3px 10px', borderRadius: '12px', border: '1px solid #fde68a' }}>
-              <span>↕</span> Inline Scroll Active (Up to 10 bills view)
-            </span>
-          )}
-          <div className="search-bills-box">
-            <input
-              type="text"
-              placeholder="Search invoice #, customer name or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="bills-search-input"
-            />
+
+          <div className="bills-header-right">
+            {daySales.length > 10 && (
+              <span className="inline-scroll-badge">
+                <span className="scroll-arrow">↕</span> Inline Scroll Active (Up to 10 bills view)
+              </span>
+            )}
+            <div className="search-bills-box">
+              <svg className="search-icon-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search invoice #, customer name, mobile..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="bills-search-input"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="search-clear-btn"
+                  onClick={() => setSearchTerm('')}
+                  title="Clear search"
+                >
+                  ×
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1107,7 +1167,7 @@ export default function DailyRevenueReport({
             <table className="daily-bills-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                  <th style={{ width: '44px', textAlign: 'center' }}>#</th>
                   <th>Invoice #</th>
                   <th>Time</th>
                   <th>Customer</th>
@@ -1137,17 +1197,25 @@ export default function DailyRevenueReport({
                       </td>
                       <td>
                         <div className="cust-info">
-                          <span>{s.customer?.fullName || 'Walk-in Customer'}</span>
-                          {s.customer?.phone && <small>{s.customer.phone}</small>}
+                          <span className="cust-name">{s.customer?.fullName || 'Walk-in Customer'}</span>
+                          <span className="cust-sub">
+                            {s.customer?.phone && s.customer.phone !== 'Store Counter' && s.customer.phone !== 'counter desk 01' ? (
+                              <span className="cust-phone-pill">+91 {s.customer.phone}</span>
+                            ) : (
+                              <span className="cust-counter-pill">Counter Walk-in</span>
+                            )}
+                          </span>
                         </div>
                       </td>
                       <td>
                         <span className={`pm-badge ${pm}`}>{s.paymentMethod || 'Cash'}</span>
                       </td>
-                      <td>{s.cashier?.name || 'Counter Staff'}</td>
+                      <td>
+                        <span className="cashier-name-text">{s.cashier?.name || 'Counter Staff'}</span>
+                      </td>
                       <td>
                         <span className="items-summary-badge">
-                          {(s.items || []).length} items
+                          {(s.items || []).length} {(s.items || []).length === 1 ? 'item' : 'items'}
                         </span>
                       </td>
                       <td className="text-right">
@@ -1161,6 +1229,10 @@ export default function DailyRevenueReport({
                             onClick={() => onOpenInvoice && onOpenInvoice(s)}
                             title="View &amp; Print Tax Invoice"
                           >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
                             View
                           </button>
                           <button
@@ -1169,7 +1241,7 @@ export default function DailyRevenueReport({
                             onClick={() => setEditBillModalItem(s)}
                             title="Edit Bill Details &amp; Items"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                             </svg>
@@ -1184,7 +1256,7 @@ export default function DailyRevenueReport({
                             }}
                             title="Delete Bill to 30-Day Recycle Bin"
                           >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6"/>
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             </svg>

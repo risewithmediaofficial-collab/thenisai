@@ -4165,162 +4165,521 @@ time, .hours {
 /* ==============================================================================
    6. Cashier Shift & Drawer Settlement
    ============================================================================== */
+.cashier-reconciliation-section {
+  margin-top: 36px;
+  margin-bottom: 36px;
+}
+
+.section-header-block {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.section-title-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.section-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.section-icon-badge.cashier {
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+}
+
+.section-icon-badge.invoices {
+  background: #EEF2FF;
+  color: #4F46E5;
+  border: 1px solid #C7D2FE;
+}
+
+.section-subtitle {
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.section-desc {
+  font-size: 0.82rem;
+  color: #64748B;
+  margin: 4px 0 0 0;
+  line-height: 1.45;
+}
+
 .cashier-table-wrap,
 .daily-bills-table-wrap {
   overflow-x: auto;
   background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+  border: 1px solid #CBD5E1;
+  border-radius: 14px;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
 }
 
 .cashier-table,
 .daily-bills-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.86rem;
 }
 
 .cashier-table th,
 .daily-bills-table th {
   text-align: left;
-  padding: 12px 16px;
-  background: #F8FAFC;
-  color: #475569;
-  font-size: 0.74rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-bottom: 1px solid #E2E8F0;
+  padding: 14px 18px !important;
+  background: #F8FAFC !important;
+  color: #475569 !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid #E2E8F0 !important;
+  white-space: nowrap !important;
 }
 
 .cashier-table td,
 .daily-bills-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #F1F5F9;
-  color: #0F172A;
+  padding: 14px 18px !important;
+  border-bottom: 1px solid #F1F5F9 !important;
+  color: #0F172A !important;
+  vertical-align: middle !important;
+}
+
+.cashier-table tbody tr:hover td,
+.daily-bills-table tbody tr:hover td {
+  background-color: #F8FAFC !important;
 }
 
 .cashier-table tr:last-child td,
 .daily-bills-table tr:last-child td {
-  border-bottom: none;
+  border-bottom: none !important;
+}
+
+/* Cashier Staff Cell */
+.cashier-staff-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.staff-avatar-initial {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #059669, #047857);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(4, 120, 87, 0.25);
+}
+
+.staff-name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.staff-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+  letter-spacing: -0.01em;
+}
+
+.staff-sub {
+  font-size: 0.72rem;
+  color: #64748B;
+  font-weight: 500;
 }
 
 .terminal-badge {
-  font-size: 11.5px;
-  padding: 3px 8px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.76rem;
+  padding: 4px 10px;
   background: #F1F5F9;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #CBD5E1;
   border-radius: 6px;
-  color: #475569;
+  color: #334155;
   font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.t-cash { color: #065F46; font-weight: 700; }
-.t-upi { color: #1E40AF; font-weight: 700; }
-.t-card { color: #5B21B6; font-weight: 700; }
-.t-total { color: #0F172A; font-size: 14px; font-weight: 800; }
+.bills-count-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1E293B;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-cash {
+  color: #047857;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-upi {
+  color: #1D4ED8;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-card {
+  color: #6D28D9;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.t-total {
+  color: #0F172A;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ==============================================================================
    7. Bills & Invoices Transaction Log
    ============================================================================== */
+.daily-bills-section {
+  margin-top: 40px;
+  margin-bottom: 44px;
+}
+
 .bills-header-line {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 4px;
+}
+
+.bills-header-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-with-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.transactions-count-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #4338CA;
+  background: #EEF2FF;
+  border: 1px solid #C7D2FE;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+}
+
+.bills-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inline-scroll-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #B45309;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  padding: 8px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.scroll-arrow {
+  font-size: 0.85rem;
+}
+
+.search-bills-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 320px;
+  max-width: 100%;
+}
+
+.search-icon-svg {
+  position: absolute;
+  left: 12px;
+  color: #94A3B8;
+  pointer-events: none;
 }
 
 .bills-search-input {
+  width: 100%;
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
   color: #0F172A;
-  padding: 8px 14px;
+  padding: 9px 32px 9px 34px;
   border-radius: 8px;
   font-size: 0.84rem;
-  min-width: 280px;
   outline: none;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .bills-search-input:focus {
-  border-color: #B45309;
-  box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.15);
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.bills-search-input::placeholder {
+  color: #94A3B8;
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  color: #94A3B8;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.search-clear-btn:hover {
+  color: #EF4444;
+}
+
+.inv-badge-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .inv-badge {
   color: #0F172A;
-  font-family: monospace;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
   font-weight: 700;
   font-size: 0.86rem;
+  background: #F1F5F9;
+  border: 1px solid #CBD5E1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.edited-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: #FEF3C7;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  padding: 1px 5px;
+  border-radius: 4px;
+  text-transform: uppercase;
 }
 
 .time-text {
-  color: #64748B;
+  color: #475569;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 0.82rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .cust-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-weight: 600;
-  color: #0F172A;
+  gap: 4px;
 }
 
-.cust-info small {
+.cust-info .cust-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #0F172A;
+  line-height: 1.35;
+}
+
+.cust-info .cust-sub {
+  display: inline-flex;
+  align-items: center;
+}
+
+.cust-phone-pill {
+  font-size: 0.76rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #475569;
+}
+
+.cust-counter-pill {
+  font-size: 0.72rem;
   color: #64748B;
-  font-size: 0.78rem;
-  font-weight: 400;
+  background: #F1F5F9;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.cashier-name-text {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
 }
 
 .pm-badge {
-  font-size: 11.5px;
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
   text-transform: uppercase;
-  display: inline-block;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
-.pm-badge.cash { background: #ECFDF5; color: #065F46; border: 1px solid #A7F3D0; }
-.pm-badge.upi { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
-.pm-badge.card { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+.pm-badge.cash { background: #ECFDF5; color: #047857; border: 1px solid #A7F3D0; }
+.pm-badge.upi { background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; }
+.pm-badge.card { background: #FAF5FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+.pm-badge.split { background: #FFFBEB; color: #B45309; border: 1px solid #FDE68A; }
 
 .items-summary-badge {
-  font-size: 11.5px;
+  font-size: 0.76rem;
   color: #475569;
   background: #F8FAFC;
   border: 1px solid #E2E8F0;
   border-radius: 6px;
-  padding: 2px 8px;
+  padding: 3px 9px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .bill-amt {
   color: #0F172A;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-weight: 800;
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.table-actions-cluster {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .view-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 6px 12px;
   background: #FFFFFF;
   border: 1px solid #CBD5E1;
-  color: #0F172A;
-  border-radius: 8px;
-  font-size: 0.8rem;
+  color: #1E293B;
+  border-radius: 7px;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .view-bill-btn:hover {
   background: #0F172A;
   color: #FFFFFF;
   border-color: #0F172A;
+}
+
+.edit-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1D4ED8;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.edit-bill-btn:hover {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border-color: #93C5FD;
+}
+
+.delete-bill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  border-radius: 7px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.delete-bill-btn:hover {
+  background: #FEE2E2;
+  color: #B91C1C;
+  border-color: #FCA5A5;
 }
 
 .empty-day-state {
@@ -24679,10 +25038,10 @@ section.tab-content,
   z-index: 25 !important;
   background: #f8fafc !important;
   box-shadow: 0 1px 0 #cbd5e1, 0 2px 4px rgba(0, 0, 0, 0.04) !important;
-  padding: 10px 14px !important;
-  font-size: 11px !important;
+  padding: 13px 18px !important;
+  font-size: 0.74rem !important;
   font-weight: 700 !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
   color: #475569 !important;
   white-space: nowrap !important;
