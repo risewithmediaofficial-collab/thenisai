@@ -17,6 +17,128 @@ import StockDetailsModal from '../Inventory/StockDetailsModal';
 import { translateToTamil } from '../../utils/translateToTamil';
 import { parseInvoiceNumber } from '../../utils/invoiceNumber';
 import { isProductUnlimitedStock } from '../../utils/unitConfig';
+
+/**
+ * Universal date key generator (YYYY-MM-DD)
+ * Supports numbers, ISO strings, textual dates like "28 Sept 2026", "28/09/2026", etc.
+ */
+export function toDateKey(dateVal) {
+  if (!dateVal) return '';
+
+  // If already YYYY-MM-DD
+  if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateVal.trim())) {
+    return dateVal.trim();
+  }
+
+  // If numeric or string timestamp (e.g. 1790571802291)
+  if (typeof dateVal === 'number' || (typeof dateVal === 'string' && /^\d{11,14}$/.test(dateVal.trim()))) {
+    const d = new Date(Number(dateVal));
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+
+  // If text or standard date string
+  if (typeof dateVal === 'string') {
+    const months = {
+      jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06',
+      jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12'
+    };
+
+    // DD-MM-YYYY or DD/MM/YYYY
+    const dmyMatch = dateVal.trim().match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+    if (dmyMatch) {
+      const day = dmyMatch[1].padStart(2, '0');
+      const month = dmyMatch[2].padStart(2, '0');
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+
+    // DD Mon YYYY (e.g. "28 Sept 2026" or "28 Sep, 2026")
+    const textMatch = dateVal.trim().match(/^(\d{1,2})\s+([A-Za-z]+)[,\s]+(\d{4})/);
+    if (textMatch) {
+      const day = textMatch[1].padStart(2, '0');
+      const monStr = textMatch[2].toLowerCase().slice(0, 3);
+      const year = textMatch[3];
+      if (months[monStr]) return `${year}-${months[monStr]}-${day}`;
+    }
+
+    // Mon DD, YYYY (e.g. "Sep 28, 2026")
+    const mdyMatch = dateVal.trim().match(/^([A-Za-z]+)\s+(\d{1,2})[,\s]+(\d{4})/);
+    if (mdyMatch) {
+      const monStr = mdyMatch[1].toLowerCase().slice(0, 3);
+      const day = mdyMatch[2].padStart(2, '0');
+      const year = mdyMatch[3];
+      if (months[monStr]) return `${year}-${months[monStr]}-${day}`;
+    }
+  }
+
+  const d = new Date(dateVal);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Checks if a sale / bill matches the selected date filter period
+ */
+function matchSaleDate(sale, filterMode, startDate, endDate) {
+  if (filterMode === 'all') return true;
+  if (!sale) return false;
+
+  const createdKey = sale.createdAt ? toDateKey(sale.createdAt) : '';
+  const orderDateKey = sale.orderDate ? toDateKey(sale.orderDate) : '';
+  const rawDateKey = sale.date ? toDateKey(sale.date) : '';
+
+  if (filterMode === 'today' || filterMode === 'yesterday') {
+    const target = startDate;
+    return (
+      createdKey === target ||
+      orderDateKey === target ||
+      rawDateKey === target
+    );
+  }
+
+  const keysToCheck = [orderDateKey, createdKey, rawDateKey].filter(Boolean);
+  if (keysToCheck.length === 0) return false;
+
+  return keysToCheck.some((k) => {
+    if (startDate && k < startDate) return false;
+    if (endDate && k > endDate) return false;
+    return true;
+  });
+}
+
+/**
+ * Checks if an expense record matches the selected date filter period
+ */
+function matchExpenseDate(exp, filterMode, startDate, endDate) {
+  if (filterMode === 'all') return true;
+  if (!exp) return false;
+
+  const createdKey = exp.createdAt ? toDateKey(exp.createdAt) : '';
+  const expDateKey = exp.date ? toDateKey(exp.date) : '';
+
+  if (filterMode === 'today' || filterMode === 'yesterday') {
+    const target = startDate;
+    return createdKey === target || expDateKey === target;
+  }
+
+  const keysToCheck = [expDateKey, createdKey].filter(Boolean);
+  if (keysToCheck.length === 0) return false;
+
+  return keysToCheck.some((k) => {
+    if (startDate && k < startDate) return false;
+    if (endDate && k > endDate) return false;
+    return true;
+  });
+}
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const {
@@ -298,6 +420,10 @@ export default function AdminDashboard() {
   const [salesSourceFilter, setSalesSourceFilter] = useState('all'); // 'all' | 'counter' | 'online'
   const [salesPaymentFilter, setSalesPaymentFilter] = useState('all'); // 'all' | 'cash' | 'upi' | 'card' | 'split'
   const [salesSortBy, setSalesSortBy] = useState('date-desc');
+  const [salesDateFilter, setSalesDateFilter] = useState('all'); // 'all' | 'today' | 'yesterday' | 'this-week' | 'this-month' | 'last-month' | 'custom'
+  const [salesStartDate, setSalesStartDate] = useState(() => toDateKey(new Date()));
+  const [salesEndDate, setSalesEndDate] = useState(() => toDateKey(new Date()));
+  const todayKey = useMemo(() => toDateKey(new Date()), []);
   const [isSyncingSales, setIsSyncingSales] = useState(false);
   const [isResetBillModalOpen, setIsResetBillModalOpen] = useState(false);
 
@@ -392,10 +518,151 @@ export default function AdminDashboard() {
     }
   }, [fetchExpenses]);
 
-  // Cashier Performance Aggregation
+  // Date Filter Preset Handler
+  const handleSelectDateFilter = (filterType) => {
+    setSalesDateFilter(filterType);
+    const now = new Date();
+    const tKey = toDateKey(now);
+
+    if (filterType === 'all') {
+      setSalesStartDate(tKey);
+      setSalesEndDate(tKey);
+    } else if (filterType === 'today') {
+      setSalesStartDate(tKey);
+      setSalesEndDate(tKey);
+    } else if (filterType === 'yesterday') {
+      const y = new Date();
+      y.setDate(y.getDate() - 1);
+      const yKey = toDateKey(y);
+      setSalesStartDate(yKey);
+      setSalesEndDate(yKey);
+    } else if (filterType === 'this-week') {
+      const w = new Date();
+      w.setDate(w.getDate() - 6);
+      setSalesStartDate(toDateKey(w));
+      setSalesEndDate(tKey);
+    } else if (filterType === 'this-month') {
+      const mStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      setSalesStartDate(toDateKey(mStart));
+      setSalesEndDate(tKey);
+    } else if (filterType === 'last-month') {
+      const lmStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lmEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      setSalesStartDate(toDateKey(lmStart));
+      setSalesEndDate(toDateKey(lmEnd));
+    } else if (filterType === 'custom') {
+      if (!salesStartDate) setSalesStartDate(tKey);
+      if (!salesEndDate) setSalesEndDate(tKey);
+    }
+  };
+
+  // Period Counts for Quick Pills
+  const periodCounts = useMemo(() => {
+    let today = 0;
+    let yesterday = 0;
+    let thisMonth = 0;
+    let thisWeek = 0;
+
+    const now = new Date();
+    const tKey = toDateKey(now);
+    const y = new Date();
+    y.setDate(y.getDate() - 1);
+    const yKey = toDateKey(y);
+    const w = new Date();
+    w.setDate(w.getDate() - 6);
+    const wKey = toDateKey(w);
+    const mStartKey = toDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
+
+    allSales.forEach((s) => {
+      const cKey = s.createdAt ? toDateKey(s.createdAt) : '';
+      const oKey = s.orderDate ? toDateKey(s.orderDate) : '';
+      const rKey = s.date ? toDateKey(s.date) : '';
+      const sKey = oKey || cKey || rKey;
+
+      if (cKey === tKey || oKey === tKey || rKey === tKey) today += 1;
+      if (cKey === yKey || oKey === yKey || rKey === yKey) yesterday += 1;
+      if (sKey && sKey >= mStartKey && sKey <= tKey) thisMonth += 1;
+      if (sKey && sKey >= wKey && sKey <= tKey) thisWeek += 1;
+    });
+
+    return { today, yesterday, thisMonth, thisWeek };
+  }, [allSales]);
+
+  const periodLabel = useMemo(() => {
+    if (salesDateFilter === 'today') return 'Today';
+    if (salesDateFilter === 'yesterday') return 'Yesterday';
+    if (salesDateFilter === 'this-week') return 'This Week';
+    if (salesDateFilter === 'this-month') return 'This Month';
+    if (salesDateFilter === 'last-month') return 'Last Month';
+    if (salesDateFilter === 'custom') return `${salesStartDate} to ${salesEndDate}`;
+    return 'All Time';
+  }, [salesDateFilter, salesStartDate, salesEndDate]);
+
+  const periodSubLabel = useMemo(() => {
+    if (salesDateFilter === 'today') return "Today's Bills";
+    if (salesDateFilter === 'yesterday') return "Yesterday's Bills";
+    if (salesDateFilter === 'this-week') return "This Week's Bills";
+    if (salesDateFilter === 'this-month') return "This Month's Bills";
+    if (salesDateFilter === 'last-month') return "Last Month's Bills";
+    if (salesDateFilter === 'custom') return 'Period Bills';
+    return 'Total Bills';
+  }, [salesDateFilter]);
+
+  // Date-filtered sales and expenses for Tab 3
+  const dateFilteredSales = useMemo(() => {
+    return allSales.filter((sale) => matchSaleDate(sale, salesDateFilter, salesStartDate, salesEndDate));
+  }, [allSales, salesDateFilter, salesStartDate, salesEndDate]);
+
+  const dateFilteredExpenses = useMemo(() => {
+    return (expenses || []).filter((exp) => matchExpenseDate(exp, salesDateFilter, salesStartDate, salesEndDate));
+  }, [expenses, salesDateFilter, salesStartDate, salesEndDate]);
+
+  // Tab 3 Sales Overview Metrics (dynamic to the selected date period)
+  const tab3GrossRevenue = useMemo(
+    () => dateFilteredSales.reduce((sum, o) => sum + (o.grandTotal || 0), 0),
+    [dateFilteredSales]
+  );
+  const tab3Expenses = useMemo(
+    () => dateFilteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0),
+    [dateFilteredExpenses]
+  );
+  const tab3NetRevenue = tab3GrossRevenue - tab3Expenses;
+
+  const tab3CounterSales = useMemo(
+    () => dateFilteredSales.filter((o) => (o.source || 'counter') === 'counter' || o.source === 'walk-in'),
+    [dateFilteredSales]
+  );
+  const tab3CounterRevenue = useMemo(
+    () => tab3CounterSales.reduce((sum, s) => sum + (s.grandTotal || 0), 0),
+    [tab3CounterSales]
+  );
+
+  const tab3OnlineOrders = useMemo(
+    () => dateFilteredSales.filter((o) => o.source === 'online'),
+    [dateFilteredSales]
+  );
+  const tab3OnlineRevenue = useMemo(
+    () => tab3OnlineOrders.reduce((sum, s) => sum + (s.grandTotal || 0), 0),
+    [tab3OnlineOrders]
+  );
+
+  const tab3CashRevenue = useMemo(
+    () => dateFilteredSales.filter((s) => (s?.paymentMethod || '').toLowerCase() === 'cash').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0),
+    [dateFilteredSales]
+  );
+  const tab3UpiRevenue = useMemo(
+    () => dateFilteredSales.filter((s) => (s?.paymentMethod || '').toLowerCase() === 'upi').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0),
+    [dateFilteredSales]
+  );
+  const tab3CardRevenue = useMemo(
+    () => dateFilteredSales.filter((s) => (s?.paymentMethod || '').toLowerCase() === 'card').reduce((sum, s) => sum + (Number(s?.grandTotal) || 0), 0),
+    [dateFilteredSales]
+  );
+
+  // Cashier Performance Aggregation for the selected period
   const cashierSummary = useMemo(() => {
     const map = {};
-    allSales.forEach((sale) => {
+    dateFilteredSales.forEach((sale) => {
       if (sale.cashier || (sale.source || 'counter') === 'counter' || sale.source === 'walk-in') {
         const cid = sale.cashier?.username || sale.cashier?.id || 'counter-desk';
         const name = sale.cashier?.name || 'Counter Staff';
@@ -423,46 +690,48 @@ export default function AdminDashboard() {
       }
     });
     return Object.values(map);
-  }, [allSales]);
+  }, [dateFilteredSales]);
 
-  // Filtered sales for Tab 3
-  const filteredSales = allSales.filter((sale) => {
-    const sSource = sale.source === 'online' ? 'online' : 'counter';
-    if (salesSourceFilter !== 'all' && sSource !== salesSourceFilter) return false;
+  // Filtered sales for Tab 3 (combines date filter + cashier + channel + payment + search)
+  const filteredSales = useMemo(() => {
+    return dateFilteredSales.filter((sale) => {
+      const sSource = sale.source === 'online' ? 'online' : 'counter';
+      if (salesSourceFilter !== 'all' && sSource !== salesSourceFilter) return false;
 
-    const sPayment = (sale.paymentMethod || '').toLowerCase();
-    if (salesPaymentFilter !== 'all') {
-      if (salesPaymentFilter === 'cash') {
-        if (sPayment !== 'cash' && sPayment !== 'split') return false;
-      } else if (salesPaymentFilter === 'upi') {
-        if (sPayment !== 'upi' && sPayment !== 'split') return false;
-      } else if (salesPaymentFilter === 'card') {
-        if (sPayment !== 'card') return false;
-      } else if (salesPaymentFilter === 'split') {
-        if (sPayment !== 'split') return false;
-      } else if (sPayment !== salesPaymentFilter) {
-        return false;
+      const sPayment = (sale.paymentMethod || '').toLowerCase();
+      if (salesPaymentFilter !== 'all') {
+        if (salesPaymentFilter === 'cash') {
+          if (sPayment !== 'cash' && sPayment !== 'split') return false;
+        } else if (salesPaymentFilter === 'upi') {
+          if (sPayment !== 'upi' && sPayment !== 'split') return false;
+        } else if (salesPaymentFilter === 'card') {
+          if (sPayment !== 'card') return false;
+        } else if (salesPaymentFilter === 'split') {
+          if (sPayment !== 'split') return false;
+        } else if (sPayment !== salesPaymentFilter) {
+          return false;
+        }
       }
-    }
 
-    if (salesCashierFilter !== 'all') {
-      const cid = sale.cashier?.username || sale.cashier?.id;
-      if (cid !== salesCashierFilter) return false;
-    }
+      if (salesCashierFilter !== 'all') {
+        const cid = sale.cashier?.username || sale.cashier?.id;
+        if (cid !== salesCashierFilter) return false;
+      }
 
-    if (salesSearchTerm.trim()) {
-      const term = salesSearchTerm.toLowerCase();
-      const matchInv = sale.invoiceNumber?.toLowerCase().includes(term);
-      const matchCust = sale.customer?.fullName?.toLowerCase().includes(term);
-      const matchPhone = sale.customer?.phone?.includes(term);
-      const matchCashier =
-        sale.cashier?.name?.toLowerCase().includes(term) ||
-        sale.cashier?.username?.toLowerCase().includes(term);
-      if (!matchInv && !matchCust && !matchPhone && !matchCashier) return false;
-    }
+      if (salesSearchTerm.trim()) {
+        const term = salesSearchTerm.toLowerCase();
+        const matchInv = sale.invoiceNumber?.toLowerCase().includes(term);
+        const matchCust = sale.customer?.fullName?.toLowerCase().includes(term);
+        const matchPhone = sale.customer?.phone?.includes(term);
+        const matchCashier =
+          sale.cashier?.name?.toLowerCase().includes(term) ||
+          sale.cashier?.username?.toLowerCase().includes(term);
+        if (!matchInv && !matchCust && !matchPhone && !matchCashier) return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
+  }, [dateFilteredSales, salesSourceFilter, salesPaymentFilter, salesCashierFilter, salesSearchTerm]);
 
   const sortedSales = useMemo(() => {
     const list = [...filteredSales];
@@ -1791,7 +2060,26 @@ export default function AdminDashboard() {
             {/* Sales Stats Strip */}
             <div className="tab-toolbar admin-sales-toolbar-top">
               <div>
-                <h3 className="section-title">All Sales, Cashier Desks & Invoices</h3>
+                <h3 className="section-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <span>All Sales, Cashier Desks & Invoices</span>
+                  {salesDateFilter !== 'all' && (
+                    <span style={{
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      background: '#fef3c7',
+                      color: '#92400e',
+                      border: '1px solid #fcd34d',
+                      borderRadius: '12px',
+                      padding: '2px 9px',
+                      letterSpacing: '0.02em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      📅 {periodLabel}
+                    </span>
+                  )}
+                </h3>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1846,12 +2134,12 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Sales Summary Metrics Strip */}
+            {/* Sales Summary Metrics Strip (Dynamic to Selected Date Period) */}
             <div className="sales-overview-metrics">
               <div className="sales-stat-card total">
                 <span className="stat-label">Gross Sales Revenue</span>
-                <strong className="stat-val">₹{totalRevenue.toLocaleString('en-IN')}</strong>
-                <span className="stat-sub">{allSales.length} Total Bills</span>
+                <strong className="stat-val">₹{tab3GrossRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{dateFilteredSales.length} {periodSubLabel}</span>
               </div>
               <div className="sales-stat-card expense">
                 <span className="stat-label">
@@ -1860,19 +2148,19 @@ export default function AdminDashboard() {
                   </svg>
                   Total Expenses
                 </span>
-                <strong className="stat-val" style={{ color: '#e11d48' }}>₹{totalExpenses.toLocaleString('en-IN')}</strong>
-                <span className="stat-sub">{expenses.length} {expenses.length === 1 ? 'Expense Logged' : 'Expenses Logged'}</span>
+                <strong className="stat-val" style={{ color: '#e11d48' }}>₹{tab3Expenses.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{dateFilteredExpenses.length} {dateFilteredExpenses.length === 1 ? 'Expense Logged' : 'Expenses Logged'}</span>
               </div>
-              <div className="sales-stat-card net" style={{ borderLeftColor: netRevenue >= 0 ? '#059669' : '#dc2626' }}>
+              <div className="sales-stat-card net" style={{ borderLeftColor: tab3NetRevenue >= 0 ? '#059669' : '#dc2626' }}>
                 <span className="stat-label">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={netRevenue >= 0 ? '#059669' : '#dc2626'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={tab3NetRevenue >= 0 ? '#059669' : '#dc2626'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '5px' }}>
                     <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
                     <polyline points="17 6 23 6 23 12" />
                   </svg>
                   Net Store Revenue
                 </span>
-                <strong className="stat-val" style={{ color: netRevenue >= 0 ? '#059669' : '#dc2626' }}>
-                  {netRevenue < 0 ? '-' : ''}₹{Math.abs(netRevenue).toLocaleString('en-IN')}
+                <strong className="stat-val" style={{ color: tab3NetRevenue >= 0 ? '#059669' : '#dc2626' }}>
+                  {tab3NetRevenue < 0 ? '-' : ''}₹{Math.abs(tab3NetRevenue).toLocaleString('en-IN')}
                 </strong>
                 <span className="stat-sub">Gross Revenue − Expenses</span>
               </div>
@@ -1884,8 +2172,8 @@ export default function AdminDashboard() {
                   </svg>
                   Counter Store Sales
                 </span>
-                <strong className="stat-val">₹{counterRevenue.toLocaleString('en-IN')}</strong>
-                <span className="stat-sub">{counterSales.length} In-Store Bills</span>
+                <strong className="stat-val">₹{tab3CounterRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{tab3CounterSales.length} In-Store Bills</span>
               </div>
               <div className="sales-stat-card online">
                 <span className="stat-label">
@@ -1896,8 +2184,8 @@ export default function AdminDashboard() {
                   </svg>
                   Customer Pre-Orders
                 </span>
-                <strong className="stat-val">₹{onlineRevenue.toLocaleString('en-IN')}</strong>
-                <span className="stat-sub">{onlineOrders.length} Pre-Orders</span>
+                <strong className="stat-val">₹{tab3OnlineRevenue.toLocaleString('en-IN')}</strong>
+                <span className="stat-sub">{tab3OnlineOrders.length} Pre-Orders</span>
               </div>
               <div className="sales-stat-card payment">
                 <span className="stat-label">Payment Modes</span>
@@ -1908,21 +2196,21 @@ export default function AdminDashboard() {
                       <circle cx="12" cy="12" r="2" />
                       <path d="M6 12h.01M18 12h.01" />
                     </svg>
-                    Cash: ₹{(typeof totalCashRevenue !== 'undefined' ? totalCashRevenue : (window.totalCashRevenue || 0)).toLocaleString('en-IN')}
+                    Cash: ₹{tab3CashRevenue.toLocaleString('en-IN')}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                       <line x1="12" y1="18" x2="12.01" y2="18" />
                     </svg>
-                    UPI: ₹{(typeof totalUpiRevenue !== 'undefined' ? totalUpiRevenue : (window.totalUpiRevenue || 0)).toLocaleString('en-IN')}
+                    UPI: ₹{tab3UpiRevenue.toLocaleString('en-IN')}
                   </span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
                       <line x1="1" y1="10" x2="23" y2="10" />
                     </svg>
-                    Card: ₹{(typeof totalCardRevenue !== 'undefined' ? totalCardRevenue : (window.totalCardRevenue || 0)).toLocaleString('en-IN')}
+                    Card: ₹{tab3CardRevenue.toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -2008,9 +2296,152 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* Quick Date Range Filter Pills */}
+            <div className="sales-quick-date-pills">
+              <span className="sales-pills-label" style={{ fontSize: '12px', fontWeight: 700, color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: '4px', marginRight: '4px' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg>
+                Period:
+              </span>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'all' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('all')}
+                id="filter-period-all"
+              >
+                All Time <span className="pill-count">{allSales.length}</span>
+              </button>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'today' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('today')}
+                id="filter-period-today"
+              >
+                Today <span className="pill-count">{periodCounts.today}</span>
+              </button>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'yesterday' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('yesterday')}
+                id="filter-period-yesterday"
+              >
+                Yesterday <span className="pill-count">{periodCounts.yesterday}</span>
+              </button>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'this-week' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('this-week')}
+                id="filter-period-this-week"
+              >
+                This Week <span className="pill-count">{periodCounts.thisWeek}</span>
+              </button>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'this-month' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('this-month')}
+                id="filter-period-this-month"
+              >
+                This Month <span className="pill-count">{periodCounts.thisMonth}</span>
+              </button>
+              <button
+                type="button"
+                className={`sales-date-pill ${salesDateFilter === 'custom' ? 'active' : ''}`}
+                onClick={() => handleSelectDateFilter('custom')}
+                id="filter-period-custom"
+              >
+                Date to Date 📅
+              </button>
+
+              {salesDateFilter !== 'all' && (
+                <button
+                  type="button"
+                  className="sales-date-pill-clear"
+                  onClick={() => handleSelectDateFilter('all')}
+                  title="Reset date filter to All Time"
+                  style={{
+                    background: '#fff',
+                    border: '1px solid #fca5a5',
+                    color: '#dc2626',
+                    borderRadius: '20px',
+                    padding: '4px 10px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    marginLeft: 'auto'
+                  }}
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Reset Period
+                </button>
+              )}
+            </div>
+
             {/* Toolbar: Filters & Search */}
             <div className="sales-tab-filters-bar">
               <div className="sales-filter-controls">
+                {/* Date Period Dropdown */}
+                <select
+                  value={salesDateFilter}
+                  onChange={(e) => handleSelectDateFilter(e.target.value)}
+                  className="admin-select-filter sales-date-select"
+                  aria-label="Filter sales by date period"
+                  style={{
+                    fontWeight: salesDateFilter !== 'all' ? 700 : 600,
+                    borderColor: salesDateFilter !== 'all' ? '#d97706' : undefined,
+                    background: salesDateFilter !== 'all' ? '#fffbeb' : '#fff',
+                    color: salesDateFilter !== 'all' ? '#92400e' : undefined,
+                  }}
+                >
+                  <option value="all">📅 All Dates (All Time)</option>
+                  <option value="today">📅 Today</option>
+                  <option value="yesterday">📅 Yesterday</option>
+                  <option value="this-week">📅 This Week (Last 7 Days)</option>
+                  <option value="this-month">📅 This Month</option>
+                  <option value="last-month">📅 Last Month</option>
+                  <option value="custom">📅 Date to Date (Custom Range)</option>
+                </select>
+
+                {/* Inline Date-to-Date inputs */}
+                {salesDateFilter === 'custom' && (
+                  <div className="sales-custom-date-inputs">
+                    <div className="date-input-wrap">
+                      <label htmlFor="sales-from-date">From</label>
+                      <input
+                        type="date"
+                        id="sales-from-date"
+                        value={salesStartDate}
+                        max={salesEndDate || todayKey}
+                        onChange={(e) => setSalesStartDate(e.target.value)}
+                        className="admin-date-picker-field"
+                        title="Start Date"
+                      />
+                    </div>
+                    <span className="date-sep">→</span>
+                    <div className="date-input-wrap">
+                      <label htmlFor="sales-to-date">To</label>
+                      <input
+                        type="date"
+                        id="sales-to-date"
+                        value={salesEndDate}
+                        min={salesStartDate}
+                        onChange={(e) => setSalesEndDate(e.target.value)}
+                        className="admin-date-picker-field"
+                        title="End Date"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Cashier Filter */}
                 <select
                   value={salesCashierFilter}
