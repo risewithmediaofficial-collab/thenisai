@@ -1405,9 +1405,9 @@ export default function AdminDashboard() {
 
                           {ord.customer?.phone && (
                             <a
-                              href={`https://wa.me/91${ord.customer.phone}?text=Namaste%20${encodeURIComponent(
-                                ord.customer.fullName
-                              )},%20Thenisai%20Sweets%20has%20confirmed%20your%20order%20${ord.invoiceNumber}.`}
+                              href={`https://api.whatsapp.com/send?phone=91${ord.customer.phone}&text=${encodeURIComponent(
+                                `🙏 *வணக்கம் / Vanakkam ${ord.customer.fullName || 'Valued Customer'}!* 🍯✨\nThenisai Sweets has confirmed your order #${ord.invoiceNumber}.`
+                              )}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="act-btn whatsapp"

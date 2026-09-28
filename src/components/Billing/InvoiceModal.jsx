@@ -188,8 +188,12 @@ export default function InvoiceModal() {
   // Separate message templates:
   // 1) In-Store POS Bill: Thank the customer, provide bill summary, and promote pre-order with store pickup
   // 2) Pre-Order: Order confirmation for pickup
+  const greetingText = greetingName
+    ? `🙏 *வணக்கம் / Vanakkam ${greetingName}!*`
+    : `🙏 *வணக்கம் / Vanakkam!*`;
+
   const whatsappMessageText = isPosSale
-    ? `${greetingName ? `🙏 *Namaste ${greetingName}!*` : `🙏 *Namaste!*`}\n` +
+    ? `${greetingText}\n` +
       `Thank you for shopping at *Thenisai Sweets*! 🍯✨\n\n` +
       `🧾 *Invoice No:* ${invoiceNumber}\n` +
       `📅 *Date:* ${orderDate} ${orderTime}\n` +
@@ -198,13 +202,13 @@ export default function InvoiceModal() {
       (discountAmount > 0 ? `🏷️ *Special Discount (${discountPercent}%${discountReason ? ` - ${discountReason}` : ''}):* -₹${discountAmount.toFixed(2)}\n` : '') +
       `💰 *Total Amount:* ₹${formattedTotal}\n` +
       `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
-      `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦\n` +
+      `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦✨\n` +
       `Did you know? You can now pre-order your favorite traditional sweets & savouries at *www.thenisaisweets.com* and have them packed ready for quick counter pickup!\n\n` +
       `🌐 *Pre-Order Menu:* https://www.thenisaisweets.com/#menu\n` +
       `📞 *Counter & Orders Helpline:* +91 93448 93547\n\n` +
-      `Thank you! Visit us again! 🙏✨`
-    : `🙏 *Namaste Thenisai Sweets!*\n` +
-      `I just placed a pre-order on your website.\n\n` +
+      `Thank you! Visit us again! 🙏🍯✨`
+    : `🙏 *வணக்கம் / Vanakkam Thenisai Sweets!*\n` +
+      `I just placed a pre-order on your website. 🍯✨\n\n` +
       `🧾 *Invoice No:* ${invoiceNumber}\n` +
       `👤 *Customer:* ${customerDisplay}\n` +
       `📍 *Delivery / Pickup Address:* ${fullAddress}\n\n` +
@@ -212,7 +216,7 @@ export default function InvoiceModal() {
       `💰 *Total Amount:* ₹${formattedTotal}\n` +
       `💳 *Payment Mode:* ${paymentModeLabel}\n` +
       (giftNote ? `🎁 *Gift Note:* "${giftNote}"\n` : '') +
-      `\nPlease confirm order packing and readiness. Thank you!`;
+      `\nPlease confirm order packing and readiness. Thank you! 🙏✨`;
 
   const whatsappMessage = encodeURIComponent(whatsappMessageText);
 
@@ -222,7 +226,11 @@ export default function InvoiceModal() {
     ? (cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone)
     : STORE_DETAILS.whatsappNumber;
 
-  const whatsappUrl = `https://wa.me/${targetPhone}?text=${whatsappMessage}`;
+  // Direct api.whatsapp.com / web.whatsapp.com URLs prevent wa.me 302 redirect header corruption of 4-byte UTF-8 emojis
+  const isMobileDevice = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+  const whatsappUrl = isMobileDevice
+    ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${whatsappMessage}`
+    : `https://web.whatsapp.com/send?phone=${targetPhone}&text=${whatsappMessage}`;
 
   // Helper to format item weight/quantity, rate, and amount matching the authentic sweet shop POS layout
   const formatItemDetails = (item) => {
