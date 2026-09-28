@@ -374,6 +374,27 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  max-height: calc(10 * 72px + 9 * 8px);  /* 10 rows × ~72px height + 9 gaps */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for menu list */
+.menu-list-container::-webkit-scrollbar {
+  width: 5px;
+}
+.menu-list-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.menu-list-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.menu-list-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .menu-list-row,
@@ -873,6 +894,11 @@
 }
 
 @media (max-width: 640px) {
+  /* Slightly shorter rows on tablet — recalculate scroll height */
+  .menu-list-container {
+    max-height: calc(10 * 64px + 9 * 8px) !important;
+  }
+
   .menu-header {
     padding: 8px 10px;
   }
@@ -1142,6 +1168,12 @@
 
 /* ── Stack action area on narrow phones so Add button is never squeezed ────── */
 @media (max-width: 480px) {
+  /* Shorter rows on mobile — recalculate scroll height */
+  .menu-list-container {
+    max-height: calc(10 * 58px + 9 * 8px) !important;
+    padding-right: 3px !important;
+  }
+
   .menu-list-row,
   .clean-menu-card {
     flex-wrap: nowrap !important;
