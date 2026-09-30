@@ -72,6 +72,7 @@ export default function InvoiceModal() {
     };
     const handleAfterPrint = () => {
       document.body.classList.remove('is-printing-invoice');
+      // Do not auto-close: keep bill template view popup and WhatsApp button accessible on screen
     };
     window.addEventListener('beforeprint', handleBeforePrint);
     window.addEventListener('afterprint', handleAfterPrint);
@@ -429,6 +430,27 @@ export default function InvoiceModal() {
     return (cleaned || raw).toUpperCase();
   };
 
+  // Helper to get Tamil name of item
+  const getItemTamilName = (item) => {
+    if (item.tamilName) return item.tamilName.trim();
+    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
+      const match = ALL_BILLING_ITEMS.find(
+        (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
+      );
+      if (match?.tamilName) return match.tamilName.trim();
+    }
+    const raw = item.name || '';
+    if (raw.includes('—')) {
+      const parts = raw.split('—');
+      if (parts[1]?.trim()) return parts[1].trim();
+    }
+    if (raw.includes('-')) {
+      const parts = raw.split('-');
+      if (parts[1]?.trim()) return parts[1].trim();
+    }
+    return '';
+  };
+
   // Helper to render POS Thermal Receipt Copy (Authentic Indian Sweet Shop Format)
   const renderThermalReceiptCopy = (copyType, index) => {
     const isShopCopy = copyType === 'shop';
@@ -440,12 +462,13 @@ export default function InvoiceModal() {
           {/* Header matching exact layout without GST */}
           <div className="pos-slip-header">
             <div className="pos-store-name">{STORE_DETAILS.brandName.toUpperCase()}</div>
+            <div className="pos-store-tamil">தெனிசை பால்கோவா &amp; ஸ்வீட்ஸ்</div>
             <div className="pos-store-sub">NATTAMAI KOTTAI, NH 44, KRISHNAGIRI</div>
             <div className="pos-store-cell">CELL: {storeCell}</div>
             <div className="pos-slip-title">
               {isTestInvoice
                 ? 'TEST BILL · SANDBOX MODE'
-                : (isShopCopy ? 'SALES RECEIPT · SHOP COPY' : 'SALES RECEIPT')}
+                : (isShopCopy ? 'விற்பனை ரசீது · SHOP COPY' : 'விற்பனை ரசீது · SALES RECEIPT')}
             </div>
           </div>
 
@@ -461,7 +484,7 @@ export default function InvoiceModal() {
 
           {/* Table Header */}
           <div className="pos-slip-table-head">
-            <span className="col-item">ITEM</span>
+            <span className="col-item">ITEM / பொருள்</span>
             <span className="col-wt">WT/QTY</span>
             <span className="col-price">PRICE</span>
             <span className="col-amt">AMT</span>
@@ -475,11 +498,15 @@ export default function InvoiceModal() {
               const code = getInventoryCode(item, idx);
               const { wtQty, rate, amt } = formatItemDetails(item);
               const displayName = getItemDisplayName(item);
+              const tamilName = getItemTamilName(item);
               return (
                 <div key={idx} className="pos-slip-item-row">
                   <div className="col-item">
                     <span className="pos-item-code">#{code}</span>
-                    <span className="pos-item-name">{displayName}</span>
+                    <div className="pos-item-title-col">
+                      <span className="pos-item-name">{displayName}</span>
+                      {tamilName && <span className="pos-item-tamil">{tamilName}</span>}
+                    </div>
                   </div>
                   <span className="col-wt">{wtQty}</span>
                   <span className="col-price">{rate}</span>
@@ -562,7 +589,8 @@ export default function InvoiceModal() {
 
           {/* Footer message */}
           <div className="pos-slip-thank-you">
-            !! THANK YOU..VISIT AGAIN !!
+            <div className="pos-thank-tamil">நன்றி! மீண்டும் வருக!</div>
+            <div className="pos-thank-en">!! THANK YOU.. VISIT AGAIN !!</div>
           </div>
 
           {/* Clean paper feed gap before auto-cutter blade */}

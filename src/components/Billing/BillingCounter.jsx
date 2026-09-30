@@ -62,6 +62,7 @@ export default function BillingCounter() {
     addCounterSale,
     addInventoryStock,
     openInvoice,
+    closeInvoice,
     navigateTo,
     isOnline,
     taxSettings,
@@ -102,6 +103,7 @@ export default function BillingCounter() {
   const [selectedStockDetailItem, setSelectedStockDetailItem] = useState(null); // Click & View Details item
   const [isAddNewProductOpen, setIsAddNewProductOpen] = useState(false);
   const [editingPriceItem, setEditingPriceItem] = useState(null); // { item, newPrice, reason }
+  const [editingUnitItem, setEditingUnitItem] = useState(null); // { item, sweetObj, mode, val, isLitre }
   const [editingMasterPriceItem, setEditingMasterPriceItem] = useState(null); // { id, name, price, stockKg, minThreshold }
   const [editingSkuProduct, setEditingSkuProduct] = useState(null); // { id, name, skuCode }
   const [newSkuInput, setNewSkuInput] = useState('');
@@ -259,6 +261,33 @@ export default function BillingCounter() {
   const [lastEditedSplit, setLastEditedSplit] = useState('cash'); // 'cash' | 'upi'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+  // Live Date & Time ticker: Updates continuously every second without page refresh
+  const [liveDate, setLiveDate] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLiveDate(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const liveDateString = useMemo(() => {
+    return liveDate.toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  }, [liveDate]);
+
+  const liveTimeString = useMemo(() => {
+    return liveDate.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    });
+  }, [liveDate]);
 
   // Reset selected mode filter to 'all' if all items are removed from bill
   useEffect(() => {
@@ -421,6 +450,7 @@ export default function BillingCounter() {
   const inlineInputRef = useRef(null);
 
   const openInlineWeight = (sweet, existingWeight) => {
+    setEditingUnitItem(null);
     if (inlineWeightId === sweet.id && !existingWeight) {
       setInlineWeightId(null);
       setEditingWeight(null);
@@ -432,6 +462,9 @@ export default function BillingCounter() {
     setEditingWeight(existingWeight || null);
 
     const isLitre = isLitreItem(sweet);
+    const isKg = isKgItem(sweet);
+    const defUnit = resolveProductDefaultUnit(sweet) || (isBeverageDrink(sweet) ? '1 Cup' : isPieceItem(sweet) ? '1 Pc' : '1 Unit');
+
     if (existingWeight) {
       const ew = String(existingWeight).toLowerCase().trim();
       if (ew.includes('ml')) {
@@ -451,25 +484,30 @@ export default function BillingCounter() {
         setInlineUnit('g');
         setInlineMode('g');
       } else {
-        setInlineVal(isLitre ? '1' : '1');
-        setInlineUnit(isLitre ? 'L' : 'kg');
-        setInlineMode(isLitre ? 'L' : 'kg');
+        setInlineVal(ew.replace(/[^0-9.]/g, '') || '1');
+        setInlineUnit(isLitre ? 'L' : isKg ? 'kg' : defUnit);
+        setInlineMode(isLitre ? 'L' : isKg ? 'kg' : 'qty');
       }
     } else {
-      // Directly open in entry mode (image format)
+      // Directly open in entry mode (kg, L, or piece/cup)
       if (isLitre) {
         setInlineVal('1');
         setInlineUnit('L');
         setInlineMode('L');
-      } else {
+      } else if (isKg) {
         setInlineVal('1');
         setInlineUnit('kg');
         setInlineMode('kg');
+      } else {
+        setInlineVal('1');
+        setInlineUnit(defUnit);
+        setInlineMode('qty');
       }
     }
 
     setTimeout(() => {
       inlineInputRef.current?.focus();
+      inlineInputRef.current?.select();
       const rowEl = document.getElementById(`pos-row-${sweet.id}`);
       if (rowEl) {
         rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -501,9 +539,13 @@ export default function BillingCounter() {
     } else if (mode === 'rs') {
       setInlineUnit('rs');
       setInlineVal('100');
+    } else if (mode === 'qty') {
+      setInlineUnit('qty');
+      setInlineVal('1');
     }
     setTimeout(() => {
       inlineInputRef.current?.focus();
+      inlineInputRef.current?.select();
     }, 60);
   };
 
@@ -519,13 +561,17 @@ export default function BillingCounter() {
         return `= ${l}L (${ml}ml)`;
       }
       return `= ${ml}ml`;
-    } else {
+    } else if (isKgItem(sweet)) {
       const grams = Math.round((amt / rate) * 1000);
       if (grams >= 1000) {
         const kg = parseFloat((grams / 1000).toFixed(3));
         return `= ${kg} kg (${grams}g)`;
       }
       return `= ${grams}g`;
+    } else {
+      const defUnit = resolveProductDefaultUnit(sweet) || 'unit';
+      const computedQty = Math.max(1, Math.round(amt / rate));
+      return `= ${computedQty} ${defUnit}`;
     }
   };
 
@@ -538,6 +584,7 @@ export default function BillingCounter() {
     if (isNaN(num) || num <= 0) return;
     let formatted;
     let finalPrice = null;
+    const defUnit = resolveProductDefaultUnit(sweet) || (isBeverageDrink(sweet) ? '1 Cup' : isPieceItem(sweet) ? '1 Pc' : '1 Unit');
 
     if (inlineMode === 'rs') {
       const rupeeAmount = Math.round(num);
@@ -546,15 +593,38 @@ export default function BillingCounter() {
       if (isLitreItem(sweet)) {
         const ml = Math.round((rupeeAmount / perUnitRate) * 1000);
         formatted = ml >= 1000 ? `${parseFloat((ml / 1000).toFixed(3))}L` : `${ml}ml`;
-      } else {
+        finalPrice = rupeeAmount;
+      } else if (isKgItem(sweet)) {
         const grams = Math.round((rupeeAmount / perUnitRate) * 1000);
         formatted = grams >= 1000 ? `${parseFloat((grams / 1000).toFixed(3))} kg` : `${grams}g`;
+        finalPrice = rupeeAmount;
+      } else {
+        // Piece or cup product: calculate quantity from rupees
+        const computedQty = Math.max(1, Math.round(rupeeAmount / perUnitRate));
+        formatted = defUnit;
+        handleAddSweetToBill(sweet, formatted, computedQty, perUnitRate);
+        setEditingWeight(null);
+        setInlineWeightId(null);
+        setInlineMode(null);
+        setInlineVal('');
+        setSearchQuery('');
+        return;
       }
-      finalPrice = rupeeAmount;
     } else if (isLitreItem(sweet)) {
       formatted = (inlineUnit === 'L' || inlineUnit === 'Litre' || inlineMode === 'L' || inlineMode === 'l') ? `${num}L` : `${num}ml`;
-    } else {
+    } else if (isKgItem(sweet)) {
       formatted = (inlineUnit === 'kg' || inlineMode === 'kg') ? `${num} kg` : `${num}g`;
+    } else {
+      // Cup or piece or unit
+      const qtyNum = Math.max(1, parseInt(inlineVal, 10) || 1);
+      formatted = defUnit;
+      handleAddSweetToBill(sweet, formatted, qtyNum);
+      setEditingWeight(null);
+      setInlineWeightId(null);
+      setInlineMode(null);
+      setInlineVal('');
+      setSearchQuery('');
+      return;
     }
 
     if (editingWeight && editingWeight !== formatted) {
@@ -591,6 +661,7 @@ export default function BillingCounter() {
     setInlineWeightId(null);
     setInlineMode(null);
     setInlineVal('');
+    setSearchQuery('');
   };
 
   useEffect(() => {
@@ -820,6 +891,71 @@ export default function BillingCounter() {
       filteredIds.forEach((id) => shouldSelect ? selected.add(id) : selected.delete(id));
       return [...selected];
     });
+  };
+
+  const handleSendShiftBillWhatsApp = (bill) => {
+    if (!bill) return;
+    const rawPhone = String(bill.customer?.phone || '').trim();
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+    const hasValidPhone = cleanDigits.length >= 10 && !rawPhone.toLowerCase().includes('counter') && !rawPhone.toLowerCase().includes('desk');
+
+    if (hasValidPhone) {
+      const rawName = (bill.customer?.fullName || '').trim();
+      const hasName = rawName && rawName.toLowerCase() !== 'walk-in customer';
+      const greeting = hasName ? `🙏 *வணக்கம் / Vanakkam ${rawName}!*` : `🙏 *வணக்கம் / Vanakkam!*`;
+      const custDisplay = hasName ? `${rawName} (${cleanDigits})` : cleanDigits;
+
+      const itemsText = (bill.items || [])
+        .map((it) => {
+          const sku = it.skuCode || it.itemNumber ? ` [SKU: ${it.skuCode || it.itemNumber}]` : '';
+          return `• ${it.name}${sku} (${it.weight || it.unit || '1 Pc'}) × ${it.quantity} = ₹${(Number(it.price || 0) * Number(it.quantity || 1))}`;
+        })
+        .join('\n');
+
+      const splitCash = bill.splitCash ?? bill.paymentDetails?.cash ?? 0;
+      const splitUpi = bill.splitUpi ?? bill.paymentDetails?.upi ?? 0;
+      const paymentModeLabel = bill.paymentMethod === 'split'
+        ? `Split Payment (Cash: ₹${splitCash} + UPI: ₹${splitUpi})`
+        : bill.paymentMethod === 'cash' || bill.paymentMethod === 'Cash'
+        ? 'Cash (Paid at Counter)'
+        : bill.paymentMethod === 'upi' || bill.paymentMethod === 'UPI'
+        ? `UPI / QR (${bill.upiUtr || 'Paid'})`
+        : bill.paymentMethod === 'card' || bill.paymentMethod === 'Card'
+        ? 'Card / POS'
+        : 'Cash (Paid at Counter)';
+
+      const formattedTotal = Number(bill.grandTotal || 0) % 1 === 0
+        ? Number(bill.grandTotal || 0).toFixed(0)
+        : Number(bill.grandTotal || 0).toFixed(2);
+
+      const discountAmt = Number(bill.discountAmount) || 0;
+      const discountPct = Number(bill.discountPercent) || 0;
+      const discountReason = bill.discountReason || '';
+
+      const msg = `${greeting}\n` +
+        `Thank you for shopping at *Thenisai Sweets*! 🍯✨\n\n` +
+        `🧾 *Invoice No:* ${bill.invoiceNumber || bill.id}\n` +
+        `📅 *Date:* ${bill.orderDate || new Date().toLocaleDateString('en-IN')} ${bill.orderTime || ''}\n` +
+        `👤 *Customer:* ${custDisplay}\n\n` +
+        `📦 *Order Items:*\n${itemsText}\n\n` +
+        (discountAmt > 0 ? `🏷️ *Special Discount (${discountPct}%${discountReason ? ` - ${discountReason}` : ''}):* -₹${discountAmt.toFixed(2)}\n` : '') +
+        `💰 *Total Amount:* ₹${formattedTotal}\n` +
+        `💳 *Payment Mode:* ${paymentModeLabel}\n\n` +
+        `🛍️ *Pre-Order Sweets & Quick Counter Pickup!* 📦✨\n` +
+        `Did you know? You can now pre-order your favorite traditional sweets & savouries at *www.thenisaisweets.com* and have them packed ready for quick counter pickup!\n\n` +
+        `🌐 *Pre-Order Menu:* https://www.thenisaisweets.com/#menu\n` +
+        `📞 *Counter & Orders Helpline:* +91 93448 93547\n\n` +
+        `Thank you! Visit us again! 🙏🍯✨`;
+
+      const targetPhone = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+      const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+      const url = isMobile
+        ? `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`
+        : `https://web.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
+      window.open(url, '_blank');
+    } else {
+      openInvoice(bill);
+    }
   };
 
   const myShiftTotalRevenue = myShiftBills.reduce((sum, b) => sum + (b.grandTotal || 0), 0);
@@ -1156,7 +1292,7 @@ export default function BillingCounter() {
   const [tempDiscountReason, setTempDiscountReason] = useState('Special Discount');
 
   const billSubtotal = useMemo(
-    () => billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1), 0),
+    () => billItems.reduce((sum, it) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 0), 0),
     [billItems]
   );
   const billDiscountAmount = useMemo(() => {
@@ -1286,7 +1422,7 @@ export default function BillingCounter() {
   };
   const handleToggleProductSelection = handleSelectProductCard;
 
-  // Direct quantity update in active bill
+  // Direct quantity update in active bill (allows 0 without removing item on backspace)
   const handleSetBillItemQty = (sweetOrId, weight, qty) => {
     const val = parseInt(qty, 10);
     const id = typeof sweetOrId === 'object' ? sweetOrId.id : sweetOrId;
@@ -1298,10 +1434,7 @@ export default function BillingCounter() {
     }
     if (!itemWeight) itemWeight = defUnit;
 
-    if (isNaN(val) || val <= 0) {
-      handleRemoveBillItem(id, itemWeight);
-      return;
-    }
+    const finalVal = isNaN(val) || val < 0 ? 0 : val;
 
     const price = (typeof sweetOrId === 'object' && sweetOrId.price) ? Number(sweetOrId.price) : computeItemPrice(sweetObj, itemWeight);
 
@@ -1309,9 +1442,9 @@ export default function BillingCounter() {
       const idx = prev.findIndex((i) => i.id === id && i.weight === itemWeight);
       if (idx > -1) {
         const updated = [...prev];
-        updated[idx] = { ...updated[idx], quantity: val };
+        updated[idx] = { ...updated[idx], quantity: finalVal };
         return updated;
-      } else {
+      } else if (finalVal > 0) {
         return [
           ...prev,
           {
@@ -1321,28 +1454,27 @@ export default function BillingCounter() {
             skuCode: sweetObj?.skuCode || (sweetObj?.itemNumber ? String(sweetObj.itemNumber) : ''),
             weight: itemWeight,
             price,
-            quantity: val,
+            quantity: finalVal,
             hsn: sweetObj?.hsn || '2106',
             image: sweetObj?.image,
             unit: defUnit,
           },
         ];
       }
+      return prev;
     });
   };
 
-  // Stepper update (+1 or -1)
+  // Stepper update (+1 or -1, minimum 0 without auto-deletion)
   const handleUpdateBillQty = (id, weight, delta) => {
     setBillItems((prev) =>
-      prev
-        .map((it) => {
-          if (it.id === id && it.weight === weight) {
-            const newQty = it.quantity + delta;
-            return newQty > 0 ? { ...it, quantity: newQty } : null;
-          }
-          return it;
-        })
-        .filter(Boolean)
+      prev.map((it) => {
+        if (it.id === id && it.weight === weight) {
+          const newQty = Math.max(0, (it.quantity || 0) + delta);
+          return { ...it, quantity: newQty };
+        }
+        return it;
+      })
     );
   };
 
@@ -1501,6 +1633,194 @@ export default function BillingCounter() {
     setEditingPriceItem(null);
   };
 
+  const parseWeightToGramsOrMl = (weightStr, isLitre = false) => {
+    if (!weightStr) return 1000;
+    const str = String(weightStr).toLowerCase().trim();
+    if (str.includes('kg')) {
+      const val = parseFloat(str.replace(/[^0-9.]/g, '')) || 1;
+      return val * 1000;
+    }
+    if (str.includes('ml')) {
+      return parseFloat(str.replace(/[^0-9.]/g, '')) || 500;
+    }
+    if (str.includes('l') || str.includes('litre')) {
+      const val = parseFloat(str.replace(/[^0-9.]/g, '')) || 1;
+      return val * 1000;
+    }
+    if (str.includes('g')) {
+      return parseFloat(str.replace(/[^0-9.]/g, '')) || 250;
+    }
+    return 1000;
+  };
+
+  const formatGramsOrMl = (val, isLitre = false) => {
+    const safeVal = Math.max(0, val);
+    if (isLitre) {
+      if (safeVal >= 1000) {
+        const l = parseFloat((safeVal / 1000).toFixed(3));
+        return `${l}L`;
+      }
+      return `${Math.round(safeVal)}ml`;
+    } else {
+      if (safeVal >= 1000) {
+        const kg = parseFloat((safeVal / 1000).toFixed(3));
+        return `${kg} kg`;
+      }
+      return `${Math.round(safeVal)}g`;
+    }
+  };
+
+  // Dedicated weight / unit edit handler for active customer bill items
+  const handleOpenBillUnitEdit = (item, actionType = 'set') => {
+    closeInlineWeight();
+
+    const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
+    const wt = String(item.weight || '').toLowerCase().trim();
+    const isLitre = (sweetObj && isLitreItem(sweetObj)) || wt.includes('ml') || wt.includes('litre') || wt.includes('l');
+
+    let initMode = isLitre ? 'L' : 'kg';
+    let initVal = '1';
+
+    if (actionType === 'set') {
+      if (isLitre) {
+        if (wt.includes('ml')) {
+          initMode = 'ml';
+          initVal = wt.replace(/[^0-9.]/g, '') || '500';
+        } else {
+          initMode = 'L';
+          initVal = wt.replace(/[^0-9.]/g, '') || '1';
+        }
+      } else {
+        if (wt.includes('g') && !wt.includes('kg')) {
+          initMode = 'g';
+          initVal = wt.replace(/[^0-9.]/g, '') || '250';
+        } else {
+          initMode = 'kg';
+          initVal = wt.replace(/[^0-9.]/g, '') || '1';
+        }
+      }
+    } else if (actionType === 'plus') {
+      initMode = isLitre ? 'L' : 'kg';
+      initVal = '1';
+    } else if (actionType === 'minus') {
+      const currentGramsOrMl = parseWeightToGramsOrMl(item.weight, isLitre);
+      if (currentGramsOrMl > 1000) {
+        initMode = isLitre ? 'L' : 'kg';
+        initVal = '1';
+      } else {
+        initMode = isLitre ? 'ml' : 'g';
+        initVal = '250';
+      }
+    }
+
+    setEditingUnitItem({
+      item,
+      sweetObj,
+      actionType, // 'set' | 'plus' | 'minus'
+      mode: initMode,
+      val: initVal,
+      isLitre,
+    });
+  };
+
+  const handleToggleBillUnitEdit = (item, targetAction) => {
+    if (editingUnitItem && editingUnitItem.item.id === item.id && editingUnitItem.item.weight === item.weight) {
+      if (editingUnitItem.actionType === targetAction) {
+        setEditingUnitItem(null);
+        return;
+      }
+    }
+    handleOpenBillUnitEdit(item, targetAction);
+  };
+
+  const computeUnitPreview = (editingUnit) => {
+    if (!editingUnit) return { weightStr: '', price: 0, deltaStr: '', deltaPrice: 0, deltaGramsOrMl: 0, newGramsOrMl: 0, currentWeightStr: '' };
+    const { item, sweetObj, actionType, mode, val, isLitre } = editingUnit;
+    const num = parseFloat(val);
+    if (isNaN(num) || num <= 0) return { weightStr: '—', price: 0, deltaStr: '0', deltaPrice: 0, deltaGramsOrMl: 0, newGramsOrMl: 0, currentWeightStr: item?.weight || '' };
+
+    const baseRate = Number(sweetObj?.price) || Number(item.price) || 0;
+    const currentGramsOrMl = parseWeightToGramsOrMl(item.weight, isLitre);
+
+    let deltaGramsOrMl = 0;
+    if (mode === 'rs') {
+      const rupeeAmount = Math.round(num);
+      deltaGramsOrMl = Math.round((rupeeAmount / (baseRate || 1)) * 1000);
+    } else if (mode === 'g' || mode === 'ml') {
+      deltaGramsOrMl = num;
+    } else if (mode === 'kg' || mode === 'L') {
+      deltaGramsOrMl = num * 1000;
+    }
+
+    let newGramsOrMl = currentGramsOrMl;
+    if (actionType === 'plus') {
+      newGramsOrMl = currentGramsOrMl + deltaGramsOrMl;
+    } else if (actionType === 'minus') {
+      newGramsOrMl = Math.max(0, currentGramsOrMl - deltaGramsOrMl);
+    } else {
+      newGramsOrMl = deltaGramsOrMl;
+    }
+
+    const finalWeightStr = formatGramsOrMl(newGramsOrMl, isLitre);
+    const deltaStr = formatGramsOrMl(deltaGramsOrMl, isLitre);
+    const finalPrice = Math.round((baseRate * newGramsOrMl) / 1000);
+    const deltaPrice = mode === 'rs' ? Math.round(num) : Math.round((baseRate * deltaGramsOrMl) / 1000);
+
+    return {
+      weightStr: finalWeightStr,
+      price: finalPrice,
+      deltaStr,
+      deltaPrice,
+      deltaGramsOrMl,
+      newGramsOrMl,
+      currentWeightStr: item.weight,
+    };
+  };
+
+  const handleConfirmBillUnitEdit = () => {
+    if (!editingUnitItem) return;
+    const { item, sweetObj, actionType } = editingUnitItem;
+    const { weightStr, price, newGramsOrMl } = computeUnitPreview(editingUnitItem);
+
+    if (actionType === 'minus' && newGramsOrMl <= 0) {
+      handleRemoveBillItem(item.id, item.weight);
+      setEditingUnitItem(null);
+      return;
+    }
+
+    if (!weightStr || weightStr === '—' || price <= 0) return;
+
+    setBillItems((prev) => {
+      const oldIdx = prev.findIndex((it) => it.id === item.id && it.weight === item.weight);
+      if (oldIdx === -1) return prev;
+
+      const existingDuplicateIdx = prev.findIndex((it, idx) => idx !== oldIdx && it.id === item.id && it.weight === weightStr);
+      if (existingDuplicateIdx > -1) {
+        const updated = prev.filter((_, idx) => idx !== oldIdx);
+        const targetIdx = updated.findIndex((it) => it.id === item.id && it.weight === weightStr);
+        if (targetIdx > -1) {
+          updated[targetIdx] = {
+            ...updated[targetIdx],
+            quantity: (updated[targetIdx].quantity || 1) + 1,
+            price,
+          };
+        }
+        return updated;
+      }
+
+      const updated = [...prev];
+      updated[oldIdx] = {
+        ...updated[oldIdx],
+        weight: weightStr,
+        price,
+        quantity: 1,
+      };
+      return updated;
+    });
+
+    setEditingUnitItem(null);
+  };
+
   const handleConfirmMasterPriceUpdate = async () => {
     if (!editingMasterPriceItem) return;
     const num = parseFloat(editingMasterPriceItem.price);
@@ -1603,7 +1923,11 @@ export default function BillingCounter() {
     if (options && options.preventDefault) options.preventDefault();
     const shouldPrint = typeof options === 'object' && 'autoPrint' in options ? options.autoPrint : true;
 
-    if (billItems.length === 0) return;
+    const validItems = billItems.filter((it) => (Number(it.quantity) || 0) > 0);
+    if (validItems.length === 0) {
+      alert('Please enter a quantity greater than 0 before completing the bill.');
+      return;
+    }
 
     // Split validation
     let finalSplitCash = parseFloat(splitCash) || 0;
@@ -1635,7 +1959,7 @@ export default function BillingCounter() {
     if (!isSandbox && validateStockBeforeBilling) {
       setIsCheckingStock(true);
       try {
-        const stockCheck = await validateStockBeforeBilling(billItems);
+        const stockCheck = await validateStockBeforeBilling(validItems);
         if (stockCheck && !stockCheck.ok && stockCheck.errors && stockCheck.errors.length > 0) {
           setIsCheckingStock(false);
           setStockErrors(stockCheck.errors);
@@ -1726,7 +2050,7 @@ export default function BillingCounter() {
         state: 'Tamil Nadu',
         pincode: '635001',
       },
-      items: [...billItems],
+      items: [...validItems],
       subtotal: billSubtotal,
       discountPercent: billDiscountPercent,
       discountAmount: billDiscountAmount,
@@ -1794,6 +2118,9 @@ export default function BillingCounter() {
     if (shouldPrint) {
       setTimeout(() => {
         window.print();
+        setTimeout(() => {
+          if (typeof closeInvoice === 'function') closeInvoice();
+        }, 300);
       }, 400);
     }
   };
@@ -1899,14 +2226,20 @@ export default function BillingCounter() {
     });
   }, [allProducts, searchQuery, selectedCategory, billItems]);
 
-  // Fast Enter key in search box adds the top matched item directly to bill
+  // Fast Enter key in search box: Ask for units (kg, g, rs or cup/pc, rs) and show "Add to Bill"
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (filteredSweets.length > 0) {
         const topItem = filteredSweets[0];
-        handleAddSweetToBill(topItem, topItem.unit || '1 Cup', 1);
-        setSearchQuery('');
+        // Don't auto-add directly; prompt for units (kg, g, rs, etc.) and show Add to Bill
+        openInlineWeight(topItem);
+        setTimeout(() => {
+          const rowEl = document.getElementById(`pos-row-${topItem.id}`);
+          if (rowEl) {
+            rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }, 50);
       }
     }
   };
@@ -2290,6 +2623,38 @@ export default function BillingCounter() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
+            {/* Live Date & Time Counter Clock Badge */}
+            <div
+              className="pos-live-clock-badge"
+              title="Live Date & Time (Continuous sync without refresh)"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '5px 12px',
+                borderRadius: '8px',
+                background: '#f8fafc',
+                border: '1px solid #cbd5e1',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: '#1e293b',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <span
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: '#16a34a',
+                  display: 'inline-block',
+                  boxShadow: '0 0 0 2px rgba(22, 163, 74, 0.25)',
+                }}
+              />
+              <span style={{ color: '#475569' }}>{liveDateString}</span>
+              <span style={{ color: '#0f172a', fontWeight: 800, fontFamily: 'monospace, tabular-nums' }}>{liveTimeString}</span>
+            </div>
+
             {user?.role === 'admin' && (
               <button
                 type="button"
@@ -2843,7 +3208,7 @@ export default function BillingCounter() {
                                             ₹ rs
                                           </button>
                                         </>
-                                      ) : (
+                                      ) : isKgItem(sweet) ? (
                                         <>
                                           <button
                                             type="button"
@@ -2858,6 +3223,23 @@ export default function BillingCounter() {
                                             onClick={() => handleSelectUnitMode('kg')}
                                           >
                                             kg
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('rs')}
+                                          >
+                                            ₹ rs
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${inlineMode === 'qty' || !inlineMode ? 'active' : ''}`}
+                                            onClick={() => handleSelectUnitMode('qty')}
+                                          >
+                                            {defaultUnit || 'Qty'}
                                           </button>
                                           <button
                                             type="button"
@@ -2917,6 +3299,20 @@ export default function BillingCounter() {
                                           ))}
                                         </>
                                       )}
+                                      {inlineMode === 'qty' && (
+                                        <>
+                                          {['1', '2', '3', '5', '10'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                              onClick={() => setInlineVal(val)}
+                                            >
+                                              {val} {defaultUnit || 'Qty'}
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
                                       {inlineMode === 'rs' && (
                                         <>
                                           {['50', '100', '150', '200', '500'].map((val) => (
@@ -2938,7 +3334,7 @@ export default function BillingCounter() {
                                   <div className="iwp-controls-row">
                                     <div className="iwp-input-wrapper">
                                       <span className="iwp-input-affix">
-                                        {inlineMode === 'rs' ? '₹' : inlineMode === 'kg' ? 'kg' : inlineMode === 'L' ? 'L' : inlineMode === 'ml' ? 'ml' : 'g'}
+                                        {inlineMode === 'rs' ? '₹' : inlineMode === 'kg' ? 'kg' : inlineMode === 'L' ? 'L' : inlineMode === 'ml' ? 'ml' : isKgItem(sweet) ? (inlineMode === 'g' ? 'g' : 'kg') : (defaultUnit || 'Qty')}
                                       </span>
                                       <input
                                         ref={inlineInputRef}
@@ -2981,6 +3377,109 @@ export default function BillingCounter() {
                               </div>
                             )}
                           </div>
+                        ) : isInlineOpen ? (
+                          <div className="pos-list-kg-action" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              className="btn-type-weight active popover-open"
+                              onClick={(e) => { e.stopPropagation(); closeInlineWeight(); }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
+                              <span>Close</span>
+                            </button>
+                            <div className="inline-weight-popover" onClick={(e) => e.stopPropagation()}>
+                              <div className="iwp-step-entry">
+                                <div className="iwp-entry-header">
+                                  <div className="iwp-mode-tabs">
+                                    <span className="iwp-mode-tabs-label">MODE:</span>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn ${inlineMode === 'qty' || !inlineMode ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('qty')}
+                                    >
+                                      {defaultUnit || 'Qty'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className={`iwp-tab-btn mode-rs-tab ${inlineMode === 'rs' ? 'active' : ''}`}
+                                      onClick={() => handleSelectUnitMode('rs')}
+                                    >
+                                      ₹ rs
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="iwp-presets">
+                                  {inlineMode === 'rs' ? (
+                                    <>
+                                      {['20', '40', '50', '100', '200'].map((val) => (
+                                        <button
+                                          key={val}
+                                          type="button"
+                                          className={`iwp-preset-pill rs-pill ${inlineVal === val ? 'active' : ''}`}
+                                          onClick={() => setInlineVal(val)}
+                                        >
+                                          ₹{val}
+                                        </button>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <>
+                                      {['1', '2', '3', '5', '10'].map((val) => (
+                                        <button
+                                          key={val}
+                                          type="button"
+                                          className={`iwp-preset-pill ${inlineVal === val ? 'active' : ''}`}
+                                          onClick={() => setInlineVal(val)}
+                                        >
+                                          {val} {defaultUnit || 'Qty'}
+                                        </button>
+                                      ))}
+                                    </>
+                                  )}
+                                </div>
+                                <div className="iwp-controls-row">
+                                  <div className="iwp-input-wrapper">
+                                    <span className="iwp-input-affix">
+                                      {inlineMode === 'rs' ? '₹' : (defaultUnit || 'Qty')}
+                                    </span>
+                                    <input
+                                      ref={inlineInputRef}
+                                      type="number"
+                                      min="1"
+                                      step="1"
+                                      className="iwp-input"
+                                      value={inlineVal}
+                                      placeholder={inlineMode === 'rs' ? 'Amount (₹)' : '1'}
+                                      onChange={(e) => setInlineVal(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') confirmInlineWeight(sweet);
+                                        if (e.key === 'Escape') closeInlineWeight();
+                                      }}
+                                    />
+                                  </div>
+                                  {inlineMode === 'rs' ? (
+                                    <span className="iwp-rs-preview">
+                                      = {Math.max(1, Math.round((parseFloat(inlineVal) || 0) / (Number(sweet.price) || 1)))} {defaultUnit || 'Qty'}
+                                    </span>
+                                  ) : (
+                                    parseFloat(inlineVal) > 0 && (
+                                      <span className="iwp-price">₹{Math.round((parseFloat(inlineVal) || 0) * (Number(sweet.price) || 0))}</span>
+                                    )
+                                  )}
+                                  <button
+                                    type="button"
+                                    className="iwp-confirm-btn"
+                                    disabled={!inlineVal || parseFloat(inlineVal) <= 0}
+                                    onClick={() => confirmInlineWeight(sweet)}
+                                  >
+                                    Add to Bill
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         ) : (
                           <div
                             className="pos-catalog-stepper"
@@ -3010,14 +3509,20 @@ export default function BillingCounter() {
                               onChange={(e) => {
                                 const raw = e.target.value.replace(/\D/g, '');
                                 const cleaned = raw.replace(/^0+/, '');
-                                if (cleaned === '' || raw === '0') {
+                                if (cleaned === '' || raw === '' || raw === '0') {
                                   handleSetBillItemQty(sweet, defaultUnit, 0);
                                 } else {
                                   const val = Math.min(999, parseInt(cleaned, 10));
                                   handleSetBillItemQty(sweet, defaultUnit, val);
                                 }
                               }}
-                              title="Type quantity (0 to remove)"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Backspace' && (qtyInBill === 0 || e.target.value === '' || e.target.value === '0')) {
+                                  e.stopPropagation();
+                                  handleSetBillItemQty(sweet, defaultUnit, 0);
+                                }
+                              }}
+                              title="Type quantity"
                             />
                             <button
                               type="button"
@@ -3104,6 +3609,10 @@ export default function BillingCounter() {
               <div className="pos-bill-header">
                 <div className="pos-bill-header-title-box">
                   <h2 className="bill-title">Current Customer Bill</h2>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} />
+                    <span>{liveDateString} • <strong style={{ color: '#0f172a' }}>{liveTimeString}</strong></span>
+                  </div>
                 </div>
                 <div className="bill-header-actions">
                   {billItems.length > 0 && (
@@ -3278,116 +3787,367 @@ export default function BillingCounter() {
                     {billItems.map((item, idx) => {
                       const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
                       const itemSku = item.skuCode || sweetObj?.skuCode || (item.itemNumber ? String(item.itemNumber) : (sweetObj?.itemNumber ? String(sweetObj.itemNumber) : ''));
+                      const wtStr = String(item.weight || '').toLowerCase().trim();
+                      const isKgOrMl = Boolean(
+                        (sweetObj && isMeasurableItem(sweetObj)) ||
+                        wtStr.includes('kg') ||
+                        (wtStr.includes('g') && !wtStr.includes('cup') && !wtStr.includes('pc') && !wtStr.includes('box') && !wtStr.includes('pkt')) ||
+                        wtStr.includes('ml') ||
+                        wtStr.includes('litre') ||
+                        wtStr.endsWith('l') ||
+                        (sweetObj && (isKgItem(sweetObj) || isLitreItem(sweetObj)))
+                      );
+
+                      const isEditingThisItem = Boolean(editingUnitItem && editingUnitItem.item.id === item.id && editingUnitItem.item.weight === item.weight);
+
                       return (
-                        <div key={`${item.id}-${item.weight}`} className="pos-bill-line">
-                          <span className="pos-bill-sno" title={`S.No: ${idx + 1}`}>
-                            {idx + 1}
-                          </span>
-                          <div className="pos-line-info">
-                            <div className="pos-line-name-wrap">
-                              <span className="pos-line-name">{item.name}</span>
-                              {itemSku && (
-                                <span className="pos-bill-sku-tag" title={`SKU / Item Code: ${itemSku}`}>
-                                  SKU: {itemSku}
-                                </span>
-                              )}
-                            </div>
-                            <div className="pos-line-weight">
-                              <span
-                                className="line-weight-tag clickable"
-                                onClick={() => {
-                                  const sweetObj = (allProducts || ALL_BILLING_ITEMS).find((s) => s.id === item.id);
-                                  if (sweetObj && (isMeasurableItem(sweetObj) || item.weight?.includes('g') || item.weight?.includes('kg') || item.weight?.includes('ml') || item.weight?.includes('L') || item.weight?.includes('l'))) {
-                                    handleOpenWeightModal(sweetObj, item.weight);
-                                  }
-                                }}
-                                title="Click to change or retype weight / volume"
-                              >
-                                {resolveBillItemUnit(item, sweetObj)}
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.6 }}>
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              </span>
-                              <span
-                                className="line-rate-info clickable-rate"
-                                onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
-                                title="Click to edit/override price (விலை மாற்றவும்)"
-                              >
-                                ₹{item.price} × {item.quantity}
-                                {item.isPriceOverridden && (
-                                  <span className="price-overridden-badge" title={`Original: ₹${item.originalPrice} (${item.overrideReason || 'Staff override'})`}>
-                                    *CUSTOM
+                        <div
+                          key={`${item.id}-${item.weight}`}
+                          className={`pos-bill-line ${isEditingThisItem ? 'weight-open' : ''}`}
+                        >
+                          <div className="pos-bill-line-main">
+                            <span className="pos-bill-sno" title={`S.No: ${idx + 1}`}>
+                              {idx + 1}
+                            </span>
+                            <div className="pos-line-info">
+                              <div className="pos-line-name-wrap">
+                                <span className="pos-line-name">{item.name}</span>
+                                {itemSku && (
+                                  <span className="pos-bill-sku-tag" title={`SKU / Item Code: ${itemSku}`}>
+                                    SKU: {itemSku}
                                   </span>
                                 )}
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.7 }}>
-                                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                                </svg>
-                              </span>
+                              </div>
+                              <div className="pos-line-weight">
+                                {!isKgOrMl && (
+                                  <span className="line-weight-tag">
+                                    {resolveBillItemUnit(item, sweetObj)}
+                                  </span>
+                                )}
+                                <span
+                                  className="line-rate-info clickable-rate"
+                                  onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
+                                  title="Click to edit/override price (விலை மாற்றவும்)"
+                                >
+                                  {isKgOrMl
+                                    ? `₹${item.price} / ${item.weight || 'unit'}`
+                                    : `₹${item.price} × ${item.quantity}`}
+                                  {item.isPriceOverridden && (
+                                    <span className="price-overridden-badge" title={`Original: ₹${item.originalPrice} (${item.overrideReason || 'Staff override'})`}>
+                                      *CUSTOM
+                                    </span>
+                                  )}
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: '3px', opacity: 0.7 }}>
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </span>
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Stepper with Direct Quantity Input */}
-                          <div className="pos-line-stepper">
+                            {/* For kg, ml (weighted/measurable items), render Unit Stepper with - and + asking for how much to adjust */}
+                            {isKgOrMl ? (
+                              <div className="pos-line-unit-stepper">
+                                <button
+                                  type="button"
+                                  className={`pos-unit-step-btn minus ${isEditingThisItem && editingUnitItem.actionType === 'minus' ? 'active' : ''}`}
+                                  onClick={() => handleToggleBillUnitEdit(item, 'minus')}
+                                  title="Reduce weight (- அளவு குறைக்க)"
+                                >
+                                  −
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`pos-line-unit-btn-inner ${isEditingThisItem && editingUnitItem.actionType === 'set' ? 'active' : ''}`}
+                                  onClick={() => handleToggleBillUnitEdit(item, 'set')}
+                                  title="Click to edit unit / weight (அளவை மாற்றவும்)"
+                                >
+                                  <span>{resolveBillItemUnit(item, sweetObj)}</span>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
+                                  className={`pos-unit-step-btn plus ${isEditingThisItem && editingUnitItem.actionType === 'plus' ? 'active' : ''}`}
+                                  onClick={() => handleToggleBillUnitEdit(item, 'plus')}
+                                  title="Add weight (+ அளவு சேர்க்க)"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="pos-line-stepper">
+                                <button
+                                  type="button"
+                                  className="line-step-btn"
+                                  onClick={() => handleUpdateBillQty(item.id, item.weight, -1)}
+                                  title="Decrease 1"
+                                >
+                                  −
+                                </button>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  pattern="[0-9]*"
+                                  className="line-qty-input"
+                                  value={item.quantity !== undefined && item.quantity !== null ? String(item.quantity) : '0'}
+                                  placeholder="0"
+                                  onFocus={(e) => e.target.select()}
+                                  onChange={(e) => {
+                                    const raw = e.target.value.replace(/\D/g, '');
+                                    const cleaned = raw.replace(/^0+/, '');
+                                    if (cleaned === '' || raw === '' || raw === '0') {
+                                      handleSetBillItemQty(item, item.weight, 0);
+                                    } else {
+                                      const val = Math.min(999, parseInt(cleaned, 10));
+                                      handleSetBillItemQty(item, item.weight, val);
+                                    }
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Backspace' && (item.quantity === 0 || e.target.value === '' || e.target.value === '0')) {
+                                      e.stopPropagation();
+                                      handleSetBillItemQty(item, item.weight, 0);
+                                    }
+                                  }}
+                                  title="Type quantity (Press × button to remove item)"
+                                />
+                                <button
+                                  type="button"
+                                  className="line-step-btn"
+                                  onClick={() => handleUpdateBillQty(item.id, item.weight, 1)}
+                                  title="Increase 1"
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+
+                            <span
+                              className="pos-line-price clickable-rate"
+                              onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
+                              title="Click to override rate (விலை மாற்றவும்)"
+                            >
+                              ₹{item.price * item.quantity}
+                            </span>
+
                             <button
                               type="button"
-                              className="line-step-btn"
-                              onClick={() => handleUpdateBillQty(item.id, item.weight, -1)}
-                              title="Decrease 1"
+                              className="pos-line-del"
+                              onClick={() => handleRemoveBillItem(item.id, item.weight)}
+                              title="Remove item"
+                              aria-label="Remove item"
                             >
-                              −
-                            </button>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              className="line-qty-input"
-                              value={item.quantity > 0 ? String(item.quantity) : ''}
-                              placeholder="0"
-                              onFocus={(e) => e.target.select()}
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/\D/g, '');
-                                const cleaned = raw.replace(/^0+/, '');
-                                if (cleaned === '' || raw === '0') {
-                                  handleRemoveBillItem(item.id, item.weight);
-                                } else {
-                                  const val = Math.min(999, parseInt(cleaned, 10));
-                                  handleSetBillItemQty(item, item.weight, val);
-                                }
-                              }}
-                              title="Type exact quantity (0 to remove)"
-                            />
-                            <button
-                              type="button"
-                              className="line-step-btn"
-                              onClick={() => handleUpdateBillQty(item.id, item.weight, 1)}
-                              title="Increase 1"
-                            >
-                              +
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                              </svg>
                             </button>
                           </div>
 
-                          <span
-                            className="pos-line-price clickable-rate"
-                            onClick={() => setEditingPriceItem({ item, newPrice: String(item.price), reason: item.overrideReason || '' })}
-                            title="Click to override rate (விலை மாற்றவும்)"
-                          >
-                            ₹{item.price * item.quantity}
-                          </span>
+                          {/* Exact inline popover from catalog for adding + , - in cart */}
+                          {isEditingThisItem && (
+                            <div className="pos-cart-inline-popover-wrap" onClick={(e) => e.stopPropagation()}>
+                              <div className="pos-cart-inline-top-bar">
+                                <span className="pos-cart-inline-action-tag">
+                                  {editingUnitItem.actionType === 'plus' ? (
+                                    <span className="cart-action-tag plus">+ ADD TO {item.weight} (கூடுதல் எடை)</span>
+                                  ) : editingUnitItem.actionType === 'minus' ? (
+                                    <span className="cart-action-tag minus">− REDUCE FROM {item.weight} (எடை குறைக்க)</span>
+                                  ) : (
+                                    <span className="cart-action-tag set">UPDATE WEIGHT ({item.weight})</span>
+                                  )}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn-type-weight active popover-open"
+                                  onClick={() => setEditingUnitItem(null)}
+                                  title="Close (Esc)"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                  </svg>
+                                  <span>Close</span>
+                                </button>
+                              </div>
 
-                          <button
-                            type="button"
-                            className="pos-line-del"
-                            onClick={() => handleRemoveBillItem(item.id, item.weight)}
-                            title="Remove item"
-                            aria-label="Remove item"
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                              <line x1="18" y1="6" x2="6" y2="18" />
-                              <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                          </button>
+                              <div className="inline-weight-popover pos-cart-inline-weight-popover">
+                                <div className="iwp-step-entry">
+                                  {/* Mode switcher tabs (enlarged & touch-friendly) */}
+                                  <div className="iwp-entry-header">
+                                    <div className="iwp-mode-tabs">
+                                      <span className="iwp-mode-tabs-label">MODE:</span>
+                                      {editingUnitItem.isLitre ? (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${editingUnitItem.mode === 'ml' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'ml', val: '250' })}
+                                          >
+                                            ml
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${editingUnitItem.mode === 'L' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'L', val: '1' })}
+                                          >
+                                            L
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn mode-rs-tab ${editingUnitItem.mode === 'rs' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'rs', val: '100' })}
+                                          >
+                                            ₹ rs
+                                          </button>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${editingUnitItem.mode === 'g' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'g', val: '250' })}
+                                          >
+                                            g
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn ${editingUnitItem.mode === 'kg' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'kg', val: '1' })}
+                                          >
+                                            kg
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className={`iwp-tab-btn mode-rs-tab ${editingUnitItem.mode === 'rs' ? 'active' : ''}`}
+                                            onClick={() => setEditingUnitItem({ ...editingUnitItem, mode: 'rs', val: '100' })}
+                                          >
+                                            ₹ rs
+                                          </button>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Quick Presets for fast 1-tap selection (when not in direct kg / L mode) */}
+                                  {editingUnitItem.mode !== 'kg' && editingUnitItem.mode !== 'L' && (
+                                    <div className="iwp-presets">
+                                      {editingUnitItem.mode === 'g' && (
+                                        <>
+                                          {['100', '250', '500', '750'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${editingUnitItem.val === val ? 'active' : ''}`}
+                                              onClick={() => setEditingUnitItem({ ...editingUnitItem, val })}
+                                            >
+                                              {editingUnitItem.actionType === 'plus' ? '+' : editingUnitItem.actionType === 'minus' ? '−' : ''}{val}g
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+
+                                      {editingUnitItem.mode === 'ml' && (
+                                        <>
+                                          {['100', '250', '500', '750'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill ${editingUnitItem.val === val ? 'active' : ''}`}
+                                              onClick={() => setEditingUnitItem({ ...editingUnitItem, val })}
+                                            >
+                                              {editingUnitItem.actionType === 'plus' ? '+' : editingUnitItem.actionType === 'minus' ? '−' : ''}{val}ml
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+
+                                      {editingUnitItem.mode === 'rs' && (
+                                        <>
+                                          {['50', '100', '150', '200', '500'].map((val) => (
+                                            <button
+                                              key={val}
+                                              type="button"
+                                              className={`iwp-preset-pill rs-pill ${editingUnitItem.val === val ? 'active' : ''}`}
+                                              onClick={() => setEditingUnitItem({ ...editingUnitItem, val })}
+                                            >
+                                              {editingUnitItem.actionType === 'plus' ? '+' : editingUnitItem.actionType === 'minus' ? '−' : ''}₹{val}
+                                            </button>
+                                          ))}
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Custom Input & Controls */}
+                                  {(() => {
+                                    const preview = computeUnitPreview(editingUnitItem);
+                                    const displayPrice = preview.deltaPrice > 0 ? preview.deltaPrice : preview.price;
+
+                                    return (
+                                      <div className="iwp-controls-row">
+                                        <div className="iwp-input-wrapper">
+                                          <span className="iwp-input-affix">
+                                            {editingUnitItem.mode === 'rs'
+                                              ? '₹'
+                                              : editingUnitItem.mode === 'kg'
+                                              ? 'kg'
+                                              : editingUnitItem.mode === 'L'
+                                              ? 'L'
+                                              : editingUnitItem.mode === 'ml'
+                                              ? 'ml'
+                                              : 'g'}
+                                          </span>
+                                          <input
+                                            type="number"
+                                            min={editingUnitItem.mode === 'kg' || editingUnitItem.mode === 'L' ? '0.05' : '1'}
+                                            step={editingUnitItem.mode === 'kg' || editingUnitItem.mode === 'L' ? '0.05' : '1'}
+                                            className="iwp-input"
+                                            value={editingUnitItem.val}
+                                            placeholder={editingUnitItem.mode === 'rs' ? 'Amount (₹)' : editingUnitItem.mode === 'kg' ? '1' : editingUnitItem.mode === 'L' ? '1' : '250'}
+                                            onChange={(e) => setEditingUnitItem({ ...editingUnitItem, val: e.target.value })}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') handleConfirmBillUnitEdit();
+                                              if (e.key === 'Escape') setEditingUnitItem(null);
+                                            }}
+                                            autoFocus
+                                          />
+                                        </div>
+
+                                        {editingUnitItem.mode === 'rs' ? (
+                                          preview.deltaStr ? (
+                                            <span className="iwp-rs-preview" title="Calculated quantity for entered amount">
+                                              = {editingUnitItem.actionType === 'plus' ? '+' : editingUnitItem.actionType === 'minus' ? '−' : ''}{preview.deltaStr}
+                                            </span>
+                                          ) : null
+                                        ) : (
+                                          displayPrice > 0 && (
+                                            <span className="iwp-price" title={`New total: ${preview.weightStr} = ₹${preview.price}`}>
+                                              {editingUnitItem.actionType === 'minus' ? `−₹${displayPrice}` : `₹${displayPrice}`}
+                                            </span>
+                                          )
+                                        )}
+
+                                        <button
+                                          type="button"
+                                          className="iwp-confirm-btn"
+                                          disabled={!editingUnitItem.val || parseFloat(editingUnitItem.val) <= 0}
+                                          onClick={handleConfirmBillUnitEdit}
+                                        >
+                                          {editingUnitItem.actionType === 'plus'
+                                            ? 'Add to Bill'
+                                            : editingUnitItem.actionType === 'minus'
+                                            ? '− Reduce'
+                                            : 'Add to Bill'}
+                                        </button>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -4135,7 +4895,7 @@ export default function BillingCounter() {
                           Amount {shiftSortBy === 'amount-desc' ? '▼' : shiftSortBy === 'amount-asc' ? '▲' : ''}
                         </th>
                         <th style={{ width: '120px', textAlign: 'center' }}>Status</th>
-                        <th style={{ minWidth: '235px', textAlign: 'right' }}>Action</th>
+                        <th style={{ minWidth: '340px', textAlign: 'right' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -4264,6 +5024,17 @@ export default function BillingCounter() {
                                   <rect x="6" y="14" width="12" height="8"/>
                                 </svg>
                                 <span>Print Bill</span>
+                              </button>
+                              <button
+                                type="button"
+                                className="btn-shift-whatsapp-inv"
+                                onClick={() => handleSendShiftBillWhatsApp(bill)}
+                                title={`Send bill ${bill.invoiceNumber || bill.id} to customer on WhatsApp`}
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12.05 2c-5.48 0-9.93 4.45-9.93 9.93 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.48 0 9.94-4.46 9.94-9.93 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0 0 12.05 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.22 8.22 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.42 0-2.81-.37-4.04-1.07l-.29-.17-3.12.82.83-3.04-.19-.3a8.21 8.21 0 0 1-1.26-4.48c0-4.54 3.7-8.24 8.24-8.24m4.53 11.66c-.25-.13-1.47-.72-1.7-.81-.23-.08-.39-.13-.56.13-.17.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.13-1.06-.39-2.02-1.24-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.44.13-.14.17-.25.25-.42.08-.17.04-.31-.02-.44-.06-.13-.56-1.35-.77-1.85-.2-.49-.41-.42-.56-.43h-.48c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.61.13.17 1.77 2.7 4.29 3.79.6.26 1.07.41 1.44.53.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.18.21-.58.21-1.07.15-1.18-.06-.11-.22-.18-.47-.3z"/>
+                                </svg>
+                                <span>WhatsApp</span>
                               </button>
                               <button
                                 type="button"
@@ -5338,6 +6109,8 @@ export default function BillingCounter() {
         }}
         initialSweetId={refillTargetSweetId}
       />
+
+
 
       {/* Staff / Admin Price Override Modal */}
       {editingPriceItem && (

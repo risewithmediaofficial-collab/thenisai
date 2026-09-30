@@ -83,20 +83,20 @@ export async function request(endpoint, options = {}) {
   }
 
   const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes((options.method || 'GET').toUpperCase());
+  const isDynamicPosEndpoint = endpoint.startsWith('/api/bills') || endpoint.startsWith('/api/inventory') || endpoint.startsWith('/api/expenses') || endpoint.startsWith('/api/preorders');
+  const bypassCache = isWrite || options.noCache || options.cache === 'no-store' || isDynamicPosEndpoint;
 
   // Rule 8 & 11: Request Interceptor (Inject auth token and required headers)
   const token = sessionStorage.getItem('thenisai_auth_token') || localStorage.getItem('thenisai_auth_token');
   const headers = {
     'Content-Type': 'application/json',
-    // Only send no-cache headers for writes — allow browser to cache GET responses
-    ...(isWrite ? { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' } : {}),
+    ...(bypassCache ? { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(fetchOptions.headers || {}),
   };
 
   const config = {
-    // Only bypass cache for write operations
-    ...(isWrite ? { cache: 'no-store' } : {}),
+    ...(bypassCache ? { cache: 'no-store' } : {}),
     ...fetchOptions,
     headers,
     signal: controller.signal,

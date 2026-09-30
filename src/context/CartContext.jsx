@@ -1455,7 +1455,22 @@ export function CartProvider({ children }) {
     window.addEventListener('hashchange', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
 
+    // Periodic live background sync (every 6 seconds) to keep multi-terminal counters synchronized in real-time
+    const liveSyncInterval = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncWithBackend();
+        // Also auto-flush offline bills queue if any pending
+        try {
+          const q = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || '[]');
+          if (q.length > 0) {
+            syncOfflineBillsInternal().catch(() => {});
+          }
+        } catch {}
+      }
+    }, 6000);
+
     return () => {
+      clearInterval(liveSyncInterval);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('hashchange', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -1465,16 +1480,17 @@ export function CartProvider({ children }) {
   // Fetch bills with optional cashier filter, merged with offline ledger
   const fetchBills = async (cashierId) => {
     try {
-      const endpoint = cashierId && cashierId !== 'all'
-        ? `/api/bills?cashierId=${encodeURIComponent(cashierId)}`
-        : '/api/bills';
-      const res = await api.get(endpoint);
-      if (res.success && Array.isArray(res.bills)) {
+      // Always fetch all bills from /api/bills to maintain universal cross-system bill synchronization
+      const res = await api.get('/api/bills', { cache: 'no-store' });
+      if (res && res.success && Array.isArray(res.bills)) {
         const merged = mergeBillsWithLedger(res.bills);
         setBills(merged);
         try {
           localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(merged));
         } catch { }
+        if (cashierId && cashierId !== 'all') {
+          return merged.filter(b => b.cashier?.id === cashierId || b.cashier?.username === cashierId);
+        }
         return merged;
       }
     } catch (err) {
@@ -1482,6 +1498,9 @@ export function CartProvider({ children }) {
     }
     const localMerged = mergeBillsWithLedger([]);
     setBills(localMerged);
+    if (cashierId && cashierId !== 'all') {
+      return localMerged.filter(b => b.cashier?.id === cashierId || b.cashier?.username === cashierId);
+    }
     return localMerged;
   };
 
