@@ -494,11 +494,11 @@ export default function InvoiceModal() {
           {/* Discount Breakdown if applied */}
           {discountAmount > 0 && (
             <>
-              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', padding: '1px 0' }}>
+              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', padding: '1px 0' }}>
                 <span>Subtotal:</span>
                 <span>₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', fontWeight: 700, padding: '1px 0' }}>
+              <div className="pos-stats-line" style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, padding: '1px 0' }}>
                 <span>DISCOUNT ({discountPercent}%):</span>
                 <span>-₹{discountAmount.toFixed(2)}</span>
               </div>
