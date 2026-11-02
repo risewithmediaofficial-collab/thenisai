@@ -2245,3 +2245,411 @@
   font-weight: 600 !important;
   text-align: center !important;
 }
+
+
+/* ==========================================================================
+   MODERN MOBILE SIDEBAR DRAWER & HIGHWAY STOREFRONT ENHANCEMENTS
+   ========================================================================== */
+
+/* Hamburger Animation */
+.stardust-nav__hamburger {
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 10px !important;
+  width: 42px !important;
+  height: 42px !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.stardust-nav__hamburger:hover {
+  background: #FBF3E2 !important;
+  border-color: #C59334 !important;
+}
+
+.stardust-nav__hamburger .hamburger-line {
+  display: block !important;
+  width: 20px !important;
+  height: 2px !important;
+  background: #1C0F08 !important;
+  border-radius: 2px !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
+  margin: 2px 0 !important;
+}
+
+.stardust-nav__hamburger.is-active .hamburger-line:nth-child(1) {
+  transform: translateY(6px) rotate(45deg) !important;
+}
+
+.stardust-nav__hamburger.is-active .hamburger-line:nth-child(2) {
+  opacity: 0 !important;
+  transform: scaleX(0) !important;
+}
+
+.stardust-nav__hamburger.is-active .hamburger-line:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg) !important;
+}
+
+/* Sidebar Backdrop with Blur */
+.stardust-sidebar-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(28, 15, 8, 0.65) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  z-index: 99998 !important;
+  animation: stardustFadeIn 0.2s ease forwards !important;
+}
+
+@keyframes stardustFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Slide-In Off-Canvas Drawer */
+.stardust-mobile-sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: min(380px, 88vw) !important;
+  height: 100% !important;
+  height: 100dvh !important;
+  background: #FFFFFF !important;
+  z-index: 99999 !important;
+  box-shadow: -12px 0 40px rgba(28, 15, 8, 0.22) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  animation: stardustSidebarSlideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+@keyframes stardustSidebarSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Sidebar Top Header */
+.stardust-sidebar__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 16px 20px !important;
+  border-bottom: 1px solid #EFE8DE !important;
+  background: #FAF7F2 !important;
+  flex-shrink: 0 !important;
+}
+
+.stardust-sidebar__brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.stardust-sidebar__logo-img {
+  width: 38px !important;
+  height: 38px !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  padding: 2px !important;
+  border: 1px solid #EFE8DE !important;
+}
+
+.stardust-sidebar__brand-name {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 19px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  margin: 0 !important;
+  line-height: 1.1 !important;
+}
+
+.stardust-sidebar__brand-tag {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 10.5px !important;
+  color: #8C7769 !important;
+  margin: 2px 0 0 0 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.stardust-sidebar__close-btn {
+  background: #FFFFFF !important;
+  border: 1px solid #EFE8DE !important;
+  color: #1C0F08 !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  padding: 0 !important;
+}
+
+.stardust-sidebar__close-btn:hover {
+  background: #FBF3E2 !important;
+  color: #C59334 !important;
+  border-color: #C59334 !important;
+}
+
+/* Scrollable Sidebar Body */
+.stardust-sidebar__body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 22px !important;
+}
+
+.stardust-sidebar__section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.stardust-sidebar__section-title {
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: #8C6218 !important;
+  text-transform: uppercase !important;
+}
+
+.stardust-sidebar__links {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.stardust-sidebar__link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 14px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 14px !important;
+  text-decoration: none !important;
+  color: #1C0F08 !important;
+  transition: all 0.15s ease !important;
+}
+
+.stardust-sidebar__link:hover,
+.stardust-sidebar__link--active {
+  background: #FBF3E2 !important;
+  border-color: rgba(197, 147, 52, 0.45) !important;
+  box-shadow: 0 4px 12px rgba(197, 147, 52, 0.08) !important;
+}
+
+.stardust-sidebar__link-left {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.stardust-sidebar__link-icon {
+  font-size: 18px !important;
+  width: 32px !important;
+  height: 32px !important;
+  background: #FFFFFF !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1px solid #EFE8DE !important;
+}
+
+.stardust-sidebar__link-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  line-height: 1.2 !important;
+}
+
+.stardust-sidebar__pill-badge {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  font-size: 9px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  padding: 2px 7px !important;
+  border-radius: 999px !important;
+}
+
+.stardust-sidebar__link-desc {
+  display: block !important;
+  font-size: 11px !important;
+  color: #8C7769 !important;
+  margin-top: 2px !important;
+  font-weight: 500 !important;
+}
+
+.stardust-sidebar__chevron {
+  color: #C59334 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Quick Category Shortcut Chips */
+.stardust-sidebar__shortcuts {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+}
+
+.stardust-sidebar__shortcut-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 12px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #4A382A !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.stardust-sidebar__shortcut-chip:hover {
+  background: #FBF3E2 !important;
+  border-color: #C59334 !important;
+  color: #C59334 !important;
+}
+
+/* Highway Info Card */
+.stardust-sidebar__info-card {
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 14px !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.stardust-sidebar__info-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+}
+
+.stardust-sidebar__info-icon {
+  font-size: 16px !important;
+  margin-top: 1px !important;
+}
+
+.stardust-sidebar__info-title {
+  display: block !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  margin-bottom: 2px !important;
+}
+
+.stardust-sidebar__info-text {
+  font-size: 11.5px !important;
+  color: #6C594C !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.stardust-sidebar__phone-btn {
+  margin-top: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 10px 14px !important;
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.stardust-sidebar__phone-btn:hover {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+}
+
+/* Sidebar Footer Sticky */
+.stardust-sidebar__footer {
+  padding: 16px 20px !important;
+  border-top: 1px solid #EFE8DE !important;
+  background: #FFFFFF !important;
+  flex-shrink: 0 !important;
+}
+
+/* Category Filter Tabs Strip in Collection */
+.stardust-collection-tabs {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  padding-bottom: 6px !important;
+  margin-bottom: 32px !important;
+}
+
+.stardust-collection-tabs::-webkit-scrollbar {
+  display: none !important;
+}
+
+.stardust-collection-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 20px !important;
+  border-radius: 9999px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  color: #5E4B3E !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.2s ease !important;
+}
+
+.stardust-collection-tab:hover {
+  background: #FBF3E2 !important;
+  color: #C59334 !important;
+  border-color: rgba(197, 147, 52, 0.45) !important;
+}
+
+.stardust-collection-tab.is-active {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border-color: #1C0F08 !important;
+  box-shadow: 0 4px 14px rgba(28, 15, 8, 0.16) !important;
+}
+
+/* Responsive adjustments for navbar */
+@media (max-width: 900px) {
+  .stardust-nav__cta-desktop {
+    display: none !important;
+  }
+  .stardust-nav__hamburger {
+    display: flex !important;
+  }
+}
