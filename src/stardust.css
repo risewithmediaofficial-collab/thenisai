@@ -2154,19 +2154,30 @@
 
 .stardust-card__badge-tag {
   position: absolute !important;
-  bottom: 10px !important;
+  top: 10px !important;
+  bottom: auto !important;
   left: 10px !important;
-  background: rgba(28, 15, 8, 0.82) !important;
+  right: auto !important;
+  width: auto !important;
+  max-width: max-content !important;
+  height: auto !important;
+  max-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
+  background: rgba(28, 15, 8, 0.85) !important;
   backdrop-filter: blur(6px) !important;
   -webkit-backdrop-filter: blur(6px) !important;
   color: #E8C06A !important;
-  border: 1px solid rgba(232, 192, 106, 0.3) !important;
+  border: 1px solid rgba(232, 192, 106, 0.35) !important;
   border-radius: 9999px !important;
-  padding: 3px 10px !important;
-  font-size: 10.5px !important;
+  padding: 4px 10px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
   letter-spacing: 0.04em !important;
+  line-height: 1.2 !important;
   z-index: 2 !important;
+  pointer-events: none !important;
 }
 
 /* Values Section Image Frame */
@@ -3356,16 +3367,29 @@ html, body {
 .stardust-card__badge-tag {
   position: absolute !important;
   top: 10px !important;
+  bottom: auto !important;
   left: 10px !important;
+  right: auto !important;
+  width: auto !important;
+  max-width: max-content !important;
+  height: auto !important;
+  max-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  white-space: nowrap !important;
   background: rgba(28, 15, 8, 0.85) !important;
   backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
   color: #E8C06A !important;
-  border: 1px solid rgba(232, 192, 106, 0.3) !important;
+  border: 1px solid rgba(232, 192, 106, 0.35) !important;
   border-radius: 9999px !important;
-  padding: 3px 10px !important;
+  padding: 4px 10px !important;
   font-size: 10px !important;
   font-weight: 700 !important;
   letter-spacing: 0.04em !important;
+  line-height: 1.2 !important;
+  z-index: 2 !important;
+  pointer-events: none !important;
 }
 
 .stardust-card__body {
