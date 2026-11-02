@@ -712,7 +712,7 @@ export default function CheckoutModal() {
 
                 <div className="calc-row total">
                   <span>Total Payable</span>
-                  <span className="total-value" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                  <span className="total-value" style={{ fontFamily: "var(--font-num, 'Lato', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
                     ₹{grandTotal}
                   </span>
                 </div>

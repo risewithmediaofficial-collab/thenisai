@@ -1,245 +1,172 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useCart } from '../../context/CartContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const { totalItems, setIsCartOpen, navigateTo } = useCart();
   const { wishlist, setIsWishlistOpen } = useWishlist();
+  const { currentView, navigateTo } = useCart();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Lock scroll when mobile menu is open
   useScrollLock(menuOpen);
 
-  const links = [
-    { label: 'Home', href: '#hero' },
-    { label: 'Menu & Pre-Order', href: '#menu', isSpecial: true },
-    { label: 'Sweets', href: '#collection' },
-    { label: 'Our Story', href: '#story' },
-    { label: 'Contact', href: '#contact' },
+  const navItems = [
+    { label: 'Home', view: 'storefront', hash: '' },
+    { label: 'Pre-Order Sweets', view: 'menu', hash: '#menu' },
+    { label: 'Our Story', view: 'story', hash: '#story' },
+    { label: 'Visit & Contact', view: 'contact', hash: '#contact' },
   ];
 
-  const scrollTo = (href) => {
+  const handleNav = (item) => {
     setMenuOpen(false);
-    if (window.__lenis) {
-      window.__lenis.scrollTo(href, { offset: -20, duration: 1.2 });
-    } else {
-      const el = document.querySelector(href);
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }
+    window.location.hash = item.hash;
+    navigateTo(item.view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePreOrderCTA = () => {
+    setMenuOpen(false);
+    window.location.hash = '#menu';
+    navigateTo('menu');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <>
-      <motion.nav
-        className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <div className="navbar__inner">
-          {/* Logo */}
-          <a className="navbar__logo" href="#hero" onClick={(e) => { e.preventDefault(); scrollTo('#hero'); }} aria-label="Thenisai Palkhova & Sweets">
-            <img src="/images/branding/logo-light.webp" alt="Thenisai Palkhova & Sweets" className="navbar__logo-img" width="160" height="97" decoding="async" />
+      <header className={`stardust-nav ${scrolled ? 'stardust-nav--scrolled' : ''}`}>
+        <div className="stardust-nav__container">
+          {/* Brand Logo with Actual Image from Logo Files */}
+          <a
+            href="#home"
+            className="stardust-nav__brand"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNav({ view: 'storefront', hash: '' });
+            }}
+          >
+            <img
+              src="/images/branding/logo.webp"
+              alt="Thenisai Sweets"
+              className="stardust-nav__logo-img"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            <span className="stardust-nav__logo font-garamond">Thenisai</span>
           </a>
 
-          {/* Desktop links */}
-          <ul className="navbar__links">
-            {links.map((link) => (
-              <li key={link.label}>
+          {/* Desktop Nav Links */}
+          <nav className="stardust-nav__menu font-lato" aria-label="Main Navigation">
+            {navItems.map((item) => {
+              const isActive = currentView === item.view;
+              return (
                 <a
-                  href={link.href}
-                  className="navbar__link"
+                  key={item.label}
+                  href={item.hash || '#'}
+                  className={`stardust-nav__link ${isActive ? 'stardust-nav__link--active' : ''}`}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (link.href === '#menu') {
-                      window.location.hash = '#menu';
-                      navigateTo('menu');
-                    } else {
-                      scrollTo(link.href);
-                    }
+                    handleNav(item);
                   }}
-                  style={link.isSpecial ? {
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    color: '#fbbf24',
-                    fontWeight: 600,
-                    padding: '3px 10px',
-                    borderRadius: '16px',
-                    background: 'rgba(217, 119, 6, 0.15)',
-                    border: '1px solid rgba(217, 119, 6, 0.35)',
-                  } : {}}
                 >
-                  {link.label}
-                  {link.isSpecial && (
-                    <span style={{ fontSize: '9px', fontWeight: 700, background: '#d97706', color: '#fff', padding: '1px 5px', borderRadius: '6px', letterSpacing: '0.04em' }}>
-                      NEW
-                    </span>
-                  )}
+                  {item.label}
                 </a>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </nav>
 
-          {/* Right actions: Wishlist + Cart + Order CTA */}
-          <div className="navbar__actions">
+          {/* Right Action Buttons */}
+          <div className="stardust-nav__actions font-lato">
+            {/* Wishlist Icon */}
             <button
-              className={`navbar__wishlist-btn ${wishlist.length > 0 ? 'has-items' : ''}`}
+              type="button"
+              className="stardust-nav__icon-btn"
               onClick={() => setIsWishlistOpen(true)}
-              aria-label={`View wishlist (${wishlist.length} saved)`}
-              title="My Wishlist"
+              aria-label="Saved Sweets"
+              title="Saved Sweets"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill={wishlist.length > 0 ? '#D97706' : 'none'} stroke={wishlist.length > 0 ? '#D97706' : 'currentColor'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={wishlist.length > 0 ? '#C59334' : 'none'} stroke={wishlist.length > 0 ? '#C59334' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
               {wishlist.length > 0 && (
-                <span className="navbar__cart-badge">{wishlist.length}</span>
+                <span className="stardust-nav__badge">{wishlist.length}</span>
               )}
             </button>
 
+            {/* Search Icon */}
             <button
-              className="navbar__cart-btn"
-              onClick={() => setIsCartOpen(true)}
-              aria-label={`View sweet box cart (${totalItems} items)`}
+              type="button"
+              className="stardust-nav__icon-btn"
+              onClick={handlePreOrderCTA}
+              aria-label="Search All Sweets"
+              title="Search All Sweets"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M3 6h18" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M16 10a4 4 0 01-8 0" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              {totalItems > 0 && (
-                <span className="navbar__cart-badge">{totalItems}</span>
-              )}
             </button>
 
+            {/* Pre-Order Now Pill Button */}
             <button
-              className="navbar__cta btn btn-gold"
-              onClick={() => {
-                if (totalItems > 0) {
-                  setIsCartOpen(true);
-                } else {
-                  scrollTo('#collection');
-                }
-              }}
+              type="button"
+              className="stardust-btn stardust-btn--primary"
+              onClick={handlePreOrderCTA}
             >
-              <span>{totalItems > 0 ? 'Checkout' : 'Order Now'}</span>
+              <span>Pre-Order Now</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+            </button>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              className={`stardust-nav__hamburger ${menuOpen ? 'is-open' : ''}`}
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+            >
+              <span />
+              <span />
             </button>
           </div>
+        </div>
+      </header>
 
-          {/* Mobile hamburger */}
+      {/* Mobile Drawer Menu */}
+      {menuOpen && (
+        <div className="stardust-nav__mobile font-lato">
+          {navItems.map((item) => (
+            <a
+              key={item.label}
+              href={item.hash || '#'}
+              className="stardust-nav__mobile-link"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNav(item);
+              }}
+            >
+              {item.label}
+            </a>
+          ))}
           <button
-            className={`navbar__hamburger ${menuOpen ? 'open' : ''}`}
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
+            type="button"
+            className="stardust-btn stardust-btn--primary"
+            style={{ marginTop: '8px', width: '100%' }}
+            onClick={handlePreOrderCTA}
           >
-            <span /><span /><span />
+            <span>Pre-Order Sweets Online ↗</span>
           </button>
         </div>
-      </motion.nav>
-
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {menuOpen && (
-          <motion.div
-            className="mobile-menu"
-            data-lenis-prevent
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="mobile-menu__inner">
-              <nav className="mobile-menu__links">
-                {links.map((link, i) => (
-                  <motion.a
-                    key={link.label}
-                    href={link.href}
-                    className={`mobile-menu__link ${link.isSpecial ? 'mobile-menu__link--special' : ''}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setMenuOpen(false);
-                      if (link.href === '#menu') {
-                        window.location.hash = '#menu';
-                        navigateTo('menu');
-                      } else {
-                        scrollTo(link.href);
-                      }
-                    }}
-                    initial={{ opacity: 0, y: 18 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 + 0.08 }}
-                  >
-                    <span className="mobile-menu__link-num">0{i + 1}</span>
-                    <span className="mobile-menu__link-text">
-                      {link.label}
-                    </span>
-                    {link.isSpecial && (
-                      <span className="mobile-menu__badge">
-                        PRE-ORDER
-                      </span>
-                    )}
-                  </motion.a>
-                ))}
-
-                <button
-                  type="button"
-                  className="mobile-menu__wishlist-btn"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    setIsWishlistOpen(true);
-                  }}
-                >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    My Wishlist
-                  </span>
-                  {wishlist.length > 0 && <span className="mobile-wishlist-count">{wishlist.length}</span>}
-                </button>
-
-                <motion.div
-                  className="mobile-menu__divider"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.3 }}
-                />
-
-                <motion.button
-                  className="btn btn-gold mobile-menu__cta"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    if (totalItems > 0) {
-                      setIsCartOpen(true);
-                    } else {
-                      scrollTo('#collection');
-                    }
-                  }}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.35 }}
-                >
-                  <span>{totalItems > 0 ? `Sweet Box (${totalItems})` : 'Order Now'}</span>
-                </motion.button>
-              </nav>
-
-              <div className="mobile-menu__footer">
-                <div className="mobile-menu__tagline">Since 2006 · Pure · Rich · Traditional</div>
-                <div className="mobile-menu__sub">Handcrafted South Indian Delicacies</div>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      )}
     </>
   );
 }
-

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, Suspense, lazy, startTransition } from 're
 import LoadingScreen from './components/Loader/LoadingScreen';
 import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
+import PreOrderTopBar from './components/PreOrder/PreOrderTopBar';
+import PreOrderAlert from './components/PreOrder/PreOrderAlert';
 import CartDrawer from './components/Cart/CartDrawer';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
@@ -14,6 +16,8 @@ const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
 const BillingCounter = lazy(() => import('./components/Billing/BillingCounter'));
 const StaffLoginModal = lazy(() => import('./components/Auth/StaffLoginModal'));
 const CustomerMenuPage = lazy(() => import('./components/Menu/CustomerMenuPage'));
+const StoryPage = lazy(() => import('./pages/StoryPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
 const CompanyManagerDashboard = lazy(() => import('./components/Admin/CompanyManagerDashboard'));
 
 // Read-only banner shown to demo/viewer accounts
@@ -26,7 +30,7 @@ function SandboxBanner({ onLogout }) {
         background: 'linear-gradient(90deg, #4f46e5, #7c3aed, #db2777)',
         color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '8px 20px', fontSize: '12px', fontWeight: 600,
-        letterSpacing: '0.03em', fontFamily: 'Inter, system-ui, sans-serif',
+        letterSpacing: '0.03em', fontFamily: 'Lato, system-ui, sans-serif',
         boxShadow: '0 2px 14px rgba(0,0,0,0.4)',
       }}
     >
@@ -59,16 +63,13 @@ const InvoiceModal = lazy(() => import('./components/Billing/InvoiceModal'));
 const WishlistDrawer = lazy(() => import('./components/Wishlist/WishlistDrawer'));
 const CustomerAuthModal = lazy(() => import('./components/Wishlist/CustomerAuthModal'));
 
+
 // Lazy load heavy storefront sections
-const BrandStory = lazy(() => import('./components/Story/BrandStory'));
-const SignaturePalkova = lazy(() => import('./components/Signature/SignaturePalkova'));
 const SweetsCollection = lazy(() => import('./components/Collection/SweetsCollection'));
-const InteractiveSweet = lazy(() => import('./components/Interactive/InteractiveSweet'));
-const IngredientsSection = lazy(() => import('./components/Ingredients/IngredientsSection'));
-const TraditionSection = lazy(() => import('./components/Tradition/TraditionSection'));
-const ProductShowcase = lazy(() => import('./components/Showcase/ProductShowcase'));
+const StatsBanner = lazy(() => import('./components/Stats/StatsBanner'));
+const ValuesSection = lazy(() => import('./components/Values/ValuesSection'));
 const CustomerReviews = lazy(() => import('./components/Reviews/CustomerReviews'));
-const ContactSection = lazy(() => import('./components/Contact/ContactSection'));
+const SweetCircleSection = lazy(() => import('./components/Newsletter/SweetCircleSection'));
 const Footer = lazy(() => import('./components/Footer/Footer'));
 
 function ModuleLoader({ label = 'Loading Thenisai...' }) {
@@ -168,9 +169,48 @@ function AppContent({ isLoaded, handleLoadComplete }) {
   // Route to Customer Menu / Pre-Order Page (Public)
   if (currentView === 'menu') {
     return (
-      <Suspense fallback={<ModuleLoader label="Loading Menu..." />}>
-        <CustomerMenuPage />
-      </Suspense>
+      <div className="site">
+        <PreOrderTopBar />
+        <Navbar />
+        <Suspense fallback={<ModuleLoader label="Loading Pre-Order Menu..." />}>
+          <CustomerMenuPage />
+        </Suspense>
+        <Footer />
+        <WishlistDrawer />
+        <CustomerAuthModal />
+      </div>
+    );
+  }
+
+  // Route to Our Story & Heritage Page (Public)
+  if (currentView === 'story') {
+    return (
+      <div className="site">
+        <PreOrderTopBar />
+        <Navbar />
+        <Suspense fallback={<ModuleLoader label="Loading Our Story..." />}>
+          <StoryPage />
+        </Suspense>
+        <Footer />
+        <WishlistDrawer />
+        <CustomerAuthModal />
+      </div>
+    );
+  }
+
+  // Route to Visit & Contact Page (Public)
+  if (currentView === 'contact') {
+    return (
+      <div className="site">
+        <PreOrderTopBar />
+        <Navbar />
+        <Suspense fallback={<ModuleLoader label="Loading Visit and Contact..." />}>
+          <ContactPage />
+        </Suspense>
+        <Footer />
+        <WishlistDrawer />
+        <CustomerAuthModal />
+      </div>
     );
   }
 
@@ -227,6 +267,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <div style={isTestMode ? { marginTop: 36 } : undefined}>
             <BillingCounter />
             <InvoiceModal />
+            <PreOrderAlert />
           </div>
         </Suspense>
       );
@@ -238,6 +279,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <AdminDashboard />
           <InvoiceModal />
+          <PreOrderAlert />
         </div>
       </Suspense>
     );
@@ -258,6 +300,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <BillingCounter />
           <InvoiceModal />
+          <PreOrderAlert />
         </div>
       </Suspense>
     );
@@ -271,34 +314,29 @@ function AppContent({ isLoaded, handleLoadComplete }) {
 
       {/* Main site — mounted immediately for instant LCP discovery & zero layout delay */}
       <div className="site">
+        <PreOrderTopBar />
         <Navbar />
-
         <main>
           <HeroSection />
-
-          <DeferredSection><BrandStory /></DeferredSection>
-          <DeferredSection><SignaturePalkova /></DeferredSection>
-          <DeferredSection minHeight={680}><SweetsCollection /></DeferredSection>
-          <DeferredSection><InteractiveSweet /></DeferredSection>
-          <DeferredSection><IngredientsSection /></DeferredSection>
-          <DeferredSection><TraditionSection /></DeferredSection>
-          <DeferredSection><ProductShowcase /></DeferredSection>
+          <DeferredSection minHeight={480}><SweetsCollection /></DeferredSection>
+          <DeferredSection><StatsBanner /></DeferredSection>
+          <DeferredSection><ValuesSection /></DeferredSection>
           <DeferredSection><CustomerReviews /></DeferredSection>
-          <DeferredSection><ContactSection /></DeferredSection>
+          <DeferredSection><SweetCircleSection /></DeferredSection>
         </main>
-
         <Suspense fallback={null}>
           <Footer />
         </Suspense>
       </div>
 
       {/* Cart Drawer, Wishlist Drawer, Customer Auth & Tax Invoice Portals */}
-      <CartDrawer />
+      {/* Minimalist Showcase: Online Cart disabled */}
       <Suspense fallback={null}>
         <WishlistDrawer />
         <CustomerAuthModal />
-        <CheckoutModal />
+
         <InvoiceModal />
+        <PreOrderAlert />
       </Suspense>
     </>
   );

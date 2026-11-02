@@ -56,7 +56,7 @@ function POSReduxStatusBar({ onOpenInventory, onOpenPreOrders }) {
         borderBottom: '1px solid #e2e8f0',
         fontSize: '12px',
         color: '#475569',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Lato', sans-serif",
       }}
     >
       {/* Left: Inventory Summary from Redux Store */}

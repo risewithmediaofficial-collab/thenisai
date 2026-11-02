@@ -313,7 +313,7 @@ export default function StockDetailsModal({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          fontFamily: "'Inter', -apple-system, sans-serif",
+          fontFamily: "'Lato', -apple-system, sans-serif",
         }}
       >
         {/* MODAL HEADER */}

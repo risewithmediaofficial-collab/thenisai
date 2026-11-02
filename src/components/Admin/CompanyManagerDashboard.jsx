@@ -248,7 +248,7 @@ export default function CompanyManagerDashboard() {
         overflow: 'hidden',
         backgroundColor: '#f8fafc',
         color: '#0f172a',
-        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        fontFamily: "'Lato', system-ui, -apple-system, sans-serif",
       }}
     >
       {/* Top Navigation Bar - Light Theme */}
@@ -297,7 +297,7 @@ export default function CompanyManagerDashboard() {
                   fontWeight: 800,
                   letterSpacing: '0.02em',
                   color: '#0f172a',
-                  fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+                  fontFamily: "'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 }}
               >
                 THENISAI SWEETS

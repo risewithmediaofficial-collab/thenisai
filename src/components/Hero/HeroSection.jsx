@@ -1,201 +1,111 @@
-import { lazy, useEffect, useRef, Suspense, useState } from 'react';
-import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import ScrollTrigger from 'gsap/ScrollTrigger';
-const PalkovaScene = lazy(() => import('./PalkovaScene'));
-gsap.registerPlugin(ScrollTrigger);
-
-const textVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.12 + 0.3,
-      duration: 0.8,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  }),
-};
+import { useCart } from '../../context/CartContext';
 
 export default function HeroSection() {
-  const heroRef = useRef();
-  const mousePos = useRef({ x: 0, y: 0 });
-  const [shouldLoadScene, setShouldLoadScene] = useState(false);
+  const { navigateTo } = useCart();
 
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
+  const handlePreOrder = () => {
+    window.location.hash = '#menu';
+    navigateTo('menu');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    const handleMouseMove = (e) => {
-      const rect = hero.getBoundingClientRect();
-      const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const ny = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-      mousePos.current.x = nx;
-      mousePos.current.y = ny;
-    };
+  const handleStory = () => {
+    window.location.hash = '#story';
+    navigateTo('story');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    hero.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => hero.removeEventListener('mousemove', handleMouseMove);
-  }, []);
-
-  const triggerScene = () => {
-    if (!shouldLoadScene && typeof window !== 'undefined' && !window.matchMedia('(max-width: 767px), (prefers-reduced-motion: reduce)').matches) {
-      setShouldLoadScene(true);
+  const scrollToBestsellers = () => {
+    const el = document.querySelector('#bestsellers');
+    if (el) {
+      if (window.__lenis) {
+        window.__lenis.scrollTo('#bestsellers', { offset: -20, duration: 0.9 });
+      } else {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
   return (
-    <section id="hero" className="hero" ref={heroRef}>
-      {/* Background atmospheric gradient */}
-      <div className="hero__bg">
-        <div className="hero__bg-gradient" />
-        <div className="hero__bg-radial" />
-        <div className="hero__bg-vignette" />
-      </div>
+    <section id="hero" className="stardust-hero">
+      <div className="stardust-hero__container">
+        <div className="stardust-hero__grid">
+          {/* Left Column: Typography & CTAs with Exact Font Pairings */}
+          <div className="stardust-hero__content">
+            <span className="stardust-hero__tag font-lato">
+              EST. 2006 · BANGALORE–SALEM HIGHWAY (NH 44) · KRISHNAGIRI
+            </span>
 
-      <div className="hero__container">
-        <div className="hero__grid">
-          {/* Left Column: Brand Identity & Narrative */}
-          <div className="hero__info">
-            {/* Eyebrow */}
-            <motion.div
-              className="hero__eyebrow label"
-              custom={0}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              <span className="hero__eyebrow-line" />
-              <span>Est. 2006 · Signature Palkova</span>
-              <span className="hero__eyebrow-line" />
-            </motion.div>
-
-            {/* Main Title */}
-            <motion.h1
-              className="hero__title display-xl"
-              custom={1}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              THENISAI <span className="hero__title-accent">SWEETS</span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              className="hero__subtitle"
-              custom={2}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              The Taste of Tradition
-            </motion.p>
-
-            {/* Narrative */}
-            <motion.p
-              className="hero__narrative"
-              custom={3}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              Handcrafted from 100% pure milk, slow-simmered for hours in authentic brass urulis into melt-in-the-mouth caramelized perfection.
-            </motion.p>
-
-            {/* Quality Badges */}
-            <motion.div
-              className="hero__badges"
-              custom={4}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              <span className="hero__badge">
-                <span className="hero__badge-dot" />
-                Pure Milk
+            <h1 className="stardust-hero__title font-garamond">
+              Thenisai Sweets
+              <span className="stardust-hero__script font-script">
+                The Art of Pure Milk Confectionery
               </span>
-              <span className="hero__badge-sep">/</span>
-              <span className="hero__badge">
-                <span className="hero__badge-dot" />
-                No Preservatives
-              </span>
-              <span className="hero__badge-sep">/</span>
-              <span className="hero__badge">
-                <span className="hero__badge-dot" />
-                Slow Cooked
-              </span>
-            </motion.div>
+            </h1>
 
-            {/* CTA Buttons */}
-            <motion.div
-              className="hero__cta-wrap"
-              custom={5}
-              initial="hidden"
-              animate="visible"
-              variants={textVariants}
-            >
-              <a
-                href="#collection"
-                className="btn btn-primary hero__cta"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.querySelector('#collection')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+            <p className="stardust-hero__desc font-lato">
+              Handcrafted from 100% farm-fresh cow milk collected at dawn, slow-simmered for 4+ continuous hours in authentic heavy brass urulis into melt-in-the-mouth caramelized perfection. A cherished landmark for travelers on NH 44 with zero preservatives or chemical essence.
+            </p>
+
+            {/* Unique Shop Detailing Pills */}
+            <div className="stardust-hero__pills font-lato">
+              <span className="stardust-hero__pill">● 100% Pure Cow Milk</span>
+              <span className="stardust-hero__pill">● 4-Hr Brass Uruli Simmer</span>
+              <span className="stardust-hero__pill">● Zero Essence or Fillers</span>
+              <span className="stardust-hero__pill">● Zero-Wait Highway Counter Pickup</span>
+            </div>
+
+            <div className="stardust-hero__buttons font-lato">
+              <button
+                type="button"
+                className="stardust-btn stardust-btn--primary"
+                onClick={handlePreOrder}
               >
-                <span>Explore Sweets</span>
-                <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                <span>Pre-Order Sweets Online</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
                 </svg>
-              </a>
-              <a
-                href="#story"
-                className="btn btn-outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.querySelector('#story')?.scrollIntoView({ behavior: 'smooth' });
-                }}
+              </button>
+
+              <button
+                type="button"
+                className="stardust-btn stardust-btn--outline-light"
+                onClick={handleStory}
               >
-                <span>Our Story</span>
-              </a>
-            </motion.div>
+                <span>Our 20-Year Heritage</span>
+              </button>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div
+              className="stardust-hero__scroll font-lato"
+              onClick={scrollToBestsellers}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="stardust-hero__mouse-icon">
+                <span className="stardust-hero__mouse-wheel" />
+              </div>
+              <span>Scroll to explore confectionery</span>
+            </div>
           </div>
 
-          {/* Right Column: Interactive 3D Photorealistic Palkova Uruli */}
-          <div
-            className="hero__visual"
-            onPointerEnter={triggerScene}
-            onTouchStart={triggerScene}
-            onClick={triggerScene}
-          >
-            <div className="hero__visual-glow" />
-            <div className="hero__canvas-wrap">
-              {shouldLoadScene ? (
-                <Suspense fallback={<div className="hero__canvas-placeholder" />}>
-                  <PalkovaScene mousePos={mousePos} />
-                </Suspense>
-              ) : (
-                <img
-                  className="hero__canvas-placeholder"
-                  src="/images/products/palkova_hero.webp"
-                  alt="Traditional Thenisai palkova"
-                  width="596"
-                  height="596"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                />
-              )}
+          {/* Right Column: Real Sweets Platter Image from Provided Assets */}
+          <div className="stardust-hero__media">
+            <div className="stardust-hero__platter-wrap">
+              <img
+                src="/images/products/sweets_platter_hero.jpg"
+                alt="Thenisai Traditional Sweets Platter"
+                className="stardust-hero__platter-img"
+                loading="eager"
+              />
+              <div className="stardust-hero__platter-badge font-lato">
+                <span>⭐ Fresh Morning Batch · NH 44</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Subtle bottom scroll cue */}
-      <div className="hero__scroll">
-        <div className="hero__scroll-line" />
-        <span className="label">Scroll</span>
       </div>
     </section>
   );

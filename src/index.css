@@ -51,10 +51,11 @@ body.modal-open .admin-modal-card {
   --text-light: #9C7A55;
 
   /* Typography */
-  --font-display: 'Playfair Display', serif;
-  --font-body: 'Cormorant Garamond', serif;
-  --font-ui: 'Inter', sans-serif;
-  --font-num: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Cormorant Garamond', Garamond, Georgia, serif;
+  --font-body: 'Lato', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Lato', system-ui, -apple-system, sans-serif;
+  --font-num: 'Lato', system-ui, -apple-system, sans-serif;
+  --font-script: 'Great Vibes', cursive;
 
   /* Spacing */
   --section-padding: clamp(80px, 12vw, 160px);
@@ -189,11 +190,11 @@ body.modal-open [data-lenis-prevent],
    in modern, clean sans-serif (Inter) rather than old-style serif numerals.
    ============================================================ */
 @font-face {
-  font-family: 'Playfair Display';
+  font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 300 800;
   font-display: swap;
-  src: local('Inter'), local('Inter-Regular'), local('Inter Regular'),
+  src: local('Lato'), local('Inter-Regular'), local('Inter Regular'),
        local('-apple-system'), local('BlinkMacSystemFont'), local('Segoe UI'),
        local('Roboto'), local('Helvetica Neue'), local('Arial'), local('sans-serif'),
        url('https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
@@ -205,7 +206,7 @@ body.modal-open [data-lenis-prevent],
   font-style: normal;
   font-weight: 300 800;
   font-display: swap;
-  src: local('Inter'), local('Inter-Regular'), local('Inter Regular'),
+  src: local('Lato'), local('Inter-Regular'), local('Inter Regular'),
        local('-apple-system'), local('BlinkMacSystemFont'), local('Segoe UI'),
        local('Roboto'), local('Helvetica Neue'), local('Arial'), local('sans-serif'),
        url('https://fonts.gstatic.com/s/inter/v18/UcC73FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7W0Q5nw.woff2') format('woff2');
@@ -266,7 +267,7 @@ h1, h2, h3, h4 {
 .invoice-modal-wrap h1, .invoice-modal-wrap h2, .invoice-modal-wrap h3, .invoice-modal-wrap h4,
 .pos-modal-card,
 .pos-modal-card * {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
 }
 
 /* Modern, Clean Sans-Serif Numbers for Prices, Calculations, Badges & Totals */
@@ -562,7 +563,7 @@ h1, h2, h3, h4 {
 
 @font-face {
   font-family: 'Cormorant Garamond';
-  src: local('Inter'),
+  src: local('Lato'),
        url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
   font-weight: 100 900;
   font-style: normal;
@@ -650,7 +651,7 @@ time, .hours {
   min-height: 100vh;
   background: #F8FAFC;
   color: #0F172A;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding-bottom: 60px;
 }
 
@@ -887,7 +888,7 @@ time, .hours {
 }
 
 .admin-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.55rem;
   color: #0F172A;
   margin: 0;
@@ -1018,7 +1019,7 @@ time, .hours {
 }
 
 .kpi-value {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 2rem;
   font-weight: 800;
   color: #0F172A;
@@ -1068,7 +1069,7 @@ time, .hours {
   background: transparent;
   border: none;
   padding: 9px 20px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   color: #475569;
@@ -1211,7 +1212,7 @@ time, .hours {
 }
 
 .order-invoice-no {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.05rem;
   font-weight: 700;
   color: #B45309;
@@ -1378,7 +1379,7 @@ time, .hours {
 }
 
 .total-amount-highlight {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.25rem;
   color: #0F172A;
   font-weight: 800;
@@ -1511,7 +1512,7 @@ time, .hours {
 }
 
 .inv-card__title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.1rem;
   color: #0F172A;
   margin: 0;
@@ -1558,7 +1559,7 @@ time, .hours {
 }
 
 .stock-number {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 2rem;
   font-weight: 800;
   color: #0F172A;
@@ -1741,7 +1742,7 @@ time, .hours {
 }
 
 .modal-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.4rem;
   color: #0F172A;
   margin: 4px 0 0 0;
@@ -3652,7 +3653,7 @@ time, .hours {
 }
 
 .daily-title-h2 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(22px, 2.2vw, 28px);
   font-weight: 700;
   color: #0F172A;
@@ -3843,7 +3844,7 @@ time, .hours {
 }
 
 .rev-value {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(24px, 2.2vw, 30px);
   font-weight: 800;
   color: #0F172A;
@@ -3877,7 +3878,7 @@ time, .hours {
    4. Tender Breakdown (Cash vs UPI vs Card)
    ============================================================================== */
 .section-subtitle {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.18rem;
   font-weight: 700;
   color: #0F172A;
@@ -3957,7 +3958,7 @@ time, .hours {
 }
 
 .tender-amt {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.6rem;
   font-weight: 800;
   color: #0F172A;
@@ -4209,7 +4210,7 @@ time, .hours {
 }
 
 .section-subtitle {
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Lato', 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 1.15rem;
   font-weight: 700;
   color: #0F172A;
@@ -5765,7 +5766,7 @@ time, .hours {
   overflow: hidden;
   background: #F8FAFC;
   color: #0F172A;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -5841,7 +5842,7 @@ time, .hours {
 }
 
 .pos-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   color: #0F172A;
   margin: 0;
@@ -6510,7 +6511,7 @@ time, .hours {
 }
 
 .pos-sweet-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.05rem;
   color: #0F172A;
   margin: 0;
@@ -6658,7 +6659,7 @@ time, .hours {
   background: #DCFCE7;
   border: 1px solid #86EFAC;
   color: #15803D;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -6776,7 +6777,7 @@ time, .hours {
 }
 
 .pos-list-title {
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  font-family: 'Lato', 'Lato', -apple-system, sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   color: #0F172A;
@@ -6813,7 +6814,7 @@ time, .hours {
   border: 1.5px solid #6366F1;
   background: #EEF2FF;
   color: #4F46E5;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -6917,7 +6918,7 @@ time, .hours {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-right: 6px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
 }
 
 .iwp-tab-btn {
@@ -7120,7 +7121,7 @@ time, .hours {
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s ease;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.28);
 }
 
@@ -7341,7 +7342,7 @@ time, .hours {
 }
 
 .pos-card-info .pos-sweet-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
   color: #0F172A;
@@ -7367,7 +7368,7 @@ time, .hours {
   background: #FFFFFF;
   border-left: none;
   box-shadow: -2px 0 12px rgba(15, 23, 42, 0.04);
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  font-family: 'Lato', 'Lato', -apple-system, sans-serif;
 }
 
 .pos-bill-header {
@@ -7390,7 +7391,7 @@ time, .hours {
 }
 
 .bill-sub {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -7399,7 +7400,7 @@ time, .hours {
 }
 
 .bill-title {
-  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  font-family: 'Lato', 'Lato', -apple-system, sans-serif;
   font-size: 1.15rem;
   color: #0F172A;
   margin: 0;
@@ -7940,7 +7941,7 @@ time, .hours {
 }
 
 .pos-empty-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
   color: #1E293B;
@@ -8105,7 +8106,7 @@ time, .hours {
 }
 
 .pos-line-name {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   font-weight: 700;
   font-size: 0.88rem;
   color: #0F172A;
@@ -8551,7 +8552,7 @@ time, .hours {
   color: #64748B;
   font-size: 0.78rem;
   font-weight: 600;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   cursor: pointer;
   transition: all 0.18s ease;
   letter-spacing: 0.02em;
@@ -8587,7 +8588,7 @@ time, .hours {
   color: #92400E;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
 }
 
 .manual-input {
@@ -8597,7 +8598,7 @@ time, .hours {
   border: 1.5px solid #FCD34D;
   background: #fff;
   font-size: 0.85rem;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   color: #1E293B;
   outline: none;
   transition: border-color 0.15s;
@@ -8673,7 +8674,7 @@ time, .hours {
   color: #64748B;
   font-size: 0.8rem;
   font-weight: 600;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -8693,7 +8694,7 @@ time, .hours {
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   cursor: pointer;
   transition: all 0.15s;
   box-shadow: 0 2px 6px rgba(217,119,6,0.3);
@@ -8729,7 +8730,7 @@ time, .hours {
 .calc-item {
   display: flex;
   justify-content: space-between;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   font-size: 0.84rem;
   color: #64748B;
   font-weight: 600;
@@ -8772,7 +8773,7 @@ time, .hours {
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 700;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   letter-spacing: 0.01em;
@@ -8808,7 +8809,7 @@ time, .hours {
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 700;
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -9369,7 +9370,7 @@ time, .hours {
 }
 
 .scale-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.25rem;
   color: #0F172A;
   margin: 4px 0 0 0;
@@ -9469,7 +9470,7 @@ time, .hours {
 }
 
 .computed-cost {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.45rem;
   font-weight: 800;
   color: #B45309;
@@ -9572,7 +9573,7 @@ time, .hours {
 }
 
 .shift-view-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #0F172A;
@@ -10925,7 +10926,7 @@ time, .hours {
 }
 
 .shift-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.55rem;
   font-weight: 800;
   color: #0F172A;
@@ -11072,7 +11073,7 @@ time, .hours {
 }
 
 .shift-kpi-card .kpi-val {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.7rem;
   font-weight: 800;
   color: #0F172A;
@@ -12681,7 +12682,7 @@ time, .hours {
   display: flex;
   flex-direction: column;
   animation: scaleInCard 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
 }
 
 @keyframes scaleInCard {
@@ -12713,7 +12714,7 @@ time, .hours {
 }
 
 .weight-modal-title {
-  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  font-family: 'Lato', 'Lato', sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: #0F172A;
@@ -12760,7 +12761,7 @@ time, .hours {
 }
 
 .weight-input-label {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   color: #1E293B;
@@ -12802,7 +12803,7 @@ time, .hours {
 .weight-input-unit-tag {
   position: absolute;
   right: 14px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.84rem;
   font-weight: 800;
   color: #64748B;
@@ -12825,7 +12826,7 @@ time, .hours {
   border: none;
   border-radius: 7px;
   padding: 0 12px;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.80rem;
   font-weight: 700;
   color: #64748B;
@@ -12854,7 +12855,7 @@ time, .hours {
 }
 
 .banner-calc-text {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.84rem;
   font-weight: 700;
   color: #92400E;
@@ -12920,7 +12921,7 @@ time, .hours {
 }
 
 .chip-wt {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.78rem;
   font-weight: 800;
   color: #1E293B;
@@ -12993,7 +12994,7 @@ time, .hours {
   border-radius: 10px;
   background: #FFFFFF;
   color: #475569;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
@@ -13012,7 +13013,7 @@ time, .hours {
   border-radius: 10px;
   background: #059669;
   color: #FFFFFF;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 0.94rem;
   font-weight: 800;
   cursor: pointer;
@@ -13088,7 +13089,7 @@ time, .hours {
 }
 
 .wm-title {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: #0F172A;
@@ -13300,7 +13301,7 @@ time, .hours {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
 }
 
 .wm-btn-cancel:hover {
@@ -13325,7 +13326,7 @@ time, .hours {
   gap: 6px;
   transition: all 0.15s ease;
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Lato', sans-serif;
 }
 
 .wm-btn-confirm:hover:not(:disabled) {
@@ -14317,7 +14318,7 @@ time, .hours {
 }
 
 .checkout-modal__title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.6rem;
   color: #FFF6EA;
   margin: 0;
@@ -14428,7 +14429,7 @@ time, .hours {
 }
 
 .form-section__title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.12rem;
   color: #F8E7CD;
   margin: 0 0 16px 0;
@@ -14645,7 +14646,7 @@ time, .hours {
   letter-spacing: 0.25em !important;
   text-align: center !important;
   color: #FFE6A3 !important;
-  font-family: var(--font-num, 'Inter', monospace) !important;
+  font-family: var(--font-num, 'Lato', monospace) !important;
 }
 
 .otp-code-input:focus {
@@ -14697,7 +14698,7 @@ time, .hours {
 }
 
 .otp-helper-code {
-  font-family: var(--font-num, 'Inter', monospace);
+  font-family: var(--font-num, 'Lato', monospace);
   font-size: 0.88rem;
   font-weight: 700;
   color: #FFF6EA;
@@ -14884,7 +14885,7 @@ time, .hours {
 }
 
 .checkout-summary__title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.25rem;
   color: #FFF6EA;
   margin: 0 0 16px 0;
@@ -14974,7 +14975,7 @@ time, .hours {
 }
 
 .total-value {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.6rem;
   font-weight: 800;
   color: #D4A843;
@@ -16245,7 +16246,7 @@ time, .hours {
   border: 1.5px dashed #D97706;
   border-radius: 6px;
   color: #92400E;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -16359,7 +16360,7 @@ time, .hours {
 }
 
 .inv-brand-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.5rem;
   color: #7A1F1D;
   margin: 0 0 4px 0;
@@ -16640,7 +16641,7 @@ time, .hours {
   margin: 0 auto;
   background: #FFFFFF !important;
   color: #000000 !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   font-size: 12px;
   line-height: 1.35;
   font-weight: 600;
@@ -16656,7 +16657,7 @@ time, .hours {
 }
 
 .pos-slip-document * {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   color: #000000 !important;
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
@@ -16922,7 +16923,7 @@ time, .hours {
   text-align: center;
   border-top: 2px dashed #475569;
   border-bottom: 2px dashed #475569;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 11.5px;
   font-weight: 800;
   color: #334155;
@@ -17198,7 +17199,7 @@ time, .hours {
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 11.5px !important;
     line-height: 1.25 !important;
     font-weight: 600 !important;
@@ -17211,7 +17212,7 @@ time, .hours {
 
   .invoice-portal.format-thermal .thermal-receipt-document *,
   .invoice-portal.format-thermal .pos-slip-document * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-variant-numeric: tabular-nums !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -17373,7 +17374,7 @@ time, .hours {
   }
 
   .invoice-portal.format-thermal .thermal-receipt-divider-cut * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     color: #000000 !important;
@@ -17461,7 +17462,7 @@ time, .hours {
     border-radius: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 10px !important;
     line-height: 1.2 !important;
     font-weight: 600 !important;
@@ -17474,7 +17475,7 @@ time, .hours {
 
   .invoice-portal.format-thermal-58 .thermal-receipt-document *,
   .invoice-portal.format-thermal-58 .pos-slip-document * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-variant-numeric: tabular-nums !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -17572,7 +17573,7 @@ time, .hours {
   }
 
   .invoice-portal.format-thermal-58 .thermal-receipt-divider-cut * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 9px !important;
     font-weight: 700 !important;
     color: #000000 !important;
@@ -17682,7 +17683,7 @@ time, .hours {
 }
 
 .cart-drawer__title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.5rem;
   color: #FFF6EA;
   margin: 0;
@@ -17792,7 +17793,7 @@ time, .hours {
 }
 
 .cart-empty__title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.4rem;
   color: #FFF6EA;
   margin-bottom: 8px;
@@ -17860,7 +17861,7 @@ time, .hours {
 }
 
 .cart-item__name {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Cormorant Garamond', serif;
   font-size: 1.05rem;
   color: #FFF8EF;
   font-weight: 500;
@@ -17933,7 +17934,7 @@ time, .hours {
 }
 
 .cart-item__price {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.1rem;
   color: #D4A843;
   font-weight: 700;
@@ -17944,7 +17945,7 @@ time, .hours {
 }
 
 .cart-item__unit-price {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 0.72rem;
   color: #8C7560;
   font-weight: 500;
@@ -17968,7 +17969,7 @@ time, .hours {
 }
 
 .cart-summary__val {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -17989,7 +17990,7 @@ time, .hours {
 }
 
 .cart-total__val {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 1.6rem;
   color: #D4A843;
   font-weight: 800;
@@ -18295,7 +18296,7 @@ time, .hours {
   background: rgba(14, 7, 4, 0.88);
   border: 1px solid var(--gold);
   color: var(--gold-light);
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-size: 15px;
   font-weight: 700;
   padding: 4px 10px;
@@ -19855,7 +19856,7 @@ time, .hours {
 }
 
 .stock-modal__title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   color: #0F172A;
@@ -20056,7 +20057,7 @@ select.stock-form__input {
   color: #334155;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
 }
 
 .stock-chip-btn:hover {
@@ -20084,7 +20085,7 @@ select.stock-form__input {
 }
 
 .stock-preview-val {
-  font-family: var(--font-num, 'Inter', sans-serif);
+  font-family: var(--font-num, 'Lato', sans-serif);
   font-weight: 800;
   font-size: 1.1rem;
   color: #B45309;
@@ -20472,7 +20473,7 @@ select.stock-form__input {
   align-items: center;
   column-gap: 0.35em;
   row-gap: 0.08em;
-  font-family: var(--font-display, 'Playfair Display', serif);
+  font-family: var(--font-display, 'Cormorant Garamond', serif);
   font-size: clamp(26px, 6.2vw, 84px);
   font-weight: 500;
   color: var(--cream, #fff8ee);
@@ -20493,7 +20494,7 @@ select.stock-form__input {
 }
 
 .loader__tagline {
-  font-family: var(--font-body, 'Inter', sans-serif);
+  font-family: var(--font-body, 'Lato', sans-serif);
   font-size: clamp(12px, 2.2vw, 16px);
   color: var(--gold, #d4a843);
   letter-spacing: clamp(0.12em, 2vw, 0.25em);
@@ -21330,7 +21331,7 @@ select.stock-form__input {
   bottom: 24px;
   left: 24px;
   z-index: 9999;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Lato', sans-serif;
 }
 
 .staff-switcher__inner {
@@ -22434,7 +22435,7 @@ select.stock-form__input {
 }
 
 .cust-auth-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.45rem;
   font-weight: 600;
   color: #FFF6EA;
@@ -22480,7 +22481,7 @@ select.stock-form__input {
 .preview-item-price {
   font-weight: 700;
   color: #F5D37E;
-  font-family: 'Playfair Display', serif;
+  font-family: 'Cormorant Garamond', serif;
 }
 
 .cust-auth-error {
@@ -22539,7 +22540,7 @@ select.stock-form__input {
   color: #FFF8EF;
   outline: none;
   transition: all 0.2s ease;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Lato', -apple-system, sans-serif;
   letter-spacing: 0.05em;
 }
 
@@ -22599,7 +22600,7 @@ select.stock-form__input {
   text-align: center;
   letter-spacing: 0.35em;
   outline: none;
-  font-family: 'Inter', monospace;
+  font-family: 'Lato', monospace;
   transition: all 0.2s ease;
 }
 
@@ -22670,7 +22671,7 @@ select.stock-form__input {
 .cust-auth-submit-btn {
   background: linear-gradient(135deg, #C8943A 0%, #DFB76C 100%);
   color: #160D07;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   border: none;
   border-radius: 10px;
   padding: 13px;

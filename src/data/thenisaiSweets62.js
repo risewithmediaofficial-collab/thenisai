@@ -30,7 +30,7 @@ export const THENISAI_SWEETS_62 = [
     price: 300,
     unit: 'kg',
     hsn: '0402',
-    image: '/images/products/palkova_card.jpg',
+    image: '/images/products/palkova_card.webp',
     description: 'Our traditional signature Thenisai Palkova slow-simmered in brass urulis with fresh milk and pure cow ghee.',
   },
   {

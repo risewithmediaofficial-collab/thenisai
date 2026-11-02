@@ -2423,7 +2423,7 @@ export default function BillingCounter() {
             position: 'sticky',
             top: 0,
             boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
+            fontFamily: 'Lato, system-ui, -apple-system, sans-serif',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflowX: 'auto', paddingBottom: '2px', maxWidth: '100%' }}>
@@ -6599,7 +6599,7 @@ export default function BillingCounter() {
               padding: '24px',
               color: '#fff',
               boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-              fontFamily: 'Inter, system-ui, sans-serif',
+              fontFamily: 'Lato, system-ui, sans-serif',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>

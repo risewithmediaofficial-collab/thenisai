@@ -101,7 +101,7 @@
 }
 
 .invoice-quick-inv-badge {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-family: 'Lato', 'Fira Code', monospace;
   font-weight: 700;
   font-size: 0.85rem;
   color: #1E293B;
@@ -326,7 +326,7 @@
   border: 1.5px dashed #D97706;
   border-radius: 6px;
   color: #92400E;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -350,7 +350,7 @@
   border: 1.5px dashed #D97706;
   border-radius: 6px;
   color: #92400E;
-  font-family: 'JetBrains Mono', 'Consolas', monospace;
+  font-family: 'Lato', 'Consolas', monospace;
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -440,7 +440,7 @@
 }
 
 .inv-brand-name {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.4rem;
   color: #7A1F1D;
   margin: 0 0 4px 0;
@@ -621,7 +621,7 @@
   color: #1D4ED8;
   font-size: 0.68rem;
   font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Lato', monospace;
   padding: 0 5px;
   border-radius: 3px;
   letter-spacing: 0.02em;
@@ -746,7 +746,7 @@
   margin: 0 auto;
   background: #FFFFFF !important;
   color: #000000 !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   font-size: 12px;
   line-height: 1.35;
   font-weight: 600;
@@ -762,7 +762,7 @@
 }
 
 .pos-slip-document * {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
   color: #000000 !important;
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
@@ -1056,7 +1056,7 @@
   text-align: center;
   border-top: 2px dashed #475569;
   border-bottom: 2px dashed #475569;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 11.5px;
   font-weight: 800;
   color: #334155;
@@ -1357,7 +1357,7 @@
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 11.5px !important;
     line-height: 1.25 !important;
     font-weight: 600 !important;
@@ -1370,7 +1370,7 @@
 
   .invoice-portal.format-thermal .thermal-receipt-document *,
   .invoice-portal.format-thermal .pos-slip-document * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-variant-numeric: tabular-nums !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1551,7 +1551,7 @@
   }
 
   .invoice-portal.format-thermal .thermal-receipt-divider-cut * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 10px !important;
     font-weight: 700 !important;
     color: #000000 !important;
@@ -1611,7 +1611,7 @@
     border-radius: 0 !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 10px !important;
     line-height: 1.2 !important;
     font-weight: 600 !important;
@@ -1624,7 +1624,7 @@
 
   .invoice-portal.format-thermal-58 .thermal-receipt-document *,
   .invoice-portal.format-thermal-58 .pos-slip-document * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-variant-numeric: tabular-nums !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -1722,7 +1722,7 @@
   }
 
   .invoice-portal.format-thermal-58 .thermal-receipt-divider-cut * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    font-family: 'Lato', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     font-size: 9px !important;
     font-weight: 700 !important;
     color: #000000 !important;

@@ -26,3 +26,6 @@ backend/data/backup_*.json
 test-results/
 playwright-report/
 
+
+.agents/
+

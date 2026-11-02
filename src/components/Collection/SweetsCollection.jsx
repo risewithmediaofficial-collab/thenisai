@@ -1,198 +1,146 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { SWEETS_CATALOG, SWEET_WEIGHT_OPTIONS } from '../../data/sweetsData';
-import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-function SweetCard({ sweet, index }) {
-  const { addToCart, setIsCartOpen } = useCart();
+import { useCart } from '../../context/CartContext';
+
+const BESTSELLERS = [
+  {
+    id: 'kaju-katli',
+    name: 'Diamond Kaju Katli',
+    flourish: 'Goan Cashews',
+    price: '₹280',
+    weight: '250g',
+    desc: 'Silken diamond-cut fudge handcrafted from premium Goan cashews and pure milk, slow-cooked to melt-in-the-mouth tenderness.',
+    image: '/images/products/kaju_katli_real.jpg',
+  },
+  {
+    id: 'palkova',
+    name: 'Signature Krishnagiri Palkova',
+    flourish: 'Our 20-Year Legend',
+    price: '₹340',
+    weight: '500g',
+    desc: 'Authentic 100% farm-fresh cow milk, slow-simmered in heavy brass urulis for 4 hours into golden, rich caramelized perfection.',
+    image: '/images/products/palkova_hero.webp',
+  },
+  {
+    id: 'gulab-jamun',
+    name: 'Caramel Gulab Jamun',
+    flourish: 'Desi Khoya & Saffron',
+    price: '₹300',
+    weight: '500g',
+    desc: 'Plump, melt-soft khoya dumplings fried in country ghee and steeped in fragrant green cardamom and saffron sugar nectar.',
+    image: '/images/products/gulab_jamun_real.jpg',
+  },
+  {
+    id: 'jangiri',
+    name: 'Traditional Royal Jangiri',
+    flourish: 'South Indian Swirl',
+    price: '₹280',
+    weight: '500g',
+    desc: 'Crisp, ornate festive sweet swirls piped from finely ground urad batter, fried golden and soaked in aromatic saffron syrup.',
+    image: '/images/products/jangiri_real.jpg',
+  },
+];
+
+export default function SweetsCollection() {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const isFav = isInWishlist(sweet.id);
+  const { navigateTo } = useCart();
 
-  const hasPrices = Boolean(sweet.prices);
-  const isLitre = (sweet.unit || '').toLowerCase().includes('litre') || (sweet.unit || '').toLowerCase().includes('liter');
-  const availableOptions = hasPrices
-    ? (isLitre
-        ? [
-            { id: '250ml', label: '250ml' },
-            { id: '500ml', label: '500ml' },
-            { id: '1L', label: '1 Litre' },
-            { id: '2L', label: '2 Litre' },
-          ].filter((opt) => sweet.prices[opt.id] || sweet.prices[`${opt.label}`])
-        : SWEET_WEIGHT_OPTIONS)
-    : [];
-
-  const defaultWeight = hasPrices
-    ? (isLitre ? (sweet.prices['500ml'] ? '500ml' : Object.keys(sweet.prices)[0]) : (sweet.prices['500g'] ? '500g' : '250g'))
-    : (sweet.unit || '1 Cup');
-
-  const [selectedWeight, setSelectedWeight] = useState(defaultWeight);
-  const [justAdded, setJustAdded] = useState(false);
-
-  const currentPrice = hasPrices
-    ? (sweet.prices[selectedWeight] || sweet.prices[selectedWeight === '1L' ? '1 Litre' : selectedWeight] || Object.values(sweet.prices)[0])
-    : (sweet.price || 20);
-
-  const handleAddToCart = (e) => {
-    e.stopPropagation();
-    addToCart(sweet, selectedWeight, currentPrice, 1);
-    setJustAdded(true);
-    setTimeout(() => setJustAdded(false), 1600);
-  };
-
-  const handleOrderNow = (e) => {
-    e.stopPropagation();
-    addToCart(sweet, selectedWeight, currentPrice, 1);
-    setIsCartOpen(true);
+  const handleGoToPreOrders = () => {
+    window.location.hash = '#menu';
+    navigateTo('menu');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <motion.div
-      className={`sweet-card ${sweet.featured ? 'sweet-card--featured' : ''}`}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{
-        delay: (index % 4) * 0.08,
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      viewport={{ once: true }}
-      whileHover={{ y: -6 }}
-    >
-      <div className="sweet-card__img-wrap">
-        <img
-          src={sweet.image}
-          alt={sweet.name}
-          className="sweet-card__img"
-          width="400"
-          height="534"
-          loading="lazy"
-          decoding="async"
-        />
-        <div className="sweet-card__overlay" />
-        {sweet.featured && (
-          <div className="sweet-card__badge label">Signature</div>
-        )}
-
-        {/* Wishlist Heart Toggle */}
-        <button
-          type="button"
-          className={`sweet-card__wishlist-btn ${isFav ? 'is-active' : ''}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleWishlist(sweet.id);
-          }}
-          aria-label={isFav ? `Remove ${sweet.name} from wishlist` : `Save ${sweet.name} to wishlist`}
-          title={isFav ? 'Saved in Wishlist' : 'Save to Wishlist'}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill={isFav ? '#DC2626' : 'none'}
-            stroke={isFav ? '#DC2626' : 'currentColor'}
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-        </button>
-
-        <div className="sweet-card__price-tag">
-          ₹{currentPrice}
-        </div>
-      </div>
-
-      <div className="sweet-card__body">
-        <span className="sweet-card__tagline label">{sweet.tagline}</span>
-        <h3 className="sweet-card__name">{sweet.name}</h3>
-        <p className="sweet-card__desc">{sweet.description}</p>
-
-        {/* Weight / Unit Selector */}
-        <div className="sweet-card__weights">
-          {availableOptions.length > 0 ? (
-            availableOptions.map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                className={`weight-pill ${selectedWeight === opt.id || selectedWeight === opt.label ? 'active' : ''}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSelectedWeight(opt.id);
-                }}
-              >
-                {opt.label}
-              </button>
-            ))
-          ) : (
-            <span className="weight-pill active">{sweet.unit || '1 Cup'}</span>
-          )}
-        </div>
-
-        {/* Action Controls */}
-        <div className="sweet-card__actions">
-          <button
-            type="button"
-            className={`btn-add-cart ${justAdded ? 'added' : ''}`}
-            onClick={handleAddToCart}
-          >
-            {justAdded ? (
-              <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="added-check">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>Added to Box</span>
-              </>
-            ) : (
-              <>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M12 5v14M5 12h14" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                <span>Add to Box</span>
-              </>
-            )}
-          </button>
+    <section id="bestsellers" className="stardust-section stardust-section--bestsellers">
+      <div className="stardust-container">
+        {/* Section Header with Unique Artisanal Detailing */}
+        <div className="stardust-bestsellers__header">
+          <div>
+            <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', lineHeight: 1, marginBottom: '6px' }}>
+              Handcrafted Masterpieces
+            </span>
+            <h2 className="stardust-section__title font-garamond">
+              Our Bestselling Confectionery
+            </h2>
+            <p className="stardust-section__sub font-lato">
+              Small-batch sweets prepared fresh every dawn using 100% pure cow milk and authentic traditional methods.
+            </p>
+          </div>
 
           <button
             type="button"
-            className="btn-quick-buy"
-            onClick={handleOrderNow}
-            title="Order directly"
+            className="stardust-btn stardust-btn--outline-dark font-lato"
+            onClick={handleGoToPreOrders}
           >
-            <span>Order</span>
-            <svg width="12" height="10" viewBox="0 0 14 10" fill="none">
-              <path d="M0 5h12M8 1l4 4-4 4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            <span>View All &amp; Pre-Order Online</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="7" y1="17" x2="17" y2="7" />
+              <polyline points="7 7 17 7 17 17" />
             </svg>
           </button>
         </div>
-      </div>
-    </motion.div>
-  );
-}
 
-export default function SweetsCollection() {
-  return (
-    <section id="collection" className="collection section">
-      <div className="container">
-        {/* Header */}
-        <div className="collection__header">
-          <span className="label collection__eyebrow">
-            Handcrafted Traditional Sweets
-          </span>
-          <h2 className="display-md collection__title">
-            Fresh Kitchen Collection
-          </h2>
-          <p className="collection__subtitle">
-            Crafted daily with pure farm milk and aromatic desi ghee. Choose your pack size and order directly.
-          </p>
-          <div className="gold-line" style={{ marginTop: 16 }} />
-        </div>
+        {/* 4-Card Horizontal Grid with Real Images */}
+        <div className="stardust-bestsellers__grid">
+          {BESTSELLERS.map((sweet) => {
+            const isFav = isInWishlist(sweet.id);
 
-        {/* Grid */}
-        <div className="collection__grid">
-          {SWEETS_CATALOG.map((sweet, i) => (
-            <SweetCard key={sweet.id} sweet={sweet} index={i} />
-          ))}
+            return (
+              <div key={sweet.id} className="stardust-card">
+                {/* Product Real Image Frame */}
+                <div className="stardust-card__img-wrap">
+                  <img
+                    src={sweet.image}
+                    alt={sweet.name}
+                    className="stardust-card__img"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+
+                  {/* Bookmark Button */}
+                  <button
+                    type="button"
+                    className={`stardust-card__fav-btn ${isFav ? 'is-active' : ''}`}
+                    onClick={() => toggleWishlist(sweet.id)}
+                    aria-label={`Save ${sweet.name}`}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? '#DC2626' : 'none'} stroke={isFav ? '#DC2626' : 'currentColor'} strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                  </button>
+
+                  <span className="stardust-card__badge-tag font-lato">
+                    {sweet.flourish}
+                  </span>
+                </div>
+
+                {/* Card Body */}
+                <div className="stardust-card__body font-lato">
+                  <div className="stardust-card__header">
+                    <h3 className="stardust-card__title font-garamond">{sweet.name}</h3>
+                    <div style={{ textAlign: 'right' }}>
+                      <span className="stardust-card__price">{sweet.price}</span>
+                      <small style={{ display: 'block', fontSize: '11px', color: '#8C7769' }}>/ {sweet.weight}</small>
+                    </div>
+                  </div>
+
+                  <p className="stardust-card__desc">
+                    {sweet.desc}
+                  </p>
+
+                  <button
+                    type="button"
+                    className="stardust-card__btn font-lato"
+                    onClick={handleGoToPreOrders}
+                  >
+                    <span>Pre-Order for Zero-Wait Pickup ↗</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

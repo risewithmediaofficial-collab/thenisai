@@ -1,0 +1,1896 @@
+/* ==========================================================================
+   THENISAI BRAND DESIGN SYSTEM (Logo-Based Warm Amber-Gold & Espresso Palette)
+   Typography: Lato (Sans), Great Vibes (Artisanal Script), Garamond (Serif)
+   Palette:
+     - Deep Logo Espresso: #1C0F08 / #26160B
+     - Warm Golden Honey: #C59334 / #D4A843 (hover: #AF7F24)
+     - Soft Honey Cream: #FBF3E2 (borders: rgba(197, 147, 52, 0.22))
+     - Website Ivory: #FAF7F2
+     - High Contrast Text: #1C0F08 (Headings), #5E4B3E (Body)
+   ========================================================================== */
+
+/* --- Font Families --- */
+.font-lato {
+  font-family: 'Lato', system-ui, -apple-system, sans-serif !important;
+}
+
+.font-garamond {
+  font-family: 'Cormorant Garamond', Garamond, Georgia, serif !important;
+}
+
+.font-script {
+  font-family: 'Great Vibes', cursive !important;
+}
+
+/* --- Container & Universal Foundations --- */
+.stardust-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stardust-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 600 !important;
+  padding: 10px 22px !important;
+  border-radius: 9999px !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: none !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+
+.stardust-btn--primary {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+}
+
+.stardust-btn--primary:hover {
+  background: #AF7F24 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(197, 147, 52, 0.35) !important;
+}
+
+.stardust-btn--outline-light {
+  background: transparent !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+}
+
+.stardust-btn--outline-light:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+.stardust-btn--outline-dark {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  font-size: 12px !important;
+  padding: 8px 18px !important;
+}
+
+.stardust-btn--outline-dark:hover {
+  background: #AF7F24 !important;
+}
+
+.stardust-section {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stardust-section__title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: clamp(32px, 4vw, 44px) !important;
+  font-weight: 500 !important;
+  color: #1C0F08 !important;
+  margin: 0 0 6px !important;
+  letter-spacing: -0.015em !important;
+  line-height: 1.15 !important;
+}
+
+.stardust-section__sub {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  color: #6B5749 !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.stardust-pill-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #FBF3E2 !important;
+  border: 1px solid rgba(197, 147, 52, 0.25) !important;
+  border-radius: 9999px !important;
+  padding: 6px 16px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #8C6218 !important;
+  margin-bottom: 12px !important;
+}
+
+/* --- Clean Stardust Navbar --- */
+.stardust-nav {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #EFE8DE !important;
+  height: 72px !important;
+  min-height: 72px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-nav--scrolled {
+  box-shadow: 0 4px 20px rgba(28, 15, 8, 0.06) !important;
+}
+
+.stardust-nav__container {
+  max-width: 1240px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-nav__brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+}
+
+.stardust-nav__logo-img {
+  height: 38px !important;
+  width: auto !important;
+  object-fit: contain !important;
+  border-radius: 6px !important;
+}
+
+.stardust-nav__logo {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 27px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  text-decoration: none !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1 !important;
+}
+
+.stardust-nav__menu {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 36px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.stardust-nav__link {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14.5px !important;
+  font-weight: 500 !important;
+  color: #5E4B3E !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+  padding: 6px 0 !important;
+}
+
+.stardust-nav__link:hover {
+  color: #C59334 !important;
+  font-weight: 600 !important;
+}
+
+.stardust-nav__link--active {
+  color: #C59334 !important;
+  font-weight: 700 !important;
+  position: relative !important;
+}
+
+.stardust-nav__link--active::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -2px !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 2px !important;
+  background: #C59334 !important;
+  border-radius: 2px !important;
+}
+
+.stardust-nav__actions {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 16px !important;
+}
+
+.stardust-nav__icon-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #382417 !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  transition: background 0.15s ease, color 0.15s ease !important;
+}
+
+.stardust-nav__icon-btn:hover {
+  background: #FBF3E2 !important;
+  color: #C59334 !important;
+}
+
+.stardust-nav__badge {
+  position: absolute !important;
+  top: 2px !important;
+  right: 2px !important;
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  border-radius: 9999px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 4px !important;
+}
+
+.stardust-nav__hamburger {
+  display: none !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  flex-direction: column !important;
+  gap: 5px !important;
+}
+
+.stardust-nav__hamburger span {
+  display: block !important;
+  width: 22px !important;
+  height: 2px !important;
+  background: #1C0F08 !important;
+  border-radius: 2px !important;
+}
+
+.stardust-nav__mobile {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  padding: 20px 24px 28px !important;
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #EFE8DE !important;
+}
+
+.stardust-nav__mobile-link {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #4A3A2F !important;
+  text-decoration: none !important;
+}
+
+/* --- Hero Section (Deep Logo Espresso #1C0F08 with Golden Flourishes) --- */
+.stardust-hero {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  padding: clamp(60px, 8vw, 96px) 0 clamp(80px, 10vw, 120px) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-hero__container {
+  max-width: 1240px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-hero__grid {
+  display: grid !important;
+  grid-template-columns: 1.15fr 0.85fr !important;
+  align-items: center !important;
+  gap: clamp(32px, 5vw, 64px) !important;
+  width: 100% !important;
+}
+
+.stardust-hero__content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.stardust-hero__tag {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  color: #E8C06A !important;
+  margin-bottom: 16px !important;
+  display: block !important;
+}
+
+.stardust-hero__title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: clamp(44px, 5.5vw, 68px) !important;
+  font-weight: 400 !important;
+  line-height: 1.08 !important;
+  color: #FFFFFF !important;
+  margin: 0 0 10px !important;
+  letter-spacing: -0.02em !important;
+}
+
+.stardust-hero__script {
+  display: block !important;
+  font-family: 'Great Vibes', cursive !important;
+  font-size: clamp(36px, 4.8vw, 54px) !important;
+  color: #E8C06A !important;
+  font-weight: 400 !important;
+  margin: 4px 0 18px !important;
+  line-height: 1.2 !important;
+}
+
+.stardust-hero__desc {
+  font-family: 'Lato', sans-serif !important;
+  font-size: clamp(15px, 1.2vw, 16.5px) !important;
+  line-height: 1.65 !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  margin: 0 0 32px !important;
+  max-width: 500px !important;
+}
+
+.stardust-hero__buttons {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 44px !important;
+}
+
+.stardust-hero__scroll {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11.5px !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  letter-spacing: 0.05em !important;
+  cursor: pointer !important;
+  transition: color 0.15s ease !important;
+}
+
+.stardust-hero__scroll:hover {
+  color: #E8C06A !important;
+}
+
+.stardust-hero__mouse-icon {
+  width: 14px !important;
+  height: 22px !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 12px !important;
+  position: relative !important;
+}
+
+.stardust-hero__mouse-wheel {
+  position: absolute !important;
+  top: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: 3px !important;
+  height: 5px !important;
+  background: #E8C06A !important;
+  border-radius: 2px !important;
+}
+
+.stardust-hero__media {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+.stardust-hero__platter-wrap {
+  width: clamp(280px, 34vw, 460px) !important;
+  height: clamp(280px, 34vw, 460px) !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55) !important;
+  border: 8px solid rgba(212, 168, 67, 0.15) !important;
+  background: #28160B !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* --- Universal Image Placeholders (Warm Honey & Espresso Style) --- */
+.stardust-placeholder {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 180px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #FDF9F2 !important;
+  border: 1.5px dashed #DEC8A2 !important;
+  border-radius: 12px !important;
+  color: #7A5E44 !important;
+  padding: 20px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+  font-family: 'Lato', sans-serif !important;
+}
+
+.stardust-placeholder--hero {
+  border-radius: 50% !important;
+  background: #28160B !important;
+  border-color: rgba(232, 192, 106, 0.3) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+
+.stardust-placeholder--card {
+  min-height: 100% !important;
+  background: #FAF5EB !important;
+  border-color: #E6D4B8 !important;
+}
+
+.stardust-placeholder--portrait {
+  min-height: 100% !important;
+  background: #FAF5EB !important;
+  border-color: #E6D4B8 !important;
+  border-radius: 20px !important;
+}
+
+/* --- Bestsellers Section --- */
+.stardust-section--bestsellers {
+  background: #FAF7F2 !important;
+  padding: clamp(70px, 8vw, 110px) 0 !important;
+}
+
+.stardust-bestsellers__header {
+  display: flex !important;
+  align-items: flex-end !important;
+  justify-content: space-between !important;
+  margin-bottom: 40px !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+}
+
+.stardust-bestsellers__grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 24px !important;
+}
+
+.stardust-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #EFE8DE !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.stardust-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 28px rgba(28, 15, 8, 0.08) !important;
+}
+
+.stardust-card__img-wrap {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  position: relative !important;
+  background: #FAF6EE !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.stardust-card__fav-btn {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  color: #5E4B3E !important;
+  box-shadow: 0 2px 8px rgba(28, 15, 8, 0.08) !important;
+  transition: all 0.15s ease !important;
+  z-index: 2 !important;
+}
+
+.stardust-card__fav-btn:hover {
+  background: #FFFFFF !important;
+  color: #C59334 !important;
+}
+
+.stardust-card__body {
+  padding: 20px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-grow: 1 !important;
+}
+
+.stardust-card__header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: baseline !important;
+  margin-bottom: 6px !important;
+}
+
+.stardust-card__title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #1C0F08 !important;
+  margin: 0 !important;
+}
+
+.stardust-card__price {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #C59334 !important;
+}
+
+.stardust-card__desc {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13px !important;
+  color: #6B5749 !important;
+  line-height: 1.45 !important;
+  margin: 0 0 16px !important;
+  flex-grow: 1 !important;
+}
+
+.stardust-card__btn {
+  width: 100% !important;
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 8px !important;
+  padding: 9px 0 !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+  line-height: 1 !important;
+}
+
+.stardust-card__btn:hover {
+  background: #AF7F24 !important;
+}
+
+/* --- Stats Ribbon (Deep Logo Espresso #1C0F08) --- */
+.stardust-stats {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  padding: clamp(48px, 6vw, 68px) 0 !important;
+  border-top: 1px solid rgba(212, 168, 67, 0.15) !important;
+  border-bottom: 1px solid rgba(212, 168, 67, 0.15) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-stats__grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 24px !important;
+  text-align: center !important;
+}
+
+.stardust-stats__item {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
+
+.stardust-stats__value {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: clamp(38px, 4vw, 54px) !important;
+  font-weight: 500 !important;
+  color: #E8C06A !important;
+  margin-bottom: 6px !important;
+  line-height: 1 !important;
+}
+
+.stardust-stats__label {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12.5px !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  letter-spacing: 0.04em !important;
+  text-transform: capitalize !important;
+}
+
+/* --- Values Section --- */
+.stardust-section--values {
+  background: #FAF7F2 !important;
+  padding: clamp(80px, 9vw, 130px) 0 !important;
+}
+
+.stardust-values__grid {
+  display: grid !important;
+  grid-template-columns: 0.95fr 1.05fr !important;
+  gap: clamp(40px, 6vw, 80px) !important;
+  align-items: center !important;
+}
+
+.stardust-values__media {
+  display: flex !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.stardust-values__img-frame {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  aspect-ratio: 3 / 4 !important;
+  max-width: 460px !important;
+  width: 100% !important;
+  background: #FAF5EB !important;
+  box-shadow: 0 20px 48px rgba(28, 15, 8, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.stardust-values__list {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 32px 28px !important;
+  margin-top: 36px !important;
+}
+
+.stardust-value-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.stardust-value-card__icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: #FBF3E2 !important;
+  color: #C59334 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-bottom: 14px !important;
+}
+
+.stardust-value-card__title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: #1C0F08 !important;
+  margin: 0 0 6px !important;
+}
+
+.stardust-value-card__desc {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13px !important;
+  color: #6B5749 !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+/* --- Customer Reviews --- */
+.stardust-section--reviews {
+  background: #FAF7F2 !important;
+  padding: clamp(70px, 8vw, 110px) 0 !important;
+}
+
+.stardust-reviews__grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 24px !important;
+  align-items: stretch !important;
+}
+
+.stardust-review-card {
+  background: #FFFFFF !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 16px !important;
+  padding: 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  box-shadow: 0 4px 16px rgba(28, 15, 8, 0.04) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.stardust-review-card--featured {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(212, 168, 67, 0.25) !important;
+  box-shadow: 0 14px 36px rgba(28, 15, 8, 0.22) !important;
+}
+
+.stardust-review-card__user {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.stardust-review-card__avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: #FBF3E2 !important;
+  color: #C59334 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__avatar {
+  background: rgba(232, 192, 106, 0.25) !important;
+  color: #E8C06A !important;
+}
+
+.stardust-review-card__name {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__name {
+  color: #FFFFFF !important;
+}
+
+.stardust-review-card__badge {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  color: #7A6658 !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__badge {
+  color: #E8C06A !important;
+}
+
+.stardust-review-card__quote {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  margin: 18px 0 24px !important;
+  color: #4A3A2F !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__quote {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.stardust-review-card__footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  border-top: 1px solid #F4EDE2 !important;
+  padding-top: 14px !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__footer {
+  border-top-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.stardust-review-card__stars {
+  display: flex !important;
+  gap: 3px !important;
+  font-size: 13px !important;
+  color: #D4A843 !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__stars {
+  color: #E8C06A !important;
+}
+
+.stardust-review-card__date {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11.5px !important;
+  color: #8C7768 !important;
+}
+
+.stardust-review-card--featured .stardust-review-card__date {
+  color: rgba(255, 255, 255, 0.65) !important;
+}
+
+/* --- Sweet Circle (Newsletter & Pitstop Note) --- */
+.stardust-section--circle {
+  background: #FAF7F2 !important;
+  padding: clamp(60px, 7vw, 100px) 0 !important;
+}
+
+.stardust-circle__box {
+  max-width: 780px !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+.stardust-circle__form {
+  display: flex !important;
+  gap: 10px !important;
+  max-width: 480px !important;
+  margin: 0 auto 24px !important;
+}
+
+.stardust-circle__input {
+  flex-grow: 1 !important;
+  padding: 12px 20px !important;
+  border-radius: 9999px !important;
+  border: 1px solid #DEC8A2 !important;
+  background: #FFFFFF !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  color: #1C0F08 !important;
+  outline: none !important;
+  transition: border-color 0.15s ease !important;
+}
+
+.stardust-circle__input:focus {
+  border-color: #C59334 !important;
+}
+
+.stardust-circle__meta {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12.5px !important;
+  color: #6B5749 !important;
+  flex-wrap: wrap !important;
+}
+
+.stardust-circle__success {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  color: #C59334 !important;
+  font-weight: 600 !important;
+  margin-top: 18px !important;
+}
+
+/* --- Footer (Deep Logo Espresso #1C0F08 with Golden Honey Watermark) --- */
+.stardust-footer {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  padding: clamp(70px, 8vw, 100px) 0 32px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.stardust-footer__watermark {
+  position: absolute !important;
+  bottom: 30px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: clamp(80px, 15vw, 200px) !important;
+  font-weight: 700 !important;
+  color: rgba(212, 168, 67, 0.05) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  z-index: 1 !important;
+}
+
+.stardust-footer__top {
+  display: grid !important;
+  grid-template-columns: 1.2fr 1.8fr !important;
+  gap: 48px !important;
+  margin-bottom: 60px !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.stardust-footer__brand {
+  max-width: 360px !important;
+}
+
+.stardust-footer__logo {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  color: #FFFFFF !important;
+  margin-bottom: 12px !important;
+  display: block !important;
+  letter-spacing: -0.01em !important;
+}
+
+.stardust-footer__tagline {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.6 !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  margin: 0 !important;
+}
+
+.stardust-footer__links-group {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 32px !important;
+}
+
+.stardust-footer__col {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.stardust-footer__col-title {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #E8C06A !important;
+  margin-bottom: 6px !important;
+}
+
+.stardust-footer__col a,
+.stardust-footer__col span {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+.stardust-footer__col a:hover {
+  color: #E8C06A !important;
+}
+
+.stardust-footer__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding-top: 24px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.45) !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.stardust-footer__social {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.stardust-footer__social a {
+  color: rgba(255, 255, 255, 0.6) !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+.stardust-footer__social a:hover {
+  color: #E8C06A !important;
+}
+
+/* --- Multi-Page Subpages (Story & Contact) --- */
+.stardust-page {
+  min-height: 100vh !important;
+  background: #FAF7F2 !important;
+  width: 100% !important;
+}
+
+.stardust-story-hero {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  padding: clamp(60px, 7vw, 90px) 0 !important;
+  text-align: center !important;
+}
+
+.stardust-story-tag {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  color: #E8C06A !important;
+  display: block !important;
+  margin-bottom: 14px !important;
+}
+
+.stardust-story-title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: clamp(36px, 5vw, 56px) !important;
+  font-weight: 400 !important;
+  color: #FFFFFF !important;
+  margin: 0 0 16px !important;
+  line-height: 1.12 !important;
+}
+
+.stardust-story-subtitle {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 15px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  max-width: 600px !important;
+  margin: 0 auto !important;
+  line-height: 1.6 !important;
+}
+
+.stardust-section--story-body {
+  padding: clamp(60px, 8vw, 100px) 0 !important;
+  background: #FAF7F2 !important;
+}
+
+.stardust-story-grid {
+  display: grid !important;
+  grid-template-columns: 0.95fr 1.05fr !important;
+  gap: clamp(40px, 6vw, 70px) !important;
+  align-items: center !important;
+}
+
+.stardust-story-frame {
+  aspect-ratio: 3 / 4 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  background: #FAF5EB !important;
+  box-shadow: 0 20px 48px rgba(28, 15, 8, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  max-width: 460px !important;
+  margin: 0 auto !important;
+  width: 100% !important;
+}
+
+.stardust-story-highlights {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+  margin-top: 24px !important;
+}
+
+.stardust-story-highlight-card {
+  background: #FBF3E2 !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  text-align: left !important;
+  border: 1px solid rgba(197, 147, 52, 0.2) !important;
+}
+
+.stardust-highlight-num {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #C59334 !important;
+  display: block !important;
+  line-height: 1 !important;
+  margin-bottom: 4px !important;
+}
+
+.stardust-highlight-label {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  display: block !important;
+  margin-bottom: 4px !important;
+}
+
+.stardust-story-highlight-card p {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11.5px !important;
+  color: #6B5749 !important;
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+/* --- Contact & Bulk Orders Page --- */
+.stardust-section--contact-body {
+  padding: clamp(60px, 8vw, 100px) 0 !important;
+  background: #FAF7F2 !important;
+}
+
+.stardust-contact-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: clamp(40px, 6vw, 70px) !important;
+  align-items: flex-start !important;
+}
+
+.stardust-info-cards {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+}
+
+.stardust-info-card {
+  display: flex !important;
+  gap: 16px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 14px !important;
+  padding: 20px !important;
+  box-shadow: 0 2px 10px rgba(28, 15, 8, 0.04) !important;
+}
+
+.stardust-info-icon {
+  font-size: 22px !important;
+  flex-shrink: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  background: #FBF3E2 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #C59334 !important;
+}
+
+.stardust-info-label {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: #1C0F08 !important;
+  margin: 0 0 6px !important;
+}
+
+.stardust-info-val {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13px !important;
+  color: #5E4B3E !important;
+  line-height: 1.5 !important;
+  margin: 0 0 8px !important;
+}
+
+.stardust-link-btn {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #C59334 !important;
+  text-decoration: none !important;
+}
+
+.stardust-link-btn:hover {
+  text-decoration: underline !important;
+}
+
+.stardust-form-input {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid #DEC8A2 !important;
+  background: #FFFFFF !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13px !important;
+  color: #1C0F08 !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease !important;
+}
+
+.stardust-form-input:focus {
+  border-color: #C59334 !important;
+}
+
+/* --- Customer Menu / Pre-Order Page Theme Overrides --- */
+.customer-menu-root {
+  background: #FAF7F2 !important;
+}
+
+.menu-header {
+  background: #FFFFFF !important;
+  color: #1C0F08 !important;
+  border-bottom: 1px solid #EFE8DE !important;
+  box-shadow: 0 2px 10px rgba(28, 15, 8, 0.04) !important;
+}
+
+.menu-title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  color: #1C0F08 !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+
+.menu-subtitle {
+  color: #7A6658 !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+}
+
+.menu-preorder-badge {
+  background: #FBF3E2 !important;
+  color: #8C6218 !important;
+  border: 1px solid rgba(197, 147, 52, 0.35) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  border-radius: 9999px !important;
+  padding: 3px 8px !important;
+}
+
+.menu-back-btn {
+  background: #FAF7F2 !important;
+  color: #1C0F08 !important;
+  border: 1.5px solid #E5DCCE !important;
+  border-radius: 9999px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-weight: 600 !important;
+  transition: all 0.15s ease !important;
+}
+
+.menu-back-btn:hover {
+  background: #F2ECE1 !important;
+  border-color: #C59334 !important;
+  color: #1C0F08 !important;
+}
+
+.menu-auth-orders-btn,
+.menu-auth-login-btn {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(197, 147, 52, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.menu-auth-orders-btn:hover,
+.menu-auth-login-btn:hover {
+  background: #AF7F24 !important;
+  transform: translateY(-1px) !important;
+}
+
+.menu-categories-bar {
+  background: #FFFFFF !important;
+  border-bottom: 1px solid #EFE8DE !important;
+}
+
+.menu-category-btn.is-active,
+.menu-category-btn.active {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+}
+
+.menu-item-card,
+.menu-card {
+  background: #FFFFFF !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 14px !important;
+  box-shadow: 0 2px 10px rgba(28, 15, 8, 0.04) !important;
+}
+
+.menu-item-title,
+.menu-card-title {
+  font-family: 'Cormorant Garamond', Garamond, serif !important;
+  font-size: 19px !important;
+  color: #1C0F08 !important;
+}
+
+.menu-item-price,
+.menu-card-price {
+  color: #C59334 !important;
+  font-weight: 700 !important;
+}
+
+.menu-add-btn,
+.menu-btn-add {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  border-radius: 8px !important;
+}
+
+.menu-add-btn:hover,
+.menu-btn-add:hover {
+  background: #AF7F24 !important;
+}
+
+.menu-tray-bar,
+.menu-floating-cart {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(212, 168, 67, 0.25) !important;
+  box-shadow: 0 10px 30px rgba(28, 15, 8, 0.35) !important;
+}
+
+.menu-tray-checkout-btn {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  border-radius: 9999px !important;
+}
+
+.menu-tray-checkout-btn:hover {
+  background: #AF7F24 !important;
+}
+
+/* --- Responsive Media Queries --- */
+@media (max-width: 1024px) {
+  .stardust-bestsellers__grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .stardust-nav__menu {
+    display: none !important;
+  }
+  .stardust-nav__hamburger {
+    display: flex !important;
+  }
+  .stardust-hero__grid {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+  .stardust-hero__content {
+    align-items: center !important;
+  }
+  .stardust-hero__desc {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .stardust-hero__buttons {
+    justify-content: center !important;
+  }
+  .stardust-values__grid {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+  }
+  .stardust-values__media {
+    order: -1 !important;
+  }
+  .stardust-values__list {
+    text-align: left !important;
+  }
+  .stardust-reviews__grid {
+    grid-template-columns: 1fr !important;
+    max-width: 520px !important;
+    margin: 0 auto !important;
+  }
+  .stardust-footer__top {
+    grid-template-columns: 1fr !important;
+  }
+  .stardust-story-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stardust-contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .stardust-bestsellers__grid {
+    grid-template-columns: 1fr !important;
+  }
+  .stardust-stats__grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 32px 16px !important;
+  }
+  .stardust-values__list {
+    grid-template-columns: 1fr !important;
+  }
+  .stardust-circle__form {
+    flex-direction: column !important;
+  }
+  .stardust-footer__links-group {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .stardust-story-highlights {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+
+/* ==========================================================================
+   PRE-ORDER ALERT MESSAGE & TOPBAR PROMPT STYLES
+   ========================================================================== */
+
+/* --- Top Notification Announcement Bar --- */
+.stardust-topbar {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border-bottom: 1px solid rgba(197, 147, 52, 0.3) !important;
+  padding: 8px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important;
+  z-index: 1001 !important;
+  font-size: 12.5px !important;
+}
+
+.stardust-topbar__inner {
+  max-width: 1240px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  text-align: center !important;
+  padding-right: 24px !important;
+}
+
+.stardust-topbar__content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.stardust-topbar__badge {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  padding: 3px 8px !important;
+  border-radius: 9999px !important;
+  text-transform: uppercase !important;
+}
+
+.stardust-topbar__msg {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.stardust-topbar__cta {
+  background: rgba(212, 168, 67, 0.22) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(212, 168, 67, 0.45) !important;
+  border-radius: 9999px !important;
+  padding: 4px 14px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+}
+
+.stardust-topbar__cta:hover {
+  background: #C59334 !important;
+  color: #FFFFFF !important;
+  border-color: #C59334 !important;
+}
+
+.stardust-topbar__close {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+  cursor: pointer !important;
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  transition: color 0.15s ease !important;
+}
+
+.stardust-topbar__close:hover {
+  color: #FFFFFF !important;
+}
+
+/* --- Pre-Order Alert Modal / Welcome Prompt --- */
+.stardust-alert-modal-wrap {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 99999 !important;
+  max-width: 420px !important;
+  width: calc(100% - 48px) !important;
+}
+
+.stardust-alert-card {
+  background: #FFFFFF !important;
+  border: 1.5px solid rgba(197, 147, 52, 0.35) !important;
+  border-radius: 18px !important;
+  padding: 24px 22px 20px !important;
+  box-shadow: 0 16px 48px rgba(28, 15, 8, 0.22), 0 4px 16px rgba(197, 147, 52, 0.15) !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.stardust-alert-card::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 4px !important;
+  background: linear-gradient(90deg, #C59334, #E8C06A, #C59334) !important;
+}
+
+.stardust-alert-close {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  background: #F8F5EE !important;
+  border: none !important;
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #7A6658 !important;
+  cursor: pointer !important;
+  font-size: 12px !important;
+  transition: all 0.15s ease !important;
+}
+
+.stardust-alert-close:hover {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+}
+
+.stardust-alert-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: #FBF3E2 !important;
+  border: 1px solid rgba(197, 147, 52, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 4px 12px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  color: #8C6218 !important;
+  margin-bottom: 8px !important;
+}
+
+.stardust-alert-dot {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 50% !important;
+  background: #C59334 !important;
+  box-shadow: 0 0 0 2px rgba(197, 147, 52, 0.3) !important;
+  animation: pulseDot 1.8s infinite ease-in-out !important;
+}
+
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.stardust-alert-script {
+  font-size: 24px !important;
+  color: #C59334 !important;
+  display: block !important;
+  line-height: 1 !important;
+  margin-top: 4px !important;
+}
+
+.stardust-alert-title {
+  font-size: 21px !important;
+  font-weight: 600 !important;
+  color: #1C0F08 !important;
+  line-height: 1.25 !important;
+  margin: 4px 0 8px !important;
+}
+
+.stardust-alert-desc {
+  font-size: 13px !important;
+  color: #5E4B3E !important;
+  line-height: 1.55 !important;
+  margin: 0 0 18px !important;
+}
+
+.stardust-alert-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.stardust-btn--alert-glow {
+  width: 100% !important;
+  padding: 12px 18px !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  animation: alertGlow 2.5s infinite ease-in-out !important;
+}
+
+@keyframes alertGlow {
+  0% { box-shadow: 0 4px 16px rgba(197, 147, 52, 0.3); }
+  50% { box-shadow: 0 6px 24px rgba(197, 147, 52, 0.6); }
+  100% { box-shadow: 0 4px 16px rgba(197, 147, 52, 0.3); }
+}
+
+.stardust-alert-dismiss-btn {
+  background: transparent !important;
+  border: none !important;
+  color: #7A6658 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  padding: 4px 0 !important;
+  transition: color 0.15s ease !important;
+}
+
+.stardust-alert-dismiss-btn:hover {
+  color: #1C0F08 !important;
+}
+
+/* --- Floating Pre-Order Quick Widget --- */
+.stardust-floating-preorder {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 24px !important;
+  z-index: 9998 !important;
+}
+
+.stardust-floating-preorder__btn {
+  background: #1C0F08 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #C59334 !important;
+  border-radius: 9999px !important;
+  padding: 10px 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  box-shadow: 0 8px 24px rgba(28, 15, 8, 0.28) !important;
+  cursor: pointer !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;
+}
+
+.stardust-floating-preorder__btn:hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 12px 30px rgba(197, 147, 52, 0.35) !important;
+}
+
+.stardust-floating-preorder__icon {
+  font-size: 20px !important;
+}
+
+.stardust-floating-preorder__text {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  line-height: 1.2 !important;
+}
+
+.stardust-floating-preorder__text strong {
+  font-size: 13px !important;
+  color: #FFFFFF !important;
+}
+
+.stardust-floating-preorder__text small {
+  font-size: 10.5px !important;
+  color: #E8C06A !important;
+}
+
+.stardust-floating-preorder__arrow {
+  color: #E8C06A !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+}
+
+@media (max-width: 640px) {
+  .stardust-topbar__msg {
+    display: none !important;
+  }
+  .stardust-topbar__inner {
+    justify-content: flex-start !important;
+  }
+  .stardust-alert-modal-wrap {
+    bottom: 16px !important;
+    right: 16px !important;
+    left: 16px !important;
+    width: auto !important;
+  }
+}
+
+/* ==========================================================================
+   REAL PRODUCT IMAGES & ARTISANAL DETAILING STYLES
+   ========================================================================== */
+
+/* Hero Platter & Badges */
+.stardust-hero__pills {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-bottom: 28px !important;
+}
+
+.stardust-hero__pill {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(232, 192, 106, 0.25) !important;
+  border-radius: 9999px !important;
+  padding: 5px 13px !important;
+}
+
+.stardust-hero__platter-img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.stardust-hero__platter-wrap:hover .stardust-hero__platter-img {
+  transform: scale(1.06) !important;
+}
+
+.stardust-hero__platter-badge {
+  position: absolute !important;
+  bottom: 20px !important;
+  background: rgba(28, 15, 8, 0.88) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(232, 192, 106, 0.4) !important;
+  border-radius: 9999px !important;
+  padding: 6px 16px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Card Real Image & Tag */
+.stardust-card__img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.stardust-card:hover .stardust-card__img {
+  transform: scale(1.06) !important;
+}
+
+.stardust-card__badge-tag {
+  position: absolute !important;
+  bottom: 10px !important;
+  left: 10px !important;
+  background: rgba(28, 15, 8, 0.82) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(232, 192, 106, 0.3) !important;
+  border-radius: 9999px !important;
+  padding: 3px 10px !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  z-index: 2 !important;
+}
+
+/* Values Section Image Frame */
+.stardust-values__img-frame {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 4 / 3 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 40px rgba(28, 15, 8, 0.12) !important;
+  border: 1px solid #EFE8DE !important;
+}
+
+.stardust-values__img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s ease !important;
+}
+
+.stardust-values__img-frame:hover .stardust-values__img {
+  transform: scale(1.04) !important;
+}
+
+.stardust-values__tag-badge {
+  position: absolute !important;
+  bottom: 16px !important;
+  left: 16px !important;
+  background: rgba(28, 15, 8, 0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(232, 192, 106, 0.35) !important;
+  border-radius: 9999px !important;
+  padding: 5px 14px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+/* Story Page Image Frame */
+.stardust-story-frame {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 4 / 3 !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 40px rgba(28, 15, 8, 0.12) !important;
+  border: 1px solid #EFE8DE !important;
+}
+
+.stardust-story__img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s ease !important;
+}
+
+.stardust-story-frame:hover .stardust-story__img {
+  transform: scale(1.04) !important;
+}
+
+.stardust-story__img-caption {
+  position: absolute !important;
+  bottom: 16px !important;
+  left: 16px !important;
+  right: 16px !important;
+  background: rgba(28, 15, 8, 0.88) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  color: #E8C06A !important;
+  border: 1px solid rgba(232, 192, 106, 0.3) !important;
+  border-radius: 12px !important;
+  padding: 8px 14px !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+}

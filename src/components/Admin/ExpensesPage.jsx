@@ -543,7 +543,7 @@ export default function ExpensesPage({ currentUser, role = 'admin' }) {
         width: '100%',
         maxWidth: '1440px',
         margin: '0 auto',
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Lato', sans-serif",
         color: '#0f172a',
         display: 'flex',
         flexDirection: 'column',

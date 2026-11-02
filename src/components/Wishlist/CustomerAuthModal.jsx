@@ -296,7 +296,7 @@ export default function CustomerAuthModal() {
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                     autoFocus
                     required
-                    className={`cust-otp-field ${inputCls} py-3.5 px-3.5 text-[1.5rem] font-extrabold text-[#F5D37E] text-center tracking-[0.35em] font-[Inter,monospace]`}
+                    className={`cust-otp-field ${inputCls} py-3.5 px-3.5 text-[1.5rem] font-extrabold text-[#F5D37E] text-center tracking-[0.35em] font-[Lato,monospace]`}
                     style={{ borderWidth: '2px' }}
                   />
 

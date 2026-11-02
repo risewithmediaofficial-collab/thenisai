@@ -226,7 +226,7 @@ export default function CartDrawer() {
               <div className="gold-divider" />
               <div className="cart-summary__row total">
                 <span className="cart-total__label">Estimated Subtotal</span>
-                <span className="cart-total__val" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
+                <span className="cart-total__val" style={{ fontFamily: "var(--font-num, 'Lato', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
                   ₹{subtotal}
                 </span>
               </div>

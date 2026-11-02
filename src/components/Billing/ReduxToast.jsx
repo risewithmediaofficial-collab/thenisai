@@ -57,7 +57,7 @@ function ReduxToast() {
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         fontSize: '13px',
         fontWeight: 500,
-        fontFamily: "'Inter', sans-serif",
+        fontFamily: "'Lato', sans-serif",
         animation: 'fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >

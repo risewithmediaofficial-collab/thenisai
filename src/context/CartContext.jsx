@@ -280,14 +280,23 @@ export function CartProvider({ children }) {
     if (viewParam === 'admin') return 'admin';
     if (viewParam === 'billing') return 'billing';
     if (viewParam === 'manager' || viewParam === 'godown') return 'manager';
+    if (viewParam === 'menu' || viewParam === 'preorder' || viewParam === 'shop') return 'menu';
+    if (viewParam === 'story' || viewParam === 'heritage') return 'story';
+    if (viewParam === 'contact' || viewParam === 'visit') return 'contact';
     if (viewParam === 'storefront' || viewParam === 'store') return 'storefront';
 
     // 2. Hash routing has HIGHEST priority in SPA
     if (hash === '#manager' || hash.startsWith('#manager') || hash === '#godown' || hash.startsWith('#godown')) {
       return 'manager';
     }
-    if (hash === '#menu' || hash.startsWith('#menu/')) {
+    if (hash === '#menu' || hash.startsWith('#menu/') || hash === '#preorder' || hash.startsWith('#preorder') || hash === '#shop' || hash.startsWith('#shop')) {
       return 'menu';
+    }
+    if (hash === '#story' || hash.startsWith('#story') || hash === '#heritage' || hash.startsWith('#heritage')) {
+      return 'story';
+    }
+    if (hash === '#contact' || hash.startsWith('#contact') || hash === '#visit' || hash.startsWith('#visit')) {
+      return 'contact';
     }
     if (hash.startsWith('#billing')) {
       return 'billing';
@@ -322,6 +331,10 @@ export function CartProvider({ children }) {
     // 3. Fallback to pathname (only when no hash specified)
     if (pathname.endsWith('/billing') || pathname === '/billing') return 'billing';
     if (pathname.endsWith('/admin') || pathname === '/admin') return 'admin';
+    if (pathname.endsWith('/manager') || pathname === '/manager') return 'manager';
+    if (pathname.endsWith('/menu') || pathname === '/menu' || pathname.endsWith('/preorder') || pathname === '/preorder') return 'menu';
+    if (pathname.endsWith('/story') || pathname === '/story' || pathname.endsWith('/heritage') || pathname === '/heritage') return 'story';
+    if (pathname.endsWith('/contact') || pathname === '/contact' || pathname.endsWith('/visit') || pathname === '/visit') return 'contact';
 
     return 'storefront';
   };
@@ -1091,6 +1104,20 @@ export function CartProvider({ children }) {
     if (view === 'menu') {
       if (window.location.hash !== '#menu') {
         window.location.hash = '#menu';
+      }
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (view === 'story') {
+      if (window.location.hash !== '#story') {
+        window.location.hash = '#story';
+      }
+      window.scrollTo(0, 0);
+      return;
+    }
+    if (view === 'contact') {
+      if (window.location.hash !== '#contact') {
+        window.location.hash = '#contact';
       }
       window.scrollTo(0, 0);
       return;
@@ -2416,7 +2443,7 @@ export function CartProvider({ children }) {
       stockKg: stockQty,
       minThreshold: parseFloat(productData.minThreshold || 8),
       hsn: generatedHsn,
-      image: productData.image || '/images/products/palkova_card.jpg',
+      image: productData.image || '/images/products/palkova_card.webp',
       isCustom: true,
       description: productData.description || 'Special preparation',
     };

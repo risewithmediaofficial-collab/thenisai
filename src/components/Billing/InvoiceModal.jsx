@@ -822,7 +822,7 @@ export default function InvoiceModal() {
 
             <div className="inv-grand-total">
               <span>Grand Total (INR)</span>
-              <span className="grand-amount" style={{ fontFamily: "var(--font-num, 'Inter', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
+              <span className="grand-amount" style={{ fontFamily: "var(--font-num, 'Lato', sans-serif)", fontVariantNumeric: 'tabular-nums lining-nums' }}>
                 ₹{grandTotal.toFixed(2)}
               </span>
             </div>
