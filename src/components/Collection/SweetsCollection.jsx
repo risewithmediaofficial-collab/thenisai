@@ -1,4 +1,3 @@
-import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 
 const BESTSELLERS = [
@@ -41,7 +40,6 @@ const BESTSELLERS = [
 ];
 
 export default function SweetsCollection() {
-  const { isInWishlist, toggleWishlist } = useWishlist();
   const { navigateTo } = useCart();
 
   const handleGoToPreOrders = () => {
@@ -82,39 +80,24 @@ export default function SweetsCollection() {
 
         {/* 4-Card Horizontal Grid with Real Images */}
         <div className="stardust-bestsellers__grid">
-          {BESTSELLERS.map((sweet) => {
-            const isFav = isInWishlist(sweet.id);
+          {BESTSELLERS.map((sweet) => (
+            <div key={sweet.id} className="stardust-card">
+              {/* Product Real Image Frame */}
+              <div className="stardust-card__img-wrap">
+                <img
+                  src={sweet.image}
+                  alt={sweet.name}
+                  className="stardust-card__img"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
 
-            return (
-              <div key={sweet.id} className="stardust-card">
-                {/* Product Real Image Frame */}
-                <div className="stardust-card__img-wrap">
-                  <img
-                    src={sweet.image}
-                    alt={sweet.name}
-                    className="stardust-card__img"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-
-                  {/* Bookmark Button */}
-                  <button
-                    type="button"
-                    className={`stardust-card__fav-btn ${isFav ? 'is-active' : ''}`}
-                    onClick={() => toggleWishlist(sweet.id)}
-                    aria-label={`Save ${sweet.name}`}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? '#DC2626' : 'none'} stroke={isFav ? '#DC2626' : 'currentColor'} strokeWidth="2">
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                  </button>
-
-                  <span className="stardust-card__badge-tag font-lato">
-                    {sweet.flourish}
-                  </span>
-                </div>
+                <span className="stardust-card__badge-tag font-lato">
+                  {sweet.flourish}
+                </span>
+              </div>
 
                 {/* Card Body */}
                 <div className="stardust-card__body font-lato">
@@ -139,8 +122,7 @@ export default function SweetsCollection() {
                   </button>
                 </div>
               </div>
-            );
-          })}
+            ))}
         </div>
       </div>
     </section>
