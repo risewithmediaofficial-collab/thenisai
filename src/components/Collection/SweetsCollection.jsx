@@ -76,26 +76,46 @@ const SHOWCASE_ITEMS = [
     image: '/images/products/panipuri_real.jpg',
   },
 
-  // 4. Beverages: Degree Coffee, Tea & Fresh Juices
+  // 4. Beverages: Tea, Fresh Juices, Rose Milk & Filter Coffee
   {
-    id: 'degree-coffee',
+    id: 'hot-tea',
     category: 'beverages',
-    name: 'Kumbakonam Degree Coffee & Tea',
-    flourish: 'Pure Cow Milk Brew',
-    price: '₹30',
+    name: 'Fresh Tea',
+    flourish: 'Brewed Hot',
+    price: '₹20',
     weight: 'Hot Cup',
-    desc: 'Freshly brewed aromatic chicory filter coffee and hot ginger-cardamom highway tea made exclusively with thick, unadulterated cow milk.',
-    image: '/images/products/tea_coffee_real.jpg',
+    desc: 'Steaming hot aromatic tea prepared fresh with unadulterated pure cow milk and subtle cardamom.',
+    image: '/images/products/tea_real.jpg',
   },
   {
     id: 'fresh-juices',
     category: 'beverages',
-    name: 'Farm-Fresh Cold-Pressed Juices',
-    flourish: '100% Natural & Chilled',
+    name: 'Fresh Juices',
+    flourish: '100% Fresh',
     price: '₹60',
     weight: '300ml Glass',
-    desc: 'Freshly squeezed seasonal fruits (pomegranate, orange, and watermelon) served chilled with zero artificial colors or added water.',
+    desc: 'Freshly squeezed seasonal fruits served chilled without artificial colors or added water.',
     image: '/images/products/fresh_juices_real.jpg',
+  },
+  {
+    id: 'rose-milk',
+    category: 'beverages',
+    name: 'Rose Milk',
+    flourish: 'Chilled & Sweet',
+    price: '₹30',
+    weight: 'Chilled Glass',
+    desc: 'Delicious chilled rose milk made with fragrant rose syrup and thick fresh milk.',
+    image: '/images/products/rosemilk_real.jpg',
+  },
+  {
+    id: 'filter-coffee',
+    category: 'beverages',
+    name: 'Filter Coffee',
+    flourish: 'Fresh Brew',
+    price: '₹25',
+    weight: 'Hot Cup',
+    desc: 'Rich, authentic South Indian filter coffee brewed with fresh cow milk and aromatic blend.',
+    image: '/images/products/tea_coffee_real.jpg',
   },
 ];
 
@@ -126,7 +146,7 @@ export default function SweetsCollection() {
               Our Bestselling Confectionery &amp; Savories
             </h2>
             <p className="stardust-section__sub font-lato">
-              Small-batch sweets, crispy savories, live hot pani puri, fresh fruit juices, and traditional Kumbakonam degree coffee prepared fresh daily on NH 44.
+              Small-batch sweets, crispy savories, live hot pani puri, fresh juices, chilled rose milk, tea, and filter coffee prepared fresh daily on NH 44.
             </p>
           </div>
 
