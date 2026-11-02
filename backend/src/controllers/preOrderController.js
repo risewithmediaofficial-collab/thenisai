@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { PreOrder, Customer, Bill } from '../models/index.js';
 import { getNextServerInvoiceNumber } from '../utils/invoiceNumber.js';
+import { sendPreOrderPushToStaff } from '../services/push.service.js';
 
 function sanitizePreOrderItem(it) {
   if (!it) return null;
@@ -75,6 +76,11 @@ export async function createPreOrder(req, res) {
     });
 
     console.log(`[Pre-Order] Created: ${invoiceNumber} for ${customerName} (${cleanPhone}) Total: ₹${preOrder.grandTotal}`);
+
+    // Asynchronously dispatch real-time web push notification to biller & admin devices
+    sendPreOrderPushToStaff(preOrder).catch((pushErr) => {
+      console.warn('[Pre-Order] Push notification dispatch failed:', pushErr.message);
+    });
     res.json({
       success: true,
       preOrder,

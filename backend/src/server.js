@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import app from './app.js';
 import { connectDB, MONGODB_URI } from './config/db.js';
 import { seedIfEmpty } from './utils/catalogSync.js';
+import { startCronJobs } from './services/cron.service.js';
 
 const PORT = process.env.PORT || 5003;
 
@@ -8,6 +10,9 @@ export async function startServer() {
   try {
     await connectDB();
     await seedIfEmpty();
+
+    // Start background cron monitors (e.g. pending customer pre-orders sweep)
+    startCronJobs();
 
     const server = app.listen(PORT, () => {
       console.log(`====================================================`);

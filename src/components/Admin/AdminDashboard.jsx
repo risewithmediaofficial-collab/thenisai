@@ -4,6 +4,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import SideNavbar from '../Nav/SideNavbar';
+import PushNotificationToggle from '../PreOrder/PushNotificationToggle';
 import DailyRevenueReport from './DailyRevenueReport';
 import AddProductInlinePanel from '../Inventory/AddProductInlinePanel';
 import DeleteBillModal from '../Billing/DeleteBillModal';
@@ -1204,6 +1205,8 @@ export default function AdminDashboard() {
            ========================================= */}
         {activeTab === 'orders' && (
           <section className="tab-content">
+            {/* Web Push Notification & Cron Monitor Banner */}
+            <PushNotificationToggle role="admin" staffName="Admin Portal" />
             <div className="tab-toolbar">
               <div className="filter-chips">
                 {['all', 'New', 'Accepted', 'Dispatched', 'Delivered'].map((st) => (

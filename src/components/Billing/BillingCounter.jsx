@@ -13,6 +13,7 @@ import StockDetailsModal from '../Inventory/StockDetailsModal';
 import POSReduxStatusBar from './POSReduxStatusBar';
 import ReduxToast from './ReduxToast';
 import SideNavbar from '../Nav/SideNavbar';
+import PushNotificationToggle from '../PreOrder/PushNotificationToggle';
 import DailyRevenueReport from '../Admin/DailyRevenueReport';
 import ExpensesPage from '../Admin/ExpensesPage';
 import api from '../../utils/api';
@@ -5109,6 +5110,9 @@ export default function BillingCounter() {
                 </button>
               </div>
             </div>
+
+            {/* Web Push Notification Banner for Incoming Pre-Orders */}
+            <PushNotificationToggle role="cashier" staffName="Biller / Cashier Counter" />
 
             {/* Pre-Orders KPI Strip */}
             <div className="online-kpis-grid">

@@ -11,6 +11,7 @@ import preOrderRoutes from './preOrderRoutes.js';
 import recycleBinRoutes from './recycleBinRoutes.js';
 import expenseRoutes from './expenseRoutes.js';
 import auditRoutes from './auditRoutes.js';
+import notificationRoutes from './notificationRoutes.js';
 import { getDailyReport } from '../controllers/expenseController.js';
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use('/bills', billRoutes);
 router.use('/preorders', preOrderRoutes);
 router.use('/recycle-bin', recycleBinRoutes);
 router.use('/expenses', expenseRoutes);
+router.use('/notifications', notificationRoutes);
 router.get('/daily-report', getDailyReport);
 router.use('/audit', auditRoutes);
 

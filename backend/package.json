@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^18.0.9",
     "express": "^4.21.2",
-    "mongoose": "^8.24.4"
+    "mongoose": "^8.24.4",
+    "node-cron": "^4.6.0",
+    "web-push": "^3.6.7"
   }
 }

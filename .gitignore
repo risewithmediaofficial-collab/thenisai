@@ -29,3 +29,5 @@ playwright-report/
 
 .agents/
 
+.env
+backend/.env

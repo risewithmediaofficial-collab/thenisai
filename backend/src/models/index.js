@@ -12,3 +12,4 @@ export { DeletedProduct } from './DeletedProduct.js';
 export { PurgedProduct } from './PurgedProduct.js';
 export { ActivityLog } from './ActivityLog.js';
 export { Expense } from './Expense.js';
+export { PushSubscription } from './PushSubscription.js';
