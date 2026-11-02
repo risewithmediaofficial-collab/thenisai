@@ -285,20 +285,80 @@
 }
 
 .stardust-nav__mobile {
+  position: fixed !important;
+  top: 72px !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: calc(100dvh - 72px) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  z-index: 9999 !important;
+  padding: 24px 20px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 16px !important;
-  padding: 20px 24px 28px !important;
-  background: #FFFFFF !important;
-  border-bottom: 1px solid #EFE8DE !important;
+  justify-content: space-between !important;
+  overflow-y: auto !important;
+  box-shadow: 0 20px 40px rgba(28, 15, 8, 0.15) !important;
+  animation: stardustNavSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+@keyframes stardustNavSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stardust-nav__mobile-links {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
 }
 
 .stardust-nav__mobile-link {
   font-family: 'Lato', sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 500 !important;
-  color: #4A3A2F !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #1C0F08 !important;
+  padding: 14px 18px !important;
+  border-radius: 14px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #EFE8DE !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
   text-decoration: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.stardust-nav__mobile-link:hover,
+.stardust-nav__mobile-link:active,
+.stardust-nav__mobile-link--active {
+  background: #FBF3E2 !important;
+  border-color: rgba(197, 147, 52, 0.35) !important;
+  color: #C59334 !important;
+}
+
+.stardust-nav__mobile-footer {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px !important;
+  padding-top: 20px !important;
+  border-top: 1px solid #EFE8DE !important;
+}
+
+.stardust-nav__mobile-note {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11.5px !important;
+  color: #7A6658 !important;
+  text-align: center !important;
+  margin: 0 !important;
 }
 
 /* --- Hero Section (Deep Logo Espresso #1C0F08 with Golden Flourishes) --- */
@@ -1356,10 +1416,31 @@
   background: #AF7F24 !important;
 }
 
-/* --- Responsive Media Queries --- */
+/* --- Comprehensive Responsive Media Queries (Mobile & Desktop) --- */
+@media (max-width: 1200px) {
+  .stardust-container {
+    max-width: 100% !important;
+    padding: 0 24px !important;
+  }
+  .stardust-hero__grid {
+    gap: 36px !important;
+  }
+  .stardust-values__grid {
+    gap: 36px !important;
+  }
+}
+
 @media (max-width: 1024px) {
   .stardust-bestsellers__grid {
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+  .stardust-reviews__grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
+  }
+  .stardust-reviews__grid > :last-child {
+    grid-column: span 2 !important;
   }
 }
 
@@ -1370,66 +1451,336 @@
   .stardust-nav__hamburger {
     display: flex !important;
   }
+  
+  /* Hero section stacked layout */
+  .stardust-hero {
+    padding: clamp(36px, 6vw, 60px) 0 clamp(48px, 8vw, 72px) !important;
+  }
   .stardust-hero__grid {
     grid-template-columns: 1fr !important;
     text-align: center !important;
+    gap: 32px !important;
   }
   .stardust-hero__content {
     align-items: center !important;
+    width: 100% !important;
+  }
+  .stardust-hero__tag {
+    font-size: 10.5px !important;
+    letter-spacing: 0.12em !important;
+    text-align: center !important;
+    margin-bottom: 12px !important;
+  }
+  .stardust-hero__title {
+    font-size: clamp(32px, 8vw, 52px) !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+  }
+  .stardust-hero__script {
+    font-size: clamp(24px, 6vw, 38px) !important;
+    text-align: center !important;
+    margin-top: 4px !important;
   }
   .stardust-hero__desc {
+    font-size: 13.5px !important;
+    line-height: 1.6 !important;
+    max-width: 580px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+    text-align: center !important;
+  }
+  .stardust-hero__pills {
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-bottom: 24px !important;
+  }
+  .stardust-hero__pill {
+    font-size: 10.5px !important;
+    padding: 4px 11px !important;
   }
   .stardust-hero__buttons {
     justify-content: center !important;
+    width: 100% !important;
+    gap: 12px !important;
+    margin-bottom: 24px !important;
+  }
+  .stardust-hero__media {
+    order: -1 !important;
+  }
+  .stardust-hero__platter-wrap {
+    width: clamp(200px, 60vw, 340px) !important;
+    height: clamp(200px, 60vw, 340px) !important;
+    max-width: 85vw !important;
+    border-width: 6px !important;
+  }
+  .stardust-hero__platter-badge {
+    bottom: 12px !important;
+    padding: 5px 12px !important;
+    font-size: 10.5px !important;
+  }
+  .stardust-hero__scroll {
+    display: none !important;
+  }
+
+  /* Values Section stacked layout */
+  .stardust-section--values {
+    padding: clamp(48px, 7vw, 80px) 0 !important;
   }
   .stardust-values__grid {
     grid-template-columns: 1fr !important;
     text-align: center !important;
+    gap: 32px !important;
   }
   .stardust-values__media {
     order: -1 !important;
+    max-width: 100% !important;
+  }
+  .stardust-values__img-frame {
+    aspect-ratio: 16 / 10 !important;
+    max-width: 100% !important;
+    border-radius: 16px !important;
+  }
+  .stardust-values__content {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
   }
   .stardust-values__list {
+    grid-template-columns: repeat(2, 1fr) !important;
     text-align: left !important;
+    gap: 24px 20px !important;
+    width: 100% !important;
+  }
+
+  /* Reviews grid */
+  .stardust-section--reviews {
+    padding: clamp(48px, 7vw, 80px) 0 !important;
   }
   .stardust-reviews__grid {
     grid-template-columns: 1fr !important;
-    max-width: 520px !important;
+    max-width: 540px !important;
     margin: 0 auto !important;
+  }
+  .stardust-reviews__grid > :last-child {
+    grid-column: span 1 !important;
+  }
+
+  /* Footer top */
+  .stardust-footer {
+    padding: clamp(48px, 7vw, 80px) 0 24px !important;
   }
   .stardust-footer__top {
     grid-template-columns: 1fr !important;
+    gap: 36px !important;
+    margin-bottom: 36px !important;
   }
+  .stardust-footer__brand {
+    max-width: 100% !important;
+  }
+
+  /* Multi-page grids */
   .stardust-story-grid {
     grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  .stardust-story-frame {
+    aspect-ratio: 16 / 10 !important;
+    max-width: 100% !important;
+    order: -1 !important;
   }
   .stardust-contact-grid {
     grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Hide desktop CTA in header to prevent navbar crowding */
+  .stardust-nav__cta-desktop {
+    display: none !important;
+  }
+  .stardust-bestsellers__header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    margin-bottom: 28px !important;
+  }
+  .stardust-bestsellers__header .stardust-btn {
+    width: 100% !important;
+    min-height: 44px !important;
   }
 }
 
 @media (max-width: 640px) {
+  .stardust-container {
+    padding: 0 16px !important;
+  }
+
+  /* Compact Navbar */
+  .stardust-nav {
+    height: 64px !important;
+    min-height: 64px !important;
+  }
+  .stardust-nav__container {
+    padding: 0 16px !important;
+  }
+  .stardust-nav__logo {
+    font-size: 22px !important;
+  }
+  .stardust-nav__logo-img {
+    height: 30px !important;
+  }
+  .stardust-nav__actions {
+    gap: 8px !important;
+  }
+  .stardust-nav__icon-btn {
+    padding: 6px !important;
+  }
+
+  /* Bestsellers */
   .stardust-bestsellers__grid {
     grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .stardust-card__body {
+    padding: 16px !important;
+  }
+  .stardust-card__btn {
+    min-height: 44px !important;
+  }
+
+  /* Stats grid 2x2 */
+  .stardust-stats {
+    padding: 24px 0 !important;
   }
   .stardust-stats__grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 32px 16px !important;
+    gap: 20px 14px !important;
   }
+  .stardust-stats__value {
+    font-size: 28px !important;
+  }
+  .stardust-stats__label {
+    font-size: 11px !important;
+  }
+
+  /* Values list 1 col */
   .stardust-values__list {
     grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  /* Newsletter / Circle form full-width stack */
+  .stardust-section--circle {
+    padding: clamp(40px, 6vw, 64px) 0 !important;
   }
   .stardust-circle__form {
     flex-direction: column !important;
+    width: 100% !important;
+    gap: 10px !important;
   }
+  .stardust-circle__input {
+    width: 100% !important;
+    min-height: 46px !important;
+  }
+  .stardust-circle__form .stardust-btn {
+    width: 100% !important;
+    min-height: 46px !important;
+  }
+  .stardust-circle__meta {
+    flex-direction: column !important;
+    gap: 6px !important;
+    font-size: 11.5px !important;
+  }
+  .stardust-circle__meta span:nth-child(even) {
+    display: none !important;
+  }
+
+  /* Footer links */
   .stardust-footer__links-group {
-    grid-template-columns: 1fr !important;
-    gap: 24px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 24px 16px !important;
   }
+
+  /* Story highlights */
   .stardust-story-highlights {
     grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Topbar */
+  .stardust-topbar {
+    padding: 6px 14px !important;
+    font-size: 11.5px !important;
+  }
+  .stardust-topbar__msg {
+    display: none !important;
+  }
+  .stardust-topbar__inner {
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    padding-right: 20px !important;
+  }
+  .stardust-topbar__cta {
+    padding: 3px 10px !important;
+    font-size: 11px !important;
+  }
+
+  /* Alert modal */
+  .stardust-alert-modal-wrap {
+    bottom: 12px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Hero buttons full-width stack on mobile phones */
+  .stardust-hero__buttons {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+  .stardust-hero__buttons .stardust-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 14.5px !important;
+  }
+  .stardust-hero__title {
+    font-size: 30px !important;
+  }
+  .stardust-hero__script {
+    font-size: 22px !important;
+  }
+
+  /* Footer 1 col */
+  .stardust-footer__links-group {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+    text-align: center !important;
+  }
+  .stardust-footer__col {
+    align-items: center !important;
+  }
+  .stardust-footer__bottom {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 12px !important;
+  }
+
+  /* Floating preorder pill */
+  .stardust-floating-preorder {
+    bottom: 16px !important;
+    right: 16px !important;
+  }
+  .stardust-floating-preorder__btn {
+    padding: 8px 16px !important;
+  }
+  .stardust-floating-preorder__text small {
+    display: none !important;
   }
 }
 

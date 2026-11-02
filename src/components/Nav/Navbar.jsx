@@ -114,10 +114,10 @@ export default function Navbar() {
               </svg>
             </button>
 
-            {/* Pre-Order Now Pill Button */}
+            {/* Pre-Order Now Pill Button (Desktop only) */}
             <button
               type="button"
-              className="stardust-btn stardust-btn--primary"
+              className="stardust-btn stardust-btn--primary stardust-nav__cta-desktop"
               onClick={handlePreOrderCTA}
             >
               <span>Pre-Order Now</span>
@@ -143,28 +143,43 @@ export default function Navbar() {
 
       {/* Mobile Drawer Menu */}
       {menuOpen && (
-        <div className="stardust-nav__mobile font-lato">
-          {navItems.map((item) => (
-            <a
-              key={item.label}
-              href={item.hash || '#'}
-              className="stardust-nav__mobile-link"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNav(item);
-              }}
+        <div className="stardust-nav__mobile font-lato" role="dialog" aria-modal="true">
+          <div className="stardust-nav__mobile-links">
+            {navItems.map((item) => (
+              <a
+                key={item.label}
+                href={item.hash || '#'}
+                className={`stardust-nav__mobile-link ${currentView === item.view ? 'stardust-nav__mobile-link--active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNav(item);
+                }}
+              >
+                <span>{item.label}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </a>
+            ))}
+          </div>
+
+          <div className="stardust-nav__mobile-footer">
+            <button
+              type="button"
+              className="stardust-btn stardust-btn--primary"
+              style={{ width: '100%', minHeight: '48px', fontSize: '15px' }}
+              onClick={handlePreOrderCTA}
             >
-              {item.label}
-            </a>
-          ))}
-          <button
-            type="button"
-            className="stardust-btn stardust-btn--primary"
-            style={{ marginTop: '8px', width: '100%' }}
-            onClick={handlePreOrderCTA}
-          >
-            <span>Pre-Order Sweets Online ↗</span>
-          </button>
+              <span>Pre-Order Sweets Online</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+            </button>
+            <p className="stardust-nav__mobile-note">
+              📍 NH 44, Krishnagiri · ⏰ 6:00 AM – 10:30 PM Daily
+            </p>
+          </div>
         </div>
       )}
     </>
