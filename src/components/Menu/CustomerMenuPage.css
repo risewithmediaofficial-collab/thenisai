@@ -13,8 +13,7 @@
 
 /* ── Top Header ───────────────────────────────────────────────────────────── */
 .menu-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 40;
   background: #ffffff;
   border-bottom: 1px solid #e2e8f0;

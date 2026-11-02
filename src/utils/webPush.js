@@ -136,3 +136,4 @@ export async function sendTestPushNotification(title, body) {
 export async function triggerCronCheck() {
   return await api.post('/api/notifications/trigger-cron-check');
 }
+
