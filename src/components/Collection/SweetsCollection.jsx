@@ -115,7 +115,7 @@ const SHOWCASE_ITEMS = [
     price: '₹25',
     weight: 'Hot Cup',
     desc: 'Rich, authentic South Indian filter coffee brewed with fresh cow milk and aromatic blend.',
-    image: '/images/products/tea_coffee_real.jpg',
+    image: '/images/products/filter_coffee_real.jpg',
   },
 ];
 
