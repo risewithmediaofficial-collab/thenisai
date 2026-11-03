@@ -1,5 +1,5 @@
 @page {
-  size: portrait;
+  size: auto;
   margin: 0mm !important;
 }
 
@@ -1240,6 +1240,11 @@
   .invoice-toolbar,
   .invoice-success-banner,
   .a4-sheet-divider-cut,
+  .stardust-floating-preorder,
+  .stardust-alert-modal-wrap,
+  .stardust-topbar,
+  .sandbox-banner,
+  aside,
   .no-print {
     display: none !important;
   }

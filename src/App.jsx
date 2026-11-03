@@ -253,11 +253,12 @@ function AppContent({ isLoaded, handleLoadComplete }) {
       );
     }
 
-    const isAdminBilling =
+    const isPreOrderRoute = currentHash.includes('preorder') || currentHash.includes('pre-order') || currentHash === '#admin/orders' || currentHash === '#orders';
+    const isAdminBilling = !isPreOrderRoute && (
       currentHash === '#admin/billing' ||
       currentHash.startsWith('#admin/billing') ||
       currentHash === '#admin/pos' ||
-      currentHash.startsWith('#admin/pos');
+      currentHash.startsWith('#admin/pos'));
 
     if (isAdminBilling) {
       return (
@@ -266,7 +267,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <div style={isTestMode ? { marginTop: 36 } : undefined}>
             <BillingCounter />
             <InvoiceModal />
-            <PreOrderAlert />
+
           </div>
         </Suspense>
       );
@@ -278,7 +279,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <AdminDashboard />
           <InvoiceModal />
-          <PreOrderAlert />
+
         </div>
       </Suspense>
     );
@@ -299,7 +300,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         <div style={isTestMode ? { marginTop: 36 } : undefined}>
           <BillingCounter />
           <InvoiceModal />
-          <PreOrderAlert />
+
         </div>
       </Suspense>
     );

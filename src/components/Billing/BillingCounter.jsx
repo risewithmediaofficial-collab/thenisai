@@ -734,9 +734,9 @@ export default function BillingCounter() {
     const isUnderAdmin = user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin');
     if (isUnderAdmin) {
       if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
-      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/billing/preorders';
+      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/billing/daily-sales';
-      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/billing/preorders';
+      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/preorders';
       else if (hash.startsWith('#billing/inventory')) target = '#admin/billing/inventory';
       else if (hash.startsWith('#billing/expenses')) target = '#admin/billing/expenses';
     }
@@ -756,12 +756,20 @@ export default function BillingCounter() {
       syncBillingHash(isAdminMode ? '#admin/billing' : '#billing');
       setMobileTab('catalog');
     } else if (newTab === 'pre-orders') {
-      syncBillingHash(isAdminMode ? '#admin/billing/preorders' : '#billing/preorders');
+      if (isAdminMode) {
+        navigateTo('admin', 'preorders');
+        return;
+      }
+      syncBillingHash('#billing/preorders');
     } else if (newTab === 'my-bills' || newTab === 'daily-sales') {
       syncBillingHash(isAdminMode ? '#admin/billing/daily-sales' : '#billing/daily-sales');
       handleRefreshShiftBills();
     } else if (newTab === 'online-orders') {
-      syncBillingHash(isAdminMode ? '#admin/billing/preorders' : '#billing/preorders');
+      if (isAdminMode) {
+        navigateTo('admin', 'preorders');
+        return;
+      }
+      syncBillingHash('#billing/preorders');
     } else if (newTab === 'inventory') {
       syncBillingHash(isAdminMode ? '#admin/billing/inventory' : '#billing/inventory');
     } else if (newTab === 'expenses') {
@@ -2554,7 +2562,13 @@ export default function BillingCounter() {
             <button
               type="button"
               id="pos-tab-preorders"
-              onClick={() => handleSwitchTab('pre-orders')}
+              onClick={() => {
+                if (user?.role === 'admin' || window.location.hash.toLowerCase().startsWith('#admin')) {
+                  navigateTo('admin', 'preorders');
+                } else {
+                  handleSwitchTab('pre-orders');
+                }
+              }}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',

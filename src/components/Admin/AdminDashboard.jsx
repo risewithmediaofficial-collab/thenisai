@@ -1230,6 +1230,35 @@ export default function AdminDashboard() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+
+              <button
+                type="button"
+                className="act-btn-return-pos"
+                onClick={() => navigateTo('admin', 'billing')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'linear-gradient(135deg, #d97706, #b45309)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '9px 18px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(217, 119, 6, 0.25)',
+                  marginLeft: 'auto',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                </svg>
+                <span>Return to POS Billing</span>
+              </button>
             </div>
 
             {filteredOrders.length === 0 ? (

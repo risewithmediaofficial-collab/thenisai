@@ -3,9 +3,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../../context/CartContext';
 
 export default function PreOrderAlert() {
-  const { navigateTo } = useCart();
+  const { navigateTo, currentView } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+
+  // Strictly keep Pre-Order alert prompt and floating button ONLY on customer website
+  const currentHash = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+  const isStaffRoute =
+    currentView === 'admin' ||
+    currentView === 'billing' ||
+    currentView === 'manager' ||
+    currentHash.startsWith('#admin') ||
+    currentHash.startsWith('#billing') ||
+    currentHash.startsWith('#manager');
+
+  if (isStaffRoute) return null;
 
   useEffect(() => {
     // Show alert message promptly after user opens the website

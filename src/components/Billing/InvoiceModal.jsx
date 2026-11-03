@@ -16,7 +16,7 @@ import DeleteBillModal from './DeleteBillModal';
 import './InvoiceModal.css';
 
 export default function InvoiceModal() {
-  const { activeInvoice, closeInvoice, taxSettings, deleteBill, openInvoice, editBill, bills } = useCart();
+  const { activeInvoice, closeInvoice, taxSettings, deleteBill, openInvoice, editBill, bills, allBillingProducts = [] } = useCart();
   const { user } = useAuth();
   const invoiceRef = useRef();
   const [isEditingBill, setIsEditingBill] = useState(false);
@@ -151,6 +151,11 @@ export default function InvoiceModal() {
     gstin: activeGstin,
   };
 
+
+  // Combined product catalog fallback (store catalog + custom items or static ALL_BILLING_ITEMS)
+  const billingCatalog = (allBillingProducts && allBillingProducts.length > 0)
+    ? allBillingProducts
+    : (ALL_BILLING_ITEMS || []);
 
   // Determine copies to render: 1 Copy (Customer) or 2 Copies (Customer + Shop)
   const copiesToRender = copiesMode === 'both' ? ['customer', 'shop'] : (copiesMode === 'shop' ? ['shop'] : ['customer']);
@@ -391,8 +396,8 @@ export default function InvoiceModal() {
   const getInventoryCode = (item, idx) => {
     if (item.itemNumber) return String(item.itemNumber).padStart(2, '0');
     if (item.code) return String(item.code).padStart(2, '0');
-    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
-      const match = ALL_BILLING_ITEMS.find(
+    if (item.id && Array.isArray(billingCatalog)) {
+      const match = billingCatalog.find(
         (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
       );
       if (match?.itemNumber) return String(match.itemNumber).padStart(2, '0');
@@ -419,8 +424,8 @@ export default function InvoiceModal() {
   // Helper to clean item title (uppercase English name matching authentic POS thermal style)
   const getItemDisplayName = (item) => {
     if (item.englishName) return item.englishName.toUpperCase();
-    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
-      const match = ALL_BILLING_ITEMS.find(
+    if (item.id && Array.isArray(billingCatalog)) {
+      const match = billingCatalog.find(
         (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
       );
       if (match?.englishName) return match.englishName.toUpperCase();
@@ -433,8 +438,8 @@ export default function InvoiceModal() {
   // Helper to get Tamil name of item
   const getItemTamilName = (item) => {
     if (item.tamilName) return item.tamilName.trim();
-    if (item.id && Array.isArray(ALL_BILLING_ITEMS)) {
-      const match = ALL_BILLING_ITEMS.find(
+    if (item.id && Array.isArray(billingCatalog)) {
+      const match = billingCatalog.find(
         (s) => s.id === item.id || s.name?.toLowerCase() === item.name?.toLowerCase()
       );
       if (match?.tamilName) return match.tamilName.trim();
@@ -750,7 +755,7 @@ export default function InvoiceModal() {
             </thead>
             <tbody>
               {items.map((item, idx) => {
-                const sku = item.skuCode || item.itemNumber || (allBillingProducts || []).find((s) => s.id === item.id)?.skuCode || (allBillingProducts || []).find((s) => s.id === item.id)?.itemNumber;
+                const sku = item.skuCode || item.itemNumber || billingCatalog.find((s) => s.id === item.id)?.skuCode || billingCatalog.find((s) => s.id === item.id)?.itemNumber;
                 return (
                   <tr key={`${item.id}-${item.weight}`}>
                     <td>{idx + 1}</td>

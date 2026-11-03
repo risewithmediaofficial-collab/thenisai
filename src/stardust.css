@@ -4048,3 +4048,35 @@ html, body {
     font-size: 12px !important;
   }
 }
+
+@media print {
+  .stardust-topbar,
+  .stardust-alert-modal-wrap,
+  .stardust-floating-preorder,
+  .stardust-floating-preorder__btn,
+  aside[aria-label="Quick Pre-Order Widget"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Ensure the floating pre-order button and alert modal never display on admin or billing pages */
+.admin-dashboard .stardust-floating-preorder,
+.admin-layout .stardust-floating-preorder,
+.billing-pos-root .stardust-floating-preorder,
+.company-manager-root .stardust-floating-preorder,
+body:has(#pos-tab-preorders) .stardust-floating-preorder,
+body:has(.pos-sidebar) .stardust-floating-preorder {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+

@@ -597,7 +597,7 @@ time, .hours {
    Ensures print preview is never clipped or suppressed by layout locks
    ============================================================ */
 @page {
-  size: portrait;
+  size: auto;
   margin: 0mm !important;
 }
 
@@ -17025,7 +17025,7 @@ time, .hours {
    Guaranteed Zero Blank Sheet Print Architecture for Thermal & A4 Invoices
    ============================================================================== */
 @page {
-  size: portrait;
+  size: auto;
   margin: 0mm !important;
 }
 
