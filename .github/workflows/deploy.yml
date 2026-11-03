@@ -44,10 +44,14 @@ jobs:
               git clone https://github.com/risewithmediaofficial-collab/thenisai.git .
             fi
 
-            # Zero-downtime deployment: Build image first while existing container continues serving traffic
-            echo "==> Building updated Docker images in background..."
-            docker compose build
-            docker compose up -d
+            # Force a clean rebuild so ALL file changes (images, CSS, JS, data) are always
+            # picked up. Without --no-cache, Docker reuses cached COPY layers when git
+            # resets file timestamps, causing the old build to be served after a push.
+            echo "==> Building updated Docker images (no cache)..."
+            docker compose build --no-cache
+
+            # Restart containers with the freshly built images
+            docker compose up -d --force-recreate
 
             # Clean up old unused images to save disk space
             echo "==> Pruning dangling images..."
