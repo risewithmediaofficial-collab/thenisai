@@ -4,7 +4,6 @@ import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
 import PreOrderTopBar from './components/PreOrder/PreOrderTopBar';
 import PreOrderAlert from './components/PreOrder/PreOrderAlert';
-import CartDrawer from './components/Cart/CartDrawer';
 import { CartProvider, useCart } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
