@@ -1,6 +1,19 @@
-// Thenisai Sweets — Service Worker for Web Push Notifications & Offline Capability
+// Thenisai Sweets — Service Worker for Web Push Notifications & Clean Cache Management
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    // Safely delete any legacy or obsolete CacheStorage caches to prevent stale offline caching
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          console.log('[SW] Deleting obsolete cache:', key);
+          return caches.delete(key);
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
 
 // 1. Listen for Incoming Push Event (Google FCM / Apple APNs / Mozilla)
 self.addEventListener('push', (event) => {
@@ -65,4 +78,3 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
-

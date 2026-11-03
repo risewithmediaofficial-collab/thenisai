@@ -44,17 +44,46 @@ jobs:
               git clone https://github.com/risewithmediaofficial-collab/thenisai.git .
             fi
 
-            # Force a clean rebuild so ALL file changes (images, CSS, JS, data) are always
-            # picked up. Without --no-cache, Docker reuses cached COPY layers when git
-            # resets file timestamps, causing the old build to be served after a push.
-            echo "==> Building updated Docker images (no cache)..."
-            docker compose build --no-cache
+            # Prepare build version metadata
+            COMMIT_SHA="${{ github.sha }}"
+            BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            echo "==> Building fresh frontend image with commit ${COMMIT_SHA:0:7}..."
 
-            # Restart containers with the freshly built images
-            docker compose up -d --force-recreate
+            # Build ONLY the frontend image with no-cache and commit build-args
+            docker compose build --no-cache \
+              --build-arg BUILD_COMMIT="${COMMIT_SHA}" \
+              --build-arg BUILD_TIME="${BUILD_DATE}" \
+              thenisai
 
-            # Clean up old unused images to save disk space
-            echo "==> Pruning dangling images..."
+            # Recreate ONLY the frontend container — preserving backend, MongoDB and all data
+            echo "==> Recreating frontend container..."
+            docker compose up -d --no-deps --force-recreate thenisai
+
+            # Safely prune dangling build cache layers without touching running containers
+            echo "==> Pruning dangling image layers..."
             docker image prune -f || true
+
+            # Health Check: verify port 92 responds with HTTP 200
+            echo "==> Running post-deployment health check on http://127.0.0.1:92..."
+            HEALTHY=false
+            for i in $(seq 1 15); do
+              HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:92/ || true)
+              if [ "$HTTP_STATUS" = "200" ]; then
+                echo "==> Health check passed! Frontend container returned HTTP 200."
+                HEALTHY=true
+                break
+              fi
+              echo "Waiting for frontend container on port 92... (attempt $i/15)"
+              sleep 2
+            done
+
+            if [ "$HEALTHY" != "true" ]; then
+              echo "ERROR: Frontend container health check failed on port 92!"
+              exit 1
+            fi
+
+            # Confirm deployed version
+            echo "==> Deployed Version Endpoint:"
+            curl -s http://127.0.0.1:92/version.json || echo "version.json unavailable"
 
             echo "==> Deployment completed successfully! App running on port 92."

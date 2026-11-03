@@ -6,10 +6,20 @@ import viteCompression from 'vite-plugin-compression'
 export default defineConfig({
   plugins: [
     react(),
-    // Generate .gz files at build time — nginx serves them via gzip_static on
-    viteCompression({ algorithm: 'gzip', ext: '.gz', threshold: 1024 }),
+    // Generate .gz files at build time for assets ONLY (never pre-compress index.html)
+    viteCompression({
+      algorithm: 'gzip',
+      ext: '.gz',
+      threshold: 1024,
+      filter: /\.(js|mjs|json|css|svg)$/i,
+    }),
     // Also generate .br (brotli) for modern browsers
-    viteCompression({ algorithm: 'brotliCompress', ext: '.br', threshold: 1024 }),
+    viteCompression({
+      algorithm: 'brotliCompress',
+      ext: '.br',
+      threshold: 1024,
+      filter: /\.(js|mjs|json|css|svg)$/i,
+    }),
   ],
   server: {
     host: '0.0.0.0',
@@ -38,6 +48,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
+        // Enforce deterministic content-hashing on every production asset
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         // Granular manual chunk splitting for optimal parallel loading
         manualChunks(id) {
           // ── Node modules ──────────────────────────────────────────────────

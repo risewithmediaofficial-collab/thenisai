@@ -21,6 +21,24 @@ if (typeof window !== 'undefined') {
   window.totalCardRevenue = 0;
   window.totalCashRevenue = 0;
   window.totalUpiRevenue = 0;
+
+  // Auto-recover from stale dynamic imports when new builds are deployed
+  window.addEventListener('vite:preloadError', (event) => {
+    console.warn('[Vite] Stale chunk preload detected. Reloading to load latest version...');
+    event.preventDefault();
+    window.location.reload();
+  });
+
+  // Safely clear any legacy CacheStorage caches from older Service Worker / PWA builds
+  if ('caches' in window) {
+    caches.keys().then((keys) => {
+      keys.forEach((key) => {
+        if (key.includes('thenisai') || key.includes('workbox') || key.includes('precache')) {
+          caches.delete(key);
+        }
+      });
+    }).catch(() => {});
+  }
 }
 
 const root = createRoot(document.getElementById('root'));
@@ -36,5 +54,3 @@ const AppTree = (
 root.render(
   import.meta.env.DEV ? <StrictMode>{AppTree}</StrictMode> : AppTree
 );
-
-

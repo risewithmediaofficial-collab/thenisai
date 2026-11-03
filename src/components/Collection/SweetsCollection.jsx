@@ -19,7 +19,7 @@ const SHOWCASE_ITEMS = [
     price: '₹340',
     weight: '500g',
     desc: 'Authentic 100% farm-fresh cow milk, slow-simmered in heavy brass urulis for 4 hours into golden, rich caramelized perfection.',
-    image: '/images/products/palkova_hero.webp',
+    image: '/images/products/palkova_hero.webp?v=2',
   },
   {
     id: 'kaju-katli',
@@ -29,7 +29,7 @@ const SHOWCASE_ITEMS = [
     price: '₹280',
     weight: '250g',
     desc: 'Silken diamond-cut fudge handcrafted from premium cashews and pure milk, slow-cooked to tender melt-in-the-mouth perfection.',
-    image: '/images/products/kaju_katli_real.jpg',
+    image: '/images/products/kaju_katli_real.jpg?v=2',
   },
   {
     id: 'mysore-pak',
@@ -39,7 +39,7 @@ const SHOWCASE_ITEMS = [
     price: '₹190',
     weight: '250g',
     desc: 'Traditional melt-in-mouth confectionery prepared with pure golden desi ghee, roasted gram flour, and aromatic cardamom.',
-    image: '/images/products/mysore_pak.webp',
+    image: '/images/products/mysore_pak.webp?v=2',
   },
   {
     id: 'jangiri',
@@ -49,7 +49,7 @@ const SHOWCASE_ITEMS = [
     price: '₹280',
     weight: '500g',
     desc: 'Crisp festive swirls piped from finely ground urad batter, fried golden in pure ghee and soaked in aromatic saffron syrup.',
-    image: '/images/products/jangiri_real.jpg',
+    image: '/images/products/jangiri_real.jpg?v=2',
   },
 
   // 2. Savories & Kara Boondi
@@ -61,7 +61,7 @@ const SHOWCASE_ITEMS = [
     price: '₹140',
     weight: '250g',
     desc: 'Crunchy golden gram flour pearls infused with roasted peanuts, cashews, garlic, and fried garden-fresh curry leaves.',
-    image: '/images/products/savories_boondi_real.jpg',
+    image: '/images/products/savories_boondi_real.jpg?v=2',
   },
 
   // 3. Live Highway Chaat
@@ -73,7 +73,7 @@ const SHOWCASE_ITEMS = [
     price: '₹50',
     weight: 'Plate (6 pcs)',
     desc: 'Hollow, crisp puffed puris filled with spiced potato-sprout filling and served with ice-cold mint theekha paani and sweet tamarind chutney.',
-    image: '/images/products/panipuri_real.jpg',
+    image: '/images/products/panipuri_real.jpg?v=2',
   },
 
   // 4. Beverages: Tea, Fresh Juices, Rose Milk & Filter Coffee
@@ -85,7 +85,7 @@ const SHOWCASE_ITEMS = [
     price: '₹20',
     weight: 'Hot Cup',
     desc: 'Steaming hot aromatic tea prepared fresh with unadulterated pure cow milk and subtle cardamom.',
-    image: '/images/products/tea_real.jpg',
+    image: '/images/products/tea_real.jpg?v=2',
   },
   {
     id: 'fresh-juices',
@@ -95,7 +95,7 @@ const SHOWCASE_ITEMS = [
     price: '₹60',
     weight: '300ml Glass',
     desc: 'Freshly squeezed seasonal fruits served chilled without artificial colors or added water.',
-    image: '/images/products/fresh_juices_real.jpg',
+    image: '/images/products/fresh_juices_real.jpg?v=2',
   },
   {
     id: 'rose-milk',
@@ -105,7 +105,7 @@ const SHOWCASE_ITEMS = [
     price: '₹30',
     weight: 'Chilled Glass',
     desc: 'Delicious chilled rose milk made with fragrant rose syrup and thick fresh milk.',
-    image: '/images/products/rosemilk_real.jpg',
+    image: '/images/products/rosemilk_real.jpg?v=2',
   },
   {
     id: 'filter-coffee',
@@ -115,7 +115,7 @@ const SHOWCASE_ITEMS = [
     price: '₹25',
     weight: 'Hot Cup',
     desc: 'Rich, authentic South Indian filter coffee brewed with fresh cow milk and aromatic blend.',
-    image: '/images/products/filter_coffee_real.jpg',
+    image: '/images/products/filter_coffee_real.jpg?v=2',
   },
 ];
 
@@ -190,7 +190,7 @@ export default function SweetsCollection() {
                   className="stardust-card__img"
                   loading="lazy"
                   onError={(e) => {
-                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
+                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg?v=2';
                   }}
                 />
 
