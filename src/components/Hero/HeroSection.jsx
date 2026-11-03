@@ -43,16 +43,12 @@ export default function HeroSection() {
               </span>
             </h1>
 
-            <p className="stardust-hero__desc font-lato">
-              Handcrafted from 100% farm-fresh cow milk collected at dawn, slow-simmered for 4+ continuous hours in authentic heavy brass urulis into melt-in-the-mouth caramelized perfection. A cherished landmark for travelers on NH 44 with zero preservatives or chemical essence.
-            </p>
-
             {/* Unique Shop Detailing Pills */}
-            <div className="stardust-hero__pills font-lato">
+            <div className="stardust-hero__pills font-lato" style={{ marginTop: '16px', marginBottom: '24px' }}>
               <span className="stardust-hero__pill">● 100% Pure Cow Milk</span>
               <span className="stardust-hero__pill">● 4-Hr Brass Uruli Simmer</span>
-              <span className="stardust-hero__pill">● Zero Essence or Fillers</span>
-              <span className="stardust-hero__pill">● Zero-Wait Highway Counter Pickup</span>
+              <span className="stardust-hero__pill">● Zero Chemical Essences</span>
+              <span className="stardust-hero__pill">● Zero-Wait Counter Pickup</span>
             </div>
 
             <div className="stardust-hero__buttons font-lato">

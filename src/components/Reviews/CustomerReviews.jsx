@@ -16,7 +16,7 @@ export default function CustomerReviews() {
       quote: 'We always stop at Krishnagiri on our Bangalore–Salem drive. The fresh hot Palkova and Ghee Mysore Pak are simply unbeatable.',
       stars: 5,
       date: '09/01/2026',
-      featured: true, // Featured card in deep espresso with gold stars
+      featured: true,
     },
     {
       id: 3,
@@ -32,8 +32,8 @@ export default function CustomerReviews() {
   return (
     <section className="stardust-section stardust-section--reviews">
       <div className="stardust-container">
-        {/* Header */}
-        <div className="text-center" style={{ marginBottom: '44px' }}>
+        {/* Header with Refined Typography */}
+        <div className="text-center" style={{ marginBottom: '36px' }}>
           <div className="stardust-pill-badge font-lato">
             <span>★ 4.9 · rated by 500+ happy customers</span>
           </div>
@@ -42,13 +42,9 @@ export default function CustomerReviews() {
             Stories of Sweetness
           </span>
 
-          <h2 className="stardust-section__title font-garamond" style={{ marginTop: '2px' }}>
+          <h2 className="stardust-section__title font-garamond" style={{ marginTop: '2px', marginBottom: 0 }}>
             What Our Customers Say
           </h2>
-
-          <p className="stardust-section__sub font-lato" style={{ maxWidth: '520px', margin: '8px auto 0' }}>
-            Real stories from travelers and families who have made Thenisai a part of their journeys and celebrations.
-          </p>
         </div>
 
         {/* 3 Review Cards */}
@@ -64,13 +60,13 @@ export default function CustomerReviews() {
                   {rev.name.charAt(0)}
                 </div>
                 <div>
-                  <h4 className="stardust-review-card__name">{rev.name}</h4>
+                  <h4 className="stardust-review-card__name font-garamond" style={{ fontSize: '18px' }}>{rev.name}</h4>
                   <span className="stardust-review-card__badge">{rev.role}</span>
                 </div>
               </div>
 
               {/* Quote Body */}
-              <p className="stardust-review-card__quote">
+              <p className="stardust-review-card__quote font-garamond" style={{ fontSize: '16px', fontStyle: 'italic', color: rev.featured ? '#FAF5EB' : '#4A3B32' }}>
                 &ldquo;{rev.quote}&rdquo;
               </p>
 

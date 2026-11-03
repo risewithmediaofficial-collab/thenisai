@@ -32,11 +32,11 @@ export default function ContactPage() {
           <span className="font-script" style={{ fontSize: '40px', color: '#E8C06A', display: 'block', marginBottom: '6px' }}>
             A Warm Welcome on NH 44
           </span>
-          <h1 className="stardust-story-title font-garamond">
+          <h1 className="stardust-story-title font-garamond" style={{ marginBottom: '8px' }}>
             Visit Us &amp; Bulk Pre-Orders
           </h1>
-          <p className="stardust-story-subtitle font-lato">
-            Stop by our boutique on NH 44 near HP Petrol Bunk in Krishnagiri, or reserve custom sweet boxes for your wedding, corporate event, or family gathering.
+          <p className="font-garamond italic" style={{ fontSize: '20px', color: '#E8C06A', margin: '8px 0 0' }}>
+            Boutique Storefront · Wedding &amp; Corporate Sweet Boxes · NH 44 Krishnagiri
           </p>
         </div>
       </section>

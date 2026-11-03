@@ -3403,8 +3403,9 @@ html, body {
   display: flex !important;
   align-items: flex-start !important;
   justify-content: space-between !important;
-  margin-bottom: 8px !important;
+  margin-bottom: 12px !important;
   gap: 10px !important;
+  min-height: 48px !important;
 }
 
 .stardust-card__title {
@@ -3413,7 +3414,7 @@ html, body {
   font-weight: 700 !important;
   color: #1C0F08 !important;
   margin: 0 !important;
-  line-height: 1.15 !important;
+  line-height: 1.2 !important;
 }
 
 .stardust-card__price {
@@ -3426,17 +3427,13 @@ html, body {
 }
 
 .stardust-card__desc {
-  font-family: 'Lato', sans-serif !important;
-  font-size: 13px !important;
-  line-height: 1.55 !important;
-  color: #5E4B3E !important;
-  margin: 0 0 16px !important;
-  flex-grow: 1 !important;
+  display: none !important;
 }
 
 .stardust-card__btn {
   width: 100% !important;
   min-height: 44px !important;
+  margin-top: auto !important;
   padding: 10px 14px !important;
   background: #FAF7F2 !important;
   color: #1C0F08 !important;

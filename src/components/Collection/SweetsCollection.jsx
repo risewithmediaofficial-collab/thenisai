@@ -18,7 +18,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Our 20-Year Legend',
     price: '₹340',
     weight: '500g',
-    desc: 'Authentic 100% farm-fresh cow milk, slow-simmered in heavy brass urulis for 4 hours into golden, rich caramelized perfection.',
     image: '/images/products/palkova_hero.webp?v=2',
   },
   {
@@ -28,7 +27,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Pure Cashew',
     price: '₹280',
     weight: '250g',
-    desc: 'Silken diamond-cut fudge handcrafted from premium cashews and pure milk, slow-cooked to tender melt-in-the-mouth perfection.',
     image: '/images/products/kaju_katli_real.jpg?v=2',
   },
   {
@@ -38,7 +36,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Pure Desi Ghee',
     price: '₹190',
     weight: '250g',
-    desc: 'Traditional melt-in-mouth confectionery prepared with pure golden desi ghee, roasted gram flour, and aromatic cardamom.',
     image: '/images/products/mysore_pak.webp?v=2',
   },
   {
@@ -48,7 +45,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Crisp Sweet Swirls',
     price: '₹280',
     weight: '500g',
-    desc: 'Crisp festive swirls piped from finely ground urad batter, fried golden in pure ghee and soaked in aromatic saffron syrup.',
     image: '/images/products/jangiri_real.jpg?v=2',
   },
 
@@ -60,7 +56,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Curry Leaves & Peanuts',
     price: '₹140',
     weight: '250g',
-    desc: 'Crunchy golden gram flour pearls infused with roasted peanuts, cashews, garlic, and fried garden-fresh curry leaves.',
     image: '/images/products/savories_boondi_real.jpg?v=2',
   },
 
@@ -72,7 +67,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Live Chaat Counter',
     price: '₹50',
     weight: 'Plate (6 pcs)',
-    desc: 'Hollow, crisp puffed puris filled with spiced potato-sprout filling and served with ice-cold mint theekha paani and sweet tamarind chutney.',
     image: '/images/products/panipuri_real.jpg?v=2',
   },
 
@@ -84,7 +78,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Brewed Hot',
     price: '₹20',
     weight: 'Hot Cup',
-    desc: 'Steaming hot aromatic tea prepared fresh with unadulterated pure cow milk and subtle cardamom.',
     image: '/images/products/tea_real.jpg?v=2',
   },
   {
@@ -94,7 +87,6 @@ const SHOWCASE_ITEMS = [
     flourish: '100% Fresh',
     price: '₹60',
     weight: '300ml Glass',
-    desc: 'Freshly squeezed seasonal fruits served chilled without artificial colors or added water.',
     image: '/images/products/fresh_juices_real.jpg?v=2',
   },
   {
@@ -104,7 +96,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Chilled & Sweet',
     price: '₹30',
     weight: 'Chilled Glass',
-    desc: 'Delicious chilled rose milk made with fragrant rose syrup and thick fresh milk.',
     image: '/images/products/rosemilk_real.jpg?v=2',
   },
   {
@@ -114,7 +105,6 @@ const SHOWCASE_ITEMS = [
     flourish: 'Fresh Brew',
     price: '₹25',
     weight: 'Hot Cup',
-    desc: 'Rich, authentic South Indian filter coffee brewed with fresh cow milk and aromatic blend.',
     image: '/images/products/filter_coffee_real.jpg?v=2',
   },
 ];
@@ -136,18 +126,15 @@ export default function SweetsCollection() {
   return (
     <section id="bestsellers" className="stardust-section stardust-section--bestsellers">
       <div className="stardust-container">
-        {/* Section Header with Unique Artisanal Detailing */}
+        {/* Section Header with Refined Typography & Clean Taglines */}
         <div className="stardust-bestsellers__header">
           <div>
             <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', lineHeight: 1, marginBottom: '6px' }}>
               Handcrafted Masterpieces &amp; Highway Favorites
             </span>
-            <h2 className="stardust-section__title font-garamond">
+            <h2 className="stardust-section__title font-garamond" style={{ margin: 0 }}>
               Our Bestselling Confectionery &amp; Savories
             </h2>
-            <p className="stardust-section__sub font-lato">
-              Small-batch sweets, crispy savories, live hot pani puri, fresh juices, chilled rose milk, tea, and filter coffee prepared fresh daily on NH 44.
-            </p>
           </div>
 
           <button
@@ -178,7 +165,7 @@ export default function SweetsCollection() {
           ))}
         </div>
 
-        {/* Dynamic Responsive Grid with Real Uploaded Images */}
+        {/* Dynamic Responsive Grid: Minimalist Luxury Presentation */}
         <div className="stardust-bestsellers__grid">
           {filteredItems.map((item) => (
             <div key={item.id} className="stardust-card">
@@ -199,8 +186,8 @@ export default function SweetsCollection() {
                 </span>
               </div>
 
-              {/* Card Body */}
-              <div className="stardust-card__body font-lato">
+              {/* Card Body: Clean Title, Pricing & Action CTA */}
+              <div className="stardust-card__body font-lato" style={{ gap: '14px' }}>
                 <div className="stardust-card__header">
                   <h3 className="stardust-card__title font-garamond">{item.name}</h3>
                   <div style={{ textAlign: 'right' }}>
@@ -208,10 +195,6 @@ export default function SweetsCollection() {
                     <small style={{ display: 'block', fontSize: '11px', color: '#8C7769' }}>/ {item.weight}</small>
                   </div>
                 </div>
-
-                <p className="stardust-card__desc">
-                  {item.desc}
-                </p>
 
                 <button
                   type="button"

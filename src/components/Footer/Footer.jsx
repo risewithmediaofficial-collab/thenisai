@@ -27,9 +27,9 @@ export default function Footer() {
             >
               Thenisai
             </span>
-            <p className="stardust-footer__tagline">
-              Handcrafted traditional confectionery from Krishnagiri, Tamil Nadu. Pure cow milk and country ghee since 2006. Pre-order online for zero waiting time on NH 44.
-            </p>
+            <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginTop: '6px' }}>
+              The Art of Pure Milk Confectionery · Est. 2006
+            </span>
           </div>
 
           <div className="stardust-footer__links-group">

@@ -12,8 +12,8 @@ export default function PreOrderTopBar() {
       <div className="stardust-topbar__inner">
         <div className="stardust-topbar__content">
           <span className="stardust-topbar__badge">PRE-ORDERS OPEN</span>
-          <span className="stardust-topbar__msg">
-            Fresh morning batches available! Pre-order online for zero-wait pickup at our Krishnagiri NH 44 counter.
+          <span className="stardust-topbar__msg font-garamond" style={{ fontSize: '15px', letterSpacing: '0.03em' }}>
+            Fresh Daily Batches · Zero Waiting Time on NH 44
           </span>
         </div>
         <button
@@ -25,7 +25,7 @@ export default function PreOrderTopBar() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
-          <span>Click to Pre-Order</span>
+          <span>Pre-Order Online</span>
           <span className="stardust-topbar__arrow">↗</span>
         </button>
       </div>
@@ -40,4 +40,3 @@ export default function PreOrderTopBar() {
     </div>
   );
 }
-

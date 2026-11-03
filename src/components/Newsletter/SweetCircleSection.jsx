@@ -22,13 +22,13 @@ export default function SweetCircleSection() {
             <span>Loved by 2,000+ sweet lovers across NH 44</span>
           </div>
 
-          <h2 className="stardust-section__title font-garamond" style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}>
+          <h2 className="stardust-section__title font-garamond" style={{ fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px' }}>
             Join Our Sweet Circle
           </h2>
 
-          <p className="stardust-section__sub" style={{ maxWidth: '480px', margin: '8px auto 28px' }}>
-            Get updates on fresh morning batches, seasonal sweets, wedding boxes, and highway travel packs.
-          </p>
+          <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginBottom: '24px' }}>
+            Fresh Batches · Highway Specials · Festive Gift Boxes
+          </span>
 
           {/* Form */}
           {submitted ? (
@@ -57,9 +57,9 @@ export default function SweetCircleSection() {
 
           {/* Quick Highway Info */}
           <div className="stardust-circle__meta font-lato">
-            <span>📍 Storefront: Nattamai Kottai, Near HP Petrol Bunk, NH 44, Krishnagiri</span>
+            <span>📍 Nattamai Kottai, Near HP Bunk, NH 44, Krishnagiri</span>
             <span>·</span>
-            <span>📞 Call: +91 93448 93547</span>
+            <span>📞 +91 93448 93547</span>
             <span>·</span>
             <span>⏰ 6:00 AM – 10:30 PM Daily</span>
           </div>
@@ -68,4 +68,3 @@ export default function SweetCircleSection() {
     </section>
   );
 }
-

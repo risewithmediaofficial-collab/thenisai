@@ -58,19 +58,14 @@ export default function PreOrderAlert() {
               </div>
 
               {/* Artisanal Script Flourish */}
-              <span className="font-script stardust-alert-script">
+              <span className="font-script stardust-alert-script" style={{ fontSize: '32px', color: '#C59334' }}>
                 Fresh Hot Batches
               </span>
 
               {/* Display Headline */}
-              <h3 className="stardust-alert-title font-garamond">
+              <h3 className="stardust-alert-title font-garamond" style={{ fontSize: '24px', margin: '4px 0 16px' }}>
                 Reserve Sweets Before You Reach Krishnagiri
               </h3>
-
-              {/* Description */}
-              <p className="stardust-alert-desc">
-                Traveling on the Bangalore&ndash;Salem Highway (NH 44)? Skip the queue! Pre-order fresh Palkova and assorted gift boxes for zero-wait pickup.
-              </p>
 
               {/* Big Clickable Pre-Order Highlight Button */}
               <div className="stardust-alert-actions">
