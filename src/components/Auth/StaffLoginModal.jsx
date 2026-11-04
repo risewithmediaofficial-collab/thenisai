@@ -124,7 +124,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
 
       {/* ── Main card ── */}
       <div
-        className="w-full max-w-[440px] bg-white border border-slate-200 rounded-[20px] px-7 pt-8 pb-6 box-border relative my-auto"
+        className="w-full max-w-[440px] bg-white border border-slate-200 rounded-[20px] px-4 sm:px-7 pt-6 sm:pt-8 pb-5 sm:pb-6 box-border relative my-auto"
         style={{ boxShadow: '0 10px 25px -5px rgba(15,23,42,0.04), 0 20px 48px -12px rgba(15,23,42,0.08)' }}
         data-lenis-prevent="true"
       >

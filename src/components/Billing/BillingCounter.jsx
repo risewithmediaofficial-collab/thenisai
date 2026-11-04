@@ -2744,7 +2744,7 @@ export default function BillingCounter() {
           <main
             className={`pos-main-split ${mobileTab === 'catalog' ? 'show-catalog' : 'show-bill'}`}
             ref={splitRef}
-            style={catalogWidth ? { gridTemplateColumns: `minmax(320px, ${catalogWidth}px) 8px minmax(380px, 1fr)` } : undefined}
+            style={catalogWidth && typeof window !== 'undefined' && window.innerWidth >= 1024 ? { gridTemplateColumns: `minmax(320px, ${catalogWidth}px) 8px minmax(380px, 1fr)` } : undefined}
           >
             {/* LEFT COLUMN: BEVERAGE & SNACK CATALOG */}
             <section className="pos-catalog-pane" data-lenis-prevent ref={catalogPaneRef}>

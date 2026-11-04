@@ -95,7 +95,7 @@ export default function ContactPage() {
                       Counter / Orders: <strong>+91 93448 93547</strong><br />
                       WhatsApp: <strong>+91 93448 93547</strong>
                     </p>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
                       <a href="tel:+919344893547" className="stardust-btn stardust-btn--primary" style={{ padding: '7px 16px', fontSize: '12px' }}>
                         Call Boutique
                       </a>
@@ -110,7 +110,7 @@ export default function ContactPage() {
 
             {/* Right: Bulk / Wedding Pre-Order Form */}
             <div className="stardust-contact-form-col">
-              <div className="stardust-card" style={{ padding: '32px' }}>
+              <div className="stardust-card" style={{ padding: 'clamp(18px, 4vw, 32px)' }}>
                 <span className="stardust-story-tag">SPECIAL OCCASIONS</span>
                 <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginTop: '4px' }}>
                   Auspicious Celebrations
@@ -152,7 +152,7 @@ export default function ContactPage() {
                       </select>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div className="stardust-form-row-2col">
                       <div>
                         <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
                           Your Name *
@@ -181,7 +181,7 @@ export default function ContactPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                    <div className="stardust-form-row-2col">
                       <div>
                         <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
                           Event / Pickup Date
