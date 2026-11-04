@@ -3,6 +3,7 @@ import { FREE_DELIVERY_THRESHOLD, SWEETS_CATALOG, ALL_BILLING_ITEMS } from '../d
 import { useScrollLock } from '../hooks/useScrollLock';
 import api from '../utils/api';
 import { getNextPreOrderInvoiceNumber, getNextInvoiceNumber, parseInvoiceNumber } from '../utils/invoiceNumber';
+import { playPreOrderNotificationSound } from '../utils/audioChime';
 import { store } from '../store';
 import { setInventoryItems, setStockLogs as setReduxStockLogs } from '../store/slices/inventorySlice';
 import {
@@ -998,9 +999,10 @@ export function CartProvider({ children }) {
     }
 
     const cleanPhone = String(orderData.customerPhone || '').replace(/\D/g, '').slice(-10);
+    const uniqueId = `preorder-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
     const newOrder = {
       ...orderData,
-      id: orderData.id || invoiceNumber || `preorder-${Date.now()}`,
+      id: orderData.id && !orderData.id.includes('PRE - ORD') ? orderData.id : uniqueId,
       invoiceNumber,
       customerPhone: cleanPhone,
       status: 'pending',
@@ -1012,6 +1014,14 @@ export function CartProvider({ children }) {
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('thenisai_preorders_channel');
+        bc.postMessage({ type: 'NEW_PREORDER', preOrder: newOrder });
+        bc.close();
+      }
+    } catch {}
 
     // Auto-save customer login data in localStorage (mobile number as password)
     if (cleanPhone.length === 10) {
@@ -1036,6 +1046,13 @@ export function CartProvider({ children }) {
           try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
           return updated;
         });
+        try {
+          if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            const bc = new BroadcastChannel('thenisai_preorders_channel');
+            bc.postMessage({ type: 'NEW_PREORDER', preOrder: finalOrder });
+            bc.close();
+          }
+        } catch {}
         return finalOrder;
       }
     } catch (err) {
@@ -1047,10 +1064,18 @@ export function CartProvider({ children }) {
 
   const acceptPreOrder = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId) ? { ...o, status: 'accepted', acceptedAt: Date.now() } : o);
+      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId || o._id === orderId) ? { ...o, status: 'accepted', acceptedAt: Date.now() } : o);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('thenisai_preorders_channel');
+        bc.postMessage({ type: 'PREORDER_STATUS_CHANGED', orderId, status: 'accepted' });
+        bc.close();
+      }
+    } catch {}
 
     try {
       await api.patch(`/api/preorders/${encodeURIComponent(orderId)}/status`, { status: 'accepted' });
@@ -1061,10 +1086,18 @@ export function CartProvider({ children }) {
 
   const markPreOrderBilled = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId) ? { ...o, status: 'billed', billedAt: Date.now() } : o);
+      const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId || o._id === orderId) ? { ...o, status: 'billed', billedAt: Date.now() } : o);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('thenisai_preorders_channel');
+        bc.postMessage({ type: 'PREORDER_STATUS_CHANGED', orderId, status: 'billed' });
+        bc.close();
+      }
+    } catch {}
 
     try {
       await api.patch(`/api/preorders/${encodeURIComponent(orderId)}/status`, { status: 'billed' });
@@ -1075,10 +1108,18 @@ export function CartProvider({ children }) {
 
   const deletePreOrder = async (orderId) => {
     setPreOrders((prev) => {
-      const updated = prev.filter((o) => o.id !== orderId && o.invoiceNumber !== orderId);
+      const updated = prev.filter((o) => o.id !== orderId && o.invoiceNumber !== orderId && o._id !== orderId);
       try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
       return updated;
     });
+
+    try {
+      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+        const bc = new BroadcastChannel('thenisai_preorders_channel');
+        bc.postMessage({ type: 'PREORDER_DELETED', orderId });
+        bc.close();
+      }
+    } catch {}
 
     try {
       await api.delete(`/api/preorders/${encodeURIComponent(orderId)}`);
@@ -1124,8 +1165,8 @@ export function CartProvider({ children }) {
     }
     if (view === 'admin') {
       const adminRouteMap = {
-        orders: '#admin/preorders',
-        dispatch: '#admin/preorders',
+        orders: '#admin/billing/preorders',
+        dispatch: '#admin/billing/preorders',
         inventory: '#admin/inventory',
         sales: '#admin/sales',
         'daily-revenue': '#admin/shift-bills',
@@ -1139,8 +1180,8 @@ export function CartProvider({ children }) {
         billing: '#admin/billing',
         pos: '#admin/billing',
         register: '#admin/billing',
-        preorders: '#admin/preorders',
-        'pre-orders': '#admin/preorders',
+        preorders: '#admin/billing/preorders',
+        'pre-orders': '#admin/billing/preorders',
         expenses: '#admin/expenses',
       };
       const targetHash = subTab ? (adminRouteMap[subTab] || `#admin/${subTab}`) : '#admin/inventory';
@@ -1205,10 +1246,11 @@ export function CartProvider({ children }) {
     }
   }, [inventory]);
 
-  // Multi-tab synchronization for product availability, inventory, and real-time bills
+  // Multi-tab synchronization for product availability, inventory, real-time bills, and pre-orders
   useEffect(() => {
     let bc = null;
     let billsBc = null;
+    let preOrdersBc = null;
     try {
       if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
         bc = new BroadcastChannel('thenisai_inventory_channel');
@@ -1228,6 +1270,34 @@ export function CartProvider({ children }) {
             const incoming = event.data.bill;
             setBills((prev) => {
               const updated = [incoming, ...prev.filter((b) => b.id !== incoming.id && b.invoiceNumber !== incoming.invoiceNumber)];
+              return updated;
+            });
+          }
+        };
+
+        preOrdersBc = new BroadcastChannel('thenisai_preorders_channel');
+        preOrdersBc.onmessage = (event) => {
+          const { type, preOrder, orderId, status } = event.data || {};
+          if (type === 'NEW_PREORDER' && preOrder) {
+            setPreOrders((prev) => {
+              if (prev.some((o) => (o.id && o.id === preOrder.id) || (o.invoiceNumber && o.invoiceNumber === preOrder.invoiceNumber))) {
+                return prev.map((o) => (o.id === preOrder.id || o.invoiceNumber === preOrder.invoiceNumber) ? preOrder : o);
+              }
+              playPreOrderNotificationSound();
+              const updated = [preOrder, ...prev];
+              try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+          } else if (type === 'PREORDER_STATUS_CHANGED' && orderId) {
+            setPreOrders((prev) => {
+              const updated = prev.map((o) => (o.id === orderId || o.invoiceNumber === orderId || o._id === orderId) ? { ...o, status } : o);
+              try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
+              return updated;
+            });
+          } else if (type === 'PREORDER_DELETED' && orderId) {
+            setPreOrders((prev) => {
+              const updated = prev.filter((o) => o.id !== orderId && o.invoiceNumber !== orderId && o._id !== orderId);
+              try { localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(updated)); } catch {}
               return updated;
             });
           }
@@ -1273,22 +1343,24 @@ export function CartProvider({ children }) {
     return () => {
       if (bc) bc.close();
       if (billsBc) billsBc.close();
+      if (preOrdersBc) preOrdersBc.close();
       window.removeEventListener('storage', handleStorage);
     };
   }, []);
 
-  // Fetch initial data from backend on mount and sync availability
+  // Fetch initial data from backend on mount and sync availability & pre-orders
   const syncWithBackend = useCallback(async () => {
     if (isSandboxActive()) {
       return; // In sandbox mode, maintain in-memory simulated state without overwriting from backend
     }
     try {
-      const [invRes, ordRes, billsRes, recBillsRes, recProdsRes] = await Promise.all([
+      const [invRes, ordRes, billsRes, recBillsRes, recProdsRes, preOrdersRes] = await Promise.all([
         api.get('/api/inventory').catch(() => null),
         api.get('/api/orders').catch(() => null),
         api.get('/api/bills').catch(() => null),
         api.get('/api/recycle-bin/bills').catch(() => null),
         api.get('/api/recycle-bin/products').catch(() => null),
+        api.get('/api/preorders').catch(() => null),
       ]);
 
       if (recBillsRes && recBillsRes.success && Array.isArray(recBillsRes.deletedBills)) {
@@ -1465,6 +1537,22 @@ export function CartProvider({ children }) {
           localStorage.setItem(BILLS_CACHE_KEY, JSON.stringify(merged));
         } catch {}
       }
+
+      if (preOrdersRes && preOrdersRes.success && Array.isArray(preOrdersRes.preOrders)) {
+        setPreOrders((prev) => {
+          const prevMap = new Map((prev || []).map((o) => [o.id || o.invoiceNumber, o]));
+          const hasNewPending = preOrdersRes.preOrders.some(
+            (incoming) => incoming.status === 'pending' && !prevMap.has(incoming.id) && !prevMap.has(incoming.invoiceNumber)
+          );
+          if (hasNewPending) {
+            playPreOrderNotificationSound();
+          }
+          try {
+            localStorage.setItem(PRE_ORDERS_STORAGE_KEY, JSON.stringify(preOrdersRes.preOrders));
+          } catch {}
+          return preOrdersRes.preOrders;
+        });
+      }
     } catch (err) {
       console.warn('Backend sync fallback to local storage:', err);
     }
@@ -1482,7 +1570,7 @@ export function CartProvider({ children }) {
     window.addEventListener('hashchange', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // Periodic live background sync (every 6 seconds) to keep multi-terminal counters synchronized in real-time
+    // Periodic live background sync (every 3.5 seconds) to keep multi-terminal counters synchronized in real-time
     const liveSyncInterval = setInterval(() => {
       if (document.visibilityState === 'visible') {
         syncWithBackend();
@@ -1494,7 +1582,7 @@ export function CartProvider({ children }) {
           }
         } catch {}
       }
-    }, 6000);
+    }, 3500);
 
     return () => {
       clearInterval(liveSyncInterval);

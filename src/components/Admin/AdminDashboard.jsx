@@ -1104,7 +1104,8 @@ export default function AdminDashboard() {
             sec === 'orders' ||
             sec === 'preorders'
           ) {
-            handleSwitchAdminTab('orders');
+            navigateTo('admin', 'billing');
+            window.location.hash = '#admin/billing/preorders';
           }
           else if (sec === 'admin-inventory' || sec === 'pos-inventory') handleSwitchAdminTab('inventory');
           else if (sec === 'admin-sales') handleSwitchAdminTab('sales');

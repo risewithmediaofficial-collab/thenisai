@@ -6,16 +6,33 @@ export default function PreOrderAlert() {
   const { navigateTo, currentView } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const [currentHash, setCurrentHash] = useState(() => (typeof window !== 'undefined' ? window.location.hash.toLowerCase() : ''));
+
+  useEffect(() => {
+    const handleHash = () => setCurrentHash((window.location.hash || '').toLowerCase());
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('popstate', handleHash);
+    return () => {
+      window.removeEventListener('hashchange', handleHash);
+      window.removeEventListener('popstate', handleHash);
+    };
+  }, []);
 
   // Strictly keep Pre-Order alert prompt and floating button ONLY on customer website
-  const currentHash = typeof window !== 'undefined' ? window.location.hash.toLowerCase() : '';
+  const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
   const isStaffRoute =
     currentView === 'admin' ||
     currentView === 'billing' ||
     currentView === 'manager' ||
-    currentHash.startsWith('#admin') ||
-    currentHash.startsWith('#billing') ||
-    currentHash.startsWith('#manager');
+    currentHash.includes('admin') ||
+    currentHash.includes('billing') ||
+    currentHash.includes('manager') ||
+    currentHash.includes('pos') ||
+    currentHash.includes('shift') ||
+    currentHash.includes('inventory') ||
+    currentHash.includes('sales') ||
+    pathname.includes('/admin') ||
+    pathname.includes('/billing');
 
   if (isStaffRoute) return null;
 

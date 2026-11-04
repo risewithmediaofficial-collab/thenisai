@@ -62,18 +62,30 @@ export async function createPreOrder(req, res) {
       );
     }
 
-    const preOrder = await PreOrder.create({
-      id: orderData.id || `preorder-${Date.now()}`,
-      invoiceNumber,
-      customerName,
-      customerPhone: cleanPhone,
-      items: cleanItems,
-      grandTotal: Number(orderData.grandTotal || 0),
-      note: String(orderData.note || '').trim(),
-      totalItems: Number(orderData.totalItems || cleanItems.length),
-      status: 'pending',
-      createdAt: Date.now(),
-    });
+    const uniqueId = (orderData.id && !orderData.id.includes('PRE - ORD') && !orderData.id.includes(' '))
+      ? orderData.id
+      : `preorder-${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
+
+    const preOrder = await PreOrder.findOneAndUpdate(
+      { $or: [{ invoiceNumber }, { id: uniqueId }] },
+      {
+        $setOnInsert: {
+          id: uniqueId,
+          createdAt: Date.now(),
+        },
+        $set: {
+          invoiceNumber,
+          customerName,
+          customerPhone: cleanPhone,
+          items: cleanItems,
+          grandTotal: Number(orderData.grandTotal || 0),
+          note: String(orderData.note || '').trim(),
+          totalItems: Number(orderData.totalItems || cleanItems.length),
+          status: 'pending',
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     console.log(`[Pre-Order] Created: ${invoiceNumber} for ${customerName} (${cleanPhone}) Total: ₹${preOrder.grandTotal}`);
 

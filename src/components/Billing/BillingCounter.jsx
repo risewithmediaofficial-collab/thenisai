@@ -86,6 +86,7 @@ export default function BillingCounter() {
     acceptPreOrder,
     markPreOrderBilled,
     deletePreOrder,
+    fetchPreOrders,
     // Expenses
     expenses = [],
     fetchExpenses,
@@ -734,9 +735,9 @@ export default function BillingCounter() {
     const isUnderAdmin = user?.role === 'admin' && window.location.hash.toLowerCase().startsWith('#admin');
     if (isUnderAdmin) {
       if (hash === '#billing' || hash.startsWith('#billing/register')) target = '#admin/billing';
-      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/preorders';
+      else if (hash.startsWith('#billing/preorders') || hash.startsWith('#billing/pre-orders')) target = '#admin/billing/preorders';
       else if (hash.startsWith('#billing/bills') || hash.startsWith('#billing/daily-sales')) target = '#admin/billing/daily-sales';
-      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/preorders';
+      else if (hash.startsWith('#billing/orders') || hash.startsWith('#billing/dispatch')) target = '#admin/billing/preorders';
       else if (hash.startsWith('#billing/inventory')) target = '#admin/billing/inventory';
       else if (hash.startsWith('#billing/expenses')) target = '#admin/billing/expenses';
     }
@@ -757,7 +758,8 @@ export default function BillingCounter() {
       setMobileTab('catalog');
     } else if (newTab === 'pre-orders') {
       if (isAdminMode) {
-        navigateTo('admin', 'preorders');
+        syncBillingHash('#admin/billing/preorders');
+        if (fetchPreOrders) fetchPreOrders();
         return;
       }
       syncBillingHash('#billing/preorders');
@@ -766,7 +768,8 @@ export default function BillingCounter() {
       handleRefreshShiftBills();
     } else if (newTab === 'online-orders') {
       if (isAdminMode) {
-        navigateTo('admin', 'preorders');
+        syncBillingHash('#admin/billing/preorders');
+        if (fetchPreOrders) fetchPreOrders();
         return;
       }
       syncBillingHash('#billing/preorders');
@@ -1148,7 +1151,13 @@ export default function BillingCounter() {
 
   const handleRefreshOnlineOrders = async () => {
     setIsRefreshingOrders(true);
-    setTimeout(() => setIsRefreshingOrders(false), 400);
+    try {
+      if (fetchPreOrders) await fetchPreOrders();
+    } catch (e) {
+      console.warn('[Pre-Orders] Manual refresh error:', e);
+    } finally {
+      setTimeout(() => setIsRefreshingOrders(false), 350);
+    }
   };
 
   // Pre-Orders metrics and handlers
@@ -1166,7 +1175,7 @@ export default function BillingCounter() {
       const name = (order.customerName || '').toLowerCase();
       const phone = (order.customerPhone || '').toLowerCase();
       const id = (order.id || '').toLowerCase();
-      return name.includes(q) || phone.includes(q) || id.includes(q);
+      return name.includes(q) || phone.includes(q) || id.includes(q) || (order.invoiceNumber || '').toLowerCase().includes(q);
     });
   }, [preOrders, preOrderFilter, preOrderSearch]);
 
@@ -2276,7 +2285,7 @@ export default function BillingCounter() {
           }
           else if (sec === 'admin-preorders' || sec === 'pos-preorders' || sec === 'admin-dispatch' || sec === 'admin-orders' || sec === 'pos-online') {
             if (user?.role === 'admin' && (sec === 'admin-preorders' || sec === 'admin-dispatch' || sec === 'admin-orders')) {
-              navigateTo('admin', 'preorders');
+              handleSwitchTab('pre-orders');
             } else {
               handleSwitchTab('pre-orders');
             }
@@ -2564,7 +2573,7 @@ export default function BillingCounter() {
               id="pos-tab-preorders"
               onClick={() => {
                 if (user?.role === 'admin' || window.location.hash.toLowerCase().startsWith('#admin')) {
-                  navigateTo('admin', 'preorders');
+                  handleSwitchTab('pre-orders');
                 } else {
                   handleSwitchTab('pre-orders');
                 }
@@ -5109,7 +5118,34 @@ export default function BillingCounter() {
                 </div>
               </div>
 
-              <div className="online-header-right">
+              <div className="online-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  type="button"
+                  className="btn-refresh-preorders"
+                  onClick={handleRefreshOnlineOrders}
+                  disabled={isRefreshingOrders}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    background: '#ffffff',
+                    border: '1.5px solid #d97706',
+                    color: '#b45309',
+                    borderRadius: '10px',
+                    padding: '8px 16px',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: isRefreshingOrders ? 'wait' : 'pointer',
+                    boxShadow: '0 2px 6px rgba(217, 119, 6, 0.12)',
+                    transition: 'all 0.15s ease',
+                  }}
+                  title="Click to instantly re-sync customer pre-orders from backend"
+                >
+                  <span style={{ display: 'inline-block', transform: isRefreshingOrders ? 'rotate(360deg)' : 'none', transition: 'transform 0.5s linear' }}>
+                    🔄
+                  </span>
+                  <span>{isRefreshingOrders ? 'Syncing...' : 'Refresh Queue'}</span>
+                </button>
                 <button
                   type="button"
                   className="btn-return-pos"

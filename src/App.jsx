@@ -253,8 +253,14 @@ function AppContent({ isLoaded, handleLoadComplete }) {
       );
     }
 
-    const isPreOrderRoute = currentHash.includes('preorder') || currentHash.includes('pre-order') || currentHash === '#admin/orders' || currentHash === '#orders';
-    const isAdminBilling = !isPreOrderRoute && (
+    const isPreOrderRoute =
+      currentHash === '#admin/preorders' ||
+      currentHash.startsWith('#admin/preorders') ||
+      currentHash === '#admin/orders' ||
+      currentHash.startsWith('#admin/orders') ||
+      currentHash === '#orders' ||
+      currentHash === '#preorders';
+    const isAdminBilling = isPreOrderRoute || (
       currentHash === '#admin/billing' ||
       currentHash.startsWith('#admin/billing') ||
       currentHash === '#admin/pos' ||
