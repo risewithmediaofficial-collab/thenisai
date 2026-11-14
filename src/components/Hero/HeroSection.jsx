@@ -15,86 +15,94 @@ export default function HeroSection() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const slices = [
-    { name: 'Palkova', img: '/images/products/palkova_card.webp' },
-    { name: 'Mysore Pak', img: '/images/products/mysore_pak.webp' },
-    { name: 'Kaju Katli', img: '/images/products/kaju_katli_real.jpg' },
-    { name: 'Kara Boondi', img: '/images/products/savories_boondi_real.jpg' },
-    { name: 'Jangiri', img: '/images/products/jangiri_real.jpg' },
-  ];
+  const scrollToBestsellers = () => {
+    const el = document.querySelector('#bestsellers');
+    if (el) {
+      if (window.__lenis) {
+        window.__lenis.scrollTo('#bestsellers', { offset: -20, duration: 0.9 });
+      } else {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
-    <>
-      {/* SECTION 1: HERO CARD (YELLOW BLOCK + MULTI-SLICE FOOD GALLERY) */}
-      <section id="hero" className="thenisai-hero-wrap">
-        <div className="thenisai-hero-card">
-          {/* Left Block: Bold Typography & Action Button */}
-          <div className="thenisai-hero-card__left">
-            <span className="thenisai-hero-card__script-tag">
-              Signature Krishnagiri Palkova
+    <section id="hero" className="stardust-hero">
+      <div className="stardust-hero__container">
+        <div className="stardust-hero__grid">
+          {/* Left Column: Typography & CTAs with Exact Font Pairings */}
+          <div className="stardust-hero__content">
+            <span className="stardust-hero__tag font-lato">
+              EST. 2006 · BANGALORE–SALEM HIGHWAY (NH 44) · KRISHNAGIRI
             </span>
 
-            <h1 className="thenisai-hero-card__headline">
-              TASTE THE FLAVOURFUL DIFFERENCE!
+            <h1 className="stardust-hero__title font-garamond">
+              Thenisai Sweets
+              <span className="stardust-hero__script font-script">
+                The Art of Pure Milk Confectionery
+              </span>
             </h1>
 
-            <p className="thenisai-hero-card__tagline">
-              100% farm-fresh cow milk simmered for 4 hours in heavy brass urulis. Fresh daily morning batches on NH 44 Krishnagiri.
-            </p>
+            {/* Unique Shop Detailing Pills */}
+            <div className="stardust-hero__pills font-lato" style={{ marginTop: '16px', marginBottom: '24px' }}>
+              <span className="stardust-hero__pill">● 100% Pure Cow Milk</span>
+              <span className="stardust-hero__pill">● 4-Hr Brass Uruli Simmer</span>
+              <span className="stardust-hero__pill">● Zero Chemical Essences</span>
+              <span className="stardust-hero__pill">● Zero-Wait Counter Pickup</span>
+            </div>
 
-            <button
-              type="button"
-              className="thenisai-hero-card__cta-btn"
-              onClick={handlePreOrder}
+            <div className="stardust-hero__buttons font-lato">
+              <button
+                type="button"
+                className="stardust-btn stardust-btn--primary"
+                onClick={handlePreOrder}
+              >
+                <span>Pre-Order Sweets Online</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                className="stardust-btn stardust-btn--outline-light"
+                onClick={handleStory}
+              >
+                <span>Our 20-Year Heritage</span>
+              </button>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div
+              className="stardust-hero__scroll font-lato"
+              onClick={scrollToBestsellers}
+              role="button"
+              tabIndex={0}
             >
-              <span>Pre-Order Online</span>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="7" y1="17" x2="17" y2="7" />
-                <polyline points="7 7 17 7 17 17" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Right Block: Vertical Multi-Slice Food Gallery */}
-          <div className="thenisai-hero-card__right" onClick={handlePreOrder} role="button" tabIndex={0} title="Click to view menu & pre-order">
-            {slices.map((slice) => (
-              <div key={slice.name} className="thenisai-hero-slice">
-                <img
-                  src={slice.img}
-                  alt={slice.name}
-                  loading="eager"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
-                  }}
-                />
-                <span className="thenisai-hero-slice__label">{slice.name}</span>
+              <div className="stardust-hero__mouse-icon">
+                <span className="stardust-hero__mouse-wheel" />
               </div>
-            ))}
+              <span>Scroll to explore confectionery</span>
+            </div>
+          </div>
+
+          {/* Right Column: Real Sweets Platter Image from Provided Assets */}
+          <div className="stardust-hero__media">
+            <div className="stardust-hero__platter-wrap">
+              <img
+                src="/images/products/sweets_platter_hero.jpg"
+                alt="Thenisai Traditional Sweets Platter"
+                className="stardust-hero__platter-img"
+                loading="eager"
+              />
+              <div className="stardust-hero__platter-badge font-lato">
+                <span>⭐ Fresh Morning Batch · NH 44</span>
+              </div>
+            </div>
           </div>
         </div>
-      </section>
-
-      {/* SECTION 2: HERITAGE & INDULGENCE STATEMENT BANNER */}
-      <section className="thenisai-heritage-banner">
-        <div className="thenisai-heritage-banner__card">
-          <div className="thenisai-heritage-banner__avatar">
-            <img
-              src="/images/products/sweets_platter_hero.jpg"
-              alt="Thenisai Master Craftsman"
-              loading="lazy"
-            />
-          </div>
-
-          <h2 className="thenisai-heritage-banner__text">
-            INDULGE YOUR TASTE BUDS IN THE DELIGHTFUL WORLD OF THENISAI, WHERE TRADITION MEETS FLAVOR.
-          </h2>
-
-          <div className="thenisai-heritage-banner__badge" onClick={handleStory} style={{ cursor: 'pointer' }}>
-            <span className="thenisai-heritage-banner__badge-num">2006</span>
-            <span className="thenisai-heritage-banner__badge-label">Est. NH 44</span>
-          </div>
-        </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 }

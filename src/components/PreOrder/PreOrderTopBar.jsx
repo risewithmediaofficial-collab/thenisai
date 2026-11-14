@@ -7,34 +7,36 @@ export default function PreOrderTopBar() {
 
   if (closed || currentView === 'menu') return null;
 
-  const tickerItems = [
-    '⚡ EXPRESS NH 44 HIGHWAY COUNTER PICKUP',
-    '100% PURE COW MILK PALKOVA',
-    'SLOW-SIMMERED IN BRASS URULIS SINCE 2006',
-    'ZERO WAITING TIME ON NH 44',
-    'PRE-ORDER SWEETS ONLINE FOR INSTANT STORE PICKUP',
-  ];
-
   return (
-    <div
-      className="thenisai-ticker"
-      onClick={() => {
-        window.location.hash = '#menu';
-        navigateTo('menu');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }}
-      style={{ cursor: 'pointer' }}
-      title="Click to Pre-Order Sweets Online"
-    >
-      <div className="thenisai-ticker__track">
-        {/* Double array for seamless loop */}
-        {[...tickerItems, ...tickerItems].map((item, idx) => (
-          <div key={idx} className="thenisai-ticker__item">
-            <span>{item}</span>
-            <span className="thenisai-ticker__dot">•</span>
-          </div>
-        ))}
+    <div className="stardust-topbar font-lato">
+      <div className="stardust-topbar__inner">
+        <div className="stardust-topbar__content">
+          <span className="stardust-topbar__badge">PRE-ORDERS OPEN</span>
+          <span className="stardust-topbar__msg font-garamond" style={{ fontSize: '15px', letterSpacing: '0.03em' }}>
+            Fresh Daily Batches · Zero Waiting Time on NH 44
+          </span>
+        </div>
+        <button
+          type="button"
+          className="stardust-topbar__cta"
+          onClick={() => {
+            window.location.hash = '#menu';
+            navigateTo('menu');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        >
+          <span>Pre-Order Online</span>
+          <span className="stardust-topbar__arrow">↗</span>
+        </button>
       </div>
+      <button
+        type="button"
+        className="stardust-topbar__close"
+        onClick={() => setClosed(true)}
+        aria-label="Close announcement"
+      >
+        ✕
+      </button>
     </div>
   );
 }
