@@ -10,64 +10,111 @@ export default function Footer() {
   };
 
   return (
-    <footer className="stardust-footer font-lato">
-      <div className="stardust-container">
-        {/* Massive Brand Watermark */}
-        <div className="stardust-footer__watermark font-garamond" aria-hidden="true">
-          Thenisai
-        </div>
-
-        {/* Footer Top Links */}
-        <div className="stardust-footer__top">
-          <div className="stardust-footer__brand">
-            <span
-              className="stardust-footer__logo font-garamond"
+    <footer className="thenisai-footer">
+      <div className="thenisai-footer__inner">
+        <div className="thenisai-footer__top">
+          {/* Brand Col */}
+          <div>
+            <h3
+              className="thenisai-footer__brand-title"
               style={{ cursor: 'pointer' }}
               onClick={() => handleNav('storefront', '')}
             >
-              Thenisai
-            </span>
-            <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginTop: '6px' }}>
-              The Art of Pure Milk Confectionery · Est. 2006
-            </span>
+              THENISAI
+            </h3>
+            <p className="thenisai-footer__brand-sub">
+              Authentic Pure Cow Milk Confectionery &amp; Savories.<br />
+              Simmered in brass urulis on NH 44 Krishnagiri since 2006.
+            </p>
+
+            <div style={{ display: 'flex', gap: '14px', marginTop: '18px' }}>
+              <a
+                href="https://instagram.com/thenisai_sweets"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#1C0F08',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Instagram ↗
+              </a>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <a
+                href="https://wa.me/919344893547"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: '#1C0F08',
+                  fontWeight: 800,
+                  fontSize: '12px',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                WhatsApp ↗
+              </a>
+            </div>
           </div>
 
-          <div className="stardust-footer__links-group">
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Customer Pages</span>
-              <a href="#home" onClick={(e) => { e.preventDefault(); handleNav('storefront', ''); }}>Home</a>
-              <a href="#menu" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Pre-Order Sweets</a>
-              <a href="#story" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our Story &amp; Heritage</a>
-              <a href="#contact" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Visit &amp; Bulk Orders</a>
+          {/* Links Grid */}
+          <div className="thenisai-footer__links-grid">
+            <div>
+              <h4 className="thenisai-footer__col-title">Customer Pages</h4>
+              <div className="thenisai-footer__links-list">
+                <a href="#home" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('storefront', ''); }}>Home</a>
+                <a href="#menu" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Pre-Order Online</a>
+                <a href="#story" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our 20-Year Legacy</a>
+                <a href="#contact" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Highway Store &amp; Bulk</a>
+              </div>
             </div>
 
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Highway Boutique</span>
-              <span>NH 44 Highway Pitstop</span>
-              <span>Near HP Petrol Bunk</span>
-              <span>Nattamai Kottai</span>
-              <span>Krishnagiri - 635001</span>
-              <span style={{ color: '#8EC4A5', marginTop: '4px' }}>⏰ 6:00 AM &ndash; 10:30 PM Daily</span>
+            <div>
+              <h4 className="thenisai-footer__col-title">Signature Sweets</h4>
+              <div className="thenisai-footer__links-list">
+                <a href="#menu" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Krishnagiri Palkova</a>
+                <a href="#menu" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Royal Mysore Pak</a>
+                <a href="#menu" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Silken Kaju Katli</a>
+                <a href="#menu" className="thenisai-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Crispy Kara Boondi</a>
+              </div>
             </div>
 
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Staff Portal</span>
-              <a href="#admin" onClick={() => navigateTo('admin')}>Admin Dashboard</a>
-              <a href="#billing" onClick={() => navigateTo('billing')}>POS Billing Counter</a>
-              <a href="#manager" onClick={() => navigateTo('manager')}>Stock Manager</a>
+            <div>
+              <h4 className="thenisai-footer__col-title">Highway Boutique</h4>
+              <div className="thenisai-footer__links-list">
+                <span className="thenisai-footer__link" style={{ pointerEvents: 'none' }}>NH 44 Highway Pitstop</span>
+                <span className="thenisai-footer__link" style={{ pointerEvents: 'none' }}>Near HP Petrol Bunk</span>
+                <span className="thenisai-footer__link" style={{ pointerEvents: 'none' }}>Krishnagiri - 635001</span>
+                <span className="thenisai-footer__link" style={{ fontWeight: 800, marginTop: '4px', pointerEvents: 'none' }}>⏰ 6:00 AM – 10:30 PM Daily</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Footer Bottom Bar */}
-        <div className="stardust-footer__bottom">
-          <span>&copy; 2006&ndash;2026 Thenisai Palkova &amp; Sweets. Handcrafted in Tamil Nadu.</span>
-          <div className="stardust-footer__social">
-            <a href="https://instagram.com/thenisai_sweets" target="_blank" rel="noopener noreferrer">Instagram</a>
-            <span>&middot;</span>
-            <a href="https://facebook.com/thenisaisweets" target="_blank" rel="noopener noreferrer">Facebook</a>
-            <span>&middot;</span>
-            <a href="https://wa.me/919344893547" target="_blank" rel="noopener noreferrer">WhatsApp Order</a>
+        {/* Bottom */}
+        <div className="thenisai-footer__bottom">
+          <span>&copy; 2006–2026 THENISAI PALKOVA &amp; SWEETS. Handcrafted in Krishnagiri, Tamil Nadu.</span>
+          <div style={{ display: 'flex', gap: '16px' }}>
+            <a
+              href="#admin"
+              onClick={(e) => { e.preventDefault(); navigateTo('admin'); }}
+              style={{ color: '#1C0F08', textDecoration: 'none', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase' }}
+            >
+              Admin Portal
+            </a>
+            <span style={{ opacity: 0.4 }}>·</span>
+            <a
+              href="#billing"
+              onClick={(e) => { e.preventDefault(); navigateTo('billing'); }}
+              style={{ color: '#1C0F08', textDecoration: 'none', fontWeight: 800, fontSize: '11px', textTransform: 'uppercase' }}
+            >
+              POS Billing
+            </a>
           </div>
         </div>
       </div>

@@ -1,102 +1,198 @@
+import { useCart } from '../../context/CartContext';
+
 export default function ValuesSection() {
-  const values = [
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2a10 10 0 0 0-7.07 17.07A10 10 0 0 0 12 22a10 10 0 0 0 7.07-2.93A10 10 0 0 0 12 2z" />
-          <path d="M12 6v6l4 2" />
-        </svg>
-      ),
-      title: '100% Pure Cow Milk',
-      flourish: 'Fresh dawn farm collections',
-    },
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-        </svg>
-      ),
-      title: 'Heavy Brass Urulis',
-      flourish: 'Patient 4-hour reduction',
-    },
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-        </svg>
-      ),
-      title: 'Zero Chemical Essences',
-      flourish: '100% natural ingredients',
-    },
-    {
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 12 20 22 4 22 4 12" />
-          <rect x="2" y="7" width="20" height="5" />
-          <line x1="12" y1="22" x2="12" y2="7" />
-          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" />
-          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
-        </svg>
-      ),
-      title: 'NH 44 Highway Heritage',
-      flourish: 'Tradition since 2006',
-    },
-  ];
+  const { navigateTo } = useCart();
+
+  const handlePreOrder = () => {
+    window.location.hash = '#menu';
+    navigateTo('menu');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleContact = () => {
+    window.location.hash = '#contact';
+    navigateTo('contact');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleMaps = () => {
+    window.open('https://maps.google.com/?q=Thenisai+Palkova+and+Sweets+Krishnagiri', '_blank', 'noopener,noreferrer');
+  };
 
   return (
-    <section id="values" className="stardust-section stardust-section--values">
-      <div className="stardust-container">
-        <div className="stardust-values__grid">
-          {/* Left Column: Real Assorted Sweets Image Frame */}
-          <div className="stardust-values__media">
-            <div className="stardust-values__img-frame">
-              <img
-                src="/images/products/sweets_assorted_real.jpg?v=2"
-                alt="Thenisai Artisanal Sweets Craft"
-                className="stardust-values__img"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = '/images/products/sweets_platter_hero.jpg?v=2';
-                }}
-              />
-              <div className="stardust-values__tag-badge font-lato">
-                <span>Traditional Slow Simmer</span>
-              </div>
+    <>
+      {/* SECTION 5: PROMOTIONAL CRIMSON BANNER ("MUNCH FOR MOODS") */}
+      <section className="thenisai-munch-banner">
+        <div className="thenisai-munch-card">
+          <div className="thenisai-munch-card__content">
+            <div className="thenisai-munch-card__stickers">
+              <span className="thenisai-sticker">Crispy</span>
+              <span className="thenisai-sticker thenisai-sticker--white">Tasty</span>
             </div>
-          </div>
 
-          {/* Right Column: Values Headline & 4 Minimalist Pillars */}
-          <div className="stardust-values__content">
-            <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', lineHeight: 1, marginBottom: '6px' }}>
-              Pure &amp; Natural Heritage
-            </span>
-
-            <h2 className="stardust-section__title font-garamond" style={{ marginBottom: '24px' }}>
-              The Timeless Values Behind<br />
-              Every Uruli Batch
+            <h2 className="thenisai-munch-card__headline">
+              MUNCH FOR MOODS. NOT JUST FOR CRAVINGS.
             </h2>
 
-            <div className="stardust-values__list">
-              {values.map((v) => (
-                <div key={v.title} className="stardust-value-card font-lato" style={{ alignItems: 'center' }}>
-                  <div className="stardust-value-card__icon">
-                    {v.icon}
-                  </div>
-                  <div>
-                    <h3 className="stardust-value-card__title font-garamond" style={{ fontSize: '20px', margin: 0 }}>
-                      {v.title}
-                    </h3>
-                    <span style={{ fontSize: '12px', color: '#8C7769', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {v.flourish}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <p className="thenisai-munch-card__tagline">
+              You have enough to focus on. We&apos;ve got your highway snacks &amp; artisanal sweets.
+            </p>
+
+            <button
+              type="button"
+              className="thenisai-munch-card__btn"
+              onClick={handlePreOrder}
+            >
+              <span>Shop Sweets</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="thenisai-munch-card__media">
+            <img
+              src="/images/products/sweet_box.webp"
+              alt="Thenisai Artisanal Sweets & Snacks"
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6: FOREST GREEN LOCATION BANNER ("ONLY AT THENISAI NH 44") */}
+      <section className="thenisai-location-banner">
+        <div className="thenisai-location-card">
+          <div className="thenisai-location-card__content">
+            <span className="thenisai-location-card__eyebrow">
+              HIGHWAY LANDMARK · NH 44
+            </span>
+
+            <h2 className="thenisai-location-card__title">
+              FAMOUS NH 44 HIGHWAY STOREFRONT
+            </h2>
+
+            <p className="thenisai-location-card__desc">
+              Opposite to HP Petrol Bunk, Nattamai Kottai, Krishnagiri · Open Daily 6:00 AM – 10:30 PM
+            </p>
+
+            <button
+              type="button"
+              className="thenisai-location-card__btn"
+              onClick={handleMaps}
+            >
+              <span>Get Directions</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="3 11 22 2 13 21 11 13 3 11" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="thenisai-location-card__media">
+            <img
+              src="/images/products/sweets_platter_hero.jpg"
+              alt="Thenisai Highway Storefront Krishnagiri"
+              className="thenisai-location-card__img"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 7: TRUST SEALS STRIP ("YOU CAN TRUST US") */}
+      <section className="thenisai-trust-strip">
+        <h3 className="thenisai-trust-strip__title">
+          YOU CAN TRUST US: CLEAN, AUTHENTIC &amp; PURE
+        </h3>
+
+        <div className="thenisai-trust-badges">
+          <span className="thenisai-trust-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4AC36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            100% Pure Cow Milk
+          </span>
+          <span className="thenisai-trust-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4AC36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            Golden Desi Ghee
+          </span>
+          <span className="thenisai-trust-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4AC36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            4-Hr Brass Uruli Simmer
+          </span>
+          <span className="thenisai-trust-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4AC36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            Zero Chemical Essences
+          </span>
+          <span className="thenisai-trust-badge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F4AC36" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            Fresh Daily Batches
+          </span>
+        </div>
+      </section>
+
+      {/* SECTION 8: "WHERE YOU CAN ENJOY" (3 CARDS) */}
+      <section className="thenisai-destinations-strip">
+        <div className="thenisai-destinations-grid">
+          <div className="thenisai-destinations-title-box">
+            <h3>WHERE YOU CAN ENJOY</h3>
+          </div>
+
+          <div className="thenisai-destinations-cards">
+            <div className="thenisai-dest-card" onClick={handleContact} role="button" tabIndex={0}>
+              <span className="thenisai-dest-card__icon">🚗</span>
+              <h4 className="thenisai-dest-card__name">Highway Pitstop</h4>
+              <span className="thenisai-dest-card__tag">NH 44 Krishnagiri</span>
+            </div>
+
+            <div className="thenisai-dest-card" onClick={handlePreOrder} role="button" tabIndex={0}>
+              <span className="thenisai-dest-card__icon">🎁</span>
+              <h4 className="thenisai-dest-card__name">Festive Gifting</h4>
+              <span className="thenisai-dest-card__tag">Custom Sweet Boxes</span>
+            </div>
+
+            <div className="thenisai-dest-card" onClick={handlePreOrder} role="button" tabIndex={0}>
+              <span className="thenisai-dest-card__icon">⚡</span>
+              <h4 className="thenisai-dest-card__name">Zero-Wait Pickup</h4>
+              <span className="thenisai-dest-card__tag">Instant Counter Handover</span>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* SECTION 9: BRAND HERITAGE SYNONYMOUS CENTERPIECE */}
+      <section className="thenisai-heritage-center">
+        <div className="thenisai-heritage-center__logo">
+          <span>THENISAI</span>
+        </div>
+
+        <p className="thenisai-heritage-center__statement">
+          THENISAI, ESTABLISHED IN 2006 IN KRISHNAGIRI, HAS GROWN TO BE SYNONYMOUS WITH PREMIUM QUALITY SOUTH INDIAN CONFECTIONERY.
+        </p>
+
+        <div className="thenisai-heritage-steps">
+          <div className="thenisai-heritage-step">
+            <div className="thenisai-heritage-step__circle">🥛</div>
+            <span className="thenisai-heritage-step__label">Farm Milk</span>
+          </div>
+
+          <span style={{ color: '#D4A843', fontSize: '20px' }}>&bull;&bull;&bull;</span>
+
+          <div className="thenisai-heritage-step">
+            <div className="thenisai-heritage-step__circle">🍲</div>
+            <span className="thenisai-heritage-step__label">Brass Uruli</span>
+          </div>
+
+          <span style={{ color: '#D4A843', fontSize: '20px' }}>&bull;&bull;&bull;</span>
+
+          <div className="thenisai-heritage-step">
+            <div className="thenisai-heritage-step__circle">🍬</div>
+            <span className="thenisai-heritage-step__label">Pure Sweets</span>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

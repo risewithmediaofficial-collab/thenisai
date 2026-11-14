@@ -1,213 +1,244 @@
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 
-const CATEGORIES = [
-  { id: 'all', label: 'All Specialties', icon: '✨' },
-  { id: 'sweets', label: 'Pure Milk Sweets', icon: '🍬' },
-  { id: 'savories', label: 'Crispy Savories', icon: '🥨' },
-  { id: 'chaat', label: 'Live Pani Puri', icon: '🧆' },
-  { id: 'beverages', label: 'Tea, Coffee & Juices', icon: '☕' },
-];
-
-const SHOWCASE_ITEMS = [
-  // 1. Traditional Sweets
+const COLLECTIONS = [
   {
-    id: 'palkova',
-    category: 'sweets',
-    name: 'Signature Krishnagiri Palkova',
-    flourish: 'Our 20-Year Legend',
-    price: '₹340',
-    weight: '500g',
-    image: '/images/products/palkova_hero.webp?v=2',
+    id: 'sweets',
+    title: 'Traditional Sweets',
+    img: '/images/products/sweets_assorted_real.jpg',
   },
   {
-    id: 'kaju-katli',
-    category: 'sweets',
-    name: 'Kaju Katli',
-    flourish: 'Pure Cashew',
-    price: '₹280',
-    weight: '250g',
-    image: '/images/products/kaju_katli_real.jpg?v=2',
+    id: 'ghee',
+    title: 'Festive Sweets & Ghee',
+    img: '/images/products/kaju_katli_real.jpg',
+  },
+  {
+    id: 'savories',
+    title: 'Crispy Savories',
+    img: '/images/products/savories_boondi_real.jpg',
+  },
+  {
+    id: 'chaat',
+    title: 'Highway Chaat & Drinks',
+    img: '/images/products/panipuri_real.jpg',
+  },
+];
+
+const BEST_SELLERS = [
+  {
+    id: 'palkova',
+    name: 'Signature Krishnagiri Palkova',
+    theme: 'blue',
+    ribbon: 'BEST SELLER',
+    img: '/images/products/palkova_hero.webp',
+    basePrice: 340,
+    baseWeight: '500g',
+    portions: [
+      { label: '250g', price: 170 },
+      { label: '500g', price: 340 },
+      { label: '1kg', price: 680 },
+    ],
   },
   {
     id: 'mysore-pak',
-    category: 'sweets',
     name: 'Royal Mysore Pak',
-    flourish: 'Pure Desi Ghee',
-    price: '₹190',
-    weight: '250g',
-    image: '/images/products/mysore_pak.webp?v=2',
+    theme: 'rose',
+    ribbon: 'PURE GHEE',
+    img: '/images/products/mysore_pak.webp',
+    basePrice: 190,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 190 },
+      { label: '500g', price: 380 },
+      { label: '1kg', price: 760 },
+    ],
   },
   {
-    id: 'jangiri',
-    category: 'sweets',
-    name: 'Traditional Jangiri',
-    flourish: 'Crisp Sweet Swirls',
-    price: '₹280',
-    weight: '500g',
-    image: '/images/products/jangiri_real.jpg?v=2',
+    id: 'kaju-katli',
+    name: 'Silken Kaju Katli',
+    theme: 'teal',
+    ribbon: 'ROYAL CASHEW',
+    img: '/images/products/kaju_katli_real.jpg',
+    basePrice: 280,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 280 },
+      { label: '500g', price: 560 },
+      { label: '1kg', price: 1120 },
+    ],
   },
-
-  // 2. Savories & Kara Boondi
   {
     id: 'kara-boondi',
-    category: 'savories',
     name: 'Crispy Spicy Kara Boondi',
-    flourish: 'Curry Leaves & Peanuts',
-    price: '₹140',
-    weight: '250g',
-    image: '/images/products/savories_boondi_real.jpg?v=2',
-  },
-
-  // 3. Live Highway Chaat
-  {
-    id: 'pani-puri',
-    category: 'chaat',
-    name: 'Highway Special Pani Puri',
-    flourish: 'Live Chaat Counter',
-    price: '₹50',
-    weight: 'Plate (6 pcs)',
-    image: '/images/products/panipuri_real.jpg?v=2',
-  },
-
-  // 4. Beverages: Tea, Fresh Juices, Rose Milk & Filter Coffee
-  {
-    id: 'hot-tea',
-    category: 'beverages',
-    name: 'Fresh Tea',
-    flourish: 'Brewed Hot',
-    price: '₹20',
-    weight: 'Hot Cup',
-    image: '/images/products/tea_real.jpg?v=2',
-  },
-  {
-    id: 'fresh-juices',
-    category: 'beverages',
-    name: 'Fresh Juices',
-    flourish: '100% Fresh',
-    price: '₹60',
-    weight: '300ml Glass',
-    image: '/images/products/fresh_juices_real.jpg?v=2',
-  },
-  {
-    id: 'rose-milk',
-    category: 'beverages',
-    name: 'Rose Milk',
-    flourish: 'Chilled & Sweet',
-    price: '₹30',
-    weight: 'Chilled Glass',
-    image: '/images/products/rosemilk_real.jpg?v=2',
-  },
-  {
-    id: 'filter-coffee',
-    category: 'beverages',
-    name: 'Filter Coffee',
-    flourish: 'Fresh Brew',
-    price: '₹25',
-    weight: 'Hot Cup',
-    image: '/images/products/filter_coffee_real.jpg?v=2',
+    theme: 'lavender',
+    ribbon: 'HIGHWAY SPECIAL',
+    img: '/images/products/savories_boondi_real.jpg',
+    basePrice: 140,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 140 },
+      { label: '500g', price: 280 },
+      { label: '1kg', price: 560 },
+    ],
   },
 ];
 
 export default function SweetsCollection() {
   const { navigateTo } = useCart();
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedPortions, setSelectedPortions] = useState({
+    palkova: '500g',
+    'mysore-pak': '250g',
+    'kaju-katli': '250g',
+    'kara-boondi': '250g',
+  });
 
-  const handleGoToPreOrders = () => {
+  const handleGoToPreOrders = (category = '') => {
     window.location.hash = '#menu';
     navigateTo('menu');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredItems = selectedCategory === 'all'
-    ? SHOWCASE_ITEMS
-    : SHOWCASE_ITEMS.filter((item) => item.category === selectedCategory);
+  const handlePortionSelect = (prodId, portionLabel) => {
+    setSelectedPortions((prev) => ({
+      ...prev,
+      [prodId]: portionLabel,
+    }));
+  };
 
   return (
-    <section id="bestsellers" className="stardust-section stardust-section--bestsellers">
-      <div className="stardust-container">
-        {/* Section Header with Refined Typography & Clean Taglines */}
-        <div className="stardust-bestsellers__header">
-          <div>
-            <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', lineHeight: 1, marginBottom: '6px' }}>
-              Handcrafted Masterpieces &amp; Highway Favorites
-            </span>
-            <h2 className="stardust-section__title font-garamond" style={{ margin: 0 }}>
-              Our Bestselling Confectionery &amp; Savories
-            </h2>
-          </div>
-
-          <button
-            type="button"
-            className="stardust-btn stardust-btn--outline-dark font-lato"
-            onClick={handleGoToPreOrders}
-          >
-            <span>View All &amp; Pre-Order Online</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="7" y1="17" x2="17" y2="7" />
-              <polyline points="7 7 17 7 17 17" />
-            </svg>
-          </button>
+    <>
+      {/* SECTION 3: MEET THE COLLECTION (4 ROUNDED CARDS) */}
+      <section id="collection" className="thenisai-section">
+        <div className="thenisai-section__title-center">
+          <h2 className="thenisai-section__headline">MEET THE COLLECTION</h2>
         </div>
 
-        {/* Category Filter Pills Strip */}
-        <div className="stardust-collection-tabs font-lato">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`stardust-collection-tab ${selectedCategory === cat.id ? 'is-active' : ''}`}
-              onClick={() => setSelectedCategory(cat.id)}
+        <div className="thenisai-collection-grid">
+          {COLLECTIONS.map((c) => (
+            <div
+              key={c.id}
+              className="thenisai-collection-card"
+              onClick={() => handleGoToPreOrders(c.id)}
             >
-              <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Dynamic Responsive Grid: Minimalist Luxury Presentation */}
-        <div className="stardust-bestsellers__grid">
-          {filteredItems.map((item) => (
-            <div key={item.id} className="stardust-card">
-              {/* Product Real Image Frame */}
-              <div className="stardust-card__img-wrap">
+              <div className="thenisai-collection-card__img-wrap">
                 <img
-                  src={item.image}
-                  alt={item.name}
-                  className="stardust-card__img"
+                  src={c.img}
+                  alt={c.title}
                   loading="lazy"
                   onError={(e) => {
-                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg?v=2';
+                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
                   }}
                 />
-
-                <span className="stardust-card__badge-tag font-lato">
-                  {item.flourish}
-                </span>
               </div>
-
-              {/* Card Body: Clean Title, Pricing & Action CTA */}
-              <div className="stardust-card__body font-lato" style={{ gap: '14px' }}>
-                <div className="stardust-card__header">
-                  <h3 className="stardust-card__title font-garamond">{item.name}</h3>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="stardust-card__price">{item.price}</span>
-                    <small style={{ display: 'block', fontSize: '11px', color: '#8C7769' }}>/ {item.weight}</small>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="stardust-card__btn font-lato"
-                  onClick={handleGoToPreOrders}
-                >
-                  <span>Pre-Order for Zero-Wait Pickup ↗</span>
-                </button>
+              <div className="thenisai-collection-card__footer">
+                <span className="thenisai-collection-card__name">{c.title}</span>
+                <span className="thenisai-collection-card__arrow">↗</span>
               </div>
             </div>
           ))}
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* SECTION 4: OUR BEST SELLERS (4 PASTEL COLORED CARDS) */}
+      <section id="bestsellers" className="thenisai-section" style={{ marginTop: '54px' }}>
+        <div className="thenisai-bestsellers-header">
+          <h2 className="thenisai-section__headline">OUR BEST SELLERS</h2>
+
+          <div className="thenisai-bestsellers-nav">
+            <button
+              type="button"
+              className="thenisai-round-arrow-btn"
+              onClick={() => handleGoToPreOrders()}
+              aria-label="Previous"
+            >
+              ‹
+            </button>
+            <button
+              type="button"
+              className="thenisai-round-arrow-btn"
+              onClick={() => handleGoToPreOrders()}
+              aria-label="Next"
+            >
+              ›
+            </button>
+            <button
+              type="button"
+              className="thenisai-view-all-pill"
+              onClick={() => handleGoToPreOrders()}
+            >
+              View All ↗
+            </button>
+          </div>
+        </div>
+
+        <div className="thenisai-cards-grid">
+          {BEST_SELLERS.map((prod) => {
+            const currentPortion = selectedPortions[prod.id] || prod.baseWeight;
+            const portionObj = prod.portions.find((p) => p.label === currentPortion) || prod.portions[0];
+
+            return (
+              <div
+                key={prod.id}
+                className={`thenisai-prod-card thenisai-prod-card--${prod.theme}`}
+              >
+                {/* Badge Ribbon */}
+                <span className="thenisai-prod-card__ribbon">{prod.ribbon}</span>
+
+                {/* Centered Food Image */}
+                <div className="thenisai-prod-card__img-wrap">
+                  <img
+                    src={prod.img}
+                    alt={prod.name}
+                    className="thenisai-prod-card__img"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
+                    }}
+                  />
+                </div>
+
+                {/* White Inner Card */}
+                <div className="thenisai-prod-card__details">
+                  <h3 className="thenisai-prod-card__title" title={prod.name}>
+                    {prod.name}
+                  </h3>
+
+                  <div className="thenisai-prod-card__meta-row">
+                    <span className="thenisai-prod-card__price">₹{portionObj.price}</span>
+                    <span className="thenisai-prod-card__weight">{portionObj.label}</span>
+                  </div>
+
+                  {/* Portion Selectors */}
+                  <div className="thenisai-prod-card__portions">
+                    {prod.portions.map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        className={`thenisai-portion-chip ${currentPortion === p.label ? 'is-active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePortionSelect(prod.id, p.label);
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    type="button"
+                    className="thenisai-prod-card__btn"
+                    onClick={() => handleGoToPreOrders()}
+                  >
+                    Pre-Order Online ↗
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </>
   );
 }

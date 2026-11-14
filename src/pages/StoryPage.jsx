@@ -10,86 +10,198 @@ export default function StoryPage() {
   };
 
   return (
-    <div className="stardust-page stardust-page--story">
-      {/* Hero Banner with Clean Taglines */}
-      <section className="stardust-story-hero">
-        <div className="stardust-container">
-          <span className="stardust-story-tag font-lato">EST. 2006 · KRISHNAGIRI · NH 44 HIGHWAY</span>
-          <span className="font-script" style={{ fontSize: '42px', color: '#E8C06A', display: 'block', marginBottom: '8px' }}>
-            The Art of Pure Milk Confectionery
-          </span>
-          <h1 className="stardust-story-title font-garamond" style={{ marginBottom: '8px' }}>
-            Handcrafted in Authentic Brass Urulis
-          </h1>
-          <p className="font-garamond italic" style={{ fontSize: '20px', color: '#E8C06A', margin: '8px 0 0' }}>
-            Two Decades of Artisanal Tradition on NH 44
-          </p>
+    <div className="thenisai-page">
+      {/* Hero Banner Card */}
+      <section className="thenisai-hero-wrap" style={{ marginTop: '24px' }}>
+        <div className="thenisai-hero-card" style={{ minHeight: 'auto', gridTemplateColumns: '1.2fr 1fr' }}>
+          <div className="thenisai-hero-card__left" style={{ padding: '48px 40px' }}>
+            <span className="thenisai-hero-card__script-tag">
+              Two Decades of Confectionery Legacy
+            </span>
+
+            <h1 className="thenisai-hero-card__headline" style={{ fontSize: 'clamp(28px, 4vw, 44px)' }}>
+              HANDCRAFTED IN AUTHENTIC BRASS URULIS SINCE 2006.
+            </h1>
+
+            <p className="thenisai-hero-card__tagline">
+              100% Pure Cow Milk · Continuous 4-Hour Gentle Flame Simmer · Zero Chemical Essences · NH 44 Krishnagiri
+            </p>
+
+            <button
+              type="button"
+              className="thenisai-hero-card__cta-btn"
+              onClick={handlePreOrder}
+            >
+              <span>Pre-Order Sweets Online</span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="7" y1="17" x2="17" y2="7" />
+                <polyline points="7 7 17 7 17 17" />
+              </svg>
+            </button>
+          </div>
+
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <img
+              src="/images/products/sweets_platter_hero.jpg"
+              alt="Thenisai Artisanal Sweets"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              loading="eager"
+            />
+          </div>
         </div>
       </section>
 
-      {/* Main Story Content */}
-      <section className="stardust-section stardust-section--story-body">
-        <div className="stardust-container">
-          {/* Two-Column Grid: Real Image & Heritage Highlights */}
-          <div className="stardust-story-grid">
-            <div className="stardust-story-visual">
-              <div className="stardust-story-frame">
-                <img
-                  src="/images/products/sweets_platter_hero.jpg?v=2"
-                  alt="Thenisai Traditional Sweets Platter"
-                  className="stardust-story__img"
-                  loading="lazy"
-                />
-                <div className="stardust-story__img-caption font-lato">
-                  <span>Slow-simmered in heavy bell-metal brass urulis since 2006</span>
-                </div>
-              </div>
-            </div>
+      {/* 4 Pillars Card Grid */}
+      <section className="thenisai-section" style={{ marginTop: '48px' }}>
+        <div className="thenisai-section__title-center">
+          <h2 className="thenisai-section__headline">OUR TIMELESS CRAFT</h2>
+        </div>
 
-            <div className="stardust-story-content font-lato">
-              <span className="stardust-pill-badge">Traditional Uruli Method</span>
-              <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', marginTop: '10px' }}>
-                Simmered with Patience
-              </span>
-              <h2 className="stardust-section__title font-garamond" style={{ marginTop: '2px', marginBottom: '14px' }}>
-                Four Hours of Continuous Gentle Flame
-              </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gap: '20px',
+        }}>
+          <div style={{
+            background: 'var(--tint-blue-bg)',
+            border: '1px solid var(--tint-blue-border)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🥛</span>
+            <h3 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 900,
+              fontSize: '18px',
+              textTransform: 'uppercase',
+              color: '#0E4770',
+              margin: '0 0 8px 0',
+            }}>
+              100% PURE COW MILK
+            </h3>
+            <span style={{
+              fontFamily: "'Lato', sans-serif",
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#1C0F08',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Fresh dawn farm collections with zero adulteration
+            </span>
+          </div>
 
-              <span className="font-garamond italic" style={{ fontSize: '20px', color: '#8C5A2B', display: 'block', marginBottom: '28px', lineHeight: 1.4 }}>
-                100% Farm-Fresh Cow Milk · Heavy Bell-Metal Brass Urulis · Zero Preservatives
-              </span>
+          <div style={{
+            background: 'var(--tint-rose-bg)',
+            border: '1px solid var(--tint-rose-border)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🍲</span>
+            <h3 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 900,
+              fontSize: '18px',
+              textTransform: 'uppercase',
+              color: '#8E2B20',
+              margin: '0 0 8px 0',
+            }}>
+              4-HR BRASS URULI SIMMER
+            </h3>
+            <span style={{
+              fontFamily: "'Lato', sans-serif",
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#1C0F08',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Patient reduction over gentle flame for deep caramel note
+            </span>
+          </div>
 
-              {/* 3 Heritage Highlights */}
-              <div className="stardust-story-highlights">
-                <div className="stardust-story-highlight-card">
-                  <span className="stardust-highlight-num font-garamond">100%</span>
-                  <span className="stardust-highlight-label">Pure Cow Milk</span>
-                </div>
-                <div className="stardust-story-highlight-card">
-                  <span className="stardust-highlight-num font-garamond">4+ Hrs</span>
-                  <span className="stardust-highlight-label">Patient Simmer</span>
-                </div>
-                <div className="stardust-story-highlight-card">
-                  <span className="stardust-highlight-num font-garamond">20 Yrs</span>
-                  <span className="stardust-highlight-label">Highway Heritage</span>
-                </div>
-              </div>
+          <div style={{
+            background: 'var(--tint-teal-bg)',
+            border: '1px solid var(--tint-teal-border)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🌿</span>
+            <h3 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 900,
+              fontSize: '18px',
+              textTransform: 'uppercase',
+              color: '#175446',
+              margin: '0 0 8px 0',
+            }}>
+              ZERO CHEMICAL ESSENCES
+            </h3>
+            <span style={{
+              fontFamily: "'Lato', sans-serif",
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#1C0F08',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Natural cardamom, pure desi ghee &amp; premium cashews
+            </span>
+          </div>
 
-              {/* Action */}
-              <div style={{ marginTop: '36px' }}>
-                <button
-                  type="button"
-                  className="stardust-btn stardust-btn--primary"
-                  onClick={handlePreOrder}
-                >
-                  <span>Pre-Order Sweets Online</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="7" y1="17" x2="17" y2="7" />
-                    <polyline points="7 7 17 7 17 17" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+          <div style={{
+            background: 'var(--tint-lavender-bg)',
+            border: '1px solid var(--tint-lavender-border)',
+            borderRadius: '20px',
+            padding: '28px 24px',
+            textAlign: 'center',
+          }}>
+            <span style={{ fontSize: '36px', display: 'block', marginBottom: '12px' }}>🚗</span>
+            <h3 style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontWeight: 900,
+              fontSize: '18px',
+              textTransform: 'uppercase',
+              color: '#4C2B7A',
+              margin: '0 0 8px 0',
+            }}>
+              NH 44 HIGHWAY PITSTOP
+            </h3>
+            <span style={{
+              fontFamily: "'Lato', sans-serif",
+              fontSize: '13px',
+              fontWeight: 700,
+              color: '#1C0F08',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}>
+              Krishnagiri landmark opposite HP bunk since 2006
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Heritage Statement Banner */}
+      <section className="thenisai-heritage-banner" style={{ marginTop: '48px', marginBottom: '32px' }}>
+        <div className="thenisai-heritage-banner__card">
+          <div className="thenisai-heritage-banner__avatar">
+            <img
+              src="/images/products/sweets_assorted_real.jpg"
+              alt="Thenisai Master Craftsman"
+              loading="lazy"
+            />
+          </div>
+
+          <h2 className="thenisai-heritage-banner__text">
+            SWEETNESS IS AN HONEST ART. TASTE THE AUTHENTIC PURITY IN EVERY BATCH.
+          </h2>
+
+          <div className="thenisai-heritage-banner__badge" onClick={handlePreOrder} style={{ cursor: 'pointer' }}>
+            <span className="thenisai-heritage-banner__badge-num">100%</span>
+            <span className="thenisai-heritage-banner__badge-label">Pure Ghee</span>
           </div>
         </div>
       </section>

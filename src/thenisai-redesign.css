@@ -1,0 +1,1495 @@
+/* ==============================================================================
+   THENISAI BRAND REDESIGN SYSTEM — INSPIRED BY MODERN ARTISANAL FOOD BRANDS
+   Bold uppercase typography, vivid color blocking, zero text walls, responsive
+   ============================================================================== */
+
+:root {
+  --thenisai-yellow: #F4AC36;
+  --thenisai-yellow-dark: #E09620;
+  --thenisai-yellow-light: #FFF2D6;
+  --thenisai-espresso: #1C0F08;
+  --thenisai-espresso-soft: #382417;
+  --thenisai-cream: #FAF7F2;
+  --thenisai-card-white: #FFFFFF;
+  --thenisai-border: #EFE8DE;
+
+  /* Pastel Card Tints for Best Sellers */
+  --tint-blue-bg: #DCEAF7;
+  --tint-blue-border: #C4DCF2;
+  --tint-blue-text: #0E4770;
+
+  --tint-rose-bg: #F7DEDC;
+  --tint-rose-border: #F0C4BF;
+  --tint-rose-text: #8E2B20;
+
+  --tint-teal-bg: #DCEFEA;
+  --tint-teal-border: #BFE2D8;
+  --tint-teal-text: #175446;
+
+  --tint-lavender-bg: #EDE6F8;
+  --tint-lavender-border: #DBCFF0;
+  --tint-lavender-text: #4C2B7A;
+
+  /* Section Accent Colors */
+  --accent-crimson: #B33220;
+  --accent-forest: #0E3B33;
+  --accent-navy: #0D3A78;
+}
+
+/* --- Universal Typography Helper Classes --- */
+.font-display-heavy {
+  font-family: 'Plus Jakarta Sans', 'Lato', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+}
+
+.font-script-accent {
+  font-family: 'Great Vibes', cursive !important;
+}
+
+/* ==============================================================================
+   1. TICKER BANNER (TOP)
+   ============================================================================== */
+.thenisai-ticker {
+  background: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  padding: 8px 0 !important;
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  border-bottom: 1px solid rgba(28, 15, 8, 0.12) !important;
+  position: relative !important;
+  z-index: 1002 !important;
+}
+
+.thenisai-ticker__track {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 28px !important;
+  animation: thenisaiTickerScroll 32s linear infinite !important;
+}
+
+@keyframes thenisaiTickerScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.thenisai-ticker__item {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.thenisai-ticker__dot {
+  color: rgba(28, 15, 8, 0.5) !important;
+  font-size: 14px !important;
+}
+
+/* ==============================================================================
+   2. NAVBAR
+   ============================================================================== */
+.thenisai-nav {
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1001 !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid #EFEAE2 !important;
+  transition: all 0.2s ease !important;
+}
+
+.thenisai-nav__inner {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 12px 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+}
+
+.thenisai-nav__brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+.thenisai-nav__logo-img {
+  width: 42px !important;
+  height: 42px !important;
+  object-fit: contain !important;
+  border-radius: 50% !important;
+  background: #FFF8EB !important;
+  border: 1px solid rgba(244, 172, 54, 0.4) !important;
+  padding: 3px !important;
+}
+
+.thenisai-nav__brand-title {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 20px !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+}
+
+.thenisai-nav__brand-sub {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 9.5px !important;
+  font-weight: 700 !important;
+  color: #8C7769 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin-top: 2px !important;
+}
+
+.thenisai-nav__links {
+  display: flex !important;
+  align-items: center !important;
+  gap: 22px !important;
+}
+
+.thenisai-nav__link {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase !important;
+  color: #4A382A !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+  position: relative !important;
+}
+
+.thenisai-nav__link:hover,
+.thenisai-nav__link.is-active {
+  color: var(--thenisai-yellow-dark) !important;
+}
+
+.thenisai-nav__actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.thenisai-nav__search {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #FAF7F2 !important;
+  border: 1px solid #E6DED4 !important;
+  border-radius: 9999px !important;
+  padding: 8px 16px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12.5px !important;
+  color: #7A695B !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.thenisai-nav__search:hover {
+  background: #FFFFFF !important;
+  border-color: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+.thenisai-nav__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 10px 20px !important;
+  border-radius: 9999px !important;
+  background: var(--thenisai-espresso) !important;
+  color: #FFFFFF !important;
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.thenisai-nav__btn:hover {
+  background: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(244, 172, 54, 0.4) !important;
+}
+
+/* ==============================================================================
+   3. HERO CARD (YELLOW BLOCK + VERTICAL PHOTO SLICES)
+   ============================================================================== */
+.thenisai-hero-wrap {
+  max-width: 1280px !important;
+  margin: 20px auto 0 !important;
+  padding: 0 20px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-hero-card {
+  display: grid !important;
+  grid-template-columns: 1fr 1.15fr !important;
+  border-radius: 24px !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 48px rgba(28, 15, 8, 0.12) !important;
+  min-height: 480px !important;
+  background: var(--thenisai-yellow) !important;
+}
+
+.thenisai-hero-card__left {
+  background: var(--thenisai-yellow) !important;
+  padding: clamp(36px, 5vw, 64px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-hero-card__script-tag {
+  font-family: 'Great Vibes', cursive !important;
+  font-size: clamp(26px, 3.5vw, 36px) !important;
+  color: var(--thenisai-espresso) !important;
+  line-height: 1 !important;
+  margin-bottom: 8px !important;
+  opacity: 0.9 !important;
+}
+
+.thenisai-hero-card__headline {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(34px, 4.2vw, 54px) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.03em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.thenisai-hero-card__tagline {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: rgba(28, 15, 8, 0.85) !important;
+  line-height: 1.5 !important;
+  margin: 0 0 28px 0 !important;
+  max-width: 440px !important;
+  letter-spacing: 0.01em !important;
+}
+
+.thenisai-hero-card__cta-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  align-self: flex-start !important;
+  background: var(--thenisai-espresso) !important;
+  color: #FFFFFF !important;
+  padding: 14px 32px !important;
+  border-radius: 9999px !important;
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.thenisai-hero-card__cta-btn:hover {
+  background: #000000 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(28, 15, 8, 0.4) !important;
+}
+
+/* Vertical Multi-Slice Food Gallery on the Right */
+.thenisai-hero-card__right {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  height: 100% !important;
+  min-height: 480px !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.thenisai-hero-slice {
+  position: relative !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  cursor: pointer !important;
+  transition: flex-grow 0.35s ease !important;
+}
+
+.thenisai-hero-slice img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.4s ease !important;
+}
+
+.thenisai-hero-slice:hover img {
+  transform: scale(1.08) !important;
+}
+
+.thenisai-hero-slice::after {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(28, 15, 8, 0.6) 100%) !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.thenisai-hero-slice__label {
+  position: absolute !important;
+  bottom: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 2 !important;
+  background: rgba(28, 15, 8, 0.85) !important;
+  color: #FFFFFF !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  padding: 4px 10px !important;
+  border-radius: 9999px !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+}
+
+/* ==============================================================================
+   4. HERITAGE & INDULGENCE STATEMENT BANNER (SECTION 2 IN IMAGE)
+   ============================================================================== */
+.thenisai-heritage-banner {
+  max-width: 1280px !important;
+  margin: 32px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-heritage-banner__card {
+  background: #FFFDF9 !important;
+  border: 1px solid #EFE8DE !important;
+  border-radius: 20px !important;
+  padding: clamp(24px, 4vw, 36px) clamp(24px, 5vw, 48px) !important;
+  display: grid !important;
+  grid-template-columns: auto 1fr auto !important;
+  align-items: center !important;
+  gap: clamp(20px, 3.5vw, 36px) !important;
+  box-shadow: 0 4px 20px rgba(28, 15, 8, 0.04) !important;
+}
+
+.thenisai-heritage-banner__avatar {
+  width: 72px !important;
+  height: 72px !important;
+  border-radius: 50% !important;
+  background: #F4AC36 !important;
+  border: 3px solid #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(244, 172, 54, 0.4) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+.thenisai-heritage-banner__avatar img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.thenisai-heritage-banner__text {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(20px, 2.5vw, 30px) !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+}
+
+.thenisai-heritage-banner__badge {
+  background: #FAF3E6 !important;
+  border: 1px solid rgba(244, 172, 54, 0.4) !important;
+  padding: 10px 18px !important;
+  border-radius: 14px !important;
+  text-align: center !important;
+  flex-shrink: 0 !important;
+}
+
+.thenisai-heritage-banner__badge-num {
+  display: block !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 22px !important;
+  color: var(--thenisai-yellow-dark) !important;
+  line-height: 1 !important;
+}
+
+.thenisai-heritage-banner__badge-label {
+  display: block !important;
+  font-family: 'Lato', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 10px !important;
+  text-transform: uppercase !important;
+  color: #7A695B !important;
+  letter-spacing: 0.08em !important;
+  margin-top: 3px !important;
+}
+
+/* ==============================================================================
+   5. "MEET THE COLLECTION" (SECTION 3 IN IMAGE)
+   ============================================================================== */
+.thenisai-section {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-section__title-center {
+  text-align: center !important;
+  margin-bottom: 28px !important;
+}
+
+.thenisai-section__headline {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(26px, 3.2vw, 38px) !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+  line-height: 1.15 !important;
+}
+
+.thenisai-collection-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 20px !important;
+}
+
+.thenisai-collection-card {
+  background: #FFFFFF !important;
+  border-radius: 20px !important;
+  border: 1px solid #EFE8DE !important;
+  overflow: hidden !important;
+  text-decoration: none !important;
+  color: var(--thenisai-espresso) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  cursor: pointer !important;
+}
+
+.thenisai-collection-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 14px 32px rgba(28, 15, 8, 0.12) !important;
+  border-color: var(--thenisai-yellow) !important;
+}
+
+.thenisai-collection-card__img-wrap {
+  aspect-ratio: 4 / 3.2 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  position: relative !important;
+  background: #FAF7F2 !important;
+}
+
+.thenisai-collection-card__img-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.35s ease !important;
+}
+
+.thenisai-collection-card:hover .thenisai-collection-card__img-wrap img {
+  transform: scale(1.06) !important;
+}
+
+.thenisai-collection-card__footer {
+  padding: 16px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: #FFFFFF !important;
+}
+
+.thenisai-collection-card__name {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 14.5px !important;
+  letter-spacing: -0.01em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+}
+
+.thenisai-collection-card__arrow {
+  color: var(--thenisai-yellow-dark) !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  transition: transform 0.2s ease !important;
+}
+
+.thenisai-collection-card:hover .thenisai-collection-card__arrow {
+  transform: translate(2px, -2px) !important;
+}
+
+/* ==============================================================================
+   6. "OUR BEST SELLERS" / "ALL TIME FAVOURITE" (SECTION 4 IN IMAGE)
+   Colorful cards: Sky Blue, Rose, Teal, Lavender
+   ============================================================================== */
+.thenisai-bestsellers-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 24px !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+}
+
+.thenisai-bestsellers-nav {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.thenisai-round-arrow-btn {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEC8A2 !important;
+  color: var(--thenisai-espresso) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  font-size: 16px !important;
+  transition: all 0.15s ease !important;
+}
+
+.thenisai-round-arrow-btn:hover {
+  background: var(--thenisai-yellow) !important;
+  border-color: var(--thenisai-yellow) !important;
+}
+
+.thenisai-view-all-pill {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 8px 18px !important;
+  border-radius: 9999px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #DEC8A2 !important;
+  color: var(--thenisai-espresso) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.thenisai-view-all-pill:hover {
+  background: var(--thenisai-yellow) !important;
+  border-color: var(--thenisai-yellow) !important;
+}
+
+.thenisai-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 20px !important;
+}
+
+/* Individual Colorful Product Cards matching Reference Image */
+.thenisai-prod-card {
+  border-radius: 20px !important;
+  padding: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  border: 1px solid transparent !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-prod-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(28, 15, 8, 0.12) !important;
+}
+
+/* 4 Tint Themes */
+.thenisai-prod-card--blue {
+  background: var(--tint-blue-bg) !important;
+  border-color: var(--tint-blue-border) !important;
+}
+
+.thenisai-prod-card--rose {
+  background: var(--tint-rose-bg) !important;
+  border-color: var(--tint-rose-border) !important;
+}
+
+.thenisai-prod-card--teal {
+  background: var(--tint-teal-bg) !important;
+  border-color: var(--tint-teal-border) !important;
+}
+
+.thenisai-prod-card--lavender {
+  background: var(--tint-lavender-bg) !important;
+  border-color: var(--tint-lavender-border) !important;
+}
+
+.thenisai-prod-card__ribbon {
+  position: absolute !important;
+  top: 14px !important;
+  left: 14px !important;
+  background: var(--thenisai-espresso) !important;
+  color: #FFFFFF !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  padding: 3px 9px !important;
+  border-radius: 6px !important;
+  z-index: 2 !important;
+}
+
+.thenisai-prod-card__img-wrap {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 12px 0 14px 0 !important;
+  position: relative !important;
+}
+
+.thenisai-prod-card__img {
+  width: 86% !important;
+  height: 86% !important;
+  object-fit: cover !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 24px rgba(28, 15, 8, 0.18) !important;
+  transition: transform 0.3s ease !important;
+}
+
+.thenisai-prod-card:hover .thenisai-prod-card__img {
+  transform: scale(1.05) !important;
+}
+
+.thenisai-prod-card__details {
+  background: #FFFFFF !important;
+  border-radius: 14px !important;
+  padding: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  margin-top: auto !important;
+}
+
+.thenisai-prod-card__title {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 15px !important;
+  letter-spacing: -0.01em !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.thenisai-prod-card__meta-row {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+}
+
+.thenisai-prod-card__price {
+  font-family: 'Lato', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 16px !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+.thenisai-prod-card__weight {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  color: #7A695B !important;
+  font-weight: 700 !important;
+}
+
+.thenisai-prod-card__portions {
+  display: flex !important;
+  gap: 6px !important;
+}
+
+.thenisai-portion-chip {
+  flex: 1 !important;
+  padding: 4px 6px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  border-radius: 6px !important;
+  border: 1px solid #EFEAE2 !important;
+  background: #FAF7F2 !important;
+  color: #4A382A !important;
+  cursor: pointer !important;
+  text-align: center !important;
+  transition: all 0.15s ease !important;
+}
+
+.thenisai-portion-chip.is-active,
+.thenisai-portion-chip:hover {
+  background: var(--thenisai-yellow) !important;
+  border-color: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+.thenisai-prod-card__btn {
+  width: 100% !important;
+  padding: 10px 14px !important;
+  border-radius: 9999px !important;
+  background: var(--thenisai-espresso) !important;
+  color: #FFFFFF !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  text-align: center !important;
+  margin-top: 2px !important;
+}
+
+.thenisai-prod-card__btn:hover {
+  background: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+/* ==============================================================================
+   7. PROMOTIONAL CRIMSON BANNER ("MUNCH FOR MOODS")
+   ============================================================================== */
+.thenisai-munch-banner {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-munch-card {
+  background: var(--accent-crimson) !important;
+  border-radius: 24px !important;
+  padding: clamp(36px, 5vw, 56px) !important;
+  display: grid !important;
+  grid-template-columns: 1.1fr 1fr !important;
+  align-items: center !important;
+  gap: 32px !important;
+  color: #FFFFFF !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.thenisai-munch-card__stickers {
+  display: flex !important;
+  gap: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+.thenisai-sticker {
+  background: #F4AC36 !important;
+  color: #1C0F08 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 4px 12px !important;
+  border-radius: 6px !important;
+  transform: rotate(-3deg) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+.thenisai-sticker--white {
+  background: #FFFFFF !important;
+  color: var(--accent-crimson) !important;
+  transform: rotate(2deg) !important;
+}
+
+.thenisai-munch-card__headline {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(32px, 4.2vw, 48px) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: #FFFFFF !important;
+  margin: 0 0 14px 0 !important;
+}
+
+.thenisai-munch-card__tagline {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  margin: 0 0 24px 0 !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+}
+
+.thenisai-munch-card__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 28px !important;
+  border-radius: 9999px !important;
+  background: #FFFFFF !important;
+  color: var(--accent-crimson) !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.thenisai-munch-card__btn:hover {
+  background: #F4AC36 !important;
+  color: #1C0F08 !important;
+  transform: translateY(-2px) !important;
+}
+
+.thenisai-munch-card__media {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+}
+
+.thenisai-munch-card__media img {
+  max-width: 100% !important;
+  height: 280px !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.35)) !important;
+  border-radius: 16px !important;
+}
+
+/* ==============================================================================
+   8. FOREST GREEN LOCATION BANNER ("ONLY AT THENISAI NH 44")
+   ============================================================================== */
+.thenisai-location-banner {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-location-card {
+  background: var(--accent-forest) !important;
+  border-radius: 24px !important;
+  padding: clamp(36px, 5vw, 56px) !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1.1fr !important;
+  align-items: center !important;
+  gap: 32px !important;
+  color: #FFFFFF !important;
+  overflow: hidden !important;
+}
+
+.thenisai-location-card__eyebrow {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  color: #70D1B9 !important;
+  margin-bottom: 8px !important;
+  display: block !important;
+}
+
+.thenisai-location-card__title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(30px, 3.8vw, 44px) !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: #FFFFFF !important;
+  margin: 0 0 16px 0 !important;
+}
+
+.thenisai-location-card__desc {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 14px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  line-height: 1.6 !important;
+  margin: 0 0 24px 0 !important;
+  font-weight: 600 !important;
+}
+
+.thenisai-location-card__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 28px !important;
+  border-radius: 9999px !important;
+  background: #F4AC36 !important;
+  color: #1C0F08 !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-decoration: none !important;
+}
+
+.thenisai-location-card__btn:hover {
+  background: #FFFFFF !important;
+  transform: translateY(-2px) !important;
+}
+
+.thenisai-location-card__img {
+  width: 100% !important;
+  height: 280px !important;
+  object-fit: cover !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+/* ==============================================================================
+   9. TRUST SEALS STRIP ("YOU CAN TRUST US")
+   ============================================================================== */
+.thenisai-trust-strip {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+
+.thenisai-trust-strip__title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 14px !important;
+  letter-spacing: 0.15em !important;
+  text-transform: uppercase !important;
+  color: #7A695B !important;
+  margin-bottom: 24px !important;
+}
+
+.thenisai-trust-badges {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(14px, 3.5vw, 36px) !important;
+  flex-wrap: wrap !important;
+}
+
+.thenisai-trust-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 16px !important;
+  border-radius: 9999px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #EFE8DE !important;
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11.5px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+/* ==============================================================================
+   10. "WHERE YOU CAN FIND / ENJOY" (3 CARDS)
+   ============================================================================== */
+.thenisai-destinations-strip {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-destinations-grid {
+  display: grid !important;
+  grid-template-columns: 0.8fr 2fr !important;
+  gap: 28px !important;
+  align-items: center !important;
+}
+
+.thenisai-destinations-title-box {
+  background: #FAF7F2 !important;
+  border-radius: 20px !important;
+  padding: 32px 24px !important;
+  border: 1px solid #EFE8DE !important;
+}
+
+.thenisai-destinations-title-box h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 28px !important;
+  text-transform: uppercase !important;
+  letter-spacing: -0.02em !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+  line-height: 1.15 !important;
+}
+
+.thenisai-destinations-cards {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 16px !important;
+}
+
+.thenisai-dest-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  border: 1px solid #EFE8DE !important;
+  padding: 18px !important;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 10px !important;
+  transition: all 0.2s ease !important;
+}
+
+.thenisai-dest-card:hover {
+  border-color: var(--thenisai-yellow) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(28, 15, 8, 0.08) !important;
+}
+
+.thenisai-dest-card__icon {
+  font-size: 30px !important;
+}
+
+.thenisai-dest-card__name {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 !important;
+}
+
+.thenisai-dest-card__tag {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 11.5px !important;
+  color: #7A695B !important;
+  font-weight: 600 !important;
+}
+
+/* ==============================================================================
+   11. BRAND HERITAGE SYNONYMOUS CENTERPIECE
+   ============================================================================== */
+.thenisai-heritage-center {
+  max-width: 900px !important;
+  margin: 54px auto 0 !important;
+  padding: 0 20px !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-heritage-center__logo {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 26px !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.thenisai-heritage-center__statement {
+  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: clamp(16px, 2.2vw, 22px) !important;
+  line-height: 1.4 !important;
+  text-transform: uppercase !important;
+  color: #4A382A !important;
+  margin: 0 auto 32px !important;
+  max-width: 760px !important;
+}
+
+.thenisai-heritage-steps {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(16px, 4vw, 44px) !important;
+  position: relative !important;
+}
+
+.thenisai-heritage-step {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.thenisai-heritage-step__circle {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 50% !important;
+  background: #FFF8EB !important;
+  border: 1.5px solid var(--thenisai-yellow) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 22px !important;
+}
+
+.thenisai-heritage-step__label {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--thenisai-espresso) !important;
+}
+
+/* ==============================================================================
+   12. CUSTOMER REVIEWS (ROYAL BLUE BLOCK WITH SPEECH BUBBLES)
+   ============================================================================== */
+.thenisai-reviews-banner {
+  max-width: 1280px !important;
+  margin: 54px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-reviews-card {
+  background: var(--accent-navy) !important;
+  border-radius: 24px !important;
+  padding: clamp(36px, 5vw, 56px) clamp(20px, 4vw, 48px) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 16px 48px rgba(13, 58, 120, 0.22) !important;
+}
+
+.thenisai-reviews-card__header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 36px !important;
+  flex-wrap: wrap !important;
+  gap: 14px !important;
+}
+
+.thenisai-reviews-card__title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: clamp(26px, 3.4vw, 38px) !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: #FFFFFF !important;
+  margin: 0 !important;
+}
+
+.thenisai-reviews-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 20px !important;
+}
+
+.thenisai-bubble-col {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.thenisai-speech-bubble {
+  background: #FFFFFF !important;
+  color: var(--thenisai-espresso) !important;
+  border-radius: 18px !important;
+  padding: 20px 18px 24px !important;
+  position: relative !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Little Speech Bubble Pointer Triangle pointing down */
+.thenisai-speech-bubble::after {
+  content: '' !important;
+  position: absolute !important;
+  bottom: -10px !important;
+  left: 28px !important;
+  width: 0 !important;
+  height: 0 !important;
+  border-left: 10px solid transparent !important;
+  border-right: 10px solid transparent !important;
+  border-top: 10px solid #FFFFFF !important;
+}
+
+.thenisai-bubble-stars {
+  color: #F4AC36 !important;
+  font-size: 15px !important;
+  letter-spacing: 2px !important;
+}
+
+.thenisai-bubble-quote {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: #382417 !important;
+  margin: 0 !important;
+}
+
+.thenisai-bubble-author {
+  align-self: flex-start !important;
+  padding-left: 16px !important;
+}
+
+.thenisai-bubble-author__name {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #FFFFFF !important;
+  margin: 0 !important;
+  text-transform: uppercase !important;
+}
+
+.thenisai-bubble-author__role {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 10.5px !important;
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* ==============================================================================
+   13. INSTAGRAM & GALLERY STRIP
+   ============================================================================== */
+.thenisai-insta-section {
+  max-width: 1280px !important;
+  margin: 48px auto 0 !important;
+  padding: 0 20px !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+
+.thenisai-insta-grid {
+  display: grid !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 12px !important;
+  margin-top: 24px !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+}
+
+.thenisai-insta-item {
+  aspect-ratio: 1 / 1 !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.thenisai-insta-item img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  transition: transform 0.35s ease !important;
+}
+
+.thenisai-insta-item:hover img {
+  transform: scale(1.08) !important;
+}
+
+/* ==============================================================================
+   14. WARM MUSTARD YELLOW FOOTER
+   ============================================================================== */
+.thenisai-footer {
+  background: var(--thenisai-yellow) !important;
+  color: var(--thenisai-espresso) !important;
+  margin-top: 54px !important;
+  padding: clamp(48px, 6vw, 72px) 0 32px !important;
+  width: 100% !important;
+  border-top: 1px solid rgba(28, 15, 8, 0.12) !important;
+}
+
+.thenisai-footer__inner {
+  max-width: 1280px !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  box-sizing: border-box !important;
+}
+
+.thenisai-footer__top {
+  display: grid !important;
+  grid-template-columns: 1.2fr 2fr !important;
+  gap: clamp(32px, 5vw, 64px) !important;
+  margin-bottom: 40px !important;
+}
+
+.thenisai-footer__brand-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 28px !important;
+  letter-spacing: -0.02em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.thenisai-footer__brand-sub {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: rgba(28, 15, 8, 0.8) !important;
+  line-height: 1.5 !important;
+}
+
+.thenisai-footer__links-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 24px !important;
+}
+
+.thenisai-footer__col-title {
+  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-weight: 900 !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--thenisai-espresso) !important;
+  margin-bottom: 12px !important;
+}
+
+.thenisai-footer__links-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.thenisai-footer__link {
+  font-family: 'Lato', sans-serif !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  color: rgba(28, 15, 8, 0.8) !important;
+  text-decoration: none !important;
+  transition: color 0.15s ease !important;
+}
+
+.thenisai-footer__link:hover {
+  color: #000000 !important;
+}
+
+.thenisai-footer__bottom {
+  border-top: 1px solid rgba(28, 15, 8, 0.15) !important;
+  padding-top: 24px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  font-family: 'Lato', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: rgba(28, 15, 8, 0.75) !important;
+  flex-wrap: wrap !important;
+}
+
+/* ==============================================================================
+   RESPONSIVE OVERRIDES (MOBILE & TABLET)
+   ============================================================================== */
+@media (max-width: 1024px) {
+  .thenisai-hero-card {
+    grid-template-columns: 1fr !important;
+    min-height: auto !important;
+  }
+  .thenisai-hero-card__right {
+    min-height: 240px !important;
+  }
+  .thenisai-collection-grid,
+  .thenisai-cards-grid,
+  .thenisai-reviews-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .thenisai-munch-card,
+  .thenisai-location-card,
+  .thenisai-destinations-grid,
+  .thenisai-footer__top {
+    grid-template-columns: 1fr !important;
+  }
+  .thenisai-insta-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .thenisai-nav__links,
+  .thenisai-nav__search {
+    display: none !important;
+  }
+  .thenisai-hero-card__right {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .thenisai-hero-slice:nth-child(n+4) {
+    display: none !important;
+  }
+  .thenisai-heritage-banner__card {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+    justify-items: center !important;
+  }
+  .thenisai-destinations-cards {
+    grid-template-columns: 1fr !important;
+  }
+  .thenisai-footer__links-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .thenisai-hero-card__left {
+    padding: 28px 20px !important;
+  }
+  .thenisai-hero-card__cta-btn {
+    width: 100% !important;
+  }
+  .thenisai-collection-grid,
+  .thenisai-cards-grid,
+  .thenisai-reviews-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .thenisai-insta-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .thenisai-footer__links-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

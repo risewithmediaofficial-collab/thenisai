@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import './stardust.css'
+import './thenisai-redesign.css'
 
 // Brand Typography: Lato (Sans), Great Vibes (Script), Cormorant Garamond (Serif)
 import '@fontsource/lato/300.css';
