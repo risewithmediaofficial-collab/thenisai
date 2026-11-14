@@ -119,40 +119,33 @@
 .thenisai-nav__brand {
   display: flex !important;
   align-items: center !important;
-  gap: 10px !important;
   text-decoration: none !important;
-  color: var(--thenisai-espresso) !important;
+  line-height: 1 !important;
 }
 
 .thenisai-nav__logo-img {
-  width: 42px !important;
-  height: 42px !important;
+  height: 48px !important;
+  width: auto !important;
+  max-width: 175px !important;
   object-fit: contain !important;
-  border-radius: 50% !important;
-  background: #FFF8EB !important;
-  border: 1px solid rgba(244, 172, 54, 0.4) !important;
-  padding: 3px !important;
+  display: block !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  transition: transform 0.2s ease !important;
+}
+
+.thenisai-nav__brand:hover .thenisai-nav__logo-img {
+  transform: scale(1.03) !important;
 }
 
 .thenisai-nav__brand-title {
-  font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
-  font-weight: 900 !important;
-  font-size: 20px !important;
-  letter-spacing: -0.02em !important;
-  text-transform: uppercase !important;
-  line-height: 1 !important;
-  color: var(--thenisai-espresso) !important;
-  margin: 0 !important;
+  display: none !important;
 }
 
 .thenisai-nav__brand-sub {
-  font-family: 'Lato', sans-serif !important;
-  font-size: 9.5px !important;
-  font-weight: 700 !important;
-  color: #8C7769 !important;
-  letter-spacing: 0.12em !important;
-  text-transform: uppercase !important;
-  margin-top: 2px !important;
+  display: none !important;
 }
 
 .thenisai-nav__links {
@@ -250,6 +243,7 @@
   box-shadow: 0 16px 48px rgba(28, 15, 8, 0.12) !important;
   min-height: 480px !important;
   background: var(--thenisai-yellow) !important;
+  align-items: stretch !important;
 }
 
 .thenisai-hero-card__left {
@@ -258,6 +252,7 @@
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
+  height: 100% !important;
   position: relative !important;
   box-sizing: border-box !important;
 }
@@ -328,6 +323,7 @@
   min-height: 480px !important;
   overflow: hidden !important;
   position: relative !important;
+  background: #FAF7F2 !important;
 }
 
 .thenisai-hero-slice {
@@ -335,6 +331,7 @@
   height: 100% !important;
   overflow: hidden !important;
   cursor: pointer !important;
+  background: #FAF7F2 !important;
   transition: flex-grow 0.35s ease !important;
 }
 
@@ -342,6 +339,8 @@
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
+  object-position: center !important;
+  display: block !important;
   transition: transform 0.4s ease !important;
 }
 
@@ -353,7 +352,8 @@
   content: '' !important;
   position: absolute !important;
   inset: 0 !important;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(28, 15, 8, 0.6) 100%) !important;
+  background: linear-gradient(180deg, transparent 65%, rgba(28, 15, 8, 0.45) 100%) !important;
+  pointer-events: none !important;
   transition: opacity 0.3s ease !important;
 }
 
@@ -621,6 +621,7 @@
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
   gap: 20px !important;
+  align-items: stretch !important;
 }
 
 /* Individual Colorful Product Cards matching Reference Image */
@@ -629,6 +630,7 @@
   padding: 16px !important;
   display: flex !important;
   flex-direction: column !important;
+  height: 100% !important;
   position: relative !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
   border: 1px solid transparent !important;
@@ -679,18 +681,20 @@
 
 .thenisai-prod-card__img-wrap {
   width: 100% !important;
-  aspect-ratio: 1 / 1 !important;
+  height: 185px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin: 12px 0 14px 0 !important;
+  margin: 8px 0 14px 0 !important;
   position: relative !important;
+  overflow: hidden !important;
 }
 
 .thenisai-prod-card__img {
-  width: 86% !important;
-  height: 86% !important;
+  width: 155px !important;
+  height: 155px !important;
   object-fit: cover !important;
+  object-position: center !important;
   border-radius: 14px !important;
   box-shadow: 0 8px 24px rgba(28, 15, 8, 0.18) !important;
   transition: transform 0.3s ease !important;
@@ -713,14 +717,14 @@
 .thenisai-prod-card__title {
   font-family: 'Plus Jakarta Sans', 'Lato', sans-serif !important;
   font-weight: 900 !important;
-  font-size: 15px !important;
+  font-size: 14.5px !important;
   letter-spacing: -0.01em !important;
   color: var(--thenisai-espresso) !important;
   margin: 0 !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+  line-height: 1.25 !important;
+  min-height: 38px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 .thenisai-prod-card__meta-row {
@@ -1222,12 +1226,14 @@
   display: grid !important;
   grid-template-columns: repeat(4, 1fr) !important;
   gap: 20px !important;
+  align-items: stretch !important;
 }
 
 .thenisai-bubble-col {
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
+  align-items: stretch !important;
+  height: 100% !important;
   gap: 14px !important;
 }
 
@@ -1242,6 +1248,7 @@
   flex-direction: column !important;
   gap: 10px !important;
   height: 100% !important;
+  min-height: 140px !important;
   box-sizing: border-box !important;
 }
 
@@ -1276,6 +1283,7 @@
 .thenisai-bubble-author {
   align-self: flex-start !important;
   padding-left: 16px !important;
+  margin-top: auto !important;
 }
 
 .thenisai-bubble-author__name {

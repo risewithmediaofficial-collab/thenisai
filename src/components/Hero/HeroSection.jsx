@@ -16,7 +16,7 @@ export default function HeroSection() {
   };
 
   const slices = [
-    { name: 'Palkova', img: '/images/products/palkova_hero.webp' },
+    { name: 'Palkova', img: '/images/products/palkova_card.webp' },
     { name: 'Mysore Pak', img: '/images/products/mysore_pak.webp' },
     { name: 'Kaju Katli', img: '/images/products/kaju_katli_real.jpg' },
     { name: 'Kara Boondi', img: '/images/products/savories_boondi_real.jpg' },

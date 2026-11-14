@@ -662,8 +662,8 @@ export default function CustomerMenuPage() {
       <header className="menu-header">
         <div className="menu-header-inner">
           <div className="menu-header-row">
-            {/* Brand info */}
-            <div className="menu-brand-wrap">
+            {/* Brand info: Only logo (No raw text) */}
+            <div className="menu-brand-wrap" style={{ cursor: 'pointer' }} onClick={() => navigateTo('storefront')} title="Back to Home">
               <img
                 src="/images/branding/logo.webp"
                 alt="Thenisai Logo"
@@ -673,10 +673,7 @@ export default function CustomerMenuPage() {
                   e.target.src = '/images/branding/logo-icon.webp';
                 }}
               />
-              <div className="menu-brand-info">
-                <h1 className="menu-title">Thenisai Menu</h1>
-                <span className="menu-preorder-badge">PRE-ORDER</span>
-              </div>
+              <span className="menu-preorder-badge">PRE-ORDER ONLINE</span>
             </div>
 
             {/* Action buttons */}

@@ -162,14 +162,18 @@ export default function ValuesSection() {
         </div>
       </section>
 
-      {/* SECTION 9: BRAND HERITAGE SYNONYMOUS CENTERPIECE */}
+      {/* SECTION 9: BRAND HERITAGE SYNONYMOUS CENTERPIECE (ONLY LOGO, NO RAW TEXT) */}
       <section className="thenisai-heritage-center">
         <div className="thenisai-heritage-center__logo">
-          <span>THENISAI</span>
+          <img
+            src="/images/branding/logo.webp"
+            alt="Thenisai Sweets"
+            style={{ height: '54px', width: 'auto', objectFit: 'contain', display: 'inline-block' }}
+          />
         </div>
 
         <p className="thenisai-heritage-center__statement">
-          THENISAI, ESTABLISHED IN 2006 IN KRISHNAGIRI, HAS GROWN TO BE SYNONYMOUS WITH PREMIUM QUALITY SOUTH INDIAN CONFECTIONERY.
+          ESTABLISHED IN 2006 IN KRISHNAGIRI, SYNONYMOUS WITH PREMIUM QUALITY SOUTH INDIAN CONFECTIONERY.
         </p>
 
         <div className="thenisai-heritage-steps">

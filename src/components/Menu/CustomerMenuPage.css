@@ -45,10 +45,12 @@
 }
 
 .menu-brand-logo {
-  height: 32px;
+  height: 38px;
   width: auto;
+  max-width: 150px;
   object-fit: contain;
   flex-shrink: 0;
+  display: block;
 }
 
 .menu-brand-info {

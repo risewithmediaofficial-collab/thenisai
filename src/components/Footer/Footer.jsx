@@ -13,15 +13,20 @@ export default function Footer() {
     <footer className="thenisai-footer">
       <div className="thenisai-footer__inner">
         <div className="thenisai-footer__top">
-          {/* Brand Col */}
+          {/* Brand Col: ONLY LOGO (No raw text) */}
           <div>
-            <h3
-              className="thenisai-footer__brand-title"
-              style={{ cursor: 'pointer' }}
+            <div
+              style={{ marginBottom: '12px', cursor: 'pointer' }}
               onClick={() => handleNav('storefront', '')}
+              title="Thenisai Sweets"
             >
-              THENISAI
-            </h3>
+              <img
+                src="/images/branding/logo.webp"
+                alt="Thenisai Sweets"
+                className="thenisai-footer__logo-img"
+              />
+            </div>
+
             <p className="thenisai-footer__brand-sub">
               Authentic Pure Cow Milk Confectionery &amp; Savories.<br />
               Simmered in brass urulis on NH 44 Krishnagiri since 2006.
@@ -98,7 +103,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="thenisai-footer__bottom">
-          <span>&copy; 2006–2026 THENISAI PALKOVA &amp; SWEETS. Handcrafted in Krishnagiri, Tamil Nadu.</span>
+          <span>&copy; 2006–2026 Handcrafted in Krishnagiri, Tamil Nadu.</span>
           <div style={{ display: 'flex', gap: '16px' }}>
             <a
               href="#admin"

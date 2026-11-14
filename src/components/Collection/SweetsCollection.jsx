@@ -30,7 +30,7 @@ const BEST_SELLERS = [
     name: 'Signature Krishnagiri Palkova',
     theme: 'blue',
     ribbon: 'BEST SELLER',
-    img: '/images/products/palkova_hero.webp',
+    img: '/images/products/palkova_card.webp',
     basePrice: 340,
     baseWeight: '500g',
     portions: [
@@ -205,7 +205,7 @@ export default function SweetsCollection() {
 
                   <div className="thenisai-prod-card__meta-row">
                     <span className="thenisai-prod-card__price">₹{portionObj.price}</span>
-                    <span className="thenisai-prod-card__weight">{portionObj.label}</span>
+                    <span className="thenisai-prod-card__weight">/ {portionObj.label}</span>
                   </div>
 
                   {/* Portion Selectors */}
