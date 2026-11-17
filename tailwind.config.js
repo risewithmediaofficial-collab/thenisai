@@ -29,9 +29,11 @@ export default {
         'text-light': '#9C7A55',
       },
       fontFamily: {
-        display: ['"Playfair Display"', 'serif'],
-        body: ['"Cormorant Garamond"', 'serif'],
-        ui: ['Inter', 'sans-serif'],
+        display: ['"Shantell Sans"', 'cursive'],
+        body: ['Outfit', 'sans-serif'],
+        ui: ['Outfit', 'sans-serif'],
+        outfit: ['Outfit', 'sans-serif'],
+        shantell: ['"Shantell Sans"', 'cursive'],
       },
       maxWidth: {
         container: '1400px',

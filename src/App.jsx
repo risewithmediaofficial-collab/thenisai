@@ -65,7 +65,7 @@ const CustomerAuthModal = lazy(() => import('./components/Wishlist/CustomerAuthM
 
 // Lazy load heavy storefront sections
 const SweetsCollection = lazy(() => import('./components/Collection/SweetsCollection'));
-const StatsBanner = lazy(() => import('./components/Stats/StatsBanner'));
+const VideosSection = lazy(() => import('./components/Videos/VideosSection'));
 const ValuesSection = lazy(() => import('./components/Values/ValuesSection'));
 const CustomerReviews = lazy(() => import('./components/Reviews/CustomerReviews'));
 const SweetCircleSection = lazy(() => import('./components/Newsletter/SweetCircleSection'));
@@ -325,7 +325,7 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         <main>
           <HeroSection />
           <DeferredSection minHeight={480}><SweetsCollection /></DeferredSection>
-          <DeferredSection><StatsBanner /></DeferredSection>
+          <DeferredSection><VideosSection /></DeferredSection>
           <DeferredSection><ValuesSection /></DeferredSection>
           <DeferredSection><CustomerReviews /></DeferredSection>
           <DeferredSection><SweetCircleSection /></DeferredSection>

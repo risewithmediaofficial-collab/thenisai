@@ -3,66 +3,107 @@ import { useCart } from '../../context/CartContext';
 export default function Footer() {
   const { navigateTo } = useCart();
 
-  const handleNav = (view, hash) => {
-    window.location.hash = hash;
+  const handleNav = (view, hash = '') => {
+    if (hash) {
+      window.location.hash = hash;
+    } else {
+      window.location.hash = '';
+    }
     navigateTo(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <footer className="stardust-footer font-lato">
-      <div className="stardust-container">
-        {/* Massive Brand Watermark */}
-        <div className="stardust-footer__watermark font-garamond" aria-hidden="true">
-          Thenisai
-        </div>
-
-        {/* Footer Top Links */}
-        <div className="stardust-footer__top">
-          <div className="stardust-footer__brand">
-            <span
-              className="stardust-footer__logo font-garamond"
-              style={{ cursor: 'pointer' }}
+    <footer className="ks-footer">
+      <div className="ks-container">
+        <div className="ks-footer__top">
+          {/* Col 1: Brand Logo & Tagline */}
+          <div className="ks-footer__brand-col">
+            <div
+              className="ks-footer__logo-wrap"
               onClick={() => handleNav('storefront', '')}
+              title="Thenisai Sweets"
             >
-              Thenisai
+              <img
+                src="/images/branding/logo.webp"
+                alt="Thenisai Sweets Logo"
+                className="ks-footer__logo"
+                onError={(e) => {
+                  e.currentTarget.src = '/images/branding/logo-icon.png';
+                }}
+              />
+            </div>
+
+            <span className="font-script ks-footer__tagline">
+              The Art of Pure Milk Confectionery &middot; Est. 2006
             </span>
-            <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginTop: '6px' }}>
-              The Art of Pure Milk Confectionery · Est. 2006
-            </span>
+
+            <p className="ks-footer__desc">
+              Authentic 100% pure cow milk sweets and savouries simmered in traditional brass urulis on the Bangalore–Salem Highway (NH 44), Krishnagiri.
+            </p>
           </div>
 
-          <div className="stardust-footer__links-group">
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Customer Pages</span>
-              <a href="#home" onClick={(e) => { e.preventDefault(); handleNav('storefront', ''); }}>Home</a>
-              <a href="#menu" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Pre-Order Sweets</a>
-              <a href="#story" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our Story &amp; Heritage</a>
-              <a href="#contact" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Visit &amp; Bulk Orders</a>
+          {/* Col 2: Customer Pages */}
+          <div>
+            <h4 className="ks-footer__col-title">Customer Pages</h4>
+            <div className="ks-footer__links-list">
+              <a href="#home" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('storefront', ''); }}>Home</a>
+              <a href="#menu" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Pre-Order Sweets</a>
+              <a href="#story" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our Story &amp; Heritage</a>
+              <a href="#contact" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Visit &amp; Bulk Orders</a>
             </div>
+          </div>
 
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Highway Boutique</span>
-              <span>NH 44 Highway Pitstop</span>
-              <span>Near HP Petrol Bunk</span>
-              <span>Nattamai Kottai</span>
-              <span>Krishnagiri - 635001</span>
-              <span style={{ color: '#8EC4A5', marginTop: '4px' }}>⏰ 6:00 AM &ndash; 10:30 PM Daily</span>
+          {/* Col 3: Highway Boutique */}
+          <div>
+            <h4 className="ks-footer__col-title">Highway Boutique</h4>
+            <div className="ks-footer__links-list">
+              <span className="ks-footer__info-text">NH 44 Highway Pitstop</span>
+              <span className="ks-footer__info-text">Near HP Petrol Bunk</span>
+              <span className="ks-footer__info-text">Nattamai Kottai</span>
+              <span className="ks-footer__info-text">Krishnagiri &ndash; 635001</span>
+              <span className="ks-footer__highlight-text">
+                ⏰ 6:00 AM &ndash; 10:30 PM Daily
+              </span>
+              <span className="ks-footer__highlight-text">
+                📞 +91 93448 93547
+              </span>
             </div>
+          </div>
 
-            <div className="stardust-footer__col">
-              <span className="stardust-footer__col-title">Staff Portal</span>
-              <a href="#admin" onClick={() => navigateTo('admin')}>Admin Dashboard</a>
-              <a href="#billing" onClick={() => navigateTo('billing')}>POS Billing Counter</a>
-              <a href="#manager" onClick={() => navigateTo('manager')}>Stock Manager</a>
+          {/* Col 4: Staff Portal */}
+          <div>
+            <h4 className="ks-footer__col-title">Staff Portal</h4>
+            <div className="ks-footer__links-list">
+              <a
+                href="#admin"
+                className="ks-footer__link"
+                onClick={(e) => { e.preventDefault(); handleNav('admin', '#admin'); }}
+              >
+                Admin Dashboard
+              </a>
+              <a
+                href="#billing"
+                className="ks-footer__link"
+                onClick={(e) => { e.preventDefault(); handleNav('billing', '#billing'); }}
+              >
+                POS Billing Counter
+              </a>
+              <a
+                href="#manager"
+                className="ks-footer__link"
+                onClick={(e) => { e.preventDefault(); handleNav('manager', '#manager'); }}
+              >
+                Stock Manager
+              </a>
             </div>
           </div>
         </div>
 
         {/* Footer Bottom Bar */}
-        <div className="stardust-footer__bottom">
+        <div className="ks-footer__bottom">
           <span>&copy; 2006&ndash;2026 Thenisai Palkova &amp; Sweets. Handcrafted in Tamil Nadu.</span>
-          <div className="stardust-footer__social">
+          <div className="ks-footer__social-links">
             <a href="https://instagram.com/thenisai_sweets" target="_blank" rel="noopener noreferrer">Instagram</a>
             <span>&middot;</span>
             <a href="https://facebook.com/thenisaisweets" target="_blank" rel="noopener noreferrer">Facebook</a>

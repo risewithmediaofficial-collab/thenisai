@@ -37,16 +37,28 @@ export default function PreOrderAlert() {
   if (isStaffRoute) return null;
 
   useEffect(() => {
-    // Show alert message promptly after user opens the website
+    // Check if user already dismissed the prompt in this session
+    try {
+      if (sessionStorage.getItem('thenisai_preorder_alert_dismissed') === 'true') {
+        return;
+      }
+    } catch {
+      // Ignore storage errors
+    }
+
+    // Show alert message after user explores the website
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 650);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, []);
 
   const handleGoToPreOrder = () => {
     setIsOpen(false);
+    try {
+      sessionStorage.setItem('thenisai_preorder_alert_dismissed', 'true');
+    } catch {}
     window.location.hash = '#menu';
     navigateTo('menu');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -55,6 +67,9 @@ export default function PreOrderAlert() {
   const handleDismiss = () => {
     setIsOpen(false);
     setDismissed(true);
+    try {
+      sessionStorage.setItem('thenisai_preorder_alert_dismissed', 'true');
+    } catch {}
   };
 
   return (

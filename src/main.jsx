@@ -3,16 +3,8 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import './index.css'
 import './stardust.css'
+import './kanti-style.css'
 
-// Brand Typography: Lato (Sans), Great Vibes (Script), Cormorant Garamond (Serif)
-import '@fontsource/lato/300.css';
-import '@fontsource/lato/400.css';
-import '@fontsource/lato/700.css';
-import '@fontsource/great-vibes/400.css';
-import '@fontsource/cormorant-garamond/400.css';
-import '@fontsource/cormorant-garamond/500.css';
-import '@fontsource/cormorant-garamond/600.css';
-import '@fontsource/cormorant-garamond/700.css';
 import { Provider } from 'react-redux';
 import { store } from './store';
 

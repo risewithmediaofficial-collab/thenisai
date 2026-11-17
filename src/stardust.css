@@ -9,17 +9,21 @@
      - High Contrast Text: #1C0F08 (Headings), #5E4B3E (Body)
    ========================================================================== */
 
-/* --- Font Families --- */
-.font-lato {
-  font-family: 'Lato', system-ui, -apple-system, sans-serif !important;
+/* --- Font Families (Mapped strictly to Outfit & Shantell Sans) --- */
+.font-lato,
+.font-ui,
+.font-outfit {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
-.font-garamond {
-  font-family: 'Cormorant Garamond', Garamond, Georgia, serif !important;
+.font-garamond,
+.font-serif {
+  font-family: 'Shantell Sans', 'Outfit', cursive, sans-serif !important;
 }
 
-.font-script {
-  font-family: 'Great Vibes', cursive !important;
+.font-script,
+.font-shantell {
+  font-family: 'Shantell Sans', cursive !important;
 }
 
 /* --- Container & Universal Foundations --- */

@@ -25,6 +25,7 @@ dist-ssr
 backend/data/backup_*.json
 test-results/
 playwright-report/
+.playwright-mcp/
 
 
 .agents/

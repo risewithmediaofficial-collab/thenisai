@@ -9,56 +9,42 @@ export default function HeroSection() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleStory = () => {
-    window.location.hash = '#story';
-    navigateTo('story');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const scrollToBestsellers = () => {
-    const el = document.querySelector('#bestsellers');
+  const handleGifting = () => {
+    const el = document.getElementById('gifting-banner');
     if (el) {
-      if (window.__lenis) {
-        window.__lenis.scrollTo('#bestsellers', { offset: -20, duration: 0.9 });
-      } else {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
+      el.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.location.hash = '#collection';
+      navigateTo('storefront');
     }
   };
 
   return (
-    <section id="hero" className="stardust-hero">
-      <div className="stardust-hero__container">
-        <div className="stardust-hero__grid">
-          {/* Left Column: Typography & CTAs with Exact Font Pairings */}
-          <div className="stardust-hero__content">
-            <span className="stardust-hero__tag font-lato">
-              EST. 2006 · BANGALORE–SALEM HIGHWAY (NH 44) · KRISHNAGIRI
+    <section className="ks-hero">
+      <div className="ks-container">
+        <div className="ks-hero__grid">
+          {/* Left Column: Headline & Action Buttons */}
+          <div className="ks-hero__content">
+            <span className="ks-hero__kicker">
+              Krishnagiri Landmark · Bangalore–Salem Highway (NH 44)
             </span>
 
-            <h1 className="stardust-hero__title font-garamond">
-              Thenisai Sweets
-              <span className="stardust-hero__script font-script">
-                The Art of Pure Milk Confectionery
-              </span>
+            <h1 className="ks-hero__title">
+              Authentic Sweets &amp; Bakes, Handcrafted Fresh Daily
             </h1>
 
-            {/* Unique Shop Detailing Pills */}
-            <div className="stardust-hero__pills font-lato" style={{ marginTop: '16px', marginBottom: '24px' }}>
-              <span className="stardust-hero__pill">● 100% Pure Cow Milk</span>
-              <span className="stardust-hero__pill">● 4-Hr Brass Uruli Simmer</span>
-              <span className="stardust-hero__pill">● Zero Chemical Essences</span>
-              <span className="stardust-hero__pill">● Zero-Wait Counter Pickup</span>
-            </div>
+            <p className="ks-hero__desc">
+              From slow-simmered Krishnagiri Palkova made with 100% pure cow milk to rich ghee Mysore Pak and crispy highway savouries — prepared in traditional brass urulis for travellers and celebrations.
+            </p>
 
-            <div className="stardust-hero__buttons font-lato">
+            <div className="ks-hero__actions">
               <button
                 type="button"
-                className="stardust-btn stardust-btn--primary"
+                className="ks-hero__btn-primary"
                 onClick={handlePreOrder}
               >
-                <span>Pre-Order Sweets Online</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <span>Pre-Order for Pickup</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="7" y1="17" x2="17" y2="7" />
                   <polyline points="7 7 17 7 17 17" />
                 </svg>
@@ -66,39 +52,23 @@ export default function HeroSection() {
 
               <button
                 type="button"
-                className="stardust-btn stardust-btn--outline-light"
-                onClick={handleStory}
+                className="ks-hero__btn-secondary"
+                onClick={handleGifting}
               >
-                <span>Our 20-Year Heritage</span>
+                <span>Festive Sweet Boxes</span>
               </button>
-            </div>
-
-            {/* Scroll Indicator */}
-            <div
-              className="stardust-hero__scroll font-lato"
-              onClick={scrollToBestsellers}
-              role="button"
-              tabIndex={0}
-            >
-              <div className="stardust-hero__mouse-icon">
-                <span className="stardust-hero__mouse-wheel" />
-              </div>
-              <span>Scroll to explore confectionery</span>
             </div>
           </div>
 
-          {/* Right Column: Real Sweets Platter Image from Provided Assets */}
-          <div className="stardust-hero__media">
-            <div className="stardust-hero__platter-wrap">
+          {/* Right Column: Clean Food Photography */}
+          <div className="ks-hero__media">
+            <div className="ks-hero__img-frame">
               <img
                 src="/images/products/sweets_platter_hero.jpg"
-                alt="Thenisai Traditional Sweets Platter"
-                className="stardust-hero__platter-img"
+                alt="Thenisai Artisanal Sweets Platter"
+                className="ks-hero__img"
                 loading="eager"
               />
-              <div className="stardust-hero__platter-badge font-lato">
-                <span>⭐ Fresh Morning Batch · NH 44</span>
-              </div>
             </div>
           </div>
         </div>

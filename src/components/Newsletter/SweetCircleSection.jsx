@@ -15,54 +15,78 @@ export default function SweetCircleSection() {
   };
 
   return (
-    <section id="contact" className="stardust-section stardust-section--circle">
-      <div className="stardust-container">
-        <div className="stardust-circle__box font-lato">
-          <div className="stardust-pill-badge" style={{ marginBottom: '14px' }}>
-            <span>Loved by 2,000+ sweet lovers across NH 44</span>
+    <section className="ks-section" style={{ paddingBottom: 0 }}>
+      <div className="ks-container">
+        <div style={{
+          background: 'linear-gradient(135deg, #FFF9EE 0%, #FAF2E3 100%)',
+          border: '1px solid var(--ks-border)',
+          borderRadius: 'var(--ks-radius-lg)',
+          padding: 'clamp(28px, 4vw, 44px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '24px',
+        }}>
+          <div>
+            <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+              Stay Updated
+            </span>
+            <h3 style={{
+              fontFamily: 'var(--ks-font-serif)',
+              fontSize: 'clamp(22px, 2.5vw, 30px)',
+              fontWeight: 700,
+              color: 'var(--ks-charcoal)',
+              margin: '0 0 6px 0',
+            }}>
+              Join Thenisai Sweet Circle
+            </h3>
+            <p style={{
+              fontSize: '13.5px',
+              color: 'var(--ks-muted)',
+              margin: 0,
+            }}>
+              Receive fresh morning batch alerts &amp; festive sweet box offers directly on WhatsApp or Email.
+            </p>
           </div>
 
-          <h2 className="stardust-section__title font-garamond" style={{ fontSize: 'clamp(28px, 4vw, 42px)', marginBottom: '8px' }}>
-            Join Our Sweet Circle
-          </h2>
-
-          <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginBottom: '24px' }}>
-            Fresh Batches · Highway Specials · Festive Gift Boxes
-          </span>
-
-          {/* Form */}
           {submitted ? (
-            <div className="stardust-circle__success font-lato">
-              <span>✓ Thank you! We have received your contact. Visit us on NH 44 near HP Bunk!</span>
-            </div>
+            <span style={{
+              fontSize: '13.5px',
+              fontWeight: 700,
+              color: 'var(--ks-maroon)',
+            }}>
+              ✓ Thank you! We will alert you about fresh batches on NH 44.
+            </span>
           ) : (
-            <form onSubmit={handleSubmit} className="stardust-circle__form">
+            <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <input
                 type="text"
-                placeholder="Enter your phone or email..."
+                placeholder="Enter email or WhatsApp number..."
                 value={contact}
                 onChange={(e) => setContact(e.target.value)}
-                className="stardust-circle__input font-lato"
+                style={{
+                  padding: '11px 18px',
+                  borderRadius: 'var(--ks-radius-pill)',
+                  border: '1px solid var(--ks-border)',
+                  background: '#FFFFFF',
+                  fontFamily: 'var(--ks-font-ui)',
+                  fontSize: '13px',
+                  color: 'var(--ks-charcoal)',
+                  outline: 'none',
+                  minWidth: '240px',
+                }}
                 required
               />
-              <button type="submit" className="stardust-btn stardust-btn--primary">
-                <span>Subscribe</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="7" y1="17" x2="17" y2="7" />
-                  <polyline points="7 7 17 7 17 17" />
-                </svg>
+              <button
+                type="submit"
+                className="ks-hero__btn-primary"
+                style={{ padding: '11px 24px', fontSize: '13px' }}
+              >
+                Subscribe ↗
               </button>
             </form>
           )}
-
-          {/* Quick Highway Info */}
-          <div className="stardust-circle__meta font-lato">
-            <span>📍 Nattamai Kottai, Near HP Bunk, NH 44, Krishnagiri</span>
-            <span>·</span>
-            <span>📞 +91 93448 93547</span>
-            <span>·</span>
-            <span>⏰ 6:00 AM – 10:30 PM Daily</span>
-          </div>
         </div>
       </div>
     </section>

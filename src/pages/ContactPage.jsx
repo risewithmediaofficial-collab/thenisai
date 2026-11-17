@@ -23,210 +23,342 @@ export default function ContactPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleMaps = () => {
+    window.open('https://maps.google.com/?q=Thenisai+Palkova+and+Sweets+Krishnagiri', '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="stardust-page stardust-page--contact">
-      {/* Header Banner with Exact Font Pairings */}
-      <section className="stardust-story-hero">
-        <div className="stardust-container">
-          <span className="stardust-story-tag font-lato">HIGHWAY BOUTIQUE &amp; INQUIRIES</span>
-          <span className="font-script" style={{ fontSize: '40px', color: '#E8C06A', display: 'block', marginBottom: '6px' }}>
-            A Warm Welcome on NH 44
+    <div className="ks-page">
+      {/* 1. Header Banner (Kanti Sweets Style) */}
+      <section style={{
+        background: 'linear-gradient(135deg, #FFF9EE 0%, #FAF2E3 100%)',
+        borderBottom: '1px solid var(--ks-border)',
+        padding: 'clamp(36px, 5vw, 56px) 0',
+      }}>
+        <div className="ks-container">
+          <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '6px' }}>
+            Store Locator &amp; Inquiries
           </span>
-          <h1 className="stardust-story-title font-garamond" style={{ marginBottom: '8px' }}>
-            Visit Us &amp; Bulk Pre-Orders
+          <h1 style={{
+            fontFamily: 'var(--ks-font-serif)',
+            fontSize: 'clamp(30px, 4vw, 48px)',
+            fontWeight: 700,
+            color: 'var(--ks-charcoal)',
+            margin: '0 0 12px 0',
+            lineHeight: 1.2,
+          }}>
+            Visit Our Highway Boutique &amp; Bulk Orders Desk
           </h1>
-          <p className="font-garamond italic" style={{ fontSize: '20px', color: '#E8C06A', margin: '8px 0 0' }}>
-            Boutique Storefront · Wedding &amp; Corporate Sweet Boxes · NH 44 Krishnagiri
+          <p style={{
+            fontSize: '15px',
+            color: 'var(--ks-muted)',
+            margin: 0,
+            maxWidth: '680px',
+            lineHeight: 1.6,
+          }}>
+            Located right on the Bangalore–Salem Highway (NH 44), Krishnagiri. The preferred pitstop for fresh hot Palkova, festive gift hampers, and wedding bulk orders.
           </p>
         </div>
       </section>
 
-      {/* Contact Content Grid */}
-      <section className="stardust-section stardust-section--contact-body font-lato">
-        <div className="stardust-container">
-          <div className="stardust-contact-grid">
-            {/* Left: Boutique Information & Directions */}
-            <div className="stardust-contact-info-col">
-              <span className="stardust-pill-badge">Boutique Information</span>
-              <span className="font-script" style={{ fontSize: '28px', color: '#C59334', display: 'block', marginTop: '10px' }}>
-                Krishnagiri Landmark
-              </span>
-              <h2 className="stardust-section__title font-garamond" style={{ marginTop: '2px', marginBottom: '24px' }}>
-                Highway Pitstop Experience
-              </h2>
+      {/* 2. Main Grid: Store Details & Bulk Inquiry Form */}
+      <section className="ks-section">
+        <div className="ks-container">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: '32px',
+          }}>
+            {/* Left Column: Boutique Information */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{
+                background: '#FFFFFF',
+                border: '1px solid var(--ks-border)',
+                borderRadius: 'var(--ks-radius-md)',
+                padding: '24px',
+                boxShadow: 'var(--ks-card-shadow)',
+              }}>
+                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>📍</span>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
+                  HIGHWAY BOUTIQUE ADDRESS
+                </h3>
+                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
+                  Thenisai Palkova &amp; Sweets, Nattamai Kottai,<br />
+                  Opposite to HP Petrol Bunk, Bangalore–Salem Highway (NH 44),<br />
+                  Krishnagiri, Tamil Nadu &ndash; 635001.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleMaps}
+                  className="ks-hero__btn-primary"
+                  style={{ padding: '9px 20px', fontSize: '12.5px' }}
+                >
+                  <span>Open in Google Maps</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="3 11 22 2 13 21 11 13 3 11" />
+                  </svg>
+                </button>
+              </div>
 
-              <div className="stardust-info-cards">
-                <div className="stardust-info-card">
-                  <div className="stardust-info-icon">📍</div>
-                  <div>
-                    <h3 className="stardust-info-label">Address</h3>
-                    <p className="stardust-info-val">
-                      Thenisai Palkova &amp; Sweets, Nattamai Kottai,<br />
-                      Near HP Petrol Bunk, Bangalore–Salem Highway (NH 44),<br />
-                      Krishnagiri, Tamil Nadu &ndash; 635001.
-                    </p>
-                    <a
-                      href="https://maps.google.com/?q=Thenisai+Sweets+Krishnagiri"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="stardust-link-btn"
-                    >
-                      Open in Google Maps ↗
-                    </a>
-                  </div>
-                </div>
+              <div style={{
+                background: '#FFFFFF',
+                border: '1px solid var(--ks-border)',
+                borderRadius: 'var(--ks-radius-md)',
+                padding: '24px',
+                boxShadow: 'var(--ks-card-shadow)',
+              }}>
+                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>⏰</span>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
+                  OPERATING TIMINGS
+                </h3>
+                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: 0 }}>
+                  Monday &ndash; Sunday: <strong>6:00 AM &ndash; 10:30 PM Daily</strong><br />
+                  Fresh hot morning Palkova batches available starting 7:30 AM every morning.
+                </p>
+              </div>
 
-                <div className="stardust-info-card">
-                  <div className="stardust-info-icon">⏰</div>
-                  <div>
-                    <h3 className="stardust-info-label">Store Hours</h3>
-                    <p className="stardust-info-val">
-                      Monday &ndash; Sunday: <strong>6:00 AM &ndash; 10:30 PM</strong><br />
-                      Fresh hot Palkova batches available starting 7:30 AM daily.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="stardust-info-card">
-                  <div className="stardust-info-icon">📞</div>
-                  <div>
-                    <h3 className="stardust-info-label">Direct Contact</h3>
-                    <p className="stardust-info-val">
-                      Counter / Orders: <strong>+91 93448 93547</strong><br />
-                      WhatsApp: <strong>+91 93448 93547</strong>
-                    </p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
-                      <a href="tel:+919344893547" className="stardust-btn stardust-btn--primary" style={{ padding: '7px 16px', fontSize: '12px' }}>
-                        Call Boutique
-                      </a>
-                      <a href="https://wa.me/919344893547" target="_blank" rel="noopener noreferrer" className="stardust-btn stardust-btn--outline-dark" style={{ padding: '7px 16px', fontSize: '12px' }}>
-                        WhatsApp Us
-                      </a>
-                    </div>
-                  </div>
-                </div>
+              <div style={{
+                background: '#FFFFFF',
+                border: '1px solid var(--ks-border)',
+                borderRadius: 'var(--ks-radius-md)',
+                padding: '24px',
+                boxShadow: 'var(--ks-card-shadow)',
+              }}>
+                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>📞</span>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
+                  DIRECT CONTACT &amp; WHATSAPP
+                </h3>
+                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
+                  Counter &amp; Order Desk: <strong>+91 93448 93547</strong>
+                </p>
+                <a
+                  href="https://wa.me/919344893547?text=Hi%20Thenisai%20Sweets"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ks-hero__btn-secondary"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '9px 20px',
+                    fontSize: '12.5px',
+                  }}
+                >
+                  <span>Chat on WhatsApp</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="7" y1="17" x2="17" y2="7" />
+                    <polyline points="7 7 17 7 17 17" />
+                  </svg>
+                </a>
               </div>
             </div>
 
-            {/* Right: Bulk / Wedding Pre-Order Form */}
-            <div className="stardust-contact-form-col">
-              <div className="stardust-card" style={{ padding: 'clamp(18px, 4vw, 32px)' }}>
-                <span className="stardust-story-tag">SPECIAL OCCASIONS</span>
-                <span className="font-script" style={{ fontSize: '24px', color: '#C59334', display: 'block', marginTop: '4px' }}>
-                  Auspicious Celebrations
-                </span>
-                <h3 className="stardust-card__title font-garamond" style={{ fontSize: '26px', marginTop: '2px', marginBottom: '8px' }}>
-                  Wedding &amp; Bulk Pre-Order
-                </h3>
-                <p style={{ color: '#687B72', fontSize: '13.5px', marginBottom: '22px' }}>
-                  Planning an auspicious event? Pre-order custom gift boxes, signature Palkova trays, or travel snack hampers.
-                </p>
+            {/* Right Column: Bulk Inquiries & Gifting Form */}
+            <div style={{
+              background: '#FFFFFF',
+              border: '1px solid var(--ks-border)',
+              borderRadius: 'var(--ks-radius-md)',
+              padding: 'clamp(24px, 4vw, 36px)',
+              boxShadow: 'var(--ks-card-shadow)',
+            }}>
+              <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+                Festive &amp; Corporate Desk
+              </span>
+              <h2 style={{
+                fontFamily: 'var(--ks-font-serif)',
+                fontSize: '26px',
+                fontWeight: 700,
+                color: 'var(--ks-charcoal)',
+                margin: '0 0 10px 0',
+              }}>
+                Wedding &amp; Bulk Orders Inquiry
+              </h2>
+              <p style={{
+                fontSize: '13.5px',
+                color: 'var(--ks-muted)',
+                margin: '0 0 24px 0',
+                lineHeight: 1.5,
+              }}>
+                Get direct boutique quotes for custom sweet boxes, wedding return gifts, and company festive hampers.
+              </p>
 
-                {submitted ? (
-                  <div className="stardust-circle__success" style={{ background: '#FBF3E2', padding: '24px', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(197, 147, 52, 0.25)' }}>
-                    <h4 className="font-garamond" style={{ fontSize: '22px', color: '#1C0F08', margin: '0 0 8px' }}>
-                      Inquiry Received!
-                    </h4>
-                    <p style={{ color: '#6B5749', fontSize: '13.5px', margin: '0 0 16px' }}>
-                      Thank you, {name}. Our sweet master will call you at {phone} within 2 hours to confirm menu and tasting samples.
-                    </p>
-                    <button type="button" className="stardust-btn stardust-btn--primary" onClick={handleGoToMenu}>
-                      Browse Pre-Order Menu
-                    </button>
+              {submitted ? (
+                <div style={{
+                  background: 'var(--ks-primary-light)',
+                  border: '1px solid var(--ks-primary)',
+                  borderRadius: 'var(--ks-radius-md)',
+                  padding: '24px',
+                  textAlign: 'center',
+                }}>
+                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '10px' }}>✓</span>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ks-primary-dark)', margin: '0 0 6px 0' }}>
+                    Inquiry Received!
+                  </h3>
+                  <p style={{ fontSize: '13px', color: 'var(--ks-charcoal)', margin: '0 0 16px 0' }}>
+                    Our Krishnagiri boutique manager will call you within 2 hours with customized sweet box options and bulk pricing.
+                  </p>
+                  <button
+                    type="button"
+                    className="ks-hero__btn-primary"
+                    onClick={handleGoToMenu}
+                    style={{ fontSize: '12.5px', padding: '9px 20px' }}
+                  >
+                    Browse Sweets Menu ↗
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      Inquiry Category
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {['wedding', 'corporate', 'family'].map((type) => (
+                        <button
+                          key={type}
+                          type="button"
+                          onClick={() => setInquiryType(type)}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: 'var(--ks-radius-sm)',
+                            border: '1px solid',
+                            borderColor: inquiryType === type ? 'var(--ks-primary)' : 'var(--ks-border)',
+                            background: inquiryType === type ? 'var(--ks-primary-light)' : '#FFFFFF',
+                            color: inquiryType === type ? 'var(--ks-primary-dark)' : 'var(--ks-charcoal)',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      Your Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Enter your name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '11px 16px',
+                        borderRadius: 'var(--ks-radius-sm)',
+                        border: '1px solid var(--ks-border)',
+                        fontSize: '13.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      Mobile / WhatsApp Number
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="10-digit mobile number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '11px 16px',
+                        borderRadius: 'var(--ks-radius-sm)',
+                        border: '1px solid var(--ks-border)',
+                        fontSize: '13.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
-                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                        Event Type
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                        Event Date
                       </label>
-                      <select
-                        value={inquiryType}
-                        onChange={(e) => setInquiryType(e.target.value)}
-                        className="stardust-form-input"
-                      >
-                        <option value="wedding">Wedding / Reception (Kalyanam Sweets)</option>
-                        <option value="corporate">Corporate / Festival Gifting (Diwali / Pongal)</option>
-                        <option value="family">Family Function / Seemantham / Birthday</option>
-                        <option value="travel">NH 44 Travel Bulk Pack</option>
-                      </select>
-                    </div>
-
-                    <div className="stardust-form-row-2col">
-                      <div>
-                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                          Your Name *
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Your Name"
-                          className="stardust-form-input"
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                          Phone Number *
-                        </label>
-                        <input
-                          type="tel"
-                          required
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="10-digit mobile"
-                          className="stardust-form-input"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="stardust-form-row-2col">
-                      <div>
-                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                          Event / Pickup Date
-                        </label>
-                        <input
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          className="stardust-form-input"
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                          Approx. Quantity (kg / boxes)
-                        </label>
-                        <input
-                          type="text"
-                          value={guestCount}
-                          onChange={(e) => setGuestCount(e.target.value)}
-                          placeholder="e.g. 25 kg / 100 boxes"
-                          className="stardust-form-input"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: 600, color: '#31443B', display: 'block', marginBottom: '6px' }}>
-                        Special Requests or Selected Sweets
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Tell us your preferences (e.g. Signature Palkova, Kaju Katli, Mysore Pak, Spicy Seedai...)"
-                        className="stardust-form-input"
-                        style={{ resize: 'vertical' }}
+                      <input
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '11px 12px',
+                          borderRadius: 'var(--ks-radius-sm)',
+                          border: '1px solid var(--ks-border)',
+                          fontSize: '13px',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
                       />
                     </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                        Box Quantity
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 100 boxes"
+                        value={guestCount}
+                        onChange={(e) => setGuestCount(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '11px 12px',
+                          borderRadius: 'var(--ks-radius-sm)',
+                          border: '1px solid var(--ks-border)',
+                          fontSize: '13px',
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
 
-                    <button type="submit" className="stardust-btn stardust-btn--primary" style={{ width: '100%', marginTop: '6px' }}>
-                      Submit Bulk Pre-Order Request
-                    </button>
-                  </form>
-                )}
-              </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      Specific Sweets or Customization Notes
+                    </label>
+                    <textarea
+                      rows={3}
+                      placeholder="E.g., 500g boxes with Signature Palkova, Mysore Pak, and Kaju Katli for wedding on NH 44"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '11px 16px',
+                        borderRadius: 'var(--ks-radius-sm)',
+                        border: '1px solid var(--ks-border)',
+                        fontSize: '13.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="ks-hero__btn-primary"
+                    style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                  >
+                    <span>Submit Bulk Inquiry</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>

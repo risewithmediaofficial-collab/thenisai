@@ -1,0 +1,1476 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+/* ==============================================================================
+   THENISAI CONFECTIONERY — LUXURY E-COMMERCE DESIGN SYSTEM
+   Palette: Royal Thenisai Gold (#C59334), Deep Maroon Accent (#7B1812),
+   Ivory (#FAF7F2), Pure White (#FFFFFF), Deep Charcoal/Espresso (#1F1610)
+   Typography: ONLY Outfit (Clean modern UI) + Shantell Sans (Artisanal Display)
+   ============================================================================== */
+
+:root {
+  --ks-primary: #C59334;
+  --ks-primary-dark: #A97922;
+  --ks-primary-light: #FDF6E9;
+  --ks-maroon: #7B1812;
+  --ks-maroon-dark: #63120D;
+  --ks-maroon-light: #FBF1F0;
+  --ks-charcoal: #1F1610;
+  --ks-text: #2D241E;
+  --ks-muted: #6B5E55;
+  --ks-bg: #FFFFFF;
+  --ks-bg-soft: #FAF7F2;
+  --ks-border: #E8DFD3;
+  --ks-border-light: #F2ECE3;
+  --ks-card-shadow: 0 4px 16px rgba(31, 22, 16, 0.06);
+  --ks-card-hover: 0 12px 32px rgba(31, 22, 16, 0.12);
+  --ks-radius-sm: 8px;
+  --ks-radius-md: 14px;
+  --ks-radius-lg: 20px;
+  --ks-radius-pill: 9999px;
+  --ks-font-ui: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ks-font-serif: 'Shantell Sans', 'Outfit', cursive, sans-serif;
+}
+
+/* Base resets & typography */
+body {
+  font-family: var(--ks-font-ui) !important;
+  color: var(--ks-text) !important;
+  background-color: var(--ks-bg) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Global utility classes for the 2 approved fonts */
+.font-outfit,
+.font-ui,
+.font-lato {
+  font-family: 'Outfit', sans-serif !important;
+}
+
+.font-shantell,
+.font-display,
+.font-script,
+.font-garamond {
+  font-family: 'Shantell Sans', cursive, sans-serif !important;
+}
+
+.ks-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* ==============================================================================
+   1. TOP ANNOUNCEMENT / UTILITY BAR (Kanti Sweets Style)
+   ============================================================================== */
+.ks-topbar {
+  background: var(--ks-maroon);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+  z-index: 1002;
+}
+
+.ks-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ks-topbar__left,
+.ks-topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.ks-topbar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #FFFFFF;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.ks-topbar__sep {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 12px;
+}
+
+.ks-topbar__item strong {
+  color: #F8D68B;
+  font-weight: 700;
+}
+
+.ks-topbar__link {
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.ks-topbar__link:hover {
+  color: #F8D68B;
+}
+
+/* ==============================================================================
+   2. MAIN HEADER & MINIMAL CLEAN NAVIGATION
+   ============================================================================== */
+.ks-header {
+  background: #FFFFFF;
+  border-bottom: 1px solid var(--ks-border);
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  box-shadow: 0 2px 10px rgba(31, 22, 16, 0.03);
+}
+
+.ks-header__main {
+  padding: 12px 0;
+}
+
+.ks-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.ks-header__logo-wrap {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.ks-header__logo {
+  height: 48px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.ks-header__logo-wrap:hover .ks-header__logo {
+  transform: scale(1.02);
+}
+
+/* Desktop Clean Nav Links */
+.ks-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.ks-nav-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ks-charcoal);
+  text-decoration: none;
+  padding: 6px 0;
+  position: relative;
+  transition: color 0.15s ease;
+}
+
+.ks-nav-link:hover,
+.ks-nav-link.is-active {
+  color: var(--ks-maroon);
+}
+
+.ks-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ks-maroon);
+  transform: scaleX(0);
+  transition: transform 0.2s ease;
+}
+
+.ks-nav-link:hover::after,
+.ks-nav-link.is-active::after {
+  transform: scaleX(1);
+}
+
+/* Header Actions */
+.ks-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.ks-preorder-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: var(--ks-radius-pill);
+  background: var(--ks-primary);
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(197, 147, 52, 0.25);
+}
+
+.ks-preorder-btn:hover {
+  background: var(--ks-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(197, 147, 52, 0.35);
+}
+
+.ks-mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 6px;
+  color: var(--ks-charcoal);
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.ks-mobile-toggle:hover {
+  background: var(--ks-bg-soft);
+}
+
+/* Mobile Drawer */
+.ks-mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ks-mobile-menu-drawer {
+  width: 85%;
+  max-width: 320px;
+  height: 100%;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  animation: ksDrawerSlide 0.25s ease-out;
+}
+
+@keyframes ksDrawerSlide {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.ks-mobile-menu-drawer__header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--ks-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ks-mobile-menu-drawer__close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--ks-muted);
+  cursor: pointer;
+  padding: 6px;
+}
+
+.ks-mobile-menu-drawer__nav {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+
+.ks-mobile-menu-drawer__nav a {
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ks-charcoal);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.ks-mobile-menu-drawer__nav a:hover {
+  background: var(--ks-bg-soft);
+  color: var(--ks-maroon);
+  border-left-color: var(--ks-maroon);
+}
+
+@media (max-width: 992px) {
+  .ks-header__nav {
+    display: none;
+  }
+  .ks-mobile-toggle {
+    display: inline-flex;
+  }
+}
+
+/* ==============================================================================
+   3. HERO BANNER (Kanti Sweets Style High-Impact Showcase)
+   ============================================================================== */
+.ks-hero {
+  background: linear-gradient(135deg, #FFF9EE 0%, #FAF2E3 100%);
+  border-bottom: 1px solid var(--ks-border);
+  padding: clamp(36px, 5vw, 64px) 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.ks-hero__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 64px);
+}
+
+.ks-hero__kicker {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ks-maroon);
+  margin-bottom: 12px;
+}
+
+.ks-hero__title {
+  font-family: var(--ks-font-serif);
+  font-size: clamp(34px, 4.4vw, 54px);
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  line-height: 1.15;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.01em;
+}
+
+.ks-hero__title span {
+  color: var(--ks-maroon);
+  font-style: italic;
+}
+
+.ks-hero__desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ks-muted);
+  margin: 0 0 28px 0;
+  max-width: 520px;
+}
+
+.ks-hero__actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ks-hero__btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 30px;
+  border-radius: var(--ks-radius-pill);
+  background: var(--ks-maroon);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 6px 18px rgba(123, 24, 18, 0.25);
+}
+
+.ks-hero__btn-primary:hover {
+  background: var(--ks-maroon-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(123, 24, 18, 0.35);
+}
+
+.ks-hero__btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: var(--ks-radius-pill);
+  background: #FFFFFF;
+  color: var(--ks-charcoal);
+  border: 1px solid var(--ks-border);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ks-hero__btn-secondary:hover {
+  border-color: var(--ks-primary);
+  color: var(--ks-primary-dark);
+  background: #FFFDF9;
+}
+
+.ks-hero__media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ks-hero__img-frame {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  border-radius: var(--ks-radius-lg);
+  overflow: hidden;
+  box-shadow: 0 20px 48px rgba(31, 22, 16, 0.16);
+  border: 4px solid #FFFFFF;
+}
+
+.ks-hero__img {
+  width: 100%;
+  height: 380px;
+  object-fit: cover;
+  display: block;
+}
+
+.ks-hero__float-badge {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 10px 18px;
+  border-radius: var(--ks-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ks-hero__float-badge-icon {
+  font-size: 22px;
+}
+
+.ks-hero__float-badge-text strong {
+  display: block;
+  font-size: 13px;
+  color: var(--ks-charcoal);
+}
+
+.ks-hero__float-badge-text span {
+  display: block;
+  font-size: 11px;
+  color: var(--ks-muted);
+}
+
+/* ==============================================================================
+   4. DISCOVER CATEGORIES GRID (Exact Kanti Sweets Layout)
+   ============================================================================== */
+.ks-section {
+  padding: clamp(48px, 6vw, 72px) 0;
+}
+
+.ks-section--soft {
+  background: var(--ks-bg-soft);
+}
+
+.ks-section-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+
+.ks-section-header__sub {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ks-primary-dark);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ks-section-header__title {
+  font-family: var(--ks-font-serif);
+  font-size: clamp(28px, 3.5vw, 40px);
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ks-categories-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.ks-cat-card {
+  background: #FFFFFF;
+  border-radius: var(--ks-radius-md);
+  border: 1px solid var(--ks-border);
+  overflow: hidden;
+  text-decoration: none;
+  color: var(--ks-charcoal);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.ks-cat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ks-card-hover);
+  border-color: var(--ks-primary);
+}
+
+.ks-cat-card__img-wrap {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #FDF9F3;
+  position: relative;
+}
+
+.ks-cat-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.ks-cat-card:hover .ks-cat-card__img {
+  transform: scale(1.06);
+}
+
+.ks-cat-card__body {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ks-cat-card__sub {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ks-primary-dark);
+}
+
+.ks-cat-card__name {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--ks-charcoal);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.ks-cat-card__btn {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ks-maroon);
+  transition: gap 0.2s ease;
+}
+
+.ks-cat-card:hover .ks-cat-card__btn {
+  gap: 9px;
+  color: var(--ks-primary-dark);
+}
+
+/* ==============================================================================
+   5. BESTSELLERS / PRODUCT CARDS (Kanti Sweets E-Commerce Grid)
+   ============================================================================== */
+.ks-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+.ks-product-card {
+  background: #FFFFFF;
+  border: 1px solid var(--ks-border);
+  border-radius: var(--ks-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ks-product-card:hover {
+  border-color: var(--ks-primary);
+  box-shadow: var(--ks-card-hover);
+  transform: translateY(-3px);
+}
+
+.ks-product-card__badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: var(--ks-maroon);
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.ks-product-card__img-wrap {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #FAF7F2;
+  margin-bottom: 14px;
+}
+
+.ks-product-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.ks-product-card:hover .ks-product-card__img {
+  transform: scale(1.05);
+}
+
+.ks-product-card__title {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+.ks-product-card__price-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ks-product-card__price {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--ks-charcoal);
+}
+
+.ks-product-card__weight {
+  font-size: 12px;
+  color: var(--ks-muted);
+  font-weight: 600;
+}
+
+/* Portion selector chips */
+.ks-product-card__portions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ks-portion-chip {
+  flex: 1;
+  padding: 5px 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid var(--ks-border);
+  background: var(--ks-bg-soft);
+  color: var(--ks-charcoal);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.ks-portion-chip.is-active,
+.ks-portion-chip:hover {
+  background: var(--ks-primary);
+  border-color: var(--ks-primary);
+  color: #FFFFFF;
+}
+
+.ks-product-card__btn {
+  margin-top: auto;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--ks-radius-pill);
+  background: var(--ks-primary);
+  color: #FFFFFF;
+  font-size: 12.5px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.ks-product-card__btn:hover {
+  background: var(--ks-primary-dark);
+}
+
+/* ==============================================================================
+   5B. 9:16 VERTICAL VIDEO SHOWCASE SECTION (Reels & Shorts Format)
+   ============================================================================== */
+.ks-videos-grid-916,
+.ks-videos-empty-grid-916 {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+  margin-top: 36px;
+}
+
+/* 9:16 Active Video Reel Card */
+.ks-video-card-916 {
+  width: 100%;
+  max-width: 250px;
+  aspect-ratio: 9 / 16;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #1F1610;
+  box-shadow: 0 10px 30px rgba(31, 22, 16, 0.12);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ks-video-card-916:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 40px rgba(197, 147, 52, 0.28);
+}
+
+.ks-video-card-916__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.ks-video-card-916:hover .ks-video-card-916__thumb {
+  transform: scale(1.06);
+}
+
+.ks-video-card-916__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.88) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  z-index: 2;
+}
+
+.ks-video-card-916__play-btn {
+  margin: auto auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(197, 147, 52, 0.95);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s ease;
+}
+
+.ks-video-card-916:hover .ks-video-card-916__play-btn {
+  transform: scale(1.15);
+  background: var(--ks-primary);
+}
+
+.ks-video-card-916__meta {
+  margin-top: auto;
+}
+
+.ks-video-card-916__duration {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.7);
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+
+.ks-video-card-916__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+}
+
+.ks-video-card-916__desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 9:16 Empty Reel Frame Slot */
+.ks-video-empty-slot-916 {
+  width: 100%;
+  max-width: 250px;
+  aspect-ratio: 9 / 16;
+  border-radius: 20px;
+  border: 2px dashed rgba(197, 147, 52, 0.45);
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  text-align: center;
+  position: relative;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px rgba(31, 22, 16, 0.04);
+}
+
+.ks-video-empty-slot-916:hover {
+  border-color: var(--ks-primary);
+  background: #FFFDF9;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(197, 147, 52, 0.18);
+}
+
+.ks-video-empty-slot-916__phone-notch {
+  width: 48px;
+  height: 4px;
+  background: rgba(31, 22, 16, 0.12);
+  border-radius: 99px;
+  position: absolute;
+  top: 14px;
+}
+
+.ks-video-empty-slot-916__icon-wrap {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: rgba(197, 147, 52, 0.12);
+  color: var(--ks-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.ks-video-empty-slot-916__badge {
+  background: var(--ks-maroon);
+  color: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.ks-video-empty-slot-916__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  margin: 0 0 6px 0;
+}
+
+.ks-video-empty-slot-916__text {
+  font-size: 12px;
+  color: var(--ks-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 9:16 Vertical Video Lightbox Modal */
+.ks-video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.ks-video-modal-916 {
+  background: #1F1610;
+  border-radius: 24px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 360px;
+  aspect-ratio: 9 / 16;
+  max-height: 88vh;
+  position: relative;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+}
+
+.ks-video-modal-916__media {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000000;
+}
+
+.ks-video-modal-916__iframe,
+.ks-video-modal-916__video {
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover;
+}
+
+.ks-video-modal-916__footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.9) 100%);
+  color: #FFFFFF;
+}
+
+.ks-video-modal-916__footer h3 {
+  font-size: 16px;
+  margin: 0 0 4px 0;
+  color: #F8D68B;
+}
+
+.ks-video-modal-916__footer p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0;
+}
+
+/* ==============================================================================
+   6. LUXURY GIFTING BANNER (Kanti Sweets Style)
+   ============================================================================== */
+.ks-gifting-banner {
+  background: linear-gradient(135deg, #7B1812 0%, #4D0E0A 100%);
+  color: #FFFFFF;
+  border-radius: var(--ks-radius-lg);
+  padding: clamp(36px, 5vw, 56px);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 36px;
+  box-shadow: 0 16px 40px rgba(123, 24, 18, 0.25);
+  margin-top: 24px;
+}
+
+.ks-gifting-banner__sub {
+  color: #F8D68B;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ks-gifting-banner__title {
+  font-family: var(--ks-font-serif);
+  font-size: clamp(30px, 3.8vw, 46px);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 16px 0;
+  color: #FFFFFF;
+}
+
+.ks-gifting-banner__desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.88);
+  margin: 0 0 24px 0;
+}
+
+.ks-gifting-banner__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: var(--ks-radius-pill);
+  background: #F8D68B;
+  color: #4D0E0A;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ks-gifting-banner__btn:hover {
+  background: #FFFFFF;
+  transform: translateY(-2px);
+}
+
+.ks-gifting-banner__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ks-gifting-banner__img {
+  max-width: 100%;
+  height: 280px;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.4));
+}
+
+/* ==============================================================================
+   7. TRUST & PURITY PROPOSITIONS (4 Badges)
+   ============================================================================== */
+.ks-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 40px;
+}
+
+.ks-trust-card {
+  background: #FFFFFF;
+  border: 1px solid var(--ks-border);
+  border-radius: var(--ks-radius-md);
+  padding: 22px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.ks-trust-card:hover {
+  border-color: var(--ks-primary);
+  box-shadow: var(--ks-card-shadow);
+  transform: translateY(-2px);
+}
+
+.ks-trust-card__icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.ks-trust-card__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ks-charcoal);
+  margin: 0 0 3px 0;
+}
+
+.ks-trust-card__desc {
+  font-size: 12px;
+  color: var(--ks-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ==============================================================================
+   8. STORE LOCATOR & HIGHWAY PITSTOP EXPERIENCE
+   ============================================================================== */
+.ks-store-section {
+  background: var(--ks-bg-soft);
+  border-radius: var(--ks-radius-lg);
+  border: 1px solid var(--ks-border);
+  padding: clamp(32px, 5vw, 48px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 36px;
+  margin-top: 48px;
+}
+
+.ks-store-info__eyebrow {
+  color: var(--ks-maroon);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.ks-store-info__title {
+  font-family: var(--ks-font-serif);
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  margin: 0 0 16px 0;
+  line-height: 1.2;
+}
+
+.ks-store-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.ks-store-spec-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--ks-border);
+  padding: 10px 14px;
+  border-radius: var(--ks-radius-md);
+  transition: all 0.2s ease;
+}
+
+.ks-store-spec-item:hover {
+  border-color: var(--ks-primary);
+  box-shadow: 0 4px 12px rgba(197, 147, 52, 0.1);
+}
+
+.ks-store-spec-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(197, 147, 52, 0.12);
+  color: var(--ks-primary-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.ks-store-spec-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ks-store-spec-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ks-muted);
+}
+
+.ks-store-spec-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ks-charcoal);
+  line-height: 1.4;
+}
+
+.ks-store-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ks-store-img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: var(--ks-radius-md);
+  border: 3px solid #FFFFFF;
+  box-shadow: 0 12px 32px rgba(31, 22, 16, 0.1);
+}
+
+/* ==============================================================================
+   9. REVIEWS SECTION
+   ============================================================================== */
+.ks-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.ks-review-card {
+  background: #FFFFFF;
+  border: 1px solid var(--ks-border);
+  border-radius: var(--ks-radius-md);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--ks-card-shadow);
+  transition: all 0.2s ease;
+}
+
+.ks-review-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--ks-card-hover);
+}
+
+.ks-review-stars {
+  color: #F4AC36;
+  font-size: 16px;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.ks-review-quote {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ks-text);
+  font-style: italic;
+  margin: 0 0 16px 0;
+}
+
+.ks-review-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--ks-border-light);
+  padding-top: 14px;
+}
+
+.ks-review-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ks-primary-light);
+  color: var(--ks-primary-dark);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.ks-review-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ks-charcoal);
+  margin: 0;
+}
+
+.ks-review-role {
+  font-size: 11px;
+  color: var(--ks-muted);
+}
+
+/* ==============================================================================
+   10. FOOTER (Exact Kanti Sweets Layout)
+   ============================================================================== */
+.ks-footer {
+  background: #18110B;
+  color: #FFFFFF;
+  margin-top: 60px;
+  padding: 60px 0 30px;
+  border-top: 3px solid var(--ks-primary);
+}
+
+.ks-footer__top {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 36px;
+  margin-bottom: 44px;
+}
+
+.ks-footer__logo-wrap {
+  display: inline-block;
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.ks-footer__logo {
+  height: 50px;
+  width: auto;
+  max-width: 175px;
+  object-fit: contain;
+  display: block;
+  background: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: var(--ks-radius-sm);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.ks-footer__logo:hover {
+  transform: scale(1.02);
+}
+
+.ks-footer__tagline {
+  font-size: 22px;
+  color: #F8D68B;
+  display: block;
+  margin: 4px 0 14px;
+  line-height: 1.2;
+}
+
+.ks-footer__desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  max-width: 320px;
+}
+
+.ks-footer__col-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #F8D68B;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 16px 0;
+}
+
+.ks-footer__links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ks-footer__link {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.ks-footer__link:hover {
+  color: #F8D68B;
+  padding-left: 3px;
+}
+
+.ks-footer__info-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.ks-footer__highlight-text {
+  font-size: 13px;
+  color: #8EC4A5;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.ks-footer__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-wrap: wrap;
+}
+
+.ks-footer__social-links {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ks-footer__social-links a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s ease;
+}
+
+.ks-footer__social-links a:hover {
+  color: #F8D68B;
+}
+
+/* ==============================================================================
+   RESPONSIVE DESIGN (Tablets & Mobile)
+   ============================================================================== */
+@media (max-width: 1024px) {
+  .ks-hero__grid {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .ks-hero__desc {
+    margin: 0 auto 28px;
+  }
+  .ks-hero__actions {
+    justify-content: center;
+  }
+  .ks-categories-grid,
+  .ks-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ks-gifting-banner,
+  .ks-store-section {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  .ks-gifting-banner__desc,
+  .ks-store-info__meta {
+    text-align: left;
+  }
+  .ks-trust-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ks-footer__top {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .ks-topbar__left {
+    display: none;
+  }
+  .ks-header__row {
+    flex-wrap: wrap;
+  }
+  .ks-search-wrap {
+    order: 3;
+    max-width: 100%;
+    width: 100%;
+  }
+  .ks-categories-grid,
+  .ks-products-grid,
+  .ks-reviews-grid {
+    grid-template-columns: 1fr;
+  }
+  .ks-trust-strip {
+    grid-template-columns: 1fr;
+  }
+  .ks-footer__top {
+    grid-template-columns: 1fr;
+  }
+}

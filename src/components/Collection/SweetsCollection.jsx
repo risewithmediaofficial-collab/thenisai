@@ -2,212 +2,255 @@ import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 
 const CATEGORIES = [
-  { id: 'all', label: 'All Specialties', icon: '✨' },
-  { id: 'sweets', label: 'Pure Milk Sweets', icon: '🍬' },
-  { id: 'savories', label: 'Crispy Savories', icon: '🥨' },
-  { id: 'chaat', label: 'Live Pani Puri', icon: '🧆' },
-  { id: 'beverages', label: 'Tea, Coffee & Juices', icon: '☕' },
-];
-
-const SHOWCASE_ITEMS = [
-  // 1. Traditional Sweets
   {
-    id: 'palkova',
-    category: 'sweets',
-    name: 'Signature Krishnagiri Palkova',
-    flourish: 'Our 20-Year Legend',
-    price: '₹340',
-    weight: '500g',
-    image: '/images/products/palkova_hero.webp?v=2',
+    id: 'sweets',
+    sub: 'Traditional Sweets',
+    title: 'Palkova & Milk Sweets',
+    img: '/images/products/sweets_assorted_real.jpg',
   },
   {
-    id: 'kaju-katli',
-    category: 'sweets',
-    name: 'Kaju Katli',
-    flourish: 'Pure Cashew',
-    price: '₹280',
-    weight: '250g',
-    image: '/images/products/kaju_katli_real.jpg?v=2',
+    id: 'ghee',
+    sub: 'Pure Desi Ghee',
+    title: 'Kaju Katli & Mysore Pak',
+    img: '/images/products/kaju_katli_real.jpg',
+  },
+  {
+    id: 'savories',
+    sub: 'Crunchy Savouries',
+    title: 'Kara Boondi & Namkeens',
+    img: '/images/products/savories_boondi_real.jpg',
+  },
+  {
+    id: 'chaat',
+    sub: 'Highway Live Counter',
+    title: 'Fresh Chaat & Hot Snacks',
+    img: '/images/products/panipuri_real.jpg',
+  },
+];
+const BEST_SELLERS = [
+  {
+    id: 'palkova',
+    name: 'Signature Krishnagiri Palkova',
+    img: '/images/products/palkova_card.webp',
+    basePrice: 340,
+    baseWeight: '500g',
+    portions: [
+      { label: '250g', price: 170 },
+      { label: '500g', price: 340 },
+      { label: '1kg', price: 680 },
+    ],
   },
   {
     id: 'mysore-pak',
-    category: 'sweets',
-    name: 'Royal Mysore Pak',
-    flourish: 'Pure Desi Ghee',
-    price: '₹190',
-    weight: '250g',
-    image: '/images/products/mysore_pak.webp?v=2',
+    name: 'Pure Ghee Mysore Pak',
+    img: '/images/products/mysore_pak.webp',
+    basePrice: 190,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 190 },
+      { label: '500g', price: 380 },
+      { label: '1kg', price: 760 },
+    ],
   },
   {
-    id: 'jangiri',
-    category: 'sweets',
-    name: 'Traditional Jangiri',
-    flourish: 'Crisp Sweet Swirls',
-    price: '₹280',
-    weight: '500g',
-    image: '/images/products/jangiri_real.jpg?v=2',
+    id: 'kaju-katli',
+    name: 'Silken Kaju Katli',
+    img: '/images/products/kaju_katli_real.jpg',
+    basePrice: 280,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 280 },
+      { label: '500g', price: 560 },
+      { label: '1kg', price: 1120 },
+    ],
   },
-
-  // 2. Savories & Kara Boondi
   {
     id: 'kara-boondi',
-    category: 'savories',
     name: 'Crispy Spicy Kara Boondi',
-    flourish: 'Curry Leaves & Peanuts',
-    price: '₹140',
-    weight: '250g',
-    image: '/images/products/savories_boondi_real.jpg?v=2',
-  },
-
-  // 3. Live Highway Chaat
-  {
-    id: 'pani-puri',
-    category: 'chaat',
-    name: 'Highway Special Pani Puri',
-    flourish: 'Live Chaat Counter',
-    price: '₹50',
-    weight: 'Plate (6 pcs)',
-    image: '/images/products/panipuri_real.jpg?v=2',
-  },
-
-  // 4. Beverages: Tea, Fresh Juices, Rose Milk & Filter Coffee
-  {
-    id: 'hot-tea',
-    category: 'beverages',
-    name: 'Fresh Tea',
-    flourish: 'Brewed Hot',
-    price: '₹20',
-    weight: 'Hot Cup',
-    image: '/images/products/tea_real.jpg?v=2',
-  },
-  {
-    id: 'fresh-juices',
-    category: 'beverages',
-    name: 'Fresh Juices',
-    flourish: '100% Fresh',
-    price: '₹60',
-    weight: '300ml Glass',
-    image: '/images/products/fresh_juices_real.jpg?v=2',
-  },
-  {
-    id: 'rose-milk',
-    category: 'beverages',
-    name: 'Rose Milk',
-    flourish: 'Chilled & Sweet',
-    price: '₹30',
-    weight: 'Chilled Glass',
-    image: '/images/products/rosemilk_real.jpg?v=2',
-  },
-  {
-    id: 'filter-coffee',
-    category: 'beverages',
-    name: 'Filter Coffee',
-    flourish: 'Fresh Brew',
-    price: '₹25',
-    weight: 'Hot Cup',
-    image: '/images/products/filter_coffee_real.jpg?v=2',
+    img: '/images/products/savories_boondi_real.jpg',
+    basePrice: 140,
+    baseWeight: '250g',
+    portions: [
+      { label: '250g', price: 140 },
+      { label: '500g', price: 280 },
+      { label: '1kg', price: 560 },
+    ],
   },
 ];
 
 export default function SweetsCollection() {
   const { navigateTo } = useCart();
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedPortions, setSelectedPortions] = useState({
+    palkova: '500g',
+    'mysore-pak': '250g',
+    'kaju-katli': '250g',
+    'kara-boondi': '250g',
+  });
 
-  const handleGoToPreOrders = () => {
+  const handleGoToMenu = (category = '') => {
     window.location.hash = '#menu';
     navigateTo('menu');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const filteredItems = selectedCategory === 'all'
-    ? SHOWCASE_ITEMS
-    : SHOWCASE_ITEMS.filter((item) => item.category === selectedCategory);
+  const handlePortionSelect = (prodId, portionLabel) => {
+    setSelectedPortions((prev) => ({
+      ...prev,
+      [prodId]: portionLabel,
+    }));
+  };
 
   return (
-    <section id="bestsellers" className="stardust-section stardust-section--bestsellers">
-      <div className="stardust-container">
-        {/* Section Header with Refined Typography & Clean Taglines */}
-        <div className="stardust-bestsellers__header">
-          <div>
-            <span className="font-script" style={{ fontSize: '32px', color: '#C59334', display: 'block', lineHeight: 1, marginBottom: '6px' }}>
-              Handcrafted Masterpieces &amp; Highway Favorites
+    <>
+      {/* 1. SPECIALTY CATEGORIES */}
+      <section id="categories" className="ks-section ks-section--soft">
+        <div className="ks-container">
+          <div className="ks-section-header">
+            <span className="ks-section-header__sub">
+              Fresh Daily Batches
             </span>
-            <h2 className="stardust-section__title font-garamond" style={{ margin: 0 }}>
-              Our Bestselling Confectionery &amp; Savories
+            <h2 className="ks-section-header__title">
+              Our Specialties
             </h2>
           </div>
 
-          <button
-            type="button"
-            className="stardust-btn stardust-btn--outline-dark font-lato"
-            onClick={handleGoToPreOrders}
-          >
-            <span>View All &amp; Pre-Order Online</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="7" y1="17" x2="17" y2="7" />
-              <polyline points="7 7 17 7 17 17" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Category Filter Pills Strip */}
-        <div className="stardust-collection-tabs font-lato">
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              className={`stardust-collection-tab ${selectedCategory === cat.id ? 'is-active' : ''}`}
-              onClick={() => setSelectedCategory(cat.id)}
-            >
-              <span>{cat.icon}</span>
-              <span>{cat.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Dynamic Responsive Grid: Minimalist Luxury Presentation */}
-        <div className="stardust-bestsellers__grid">
-          {filteredItems.map((item) => (
-            <div key={item.id} className="stardust-card">
-              {/* Product Real Image Frame */}
-              <div className="stardust-card__img-wrap">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="stardust-card__img"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.src = '/images/products/sweets_platter_hero.jpg?v=2';
-                  }}
-                />
-
-                <span className="stardust-card__badge-tag font-lato">
-                  {item.flourish}
-                </span>
-              </div>
-
-              {/* Card Body: Clean Title, Pricing & Action CTA */}
-              <div className="stardust-card__body font-lato" style={{ gap: '14px' }}>
-                <div className="stardust-card__header">
-                  <h3 className="stardust-card__title font-garamond">{item.name}</h3>
-                  <div style={{ textAlign: 'right' }}>
-                    <span className="stardust-card__price">{item.price}</span>
-                    <small style={{ display: 'block', fontSize: '11px', color: '#8C7769' }}>/ {item.weight}</small>
-                  </div>
+          <div className="ks-categories-grid">
+            {CATEGORIES.map((cat) => (
+              <div
+                key={cat.id}
+                className="ks-cat-card"
+                onClick={() => handleGoToMenu(cat.id)}
+              >
+                <div className="ks-cat-card__img-wrap">
+                  <img
+                    src={cat.img}
+                    alt={cat.title}
+                    className="ks-cat-card__img"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
+                    }}
+                  />
                 </div>
-
-                <button
-                  type="button"
-                  className="stardust-card__btn font-lato"
-                  onClick={handleGoToPreOrders}
-                >
-                  <span>Pre-Order for Zero-Wait Pickup ↗</span>
-                </button>
+                <div className="ks-cat-card__body">
+                  <span className="ks-cat-card__sub">{cat.sub}</span>
+                  <h3 className="ks-cat-card__name">{cat.title}</h3>
+                  <span className="ks-cat-card__btn">
+                    <span>View Delicacies</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {/* 2. CUSTOMER FAVORITES */}
+      <section id="bestsellers" className="ks-section">
+        <div className="ks-container">
+          <div style={{
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            marginBottom: '36px',
+            flexWrap: 'wrap',
+            gap: '16px',
+          }}>
+            <div>
+              <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+                Handcrafted Delights
+              </span>
+              <h2 className="ks-section-header__title" style={{ textAlign: 'left' }}>
+                Customer Favorites
+              </h2>
+            </div>
+
+            <button
+              type="button"
+              className="ks-action-link"
+              onClick={() => handleGoToMenu()}
+              style={{
+                fontSize: '13.5px',
+                fontWeight: 700,
+                color: 'var(--ks-maroon)',
+                gap: '8px',
+              }}
+            >
+              <span>Explore Full Menu</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="ks-products-grid">
+            {BEST_SELLERS.map((prod) => {
+              const currentPortion = selectedPortions[prod.id] || prod.baseWeight;
+              const portionObj = prod.portions.find((p) => p.label === currentPortion) || prod.portions[0];
+
+              return (
+                <div key={prod.id} className="ks-product-card">
+                  <div className="ks-product-card__img-wrap">
+                    <img
+                      src={prod.img}
+                      alt={prod.name}
+                      className="ks-product-card__img"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
+                      }}
+                    />
+                  </div>
+
+                  <h3 className="ks-product-card__title" title={prod.name}>
+                    {prod.name}
+                  </h3>
+
+                  <div className="ks-product-card__price-row">
+                    <span className="ks-product-card__price">₹{portionObj.price}</span>
+                    <span className="ks-product-card__weight">/ {portionObj.label}</span>
+                  </div>
+
+                  {/* Portion Selectors */}
+                  <div className="ks-product-card__portions">
+                    {prod.portions.map((p) => (
+                      <button
+                        key={p.label}
+                        type="button"
+                        className={`ks-portion-chip ${currentPortion === p.label ? 'is-active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePortionSelect(prod.id, p.label);
+                        }}
+                      >
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* CTA Button */}
+                  <button
+                    type="button"
+                    className="ks-product-card__btn"
+                    onClick={() => handleGoToMenu()}
+                  >
+                    <span>Pre-Order for Pickup</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="7" y1="17" x2="17" y2="7" />
+                      <polyline points="7 7 17 7 17 17" />
+                    </svg>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
