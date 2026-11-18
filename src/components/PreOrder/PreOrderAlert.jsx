@@ -37,6 +37,11 @@ export default function PreOrderAlert() {
   if (isStaffRoute) return null;
 
   useEffect(() => {
+    // On mobile screens (< 768px), avoid intrusive modal prompts that cover navigation and content
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      return;
+    }
+
     // Check if user already dismissed the prompt in this session
     try {
       if (sessionStorage.getItem('thenisai_preorder_alert_dismissed') === 'true') {
@@ -49,7 +54,7 @@ export default function PreOrderAlert() {
     // Show alert message after user explores the website
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 2500);
+    }, 4000);
 
     return () => clearTimeout(timer);
   }, []);

@@ -4,26 +4,26 @@ import { useCart } from '../../context/CartContext';
 const CATEGORIES = [
   {
     id: 'sweets',
-    sub: 'Traditional Sweets',
+    sub: '100% Pure Cow Milk',
     title: 'Palkova & Milk Sweets',
     img: '/images/products/sweets_assorted_real.jpg',
   },
   {
     id: 'ghee',
     sub: 'Pure Desi Ghee',
-    title: 'Kaju Katli & Mysore Pak',
+    title: 'Mysore Pak & Halwa',
     img: '/images/products/kaju_katli_real.jpg',
   },
   {
     id: 'savories',
-    sub: 'Crunchy Savouries',
-    title: 'Kara Boondi & Namkeens',
+    sub: 'Crispy & Crunchy',
+    title: 'Kara Boondi & Mixtures',
     img: '/images/products/savories_boondi_real.jpg',
   },
   {
     id: 'chaat',
     sub: 'Highway Live Counter',
-    title: 'Fresh Chaat & Hot Snacks',
+    title: 'Hot Snacks, Tea & Coffee',
     img: '/images/products/panipuri_real.jpg',
   },
 ];
@@ -107,10 +107,10 @@ export default function SweetsCollection() {
         <div className="ks-container">
           <div className="ks-section-header">
             <span className="ks-section-header__sub">
-              Fresh Daily Batches
+              Fresh From Our Kitchen
             </span>
             <h2 className="ks-section-header__title">
-              Our Specialties
+              Popular Sweets &amp; Snacks
             </h2>
           </div>
 
@@ -136,7 +136,7 @@ export default function SweetsCollection() {
                   <span className="ks-cat-card__sub">{cat.sub}</span>
                   <h3 className="ks-cat-card__name">{cat.title}</h3>
                   <span className="ks-cat-card__btn">
-                    <span>View Delicacies</span>
+                    <span>View Sweets</span>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12" />
                       <polyline points="12 5 19 12 12 19" />
@@ -162,10 +162,10 @@ export default function SweetsCollection() {
           }}>
             <div>
               <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
-                Handcrafted Delights
+                Highway Specials
               </span>
               <h2 className="ks-section-header__title" style={{ textAlign: 'left' }}>
-                Customer Favorites
+                Signature Sweets
               </h2>
             </div>
 
@@ -180,7 +180,7 @@ export default function SweetsCollection() {
                 gap: '8px',
               }}
             >
-              <span>Explore Full Menu</span>
+              <span>See All Sweets</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />

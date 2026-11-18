@@ -5,7 +5,6 @@ import HeroSection from './components/Hero/HeroSection';
 import PreOrderTopBar from './components/PreOrder/PreOrderTopBar';
 import PreOrderAlert from './components/PreOrder/PreOrderAlert';
 import { CartProvider, useCart } from './context/CartContext';
-import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLenis } from './hooks/useLenis';
 import { useScrollReveal } from './hooks/useAnimations';
@@ -59,8 +58,6 @@ function SandboxBanner({ onLogout }) {
 }
 const CheckoutModal = lazy(() => import('./components/Billing/CheckoutModal'));
 const InvoiceModal = lazy(() => import('./components/Billing/InvoiceModal'));
-const WishlistDrawer = lazy(() => import('./components/Wishlist/WishlistDrawer'));
-const CustomerAuthModal = lazy(() => import('./components/Wishlist/CustomerAuthModal'));
 
 
 // Lazy load heavy storefront sections
@@ -335,12 +332,8 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         </Suspense>
       </div>
 
-      {/* Cart Drawer, Wishlist Drawer, Customer Auth & Tax Invoice Portals */}
-      {/* Minimalist Showcase: Online Cart disabled */}
+      {/* Modals & Customer Alerts */}
       <Suspense fallback={null}>
-        <WishlistDrawer />
-        <CustomerAuthModal />
-
         <InvoiceModal />
         <PreOrderAlert />
       </Suspense>
@@ -408,9 +401,7 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <WishlistProvider>
-          <AppContent isLoaded={isLoaded} handleLoadComplete={handleLoadComplete} />
-        </WishlistProvider>
+        <AppContent isLoaded={isLoaded} handleLoadComplete={handleLoadComplete} />
       </CartProvider>
     </AuthProvider>
   );

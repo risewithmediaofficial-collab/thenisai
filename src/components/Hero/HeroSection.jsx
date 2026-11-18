@@ -26,15 +26,15 @@ export default function HeroSection() {
           {/* Left Column: Headline & Action Buttons */}
           <div className="ks-hero__content">
             <span className="ks-hero__kicker">
-              Krishnagiri Landmark · Bangalore–Salem Highway (NH 44)
+              NH 44 Highway, Krishnagiri · Since 2006
             </span>
 
             <h1 className="ks-hero__title">
-              Authentic Sweets &amp; Bakes, Handcrafted Fresh Daily
+              Pure Cow Milk Palkova &amp; Traditional Sweets
             </h1>
 
             <p className="ks-hero__desc">
-              From slow-simmered Krishnagiri Palkova made with 100% pure cow milk to rich ghee Mysore Pak and crispy highway savouries — prepared in traditional brass urulis for travellers and celebrations.
+              Freshly prepared every day using 100% pure cow milk and pure ghee. Stop by our shop on the Bangalore–Salem highway or pre-order online for instant pickup with zero waiting time.
             </p>
 
             <div className="ks-hero__actions">
@@ -55,7 +55,7 @@ export default function HeroSection() {
                 className="ks-hero__btn-secondary"
                 onClick={handleGifting}
               >
-                <span>Festive Sweet Boxes</span>
+                <span>Special Sweet Boxes</span>
               </button>
             </div>
           </div>

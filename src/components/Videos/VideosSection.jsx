@@ -50,10 +50,10 @@ export default function VideosSection() {
         {/* Minimal Section Header */}
         <div className="ks-section-header">
           <span className="ks-section-header__sub">
-            Thenisai in Motion
+            Watch Our Kitchen
           </span>
           <h2 className="ks-section-header__title">
-            Kitchen Craft &amp; Highway Stories
+            How We Make Our Sweets
           </h2>
           <p style={{
             maxWidth: '540px',
@@ -62,7 +62,7 @@ export default function VideosSection() {
             color: 'var(--ks-muted)',
             lineHeight: 1.6,
           }}>
-            Short-form 9:16 video reels showing our daily sweet making, live counters, and highway boutique.
+            See how our pure cow milk palkova and fresh ghee sweets are made daily at Krishnagiri.
           </p>
         </div>
 

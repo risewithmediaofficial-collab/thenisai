@@ -28,10 +28,10 @@ export default function CustomerReviews() {
       <div className="ks-container">
         <div className="ks-section-header">
           <span className="ks-section-header__sub">
-            Highway Commuters &amp; Families
+            Customer Reviews
           </span>
           <h2 className="ks-section-header__title">
-            Words from Our Guests
+            What Customers Say About Thenisai
           </h2>
         </div>
 

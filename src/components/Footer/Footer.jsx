@@ -35,28 +35,28 @@ export default function Footer() {
             </div>
 
             <span className="font-script ks-footer__tagline">
-              The Art of Pure Milk Confectionery &middot; Est. 2006
+              Traditional Pure Cow Milk Sweets &middot; Est. 2006
             </span>
 
             <p className="ks-footer__desc">
-              Authentic 100% pure cow milk sweets and savouries simmered in traditional brass urulis on the Bangalore–Salem Highway (NH 44), Krishnagiri.
+              Fresh cow milk Palkova and traditional sweets made daily on the Bangalore–Salem Highway (NH 44), Krishnagiri.
             </p>
           </div>
 
           {/* Col 2: Customer Pages */}
           <div>
-            <h4 className="ks-footer__col-title">Customer Pages</h4>
+            <h4 className="ks-footer__col-title">Quick Links</h4>
             <div className="ks-footer__links-list">
               <a href="#home" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('storefront', ''); }}>Home</a>
               <a href="#menu" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('menu', '#menu'); }}>Pre-Order Sweets</a>
-              <a href="#story" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our Story &amp; Heritage</a>
-              <a href="#contact" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Visit &amp; Bulk Orders</a>
+              <a href="#story" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('story', '#story'); }}>Our Heritage &amp; Story</a>
+              <a href="#contact" className="ks-footer__link" onClick={(e) => { e.preventDefault(); handleNav('contact', '#contact'); }}>Visit &amp; Contact Us</a>
             </div>
           </div>
 
-          {/* Col 3: Highway Boutique */}
+          {/* Col 3: Highway Store */}
           <div>
-            <h4 className="ks-footer__col-title">Highway Boutique</h4>
+            <h4 className="ks-footer__col-title">Highway Store</h4>
             <div className="ks-footer__links-list">
               <span className="ks-footer__info-text">NH 44 Highway Pitstop</span>
               <span className="ks-footer__info-text">Near HP Petrol Bunk</span>

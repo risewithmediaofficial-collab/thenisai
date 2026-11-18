@@ -56,17 +56,11 @@ export default defineConfig({
         manualChunks(id) {
           // ── Node modules ──────────────────────────────────────────────────
           if (id.includes('node_modules')) {
-            if (id.includes('three') || id.includes('@react-three')) {
-              return 'vendor-three';
-            }
             if (id.includes('framer-motion') || id.includes('gsap')) {
               return 'vendor-animation';
             }
             if (id.includes('react-dom') || id.includes('react/')) {
               return 'vendor-react';
-            }
-            if (id.includes('@fontsource')) {
-              return 'vendor-fonts';
             }
             if (id.includes('redux') || id.includes('@reduxjs')) {
               return 'vendor-redux';

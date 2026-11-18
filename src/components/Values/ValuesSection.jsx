@@ -26,13 +26,13 @@ export default function ValuesSection() {
         <div id="gifting-banner" className="ks-gifting-banner">
           <div className="ks-gifting-banner__content">
             <span className="ks-gifting-banner__sub">
-              Festive Gifting &amp; Bulk Celebrations
+              Gift Boxes &amp; Bulk Orders
             </span>
             <h2 className="ks-gifting-banner__title">
-              Make Every Celebration Sweeter
+              Sweet Boxes for Weddings &amp; Festivals
             </h2>
             <p className="ks-gifting-banner__desc">
-              Curated sweet boxes and gift hampers for weddings, family functions, and corporate gifting. Custom sweet assortments prepared fresh and boxed in royal packaging.
+              Freshly packed sweet gift boxes for family celebrations, highway commuters, and gifting. Choose your favorite sweets and get them packed in premium gift boxes.
             </p>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button
@@ -40,7 +40,7 @@ export default function ValuesSection() {
                 className="ks-gifting-banner__btn"
                 onClick={handlePreOrder}
               >
-                <span>Explore Gift Boxes</span>
+                <span>Order Sweet Boxes</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -65,7 +65,7 @@ export default function ValuesSection() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                <span>Bulk Wedding Inquiry</span>
+                <span>WhatsApp Bulk Inquiry</span>
               </a>
             </div>
           </div>
@@ -86,8 +86,8 @@ export default function ValuesSection() {
         {/* 2. HIGHWAY STORE LOCATOR & VISIT CARD */}
         <div className="ks-store-section" style={{ marginTop: '48px' }}>
           <div className="ks-store-info">
-            <span className="ks-store-info__eyebrow">Highway Pitstop Experience</span>
-            <h3 className="ks-store-info__title">Visit Our Krishnagiri Boutique</h3>
+            <span className="ks-store-info__eyebrow">Store Location</span>
+            <h3 className="ks-store-info__title">Visit Our Krishnagiri Sweet Shop</h3>
 
             {/* Professionally Aligned Reduced Content Specs */}
             <div className="ks-store-specs">

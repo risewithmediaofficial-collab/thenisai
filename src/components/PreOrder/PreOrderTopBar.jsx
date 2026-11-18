@@ -41,6 +41,13 @@ export default function PreOrderTopBar() {
               WhatsApp: +91 93448 93547
             </a>
           </div>
+
+          {/* Clean Single-line Mobile Announcement */}
+          <div className="ks-topbar__mobile">
+            <span onClick={handlePreOrder} style={{ cursor: 'pointer' }}>
+              <strong>Zero-Wait Counter Pickup</strong> on NH 44 · 6 AM – 10:30 PM
+            </span>
+          </div>
         </div>
       </div>
     </div>

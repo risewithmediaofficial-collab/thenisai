@@ -37,7 +37,7 @@ export default function ContactPage() {
       }}>
         <div className="ks-container">
           <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '6px' }}>
-            Store Locator &amp; Inquiries
+            Store Location &amp; Contact
           </span>
           <h1 style={{
             fontFamily: 'var(--ks-font-serif)',
@@ -47,7 +47,7 @@ export default function ContactPage() {
             margin: '0 0 12px 0',
             lineHeight: 1.2,
           }}>
-            Visit Our Highway Boutique &amp; Bulk Orders Desk
+            Visit Thenisai Sweets at Krishnagiri
           </h1>
           <p style={{
             fontSize: '15px',
@@ -56,7 +56,7 @@ export default function ContactPage() {
             maxWidth: '680px',
             lineHeight: 1.6,
           }}>
-            Located right on the Bangalore–Salem Highway (NH 44), Krishnagiri. The preferred pitstop for fresh hot Palkova, festive gift hampers, and wedding bulk orders.
+            Located directly on the Bangalore–Salem Highway (NH 44) opposite HP Petrol Bunk. Stop by for fresh hot Palkova, tea, or order bulk sweet boxes for your celebrations.
           </p>
         </div>
       </section>

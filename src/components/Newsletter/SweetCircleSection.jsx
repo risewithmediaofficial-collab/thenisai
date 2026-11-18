@@ -30,7 +30,7 @@ export default function SweetCircleSection() {
         }}>
           <div>
             <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
-              Stay Updated
+              Get Batch Updates
             </span>
             <h3 style={{
               fontFamily: 'var(--ks-font-serif)',
@@ -39,14 +39,14 @@ export default function SweetCircleSection() {
               color: 'var(--ks-charcoal)',
               margin: '0 0 6px 0',
             }}>
-              Join Thenisai Sweet Circle
+              Fresh Palkova Batch Alerts
             </h3>
             <p style={{
               fontSize: '13.5px',
               color: 'var(--ks-muted)',
               margin: 0,
             }}>
-              Receive fresh morning batch alerts &amp; festive sweet box offers directly on WhatsApp or Email.
+              Get notified when fresh morning hot palkova batches and festival sweet gift boxes are ready.
             </p>
           </div>
 
