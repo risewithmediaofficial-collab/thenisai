@@ -28,124 +28,80 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="ks-page">
-      {/* 1. Header Banner (Kanti Sweets Style) */}
-      <section style={{
-        background: 'linear-gradient(135deg, #FFF9EE 0%, #FAF2E3 100%)',
-        borderBottom: '1px solid var(--ks-border)',
-        padding: 'clamp(36px, 5vw, 56px) 0',
-      }}>
-        <div className="ks-container">
-          <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '6px' }}>
+    <div className="min-h-screen bg-[#FAF7F2] font-sans text-gray-900">
+      {/* 1. Header Banner */}
+      <section className="bg-gradient-to-b from-[#FFF9EE] to-[#FAF7F2] border-b border-amber-100/70 py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
             Store Location &amp; Contact
           </span>
-          <h1 style={{
-            fontFamily: 'var(--ks-font-serif)',
-            fontSize: 'clamp(30px, 4vw, 48px)',
-            fontWeight: 700,
-            color: 'var(--ks-charcoal)',
-            margin: '0 0 12px 0',
-            lineHeight: 1.2,
-          }}>
+          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-3">
             Visit Thenisai Sweets at Krishnagiri
           </h1>
-          <p style={{
-            fontSize: '15px',
-            color: 'var(--ks-muted)',
-            margin: 0,
-            maxWidth: '680px',
-            lineHeight: 1.6,
-          }}>
+          <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
             Located directly on the Bangalore–Salem Highway (NH 44) opposite HP Petrol Bunk. Stop by for fresh hot Palkova, tea, or order bulk sweet boxes for your celebrations.
           </p>
         </div>
       </section>
 
       {/* 2. Main Grid: Store Details & Bulk Inquiry Form */}
-      <section className="ks-section">
-        <div className="ks-container">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '32px',
-          }}>
+      <section className="py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Left Column: Boutique Information */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{
-                background: '#FFFFFF',
-                border: '1px solid var(--ks-border)',
-                borderRadius: 'var(--ks-radius-md)',
-                padding: '24px',
-                boxShadow: 'var(--ks-card-shadow)',
-              }}>
-                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>📍</span>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
-                  HIGHWAY BOUTIQUE ADDRESS
-                </h3>
-                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
+            <div className="lg:col-span-5 space-y-5">
+              {/* Address Card */}
+              <div className="bg-white border border-amber-100 rounded-2xl p-6 shadow-sm">
+                <span className="text-3xl block mb-3">📍</span>
+                <h2 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-2">
+                  Highway Boutique Address
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
                   Thenisai Palkova &amp; Sweets, Nattamai Kottai,<br />
-                  Opposite to HP Petrol Bunk, Bangalore–Salem Highway (NH 44),<br />
+                  Opposite HP Petrol Bunk, Bangalore–Salem Highway (NH 44),<br />
                   Krishnagiri, Tamil Nadu &ndash; 635001.
                 </p>
                 <button
                   type="button"
                   onClick={handleMaps}
-                  className="ks-hero__btn-primary"
-                  style={{ padding: '9px 20px', fontSize: '12.5px' }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] text-white font-semibold text-xs shadow-sm hover:shadow transition-all active:scale-95"
                 >
                   <span>Open in Google Maps</span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polygon points="3 11 22 2 13 21 11 13 3 11" />
                   </svg>
                 </button>
               </div>
 
-              <div style={{
-                background: '#FFFFFF',
-                border: '1px solid var(--ks-border)',
-                borderRadius: 'var(--ks-radius-md)',
-                padding: '24px',
-                boxShadow: 'var(--ks-card-shadow)',
-              }}>
-                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>⏰</span>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
-                  OPERATING TIMINGS
-                </h3>
-                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: 0 }}>
-                  Monday &ndash; Sunday: <strong>6:00 AM &ndash; 10:30 PM Daily</strong><br />
+              {/* Timings Card */}
+              <div className="bg-white border border-amber-100 rounded-2xl p-6 shadow-sm">
+                <span className="text-3xl block mb-3">⏰</span>
+                <h2 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-2">
+                  Operating Timings
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Monday &ndash; Sunday: <strong className="text-gray-900">6:00 AM &ndash; 10:30 PM Daily</strong><br />
                   Fresh hot morning Palkova batches available starting 7:30 AM every morning.
                 </p>
               </div>
 
-              <div style={{
-                background: '#FFFFFF',
-                border: '1px solid var(--ks-border)',
-                borderRadius: 'var(--ks-radius-md)',
-                padding: '24px',
-                boxShadow: 'var(--ks-card-shadow)',
-              }}>
-                <span style={{ fontSize: '28px', display: 'block', marginBottom: '10px' }}>📞</span>
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ks-charcoal)', margin: '0 0 8px 0' }}>
-                  DIRECT CONTACT &amp; WHATSAPP
-                </h3>
-                <p style={{ fontSize: '13.5px', color: 'var(--ks-muted)', lineHeight: 1.6, margin: '0 0 16px 0' }}>
-                  Counter &amp; Order Desk: <strong>+91 93448 93547</strong>
+              {/* Contact Card */}
+              <div className="bg-white border border-amber-100 rounded-2xl p-6 shadow-sm">
+                <span className="text-3xl block mb-3">📞</span>
+                <h2 className="text-xs font-bold tracking-widest uppercase text-gray-900 mb-2">
+                  Direct Contact &amp; WhatsApp
+                </h2>
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
+                  Counter &amp; Order Desk: <strong className="text-gray-900">+91 93448 93547</strong>
                 </p>
                 <a
                   href="https://wa.me/919344893547?text=Hi%20Thenisai%20Sweets"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ks-hero__btn-secondary"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '9px 20px',
-                    fontSize: '12.5px',
-                  }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-700 text-white font-semibold text-xs shadow-sm hover:bg-emerald-800 transition-all active:scale-95"
                 >
                   <span>Chat on WhatsApp</span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="7" y1="17" x2="17" y2="7" />
                     <polyline points="7 7 17 7 17 17" />
                   </svg>
@@ -154,83 +110,51 @@ export default function ContactPage() {
             </div>
 
             {/* Right Column: Bulk Inquiries & Gifting Form */}
-            <div style={{
-              background: '#FFFFFF',
-              border: '1px solid var(--ks-border)',
-              borderRadius: 'var(--ks-radius-md)',
-              padding: 'clamp(24px, 4vw, 36px)',
-              boxShadow: 'var(--ks-card-shadow)',
-            }}>
-              <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+            <div className="lg:col-span-7 bg-white border border-amber-100 rounded-2xl p-6 sm:p-8 shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
                 Festive &amp; Corporate Desk
               </span>
-              <h2 style={{
-                fontFamily: 'var(--ks-font-serif)',
-                fontSize: '26px',
-                fontWeight: 700,
-                color: 'var(--ks-charcoal)',
-                margin: '0 0 10px 0',
-              }}>
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                 Wedding &amp; Bulk Orders Inquiry
               </h2>
-              <p style={{
-                fontSize: '13.5px',
-                color: 'var(--ks-muted)',
-                margin: '0 0 24px 0',
-                lineHeight: 1.5,
-              }}>
+              <p className="text-sm text-gray-600 leading-relaxed mb-6">
                 Get direct boutique quotes for custom sweet boxes, wedding return gifts, and company festive hampers.
               </p>
 
               {submitted ? (
-                <div style={{
-                  background: 'var(--ks-primary-light)',
-                  border: '1px solid var(--ks-primary)',
-                  borderRadius: 'var(--ks-radius-md)',
-                  padding: '24px',
-                  textAlign: 'center',
-                }}>
-                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '10px' }}>✓</span>
-                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ks-primary-dark)', margin: '0 0 6px 0' }}>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+                  <span className="text-3xl block mb-2 text-emerald-600">✓</span>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
                     Inquiry Received!
                   </h3>
-                  <p style={{ fontSize: '13px', color: 'var(--ks-charcoal)', margin: '0 0 16px 0' }}>
+                  <p className="text-sm text-gray-600 mb-5">
                     Our Krishnagiri boutique manager will call you within 2 hours with customized sweet box options and bulk pricing.
                   </p>
                   <button
                     type="button"
-                    className="ks-hero__btn-primary"
                     onClick={handleGoToMenu}
-                    style={{ fontSize: '12.5px', padding: '9px 20px' }}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] text-white font-semibold text-xs shadow-sm"
                   >
                     Browse Sweets Menu ↗
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                       Inquiry Category
                     </label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div className="grid grid-cols-3 gap-2">
                       {['wedding', 'corporate', 'family'].map((type) => (
                         <button
                           key={type}
                           type="button"
                           onClick={() => setInquiryType(type)}
-                          style={{
-                            flex: 1,
-                            padding: '8px 12px',
-                            borderRadius: 'var(--ks-radius-sm)',
-                            border: '1px solid',
-                            borderColor: inquiryType === type ? 'var(--ks-primary)' : 'var(--ks-border)',
-                            background: inquiryType === type ? 'var(--ks-primary-light)' : '#FFFFFF',
-                            color: inquiryType === type ? 'var(--ks-primary-dark)' : 'var(--ks-charcoal)',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            cursor: 'pointer',
-                          }}
+                          className={`py-2 px-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all text-center ${
+                            inquiryType === type
+                              ? 'border-[#D97706] bg-amber-50 text-[#B45309]'
+                              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                          }`}
                         >
                           {type}
                         </button>
@@ -239,7 +163,7 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                       Your Full Name
                     </label>
                     <input
@@ -248,20 +172,12 @@ export default function ContactPage() {
                       placeholder="Enter your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '11px 16px',
-                        borderRadius: 'var(--ks-radius-sm)',
-                        border: '1px solid var(--ks-border)',
-                        fontSize: '13.5px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] outline-none"
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                       Mobile / WhatsApp Number
                     </label>
                     <input
@@ -270,40 +186,24 @@ export default function ContactPage() {
                       placeholder="10-digit mobile number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '11px 16px',
-                        borderRadius: 'var(--ks-radius-sm)',
-                        border: '1px solid var(--ks-border)',
-                        fontSize: '13.5px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] outline-none"
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                         Event Date
                       </label>
                       <input
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '11px 12px',
-                          borderRadius: 'var(--ks-radius-sm)',
-                          border: '1px solid var(--ks-border)',
-                          fontSize: '13px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] outline-none"
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                         Box Quantity
                       </label>
                       <input
@@ -311,21 +211,13 @@ export default function ContactPage() {
                         placeholder="e.g. 100 boxes"
                         value={guestCount}
                         onChange={(e) => setGuestCount(e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '11px 12px',
-                          borderRadius: 'var(--ks-radius-sm)',
-                          border: '1px solid var(--ks-border)',
-                          fontSize: '13px',
-                          outline: 'none',
-                          boxSizing: 'border-box',
-                        }}
+                        className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] outline-none"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px', color: 'var(--ks-charcoal)' }}>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5">
                       Specific Sweets or Customization Notes
                     </label>
                     <textarea
@@ -333,23 +225,13 @@ export default function ContactPage() {
                       placeholder="E.g., 500g boxes with Signature Palkova, Mysore Pak, and Kaju Katli for wedding on NH 44"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '11px 16px',
-                        borderRadius: 'var(--ks-radius-sm)',
-                        border: '1px solid var(--ks-border)',
-                        fontSize: '13.5px',
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                        resize: 'vertical',
-                      }}
+                      className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706] outline-none resize-y"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="ks-hero__btn-primary"
-                    style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                   >
                     <span>Submit Bulk Inquiry</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

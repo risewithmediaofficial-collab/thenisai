@@ -27,6 +27,7 @@ const CATEGORIES = [
     img: '/images/products/panipuri_real.jpg',
   },
 ];
+
 const BEST_SELLERS = [
   {
     id: 'palkova',
@@ -103,39 +104,39 @@ export default function SweetsCollection() {
   return (
     <>
       {/* 1. SPECIALTY CATEGORIES */}
-      <section id="categories" className="ks-section ks-section--soft">
-        <div className="ks-container">
-          <div className="ks-section-header">
-            <span className="ks-section-header__sub">
+      <section id="categories" className="bg-[#FAF7F2] py-12 sm:py-16 border-b border-[#EAE2D5] font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-8 sm:mb-12">
+            <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
               Fresh From Our Kitchen
             </span>
-            <h2 className="ks-section-header__title">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D]">
               Popular Sweets &amp; Snacks
             </h2>
           </div>
 
-          <div className="ks-categories-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {CATEGORIES.map((cat) => (
               <div
                 key={cat.id}
-                className="ks-cat-card"
+                className="bg-white rounded-2xl border border-[#EAE2D5] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer group flex flex-col"
                 onClick={() => handleGoToMenu(cat.id)}
               >
-                <div className="ks-cat-card__img-wrap">
+                <div className="aspect-[4/3] w-full overflow-hidden bg-gray-100">
                   <img
                     src={cat.img}
                     alt={cat.title}
-                    className="ks-cat-card__img"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                     onError={(e) => {
                       e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
                     }}
                   />
                 </div>
-                <div className="ks-cat-card__body">
-                  <span className="ks-cat-card__sub">{cat.sub}</span>
-                  <h3 className="ks-cat-card__name">{cat.title}</h3>
-                  <span className="ks-cat-card__btn">
+                <div className="p-4 sm:p-5 flex flex-col flex-1">
+                  <span className="text-xs text-[#A97922] font-semibold mb-1 block">{cat.sub}</span>
+                  <h3 className="text-base sm:text-lg font-bold text-[#1C130D] mb-3 group-hover:text-[#7B1812] transition-colors">{cat.title}</h3>
+                  <span className="mt-auto inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#7B1812] group-hover:translate-x-1 transition-transform">
                     <span>View Sweets</span>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12" />
@@ -150,35 +151,22 @@ export default function SweetsCollection() {
       </section>
 
       {/* 2. CUSTOMER FAVORITES */}
-      <section id="bestsellers" className="ks-section">
-        <div className="ks-container">
-          <div style={{
-            display: 'flex',
-            alignItems: 'flex-end',
-            justifyContent: 'space-between',
-            marginBottom: '36px',
-            flexWrap: 'wrap',
-            gap: '16px',
-          }}>
+      <section id="bestsellers" className="bg-white py-12 sm:py-16 border-b border-[#EAE2D5] font-sans">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8 sm:mb-10">
             <div>
-              <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+              <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-1">
                 Highway Specials
               </span>
-              <h2 className="ks-section-header__title" style={{ textAlign: 'left' }}>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D]">
                 Signature Sweets
               </h2>
             </div>
 
             <button
               type="button"
-              className="ks-action-link"
+              className="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-[#7B1812] hover:text-[#63120D] transition-colors cursor-pointer bg-transparent border-0 p-0"
               onClick={() => handleGoToMenu()}
-              style={{
-                fontSize: '13.5px',
-                fontWeight: 700,
-                color: 'var(--ks-maroon)',
-                gap: '8px',
-              }}
             >
               <span>See All Sweets</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -188,18 +176,18 @@ export default function SweetsCollection() {
             </button>
           </div>
 
-          <div className="ks-products-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {BEST_SELLERS.map((prod) => {
               const currentPortion = selectedPortions[prod.id] || prod.baseWeight;
               const portionObj = prod.portions.find((p) => p.label === currentPortion) || prod.portions[0];
 
               return (
-                <div key={prod.id} className="ks-product-card">
-                  <div className="ks-product-card__img-wrap">
+                <div key={prod.id} className="bg-white rounded-2xl border border-[#EAE2D5] p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
+                  <div className="aspect-[4/3] w-full rounded-xl overflow-hidden mb-3.5 bg-gray-100">
                     <img
                       src={prod.img}
                       alt={prod.name}
-                      className="ks-product-card__img"
+                      className="w-full h-full object-cover"
                       loading="lazy"
                       onError={(e) => {
                         e.currentTarget.src = '/images/products/sweets_platter_hero.jpg';
@@ -207,22 +195,26 @@ export default function SweetsCollection() {
                     />
                   </div>
 
-                  <h3 className="ks-product-card__title" title={prod.name}>
+                  <h3 className="font-bold text-base sm:text-lg text-[#1C130D] mb-1.5 truncate" title={prod.name}>
                     {prod.name}
                   </h3>
 
-                  <div className="ks-product-card__price-row">
-                    <span className="ks-product-card__price">₹{portionObj.price}</span>
-                    <span className="ks-product-card__weight">/ {portionObj.label}</span>
+                  <div className="flex items-baseline gap-1.5 mb-3.5">
+                    <span className="text-xl sm:text-2xl font-bold text-[#1C130D]">₹{portionObj.price}</span>
+                    <span className="text-xs text-gray-500">/ {portionObj.label}</span>
                   </div>
 
                   {/* Portion Selectors */}
-                  <div className="ks-product-card__portions">
+                  <div className="flex items-center gap-1.5 mb-4">
                     {prod.portions.map((p) => (
                       <button
                         key={p.label}
                         type="button"
-                        className={`ks-portion-chip ${currentPortion === p.label ? 'is-active' : ''}`}
+                        className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                          currentPortion === p.label
+                            ? 'bg-[#C59334] text-white border-[#C59334] shadow-xs'
+                            : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                        }`}
                         onClick={(e) => {
                           e.stopPropagation();
                           handlePortionSelect(prod.id, p.label);
@@ -236,7 +228,7 @@ export default function SweetsCollection() {
                   {/* CTA Button */}
                   <button
                     type="button"
-                    className="ks-product-card__btn"
+                    className="mt-auto w-full py-2.5 px-3 rounded-full bg-[#C59334] hover:bg-[#A97922] text-white font-bold text-xs sm:text-sm inline-flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer border-0"
                     onClick={() => handleGoToMenu()}
                   >
                     <span>Pre-Order for Pickup</span>

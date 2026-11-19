@@ -7,6 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        'brand-gold': '#C59334',
+        'brand-gold-dark': '#A97922',
+        'brand-gold-light': '#FAF4E8',
+        'brand-maroon': '#7B1812',
+        'brand-maroon-dark': '#63120D',
+        'brand-maroon-light': '#FBF2F1',
+        'brand-bg': '#FAF7F2',
+        'brand-border': '#EAE2D5',
+        'brand-charcoal': '#1C130D',
         cream: '#FFF8EE',
         ivory: {
           DEFAULT: '#F5EDD8',
@@ -17,9 +26,9 @@ export default {
           light: '#D9954A',
         },
         gold: {
-          DEFAULT: '#D4A843',
+          DEFAULT: '#C59334',
           light: '#E8C06A',
-          dark: '#B8902E',
+          dark: '#A97922',
         },
         'deep-brown': '#2A1810',
         'warm-dark': '#1A0F08',
@@ -29,6 +38,7 @@ export default {
         'text-light': '#9C7A55',
       },
       fontFamily: {
+        sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         display: ['"Shantell Sans"', 'cursive'],
         body: ['Outfit', 'sans-serif'],
         ui: ['Outfit', 'sans-serif'],

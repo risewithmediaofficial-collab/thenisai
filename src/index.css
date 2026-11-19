@@ -50,12 +50,12 @@ body.modal-open .admin-modal-card {
   --text-mid: #5C3D1E;
   --text-light: #9C7A55;
 
-  /* Typography */
-  --font-display: 'Cormorant Garamond', Garamond, Georgia, serif;
-  --font-body: 'Lato', system-ui, -apple-system, sans-serif;
-  --font-ui: 'Lato', system-ui, -apple-system, sans-serif;
-  --font-num: 'Lato', system-ui, -apple-system, sans-serif;
-  --font-script: 'Great Vibes', cursive;
+  /* Typography — strictly 2 fonts: Shantell Sans (Headings) & Outfit (UI & Body) */
+  --font-display: 'Shantell Sans', cursive;
+  --font-body: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-num: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-script: 'Shantell Sans', cursive;
 
   /* Spacing */
   --section-padding: clamp(80px, 12vw, 160px);

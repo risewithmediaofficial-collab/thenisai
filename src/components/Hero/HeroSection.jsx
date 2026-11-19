@@ -20,27 +20,27 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="ks-hero">
-      <div className="ks-container">
-        <div className="ks-hero__grid">
+    <section className="bg-gradient-to-br from-[#FFF9EE] to-[#FAF2E3] border-b border-[#EAE2D5] py-8 sm:py-12 md:py-16 font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Headline & Action Buttons */}
-          <div className="ks-hero__content">
-            <span className="ks-hero__kicker">
+          <div className="lg:col-span-7 flex flex-col items-center lg:items-start text-center lg:text-left">
+            <span className="inline-block text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider mb-2.5">
               NH 44 Highway, Krishnagiri · Since 2006
             </span>
 
-            <h1 className="ks-hero__title">
+            <h1 className="font-display text-[#1C130D] text-3xl sm:text-4xl md:text-5xl lg:text-[50px] leading-[1.18] mb-4">
               Pure Cow Milk Palkova &amp; Traditional Sweets
             </h1>
 
-            <p className="ks-hero__desc">
+            <p className="text-[#5C4A3E] text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mb-6 sm:mb-8">
               Freshly prepared every day using 100% pure cow milk and pure ghee. Stop by our shop on the Bangalore–Salem highway or pre-order online for instant pickup with zero waiting time.
             </p>
 
-            <div className="ks-hero__actions">
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 w-full sm:w-auto">
               <button
                 type="button"
-                className="ks-hero__btn-primary"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#7B1812] hover:bg-[#63120D] text-white font-bold text-sm sm:text-base shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer border-0"
                 onClick={handlePreOrder}
               >
                 <span>Pre-Order for Pickup</span>
@@ -52,7 +52,7 @@ export default function HeroSection() {
 
               <button
                 type="button"
-                className="ks-hero__btn-secondary"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-white hover:bg-[#FAF7F2] text-[#2C2018] font-bold text-sm sm:text-base border border-[#EAE2D5] shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
                 onClick={handleGifting}
               >
                 <span>Special Sweet Boxes</span>
@@ -61,12 +61,12 @@ export default function HeroSection() {
           </div>
 
           {/* Right Column: Clean Food Photography */}
-          <div className="ks-hero__media">
-            <div className="ks-hero__img-frame">
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="relative w-full max-w-md sm:max-w-lg lg:max-w-none rounded-2xl overflow-hidden shadow-xl border-4 border-white aspect-[4/3] sm:aspect-[16/11]">
               <img
                 src="/images/products/sweets_platter_hero.jpg"
                 alt="Thenisai Artisanal Sweets Platter"
-                className="ks-hero__img"
+                className="w-full h-full object-cover"
                 loading="eager"
               />
             </div>

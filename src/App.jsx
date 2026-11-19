@@ -3,7 +3,6 @@ import LoadingScreen from './components/Loader/LoadingScreen';
 import Navbar from './components/Nav/Navbar';
 import HeroSection from './components/Hero/HeroSection';
 import PreOrderTopBar from './components/PreOrder/PreOrderTopBar';
-import PreOrderAlert from './components/PreOrder/PreOrderAlert';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLenis } from './hooks/useLenis';
@@ -172,8 +171,6 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <CustomerMenuPage />
         </Suspense>
         <Footer />
-        <WishlistDrawer />
-        <CustomerAuthModal />
       </div>
     );
   }
@@ -188,8 +185,6 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <StoryPage />
         </Suspense>
         <Footer />
-        <WishlistDrawer />
-        <CustomerAuthModal />
       </div>
     );
   }
@@ -204,8 +199,6 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <ContactPage />
         </Suspense>
         <Footer />
-        <WishlistDrawer />
-        <CustomerAuthModal />
       </div>
     );
   }
@@ -332,10 +325,9 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         </Suspense>
       </div>
 
-      {/* Modals & Customer Alerts */}
+      {/* Staff Invoices */}
       <Suspense fallback={null}>
         <InvoiceModal />
-        <PreOrderAlert />
       </Suspense>
     </>
   );

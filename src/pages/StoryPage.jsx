@@ -10,84 +10,46 @@ export default function StoryPage() {
   };
 
   return (
-    <div className="ks-page">
-      {/* 1. Header Banner (Kanti Sweets Style) */}
-      <section style={{
-        background: 'linear-gradient(135deg, #FFF9EE 0%, #FAF2E3 100%)',
-        borderBottom: '1px solid var(--ks-border)',
-        padding: 'clamp(36px, 5vw, 56px) 0',
-      }}>
-        <div className="ks-container">
-          <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '6px' }}>
-            BANGALORE–SALEM HIGHWAY (NH 44), KRISHNAGIRI · EST. 2006
+    <div className="min-h-screen bg-[#FAF7F2] font-sans text-gray-900">
+      {/* 1. Header Banner */}
+      <section className="bg-gradient-to-b from-[#FFF9EE] to-[#FAF7F2] border-b border-amber-100/70 py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
+            Bangalore–Salem Highway (NH 44), Krishnagiri · Est. 2006
           </span>
-          <h1 style={{
-            fontFamily: 'var(--ks-font-serif)',
-            fontSize: 'clamp(30px, 4vw, 48px)',
-            fontWeight: 700,
-            color: 'var(--ks-charcoal)',
-            margin: '0 0 12px 0',
-            lineHeight: 1.2,
-          }}>
+          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-3">
             Our Heritage: Pure Cow Milk Sweets Since 2006
           </h1>
-          <p style={{
-            fontSize: '15px',
-            color: 'var(--ks-muted)',
-            margin: 0,
-            maxWidth: '680px',
-            lineHeight: 1.6,
-          }}>
+          <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
             Started nearly 20 years ago on the NH 44 highway corridor in Krishnagiri, Thenisai is famous for pure cow milk Palkova and authentic traditional ghee sweets.
           </p>
         </div>
       </section>
 
       {/* 2. Visual Story Showcase */}
-      <section className="ks-section">
-        <div className="ks-container">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            alignItems: 'center',
-            gap: '40px',
-            marginBottom: '48px',
-          }}>
-            <div>
-              <span className="ks-section-header__sub" style={{ textAlign: 'left', marginBottom: '4px' }}>
+      <section className="py-10 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-12">
+            <div className="lg:col-span-7">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
                 Made Fresh Every Morning
               </span>
-              <h2 style={{
-                fontFamily: 'var(--ks-font-serif)',
-                fontSize: 'clamp(26px, 3.2vw, 36px)',
-                fontWeight: 700,
-                color: 'var(--ks-charcoal)',
-                margin: '0 0 16px 0',
-                lineHeight: 1.2,
-              }}>
+              <h2 className="font-display text-xl sm:text-3xl font-bold text-gray-900 leading-snug mb-4">
                 Slow-Simmered for 4 Hours in Traditional Vessels
               </h2>
-              <p style={{
-                fontSize: '14.5px',
-                color: 'var(--ks-text)',
-                lineHeight: 1.7,
-                margin: '0 0 16px 0',
-              }}>
-                Every morning before sunrise, fresh milk arrives from local dairy farms. We slowly simmer the milk in traditional heavy brass vessels for over 4 continuous hours with pure sugar, stirring gently until it turns into rich, golden Palkova.
-              </p>
-              <p style={{
-                fontSize: '14.5px',
-                color: 'var(--ks-text)',
-                lineHeight: 1.7,
-                margin: '0 0 24px 0',
-              }}>
-                Zero milk powder, zero artificial thickeners, and zero preservatives. Just pure milk goodness that highway travellers, families, and regular commuters have loved since 2006.
-              </p>
+              <div className="space-y-3 text-sm sm:text-base text-gray-600 leading-relaxed mb-6">
+                <p>
+                  Every morning before sunrise, fresh milk arrives from local dairy farms. We slowly simmer the milk in traditional heavy brass vessels for over 4 continuous hours with pure sugar, stirring gently until it turns into rich, golden Palkova.
+                </p>
+                <p>
+                  Zero milk powder, zero artificial thickeners, and zero preservatives. Just pure milk goodness that highway travellers, families, and regular commuters have loved since 2006.
+                </p>
+              </div>
 
               <button
                 type="button"
-                className="ks-hero__btn-primary"
                 onClick={handlePreOrder}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#D97706] to-[#B45309] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all active:scale-95"
               >
                 <span>Pre-Order Fresh Sweets</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -97,54 +59,47 @@ export default function StoryPage() {
               </button>
             </div>
 
-            <div style={{ position: 'relative' }}>
+            <div className="lg:col-span-5">
               <img
                 src="/images/products/sweets_platter_hero.jpg"
                 alt="Thenisai Artisanal Tradition"
-                style={{
-                  width: '100%',
-                  height: '380px',
-                  objectFit: 'cover',
-                  borderRadius: 'var(--ks-radius-md)',
-                  boxShadow: 'var(--ks-card-hover)',
-                  border: '3px solid #FFFFFF',
-                }}
+                className="w-full h-64 sm:h-96 object-cover rounded-2xl shadow-lg border-4 border-white"
                 loading="lazy"
               />
             </div>
           </div>
 
           {/* 3. 4 Timeless Pillars Grid */}
-          <div className="ks-trust-strip" style={{ marginTop: '32px' }}>
-            <div className="ks-trust-card">
-              <span className="ks-trust-card__icon">🥛</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+            <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-start gap-4">
+              <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl shrink-0">🥛</span>
               <div>
-                <h4 className="ks-trust-card__title">100% Farm Milk</h4>
-                <p className="ks-trust-card__desc">Pure cow milk direct from local farms</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">100% Farm Milk</h3>
+                <p className="text-xs text-gray-500 leading-normal">Pure cow milk direct from local farms</p>
               </div>
             </div>
 
-            <div className="ks-trust-card">
-              <span className="ks-trust-card__icon">🍲</span>
+            <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-start gap-4">
+              <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl shrink-0">🍲</span>
               <div>
-                <h4 className="ks-trust-card__title">Brass Uruli Simmer</h4>
-                <p className="ks-trust-card__desc">4-hour unhurried traditional reduction</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">Brass Uruli Simmer</h3>
+                <p className="text-xs text-gray-500 leading-normal">4-hour unhurried traditional reduction</p>
               </div>
             </div>
 
-            <div className="ks-trust-card">
-              <span className="ks-trust-card__icon">🌿</span>
+            <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-start gap-4">
+              <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl shrink-0">🌿</span>
               <div>
-                <h4 className="ks-trust-card__title">Zero Preservatives</h4>
-                <p className="ks-trust-card__desc">Natural pure ghee and aromatic spices</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">Zero Preservatives</h3>
+                <p className="text-xs text-gray-500 leading-normal">Natural pure ghee and aromatic spices</p>
               </div>
             </div>
 
-            <div className="ks-trust-card">
-              <span className="ks-trust-card__icon">🚗</span>
+            <div className="bg-white p-5 rounded-2xl border border-amber-100 shadow-sm flex items-start gap-4">
+              <span className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-xl shrink-0">🚗</span>
               <div>
-                <h4 className="ks-trust-card__title">Highway Heritage</h4>
-                <p className="ks-trust-card__desc">Beloved NH 44 landmark since 2006</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-0.5">Highway Heritage</h3>
+                <p className="text-xs text-gray-500 leading-normal">Beloved NH 44 landmark since 2006</p>
               </div>
             </div>
           </div>
