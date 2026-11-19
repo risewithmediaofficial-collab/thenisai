@@ -25,6 +25,46 @@ export function useScrollReveal() {
   }, []);
 }
 
+/**
+ * Universal Scroll Intersection Observer for CSS-based [data-mask-rise] elements
+ */
+export function useMaskRiseScroll() {
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.1 }
+    );
+
+    const observeAll = () => {
+      const elements = document.querySelectorAll('[data-mask-rise]:not(.is-revealed)');
+      elements.forEach((el) => observer.observe(el));
+    };
+
+    observeAll();
+
+    // Re-check when lazy sections or route changes mount
+    const mutationObserver = new MutationObserver(() => {
+      observeAll();
+    });
+
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
+}
+
 export function useMousePosition() {
   const mouseRef = useRef({ x: 0, y: 0, normX: 0, normY: 0 });
 

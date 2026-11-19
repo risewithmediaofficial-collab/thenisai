@@ -1,4 +1,5 @@
 import { useCart } from '../context/CartContext';
+import MaskRiseText from '../components/Common/MaskRiseText';
 
 export default function StoryPage() {
   const { navigateTo } = useCart();
@@ -14,13 +15,21 @@ export default function StoryPage() {
       {/* 1. Header Banner */}
       <section className="bg-gradient-to-b from-[#FFF9EE] to-[#FAF7F2] border-b border-amber-100/70 py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
+          <MaskRiseText
+            as="span"
+            delay={0.04}
+            className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] mb-2 block"
+          >
             Bangalore–Salem Highway (NH 44), Krishnagiri · Est. 2006
-          </span>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
-            Our Heritage: Pure Cow Milk Sweets Since 2006
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
+          </MaskRiseText>
+          <MaskRiseText
+            as="h1"
+            delay={0.12}
+            className="font-shantell font-extrabold text-2xl sm:text-4xl lg:text-5xl text-[#161B26] tracking-tight leading-tight mb-3"
+            lineClassName="font-shantell"
+            lines={['Our Heritage: Pure Cow Milk Sweets', 'Since 2006']}
+          />
+          <p className="font-museo text-sm sm:text-base text-[#5C5256] max-w-2xl leading-relaxed">
             Started nearly 20 years ago on the NH 44 highway corridor in Krishnagiri, Thenisai is famous for pure cow milk Palkova and authentic traditional ghee sweets.
           </p>
         </div>
@@ -31,13 +40,22 @@ export default function StoryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-12">
             <div className="lg:col-span-7">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
+              <MaskRiseText
+                as="span"
+                delay={0.04}
+                className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-2"
+              >
                 Made Fresh Every Morning
-              </span>
-              <h2 className="text-xl sm:text-3xl font-bold tracking-tight text-gray-900 leading-snug mb-4">
+              </MaskRiseText>
+              <MaskRiseText
+                as="h2"
+                delay={0.12}
+                className="font-shantell font-extrabold text-xl sm:text-3xl text-[#161B26] leading-snug mb-4 tracking-tight"
+                lineClassName="font-shantell"
+              >
                 Slow-Simmered for 4 Hours in Traditional Vessels
-              </h2>
-              <div className="space-y-3 text-sm sm:text-base text-gray-600 leading-relaxed mb-6">
+              </MaskRiseText>
+              <div className="space-y-3 text-sm sm:text-base text-[#5C5256] font-museo leading-relaxed mb-6">
                 <p>
                   Every morning before sunrise, fresh milk arrives from local dairy farms. We slowly simmer the milk in traditional heavy brass vessels for over 4 continuous hours with pure sugar, stirring gently until it turns into rich, golden Palkova.
                 </p>

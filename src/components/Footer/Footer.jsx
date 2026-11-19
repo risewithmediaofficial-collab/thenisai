@@ -34,7 +34,7 @@ export default function Footer() {
               />
             </div>
 
-            <span className="font-bold tracking-tight text-[#C59334] text-lg sm:text-xl block mb-2 leading-snug">
+            <span className="font-display font-bold text-[#C59334] text-lg sm:text-xl block mb-2 leading-snug">
               Traditional Pure Cow Milk Sweets &middot; Est. 2006
             </span>
 

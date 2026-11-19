@@ -1,4 +1,5 @@
 import { useCart } from '../../context/CartContext';
+import MaskRiseText from '../Common/MaskRiseText';
 
 export default function ValuesSection() {
   const { navigateTo } = useCart();
@@ -26,12 +27,21 @@ export default function ValuesSection() {
         <div id="gifting-banner" className="bg-gradient-to-br from-[#7B1812] to-[#59100C] text-white rounded-3xl p-6 sm:p-10 lg:p-12 mb-12 sm:mb-16 shadow-xl overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 flex flex-col items-start">
-              <span className="text-[#F8D68B] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
+              <MaskRiseText
+                as="span"
+                delay={0.04}
+                className="text-[#F8D68B] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2"
+              >
                 Gift Boxes &amp; Bulk Orders
-              </span>
-              <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-3 leading-tight tracking-tight">
+              </MaskRiseText>
+              <MaskRiseText
+                as="h2"
+                delay={0.12}
+                className="font-display font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-3 leading-tight tracking-tight"
+                lineClassName="font-display"
+              >
                 Sweet Boxes for Weddings &amp; Festivals
-              </h2>
+              </MaskRiseText>
               <p className="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed mb-6 max-w-xl">
                 Freshly packed sweet gift boxes for family celebrations, highway commuters, and gifting. Choose your favorite sweets and get them packed in premium gift boxes.
               </p>
@@ -78,12 +88,25 @@ export default function ValuesSection() {
         <div className="bg-[#FAF7F2] rounded-3xl p-6 sm:p-10 lg:p-12 border border-[#EAE2D5] shadow-xs">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             <div className="lg:col-span-7">
-              <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
-                Store Location
-              </span>
-              <h3 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] mb-6 tracking-tight">
-                Visit Our Krishnagiri Sweet Shop
-              </h3>
+              <MaskRiseText
+                as="span"
+                delay={0.04}
+                className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-2"
+              >
+                STORE LOCATION &amp; CONTACT
+              </MaskRiseText>
+              <MaskRiseText
+                as="h3"
+                delay={0.12}
+                className="font-shantell font-extrabold text-2xl sm:text-4xl lg:text-[42px] text-[#161B26] mb-3 leading-[1.2] tracking-tight"
+                lineClassName="font-shantell"
+              >
+                Visit Thenisai Sweets at Krishnagiri
+              </MaskRiseText>
+
+              <p className="font-museo text-sm sm:text-base text-[#5C5256] leading-[1.65] max-w-xl mb-6">
+                Located directly on the Bangalore–Salem Highway (NH 44) opposite HP Petrol Bunk. Stop by for fresh hot Palkova, tea, or order bulk sweet boxes for your celebrations.
+              </p>
 
               {/* Reduced Content Specs */}
               <div className="space-y-3 mb-6">

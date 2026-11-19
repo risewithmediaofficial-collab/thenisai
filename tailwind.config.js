@@ -38,12 +38,12 @@ export default {
         'text-light': '#9C7A55',
       },
       fontFamily: {
-        sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        body: ['Outfit', 'sans-serif'],
-        ui: ['Outfit', 'sans-serif'],
-        outfit: ['Outfit', 'sans-serif'],
-        shantell: ['Outfit', 'sans-serif'],
+        sans: ['"museo-sans"', '"Museo Sans 500"', '"Museo Sans"', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['"Shantell Sans"', 'cursive', 'sans-serif'],
+        body: ['"museo-sans"', '"Museo Sans 500"', '"Museo Sans"', 'sans-serif'],
+        ui: ['"museo-sans"', '"Museo Sans 500"', '"Museo Sans"', 'sans-serif'],
+        museo: ['"museo-sans"', '"Museo Sans 500"', '"Museo Sans"', 'sans-serif'],
+        shantell: ['"Shantell Sans"', 'cursive', 'sans-serif'],
       },
       maxWidth: {
         container: '1400px',

@@ -6,7 +6,7 @@ import PreOrderTopBar from './components/PreOrder/PreOrderTopBar';
 import { CartProvider, useCart } from './context/CartContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useLenis } from './hooks/useLenis';
-import { useScrollReveal } from './hooks/useAnimations';
+import { useScrollReveal, useMaskRiseScroll } from './hooks/useAnimations';
 
 // Lazy load heavy admin, billing & modal modules for fast storefront load
 const AdminDashboard = lazy(() => import('./components/Admin/AdminDashboard'));
@@ -352,6 +352,7 @@ function App() {
 
   // Initialize scroll reveal animations
   useScrollReveal();
+  useMaskRiseScroll();
 
   const handleLoadComplete = () => {
     setIsLoaded(true);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MaskRiseText from '../Common/MaskRiseText';
 
 export default function SweetCircleSection() {
   const [contact, setContact] = useState('');
@@ -19,13 +20,22 @@ export default function SweetCircleSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="bg-gradient-to-br from-[#FFF9EE] to-[#FAF2E3] border border-[#EAE2D5] rounded-3xl p-6 sm:p-10 lg:p-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-xs">
           <div>
-            <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-1">
+            <MaskRiseText
+              as="span"
+              delay={0.04}
+              className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-1"
+            >
               Get Batch Updates
-            </span>
-            <h3 className="font-bold tracking-tight text-2xl sm:text-3xl text-[#1C130D] mb-2">
+            </MaskRiseText>
+            <MaskRiseText
+              as="h3"
+              delay={0.12}
+              className="font-shantell font-extrabold text-2xl sm:text-3xl text-[#161B26] mb-2 tracking-tight"
+              lineClassName="font-shantell"
+            >
               Fresh Palkova Batch Alerts
-            </h3>
-            <p className="text-[#5C4A3E] text-xs sm:text-sm max-w-md m-0">
+            </MaskRiseText>
+            <p className="font-museo text-xs sm:text-sm text-[#5C5256] max-w-md m-0">
               Get notified when fresh morning hot palkova batches and festival sweet gift boxes are ready.
             </p>
           </div>

@@ -136,7 +136,7 @@ export default function StaffLoginModal({ initialRole = 'admin', onSuccess, onCa
           >
             <span className="text-2xl">✨</span>
           </div>
-          <h1 className="font-[Outfit,Lato,system-ui] text-[22px] font-extrabold text-slate-900 m-0 tracking-[-0.02em]">
+          <h1 className="font-museo text-[22px] font-extrabold text-slate-900 m-0 tracking-[-0.02em]">
             Thenisai Staff Portal
           </h1>
           <p className="text-[13px] text-slate-500 mt-1.5 mb-0 font-normal">

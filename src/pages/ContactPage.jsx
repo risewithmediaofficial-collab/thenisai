@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCart } from '../context/CartContext';
+import MaskRiseText from '../components/Common/MaskRiseText';
 
 export default function ContactPage() {
   const { navigateTo } = useCart();
@@ -32,13 +33,21 @@ export default function ContactPage() {
       {/* 1. Header Banner */}
       <section className="bg-gradient-to-b from-[#FFF9EE] to-[#FAF7F2] border-b border-amber-100/70 py-10 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
+          <MaskRiseText
+            as="span"
+            delay={0.04}
+            className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] mb-2 block"
+          >
             Store Location &amp; Contact
-          </span>
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
-            Visit Thenisai Sweets at Krishnagiri
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
+          </MaskRiseText>
+          <MaskRiseText
+            as="h1"
+            delay={0.12}
+            className="font-shantell font-extrabold text-2xl sm:text-4xl lg:text-5xl text-[#161B26] tracking-tight leading-tight mb-3"
+            lineClassName="font-shantell"
+            lines={['Visit Thenisai Sweets', 'at Krishnagiri']}
+          />
+          <p className="font-museo text-sm sm:text-base text-[#5C5256] max-w-2xl leading-relaxed">
             Located directly on the Bangalore–Salem Highway (NH 44) opposite HP Petrol Bunk. Stop by for fresh hot Palkova, tea, or order bulk sweet boxes for your celebrations.
           </p>
         </div>
@@ -111,13 +120,22 @@ export default function ContactPage() {
 
             {/* Right Column: Bulk Inquiries & Gifting Form */}
             <div className="lg:col-span-7 bg-white border border-amber-100 rounded-2xl p-6 sm:p-8 shadow-sm">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
+              <MaskRiseText
+                as="span"
+                delay={0.04}
+                className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-2"
+              >
                 Festive &amp; Corporate Desk
-              </span>
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mb-2">
+              </MaskRiseText>
+              <MaskRiseText
+                as="h2"
+                delay={0.12}
+                className="font-shantell font-extrabold text-xl sm:text-2xl text-[#161B26] mb-2 tracking-tight"
+                lineClassName="font-shantell"
+              >
                 Wedding &amp; Bulk Orders Inquiry
-              </h2>
-              <p className="text-sm text-gray-600 leading-relaxed mb-6">
+              </MaskRiseText>
+              <p className="font-museo text-sm text-[#5C5256] leading-relaxed mb-6">
                 Get direct boutique quotes for custom sweet boxes, wedding return gifts, and company festive hampers.
               </p>
 

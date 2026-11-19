@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCart } from '../../context/CartContext';
+import MaskRiseText from '../Common/MaskRiseText';
 
 const CATEGORIES = [
   {
@@ -107,12 +108,21 @@ export default function SweetsCollection() {
       <section id="categories" className="bg-[#FAF7F2] py-12 sm:py-16 border-b border-[#EAE2D5] font-sans">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8 sm:mb-12">
-            <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
+            <MaskRiseText
+              as="span"
+              delay={0.04}
+              className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-2"
+            >
               Fresh From Our Kitchen
-            </span>
-            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight">
+            </MaskRiseText>
+            <MaskRiseText
+              as="h2"
+              delay={0.12}
+              className="font-shantell font-extrabold text-2xl sm:text-3xl md:text-4xl text-[#161B26] tracking-tight"
+              lineClassName="font-shantell"
+            >
               Popular Sweets &amp; Snacks
-            </h2>
+            </MaskRiseText>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -155,12 +165,21 @@ export default function SweetsCollection() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-wrap items-end justify-between gap-4 mb-8 sm:mb-10">
             <div>
-              <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-1">
+              <MaskRiseText
+                as="span"
+                delay={0.04}
+                className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-1"
+              >
                 Highway Specials
-              </span>
-              <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight">
+              </MaskRiseText>
+              <MaskRiseText
+                as="h2"
+                delay={0.12}
+                className="font-shantell font-extrabold text-2xl sm:text-3xl md:text-4xl text-[#161B26] tracking-tight"
+                lineClassName="font-shantell"
+              >
                 Signature Sweets
-              </h2>
+              </MaskRiseText>
             </div>
 
             <button

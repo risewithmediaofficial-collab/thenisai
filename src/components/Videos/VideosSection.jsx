@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import MaskRiseText from '../Common/MaskRiseText';
 
 /**
  * 9:16 Vertical Video Showcase Section (Reels / Shorts Format)
@@ -49,15 +50,29 @@ export default function VideosSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Minimal Section Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
+          <MaskRiseText
+            as="span"
+            delay={0.04}
+            className="font-museo uppercase font-bold text-xs sm:text-[13px] tracking-[0.08em] text-[#C55018] block mb-2"
+          >
             Watch Our Kitchen
-          </span>
-          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight mb-3">
+          </MaskRiseText>
+          <MaskRiseText
+            as="h2"
+            delay={0.12}
+            className="font-shantell font-extrabold text-2xl sm:text-3xl md:text-4xl text-[#161B26] tracking-tight mb-3"
+            lineClassName="font-shantell"
+          >
             How We Make Our Sweets
-          </h2>
-          <p className="text-[#5C4A3E] text-xs sm:text-sm md:text-base text-center max-w-lg mx-auto">
+          </MaskRiseText>
+          <MaskRiseText
+            as="p"
+            delay={0.2}
+            duration={0.65}
+            className="font-museo text-xs sm:text-sm md:text-base text-[#5C5256] text-center max-w-lg mx-auto leading-relaxed"
+          >
             See how our pure cow milk palkova and fresh ghee sweets are made daily at Krishnagiri.
-          </p>
+          </MaskRiseText>
         </div>
 
         {/* 9:16 Vertical Video Grid or Empty Slots */}
