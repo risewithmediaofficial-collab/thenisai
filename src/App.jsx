@@ -57,6 +57,7 @@ function SandboxBanner({ onLogout }) {
 }
 const CheckoutModal = lazy(() => import('./components/Billing/CheckoutModal'));
 const InvoiceModal = lazy(() => import('./components/Billing/InvoiceModal'));
+const CustomerOrdersModal = lazy(() => import('./components/Menu/CustomerOrdersModal'));
 
 
 // Lazy load heavy storefront sections
@@ -171,6 +172,9 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <CustomerMenuPage />
         </Suspense>
         <Footer />
+        <Suspense fallback={null}>
+          <CustomerOrdersModal />
+        </Suspense>
       </div>
     );
   }
@@ -185,6 +189,9 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <StoryPage />
         </Suspense>
         <Footer />
+        <Suspense fallback={null}>
+          <CustomerOrdersModal />
+        </Suspense>
       </div>
     );
   }
@@ -199,6 +206,9 @@ function AppContent({ isLoaded, handleLoadComplete }) {
           <ContactPage />
         </Suspense>
         <Footer />
+        <Suspense fallback={null}>
+          <CustomerOrdersModal />
+        </Suspense>
       </div>
     );
   }
@@ -325,9 +335,10 @@ function AppContent({ isLoaded, handleLoadComplete }) {
         </Suspense>
       </div>
 
-      {/* Staff Invoices */}
+      {/* Staff Invoices & Customer Orders Tracking */}
       <Suspense fallback={null}>
         <InvoiceModal />
+        <CustomerOrdersModal />
       </Suspense>
     </>
   );

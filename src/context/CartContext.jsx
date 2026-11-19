@@ -352,6 +352,59 @@ export function CartProvider({ children }) {
     }
   });
 
+  // ── Customer Account & Pre-Orders Tracking Modal ─────────────────────────
+  const [customerUser, setCustomerUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('thenisai_customer_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isMyOrdersOpen, setIsMyOrdersOpen] = useState(false);
+  const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
+  const [customerPreOrders, setCustomerPreOrders] = useState([]);
+  const [isLoadingCustomerOrders, setIsLoadingCustomerOrders] = useState(false);
+
+  const fetchCustomerOrders = useCallback(async (phone) => {
+    const p = phone || customerUser?.phone;
+    if (!p) return;
+    const cleanPhone = String(p).replace(/\D/g, '').slice(-10);
+    setIsLoadingCustomerOrders(true);
+    try {
+      const res = await api.get(`/api/preorders/customer/${cleanPhone}`);
+      if (res && res.success && Array.isArray(res.preOrders)) {
+        setCustomerPreOrders(res.preOrders);
+      } else {
+        const local = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone);
+        setCustomerPreOrders(local);
+      }
+    } catch {
+      const local = (preOrders || []).filter((o) => String(o.customerPhone || '').replace(/\D/g, '').slice(-10) === cleanPhone);
+      setCustomerPreOrders(local);
+    } finally {
+      setIsLoadingCustomerOrders(false);
+    }
+  }, [customerUser, preOrders]);
+
+  const openMyOrders = useCallback(() => {
+    if (customerUser?.phone) {
+      fetchCustomerOrders(customerUser.phone);
+      setIsMyOrdersOpen(true);
+    } else {
+      setIsCustomerLoginOpen(true);
+    }
+  }, [customerUser, fetchCustomerOrders]);
+
+  const handleCustomerLogout = useCallback(() => {
+    try {
+      localStorage.removeItem('thenisai_customer_user');
+    } catch {}
+    setCustomerUser(null);
+    setCustomerPreOrders([]);
+    setIsMyOrdersOpen(false);
+  }, []);
+
   // Orders state — strictly online delivery orders
   const [orders, setOrders] = useState(() => {
     try {
@@ -4358,9 +4411,32 @@ export function CartProvider({ children }) {
     validateStockBeforeBilling,
     subtotal,
     totalItems,
+    // Customer Pre-Orders & Auth Tracking
+    customerUser,
+    setCustomerUser,
+    isMyOrdersOpen,
+    setIsMyOrdersOpen,
+    isCustomerLoginOpen,
+    setIsCustomerLoginOpen,
+    openMyOrders,
+    openCustomerLogin: () => setIsCustomerLoginOpen(true),
+    closeMyOrders: () => setIsMyOrdersOpen(false),
+    closeCustomerLogin: () => setIsCustomerLoginOpen(false),
+    customerPreOrders,
+    fetchCustomerOrders,
+    isLoadingCustomerOrders,
+    handleCustomerLogout,
     freeDeliveryRemaining,
     isFreeDelivery,
   }), [
+    customerUser,
+    isMyOrdersOpen,
+    isCustomerLoginOpen,
+    customerPreOrders,
+    isLoadingCustomerOrders,
+    openMyOrders,
+    fetchCustomerOrders,
+    handleCustomerLogout,
     cart,
     isCartOpen,
     isCheckoutOpen,

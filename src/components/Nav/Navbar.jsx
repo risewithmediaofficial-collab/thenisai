@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '../../context/CartContext';
 
 export default function Navbar() {
-  const { navigateTo } = useCart();
+  const { navigateTo, openMyOrders, customerUser, customerPreOrders = [] } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Lock body scroll when mobile sidebar drawer is active
@@ -106,8 +106,30 @@ export default function Navbar() {
               </a>
             </nav>
 
-            {/* Right Actions: Pre-Order Pill Button & Mobile Hamburger Toggle */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            {/* Right Actions: My Orders Button, Pre-Order Pill & Mobile Hamburger Toggle */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
+              {/* My Orders Button in Navbar */}
+              <button
+                type="button"
+                onClick={openMyOrders}
+                className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full border border-[#EAE2D5] bg-[#FAF7F2] hover:bg-[#F3EDE4] text-[#2C2018] text-xs sm:text-sm font-semibold transition-all cursor-pointer active:scale-95"
+                title="Track Your Pre-Orders"
+                aria-label="View My Orders"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+                </svg>
+                <span className="hidden xs:inline sm:inline">My Orders</span>
+                <span className="inline xs:hidden sm:hidden">Orders</span>
+                {customerPreOrders.length > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-[#7B1812] text-white text-[10px] font-bold flex items-center justify-center">
+                    {customerPreOrders.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Pre-Order Pill Button */}
               <button
                 type="button"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-[#C59334] hover:bg-[#A97922] text-white text-xs sm:text-sm font-bold shadow-sm transition-all duration-150 cursor-pointer border-0 active:scale-95"
@@ -231,6 +253,24 @@ export default function Navbar() {
                 </div>
                 <span className="text-[#C59334] text-lg leading-none">›</span>
               </a>
+
+              {/* My Orders in Mobile Drawer */}
+              <button
+                type="button"
+                className="flex items-center justify-between px-5 py-3.5 bg-amber-50/60 text-[#1C130D] text-sm font-bold border-b border-[#F3EDE4] transition-colors cursor-pointer text-left w-full border-l-4 border-[#7B1812]"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openMyOrders();
+                }}
+              >
+                <div>
+                  <span className="block">📋 My Orders</span>
+                  <span className="block text-[11px] font-semibold text-[#7B1812]">
+                    {customerUser?.phone ? `Track phone: +91 ${customerUser.phone}` : 'Track sweets pickup status'}
+                  </span>
+                </div>
+                <span className="text-gray-400 text-lg leading-none">›</span>
+              </button>
 
               <a
                 href="#contact"
