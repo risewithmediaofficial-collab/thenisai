@@ -35,7 +35,7 @@ export default function ContactPage() {
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
             Store Location &amp; Contact
           </span>
-          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-3">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
             Visit Thenisai Sweets at Krishnagiri
           </h1>
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
@@ -114,7 +114,7 @@ export default function ContactPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
                 Festive &amp; Corporate Desk
               </span>
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 mb-2">
                 Wedding &amp; Bulk Orders Inquiry
               </h2>
               <p className="text-sm text-gray-600 leading-relaxed mb-6">

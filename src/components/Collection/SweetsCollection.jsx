@@ -110,7 +110,7 @@ export default function SweetsCollection() {
             <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
               Fresh From Our Kitchen
             </span>
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D]">
+            <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight">
               Popular Sweets &amp; Snacks
             </h2>
           </div>
@@ -158,7 +158,7 @@ export default function SweetsCollection() {
               <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-1">
                 Highway Specials
               </span>
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D]">
+              <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight">
                 Signature Sweets
               </h2>
             </div>

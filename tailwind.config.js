@@ -39,11 +39,11 @@ export default {
       },
       fontFamily: {
         sans: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        display: ['"Shantell Sans"', 'cursive'],
+        display: ['Outfit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         body: ['Outfit', 'sans-serif'],
         ui: ['Outfit', 'sans-serif'],
         outfit: ['Outfit', 'sans-serif'],
-        shantell: ['"Shantell Sans"', 'cursive'],
+        shantell: ['Outfit', 'sans-serif'],
       },
       maxWidth: {
         container: '1400px',

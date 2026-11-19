@@ -29,7 +29,7 @@ export default function ValuesSection() {
               <span className="text-[#F8D68B] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
                 Gift Boxes &amp; Bulk Orders
               </span>
-              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-white mb-3 leading-tight">
+              <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-white mb-3 leading-tight tracking-tight">
                 Sweet Boxes for Weddings &amp; Festivals
               </h2>
               <p className="text-white/80 text-xs sm:text-sm md:text-base leading-relaxed mb-6 max-w-xl">
@@ -81,7 +81,7 @@ export default function ValuesSection() {
               <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
                 Store Location
               </span>
-              <h3 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D] mb-6">
+              <h3 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] mb-6 tracking-tight">
                 Visit Our Krishnagiri Sweet Shop
               </h3>
 

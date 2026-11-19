@@ -22,7 +22,7 @@ export default function SweetCircleSection() {
             <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-1">
               Get Batch Updates
             </span>
-            <h3 className="font-display text-2xl sm:text-3xl text-[#1C130D] mb-2">
+            <h3 className="font-bold tracking-tight text-2xl sm:text-3xl text-[#1C130D] mb-2">
               Fresh Palkova Batch Alerts
             </h3>
             <p className="text-[#5C4A3E] text-xs sm:text-sm max-w-md m-0">

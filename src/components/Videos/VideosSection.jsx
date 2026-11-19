@@ -52,7 +52,7 @@ export default function VideosSection() {
           <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
             Watch Our Kitchen
           </span>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D] mb-3">
+          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight mb-3">
             How We Make Our Sweets
           </h2>
           <p className="text-[#5C4A3E] text-xs sm:text-sm md:text-base text-center max-w-lg mx-auto">

@@ -50,12 +50,12 @@ body.modal-open .admin-modal-card {
   --text-mid: #5C3D1E;
   --text-light: #9C7A55;
 
-  /* Typography — strictly 2 fonts: Shantell Sans (Headings) & Outfit (UI & Body) */
-  --font-display: 'Shantell Sans', cursive;
+  /* Typography — Clean Modern Geometric Outfit */
+  --font-display: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-body: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-ui: 'Outfit', system-ui, -apple-system, sans-serif;
   --font-num: 'Outfit', system-ui, -apple-system, sans-serif;
-  --font-script: 'Shantell Sans', cursive;
+  --font-script: 'Outfit', system-ui, -apple-system, sans-serif;
 
   /* Spacing */
   --section-padding: clamp(80px, 12vw, 160px);
@@ -223,7 +223,7 @@ body.modal-open [data-lenis-prevent],
    in modern, clean sans-serif (Inter) rather than old-style serif numerals.
    ============================================================ */
 @font-face {
-  font-family: 'Cormorant Garamond';
+  font-family: 'Outfit';
   font-style: normal;
   font-weight: 300 800;
   font-display: swap;
@@ -235,7 +235,7 @@ body.modal-open [data-lenis-prevent],
 }
 
 @font-face {
-  font-family: 'Cormorant Garamond';
+  font-family: 'Outfit';
   font-style: normal;
   font-weight: 300 800;
   font-display: swap;
@@ -595,7 +595,7 @@ h1, h2, h3, h4 {
    ============================================================ */
 
 @font-face {
-  font-family: 'Cormorant Garamond';
+  font-family: 'Outfit';
   src: local('Lato'),
        url('https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiA.woff2') format('woff2');
   font-weight: 100 900;
@@ -1052,7 +1052,7 @@ time, .hours {
 }
 
 .kpi-value {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 2rem;
   font-weight: 800;
   color: #0F172A;
@@ -1102,7 +1102,7 @@ time, .hours {
   background: transparent;
   border: none;
   padding: 9px 20px;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   color: #475569;
@@ -1245,7 +1245,7 @@ time, .hours {
 }
 
 .order-invoice-no {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.05rem;
   font-weight: 700;
   color: #B45309;
@@ -1412,7 +1412,7 @@ time, .hours {
 }
 
 .total-amount-highlight {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.25rem;
   color: #0F172A;
   font-weight: 800;
@@ -1592,7 +1592,7 @@ time, .hours {
 }
 
 .stock-number {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 2rem;
   font-weight: 800;
   color: #0F172A;
@@ -6692,7 +6692,7 @@ time, .hours {
   background: #DCFCE7;
   border: 1px solid #86EFAC;
   color: #15803D;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -6847,7 +6847,7 @@ time, .hours {
   border: 1.5px solid #6366F1;
   background: #EEF2FF;
   color: #4F46E5;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   cursor: pointer;
@@ -6951,7 +6951,7 @@ time, .hours {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   margin-right: 6px;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .iwp-tab-btn {
@@ -7154,7 +7154,7 @@ time, .hours {
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s ease;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.28);
 }
 
@@ -7424,7 +7424,7 @@ time, .hours {
 }
 
 .bill-sub {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -7974,7 +7974,7 @@ time, .hours {
 }
 
 .pos-empty-title {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.05rem;
   font-weight: 700;
   color: #1E293B;
@@ -8139,7 +8139,7 @@ time, .hours {
 }
 
 .pos-line-name {
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   font-weight: 700;
   font-size: 0.88rem;
   color: #0F172A;
@@ -8585,7 +8585,7 @@ time, .hours {
   color: #64748B;
   font-size: 0.78rem;
   font-weight: 600;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.18s ease;
   letter-spacing: 0.02em;
@@ -8621,7 +8621,7 @@ time, .hours {
   color: #92400E;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .manual-input {
@@ -8631,7 +8631,7 @@ time, .hours {
   border: 1.5px solid #FCD34D;
   background: #fff;
   font-size: 0.85rem;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   color: #1E293B;
   outline: none;
   transition: border-color 0.15s;
@@ -8707,7 +8707,7 @@ time, .hours {
   color: #64748B;
   font-size: 0.8rem;
   font-weight: 600;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -8727,7 +8727,7 @@ time, .hours {
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.15s;
   box-shadow: 0 2px 6px rgba(217,119,6,0.3);
@@ -8763,7 +8763,7 @@ time, .hours {
 .calc-item {
   display: flex;
   justify-content: space-between;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.84rem;
   color: #64748B;
   font-weight: 600;
@@ -8806,7 +8806,7 @@ time, .hours {
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 700;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   letter-spacing: 0.01em;
@@ -8842,7 +8842,7 @@ time, .hours {
   border-radius: 20px;
   font-size: 0.72rem;
   font-weight: 700;
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -9503,7 +9503,7 @@ time, .hours {
 }
 
 .computed-cost {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.45rem;
   font-weight: 800;
   color: #B45309;
@@ -11106,7 +11106,7 @@ time, .hours {
 }
 
 .shift-kpi-card .kpi-val {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.7rem;
   font-weight: 800;
   color: #0F172A;
@@ -12715,7 +12715,7 @@ time, .hours {
   display: flex;
   flex-direction: column;
   animation: scaleInCard 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 @keyframes scaleInCard {
@@ -12747,7 +12747,7 @@ time, .hours {
 }
 
 .weight-modal-title {
-  font-family: 'Lato', 'Lato', sans-serif;
+  font-family: 'Lato', 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: #0F172A;
@@ -12794,7 +12794,7 @@ time, .hours {
 }
 
 .weight-input-label {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   color: #1E293B;
@@ -12836,7 +12836,7 @@ time, .hours {
 .weight-input-unit-tag {
   position: absolute;
   right: 14px;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.84rem;
   font-weight: 800;
   color: #64748B;
@@ -12859,7 +12859,7 @@ time, .hours {
   border: none;
   border-radius: 7px;
   padding: 0 12px;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.80rem;
   font-weight: 700;
   color: #64748B;
@@ -12888,7 +12888,7 @@ time, .hours {
 }
 
 .banner-calc-text {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.84rem;
   font-weight: 700;
   color: #92400E;
@@ -12954,7 +12954,7 @@ time, .hours {
 }
 
 .chip-wt {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.78rem;
   font-weight: 800;
   color: #1E293B;
@@ -13027,7 +13027,7 @@ time, .hours {
   border-radius: 10px;
   background: #FFFFFF;
   color: #475569;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
@@ -13046,7 +13046,7 @@ time, .hours {
   border-radius: 10px;
   background: #059669;
   color: #FFFFFF;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 0.94rem;
   font-weight: 800;
   cursor: pointer;
@@ -13122,7 +13122,7 @@ time, .hours {
 }
 
 .wm-title {
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.15rem;
   font-weight: 800;
   color: #0F172A;
@@ -13334,7 +13334,7 @@ time, .hours {
   font-weight: 700;
   cursor: pointer;
   transition: all 0.15s ease;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .wm-btn-cancel:hover {
@@ -13359,7 +13359,7 @@ time, .hours {
   gap: 6px;
   transition: all 0.15s ease;
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .wm-btn-confirm:hover:not(:disabled) {
@@ -15008,7 +15008,7 @@ time, .hours {
 }
 
 .total-value {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.6rem;
   font-weight: 800;
   color: #D4A843;
@@ -17737,7 +17737,7 @@ time, .hours {
 }
 
 .cart-drawer__title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.5rem;
   color: #FFF6EA;
   margin: 0;
@@ -17847,7 +17847,7 @@ time, .hours {
 }
 
 .cart-empty__title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.4rem;
   color: #FFF6EA;
   margin-bottom: 8px;
@@ -17915,7 +17915,7 @@ time, .hours {
 }
 
 .cart-item__name {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
   font-size: 1.05rem;
   color: #FFF8EF;
   font-weight: 500;
@@ -17988,7 +17988,7 @@ time, .hours {
 }
 
 .cart-item__price {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.1rem;
   color: #D4A843;
   font-weight: 700;
@@ -17999,7 +17999,7 @@ time, .hours {
 }
 
 .cart-item__unit-price {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 0.72rem;
   color: #8C7560;
   font-weight: 500;
@@ -18023,7 +18023,7 @@ time, .hours {
 }
 
 .cart-summary__val {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-weight: 600;
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -18044,7 +18044,7 @@ time, .hours {
 }
 
 .cart-total__val {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 1.6rem;
   color: #D4A843;
   font-weight: 800;
@@ -18350,7 +18350,7 @@ time, .hours {
   background: rgba(14, 7, 4, 0.88);
   border: 1px solid var(--gold);
   color: var(--gold-light);
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: 15px;
   font-weight: 700;
   padding: 4px 10px;
@@ -20111,7 +20111,7 @@ select.stock-form__input {
   color: #334155;
   cursor: pointer;
   transition: all 0.2s;
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
 }
 
 .stock-chip-btn:hover {
@@ -20139,7 +20139,7 @@ select.stock-form__input {
 }
 
 .stock-preview-val {
-  font-family: var(--font-num, 'Lato', sans-serif);
+  font-family: var(--font-num, 'Outfit', system-ui, -apple-system, sans-serif);
   font-weight: 800;
   font-size: 1.1rem;
   color: #B45309;
@@ -20527,7 +20527,7 @@ select.stock-form__input {
   align-items: center;
   column-gap: 0.35em;
   row-gap: 0.08em;
-  font-family: var(--font-display, 'Cormorant Garamond', serif);
+  font-family: var(--font-display, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: clamp(26px, 6.2vw, 84px);
   font-weight: 500;
   color: var(--cream, #fff8ee);
@@ -20548,7 +20548,7 @@ select.stock-form__input {
 }
 
 .loader__tagline {
-  font-family: var(--font-body, 'Lato', sans-serif);
+  font-family: var(--font-body, 'Outfit', system-ui, -apple-system, sans-serif);
   font-size: clamp(12px, 2.2vw, 16px);
   color: var(--gold, #d4a843);
   letter-spacing: clamp(0.12em, 2vw, 0.25em);
@@ -21385,7 +21385,7 @@ select.stock-form__input {
   bottom: 24px;
   left: 24px;
   z-index: 9999;
-  font-family: 'Lato', sans-serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .staff-switcher__inner {
@@ -22535,7 +22535,7 @@ select.stock-form__input {
 .preview-item-price {
   font-weight: 700;
   color: #F5D37E;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
 }
 
 .cust-auth-error {

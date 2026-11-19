@@ -1,6 +1,6 @@
 /* ==============================================================================
    THENISAI — CUSTOMER MENU & PRE-ORDER PAGE (RESPONSIVE STYLES)
-   Strictly TWO fonts: Shantell Sans (Headings) & Outfit (Body & UI)
+   Font: Modern Geometric Outfit across all elements
    ============================================================================== */
 
 .customer-menu-root {
@@ -17,7 +17,8 @@
 .customer-menu-root h3,
 .customer-menu-root .menu-title,
 .customer-menu-root .preorder-modal-card h3 {
-  font-family: 'Shantell Sans', cursive;
+  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  font-weight: 700;
 }
 
 /* ── Top Header ───────────────────────────────────────────────────────────── */

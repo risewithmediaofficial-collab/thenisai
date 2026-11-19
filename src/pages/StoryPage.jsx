@@ -17,7 +17,7 @@ export default function StoryPage() {
           <span className="text-[11px] sm:text-xs font-bold uppercase tracking-widest text-[#B32D00] mb-2 block">
             Bangalore–Salem Highway (NH 44), Krishnagiri · Est. 2006
           </span>
-          <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight leading-tight mb-3">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 tracking-tight leading-tight mb-3">
             Our Heritage: Pure Cow Milk Sweets Since 2006
           </h1>
           <p className="text-sm sm:text-base text-gray-600 max-w-2xl leading-relaxed">
@@ -34,7 +34,7 @@ export default function StoryPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-[#B32D00] block mb-2">
                 Made Fresh Every Morning
               </span>
-              <h2 className="font-display text-xl sm:text-3xl font-bold text-gray-900 leading-snug mb-4">
+              <h2 className="text-xl sm:text-3xl font-bold tracking-tight text-gray-900 leading-snug mb-4">
                 Slow-Simmered for 4 Hours in Traditional Vessels
               </h2>
               <div className="space-y-3 text-sm sm:text-base text-gray-600 leading-relaxed mb-6">

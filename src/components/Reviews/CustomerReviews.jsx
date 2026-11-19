@@ -30,7 +30,7 @@ export default function CustomerReviews() {
           <span className="text-[#7B1812] uppercase font-bold text-xs sm:text-sm tracking-wider block mb-2">
             Customer Reviews
           </span>
-          <h2 className="font-display text-2xl sm:text-3xl md:text-4xl text-[#1C130D]">
+          <h2 className="font-bold text-2xl sm:text-3xl md:text-4xl text-[#1C130D] tracking-tight">
             What Customers Say About Thenisai
           </h2>
         </div>
